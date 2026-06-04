@@ -2,6 +2,8 @@
 -- Player input, movement, and dash movement live in Script/PlayerCharacter.lua.
 
 local PlayerCharacter = require("PlayerCharacter")
+local PlayerAction = require("PlayerAction")
+local CombatContext = require("CombatContext")
 
 local IDLE_PATH = "Content/Animation/Samurai_UE4/SamuraiIdle.uasset"
 local WALK_PATH = "Content/Animation/Samurai_UE4/SamuraiWalk.uasset"
@@ -34,7 +36,23 @@ local ULTIMATE_ATTACK_BLEND_OUT = 0.12
 
 local VK_SHIFT = 0x10
 
+local function GetPlayerCtx(self)
+    local playerCtx = CombatContext.GetPlayerByOwner(obj)
+    if playerCtx ~= nil then
+        self.PlayerCtx = playerCtx
+        return playerCtx
+    end
+
+    return self.PlayerCtx
+end
+
+local function PushPlayerEvent(self, event)
+    PlayerAction.PushEvent(GetPlayerCtx(self), event)
+end
+
 local function ResetAttack(self, unlockMovement)
+    local attackIndex = self.AttackIndex
+
     self.AttackIndex = 0
     self.ComboWindow = false
     self.ComboQueued = false
@@ -44,7 +62,9 @@ local function ResetAttack(self, unlockMovement)
         PlayerCharacter.SetMovementInputEnabled(self, true)
     end
 
-    PlayerCharacter.SetKatanaTrailActive(false)
+    if attackIndex ~= nil and attackIndex > 0 then
+        PushPlayerEvent(self, { Type = "AttackEnd", AttackIndex = attackIndex })
+    end
 end
 
 local function BeginAttack(self, index)
@@ -54,7 +74,7 @@ local function BeginAttack(self, index)
     self.AttackEnd = false
     PlayerCharacter.StopMovementImmediately(self)
     PlayerCharacter.StepAttackForward(self)
-    PlayerCharacter.SetKatanaTrailActive(true)
+    PushPlayerEvent(self, { Type = "AttackStart", AttackIndex = index })
 end
 
 local function BeginDashSlash(self)
@@ -78,6 +98,7 @@ function init(self)
     self.DashSlashEnd = false
 
     PlayerCharacter.Initialize(self, obj)
+    self.PlayerCtx = GetPlayerCtx(self)
     ResetAttack(self)
 
     local loco = Anim.create_blend_space_1d(0.0)
@@ -101,7 +122,7 @@ function init(self)
 
     Anim.sm_add_transition(top, "AnyState", "DashSlash",
         function()
-            if self.DashSlashPressed and not self.DashSlashActive and not Anim.is_owner_falling() and not PlayerCharacter.IsUltimateRunning then
+            if self.DashSlashPressed and not self.DashSlashActive and not Anim.is_owner_falling() and not PlayerCharacter.IsUltimateRunning(self) then
                 BeginDashSlash(self)
                 return true
             end
@@ -114,14 +135,14 @@ function init(self)
 
     Anim.sm_add_transition(top, "AnyState", "UltimateAttack",
         function()
-            return PlayerCharacter.IsInUltimateMode == true
+            return PlayerCharacter.IsInUltimateMode(self) == true
         end,
         ULTIMATE_ATTACK_BLEND_IN
     )
 
     Anim.sm_add_transition(top, "UltimateAttack", "Locomotion",
         function()
-            return PlayerCharacter.IsInUltimateMode ~= true
+            return PlayerCharacter.IsInUltimateMode(self) ~= true
         end,
         ULTIMATE_ATTACK_BLEND_OUT
     )
@@ -268,6 +289,8 @@ function init(self)
 end
 
 function update(self, dt)
+    self.PlayerCtx = GetPlayerCtx(self)
+
     self.Speed = Anim.get_owner_speed()
     local blendAlpha = math.min(dt * LOCOMOTION_SPEED_RESPONSE, 1.0)
     self.BlendSpeed = self.BlendSpeed + (self.Speed - self.BlendSpeed) * blendAlpha
