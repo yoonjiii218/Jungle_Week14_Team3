@@ -16,7 +16,9 @@ local ATTACK3_PATH = "Content/Animation/Samurai_UE4/SamuraiAttack3.uasset"
 local ATTACK4_PATH = "Content/Animation/Samurai_UE4/SamuraiAttack4.uasset"
 local ATTACK5_PATH = "Content/Animation/Samurai_UE4/SamuraiAttack5.uasset"
 
-local DASH_SLASH_PATH = "Content/Animation/Samurai_UE4/SamuraiAttackHeavy1_Start.uasset"
+local DASH_PATH = "Content/Animation/Samurai_UE4/SamuraiAttackHeavy1_Start.uasset"
+local DASH_CHARGING_PATH = "Content/Animation/Samurai_UE4/SamuraiAttackHeavy1_Start.uasset"
+local DASH_CHARGE_ATTACK_PATH = "Content/Animation/Samurai_UE4/SamuraiAttack1.uasset"
 local ULTIMATE_ATTACK_PATH = "Content/Animation/Samurai_UE4/SamuraiAttackUltimate.uasset"
 
 local WALK_THRESHOLD = 0.1
@@ -28,8 +30,12 @@ local JUMP_LOOP = false
 local ATTACK_BLEND_IN  = 0.08
 local ATTACK_BLEND_OUT = 0.15
 
-local DASH_SLASH_BLEND_IN  = 0.05
-local DASH_SLASH_BLEND_OUT = 0.12
+local DASH_BLEND_IN  = 0.05
+local DASH_BLEND_OUT = 0.12
+local DASH_CHARGING_BLEND_IN = 0.05
+local DASH_CHARGING_TO_ATTACK_BLEND = 0.03
+local DASH_CHARGE_ATTACK_BLEND_OUT = 0.12
+local DASH_CHARGE_ATTACK_FALLBACK_DURATION = 0.65
 
 local ULTIMATE_ATTACK_BLEND_IN  = 0.05
 local ULTIMATE_ATTACK_BLEND_OUT = 0.12
@@ -75,13 +81,35 @@ local function BeginAttack(self, index)
     PushPlayerEvent(self, { Type = "AttackStart", AttackIndex = index })
 end
 
-local function BeginDashSlash(self)
+local function BeginDash(self)
     ResetAttack(self, false)
-    PlayerCharacter.BeginDashSlash(self)
+    self.DashPressed = false
+    PlayerCharacter.BeginDash(self)
 end
 
-local function EndDashSlash(self)
-    PlayerCharacter.EndDashSlash(self)
+local function EndDash(self)
+    PlayerCharacter.EndDash(self)
+end
+
+local function BeginDashCharging(self)
+    ResetAttack(self, false)
+    self.DashChargingPressed = false
+    self.DashChargingReleased = false
+    PlayerCharacter.BeginDashCharging(self)
+end
+
+local function EndDashCharging(self, unlockMovement)
+    PlayerCharacter.EndDashCharging(self, unlockMovement)
+end
+
+local function BeginDashChargeAttack(self)
+    ResetAttack(self, false)
+    self.DashChargeAttackEnd = false
+    PlayerCharacter.BeginDashChargeAttack(self)
+end
+
+local function EndDashChargeAttack(self)
+    PlayerCharacter.EndDashChargeAttack(self)
 end
 
 function init(self)
@@ -89,8 +117,24 @@ function init(self)
     self.BlendSpeed = 0.0
 
     self.AttackPressed = false
-    self.DashSlashPressed = false
+    self.DashPressed = false
+    self.DashChargingPressed = false
+    self.DashChargingReleased = false
 
+    self.DashActive = false
+    self.DashElapsed = 0.0
+    self.DashEnd = false
+
+    self.DashChargingActive = false
+    self.DashChargingElapsed = 0.0
+    self.DashChargingEnd = false
+
+    self.DashChargeAttackActive = false
+    self.DashChargeAttackElapsed = 0.0
+    self.DashChargeAttackEnd = false
+
+    -- Compatibility fields for notifies/assets that still use the old DashSlash name.
+    self.DashSlashPressed = false
     self.DashSlashActive = false
     self.DashSlashElapsed = 0.0
     self.DashSlashEnd = false
@@ -116,17 +160,75 @@ function init(self)
     Anim.sm_add_state(top, "Attack4", Anim.create_sequence_player(ATTACK4_PATH, 1.5, false))
     Anim.sm_add_state(top, "Attack5", Anim.create_sequence_player(ATTACK5_PATH, 1.5, false))
 
-    Anim.sm_add_state(top, "DashSlash", Anim.create_sequence_player(DASH_SLASH_PATH, 3.0, false))
+    Anim.sm_add_state(top, "Dash", Anim.create_sequence_player(DASH_PATH, 3.0, false))
+    Anim.sm_add_state(top, "DashCharging", Anim.create_sequence_player(DASH_CHARGING_PATH, 1.0, false))
+    Anim.sm_add_state(top, "DashChargeAttack", Anim.create_sequence_player(DASH_CHARGE_ATTACK_PATH, 1.4, false))
 
-    Anim.sm_add_transition(top, "AnyState", "DashSlash",
+    Anim.sm_add_transition(top, "AnyState", "DashCharging",
         function()
-            if self.DashSlashPressed and not self.DashSlashActive and not Anim.is_owner_falling() and not PlayerCharacter.IsUltimateRunning(self) then
-                BeginDashSlash(self)
+            if self.DashChargingPressed
+                and not self.DashActive
+                and not self.DashChargingActive
+                and not self.DashChargeAttackActive
+                and not Anim.is_owner_falling()
+                and not PlayerCharacter.IsUltimateRunning(self) then
+                BeginDashCharging(self)
                 return true
             end
             return false
         end,
-        DASH_SLASH_BLEND_IN
+        DASH_CHARGING_BLEND_IN
+    )
+
+    Anim.sm_add_transition(top, "AnyState", "Dash",
+        function()
+            if self.DashPressed
+                and not self.DashActive
+                and not self.DashChargingActive
+                and not self.DashChargeAttackActive
+                and not Anim.is_owner_falling()
+                and not PlayerCharacter.IsUltimateRunning(self) then
+                BeginDash(self)
+                return true
+            end
+            return false
+        end,
+        DASH_BLEND_IN
+    )
+
+    Anim.sm_add_transition(top, "Dash", "Locomotion",
+        function()
+            if self.DashEnd then
+                EndDash(self)
+                return true
+            end
+            return false
+        end,
+        DASH_BLEND_OUT
+    )
+
+    Anim.sm_add_transition(top, "DashCharging", "DashChargeAttack",
+        function()
+            if self.DashChargingReleased then
+                self.DashChargingReleased = false
+                EndDashCharging(self, false)
+                BeginDashChargeAttack(self)
+                return true
+            end
+            return false
+        end,
+        DASH_CHARGING_TO_ATTACK_BLEND
+    )
+
+    Anim.sm_add_transition(top, "DashChargeAttack", "Locomotion",
+        function()
+            if self.DashChargeAttackEnd or (self.DashChargeAttackElapsed or 0.0) >= DASH_CHARGE_ATTACK_FALLBACK_DURATION then
+                EndDashChargeAttack(self)
+                return true
+            end
+            return false
+        end,
+        DASH_CHARGE_ATTACK_BLEND_OUT
     )
 
     Anim.sm_add_state(top, "UltimateAttack", Anim.create_sequence_player(ULTIMATE_ATTACK_PATH, 1.2, false))
@@ -143,17 +245,6 @@ function init(self)
             return PlayerCharacter.IsInUltimateMode(self) ~= true
         end,
         ULTIMATE_ATTACK_BLEND_OUT
-    )
-
-    Anim.sm_add_transition(top, "DashSlash", "Locomotion",
-        function()
-            if self.DashSlashEnd then
-                EndDashSlash(self)
-                return true
-            end
-            return false
-        end,
-        DASH_SLASH_BLEND_OUT
     )
 
     Anim.sm_add_transition(top, "Locomotion", "Jump",
@@ -299,8 +390,12 @@ function update(self, dt)
         self.ComboQueued = true
     end
 
-    if self.DashSlashActive then
-        PlayerCharacter.UpdateDashSlash(self, dt)
+    if self.DashActive then
+        PlayerCharacter.UpdateDash(self, dt)
+    elseif self.DashChargingActive then
+        PlayerCharacter.UpdateDashCharging(self, dt)
+    elseif self.DashChargeAttackActive then
+        PlayerCharacter.UpdateDashChargeAttack(self, dt)
     elseif self.AttackIndex == 0 then
         PlayerCharacter.ApplyMoveInput(self)
     else
@@ -326,12 +421,22 @@ function on_notify(self, name)
 
     if name == "AttackEnd" then
         self.ComboWindow = false
-        self.AttackEnd = true
+        if self.DashChargeAttackActive then
+            self.DashChargeAttackEnd = true
+        else
+            self.AttackEnd = true
+        end
         return
     end
 
-    if name == "DashSlashEnd" then
+    if name == "DashEnd" or name == "DashSlashEnd" then
+        self.DashEnd = true
         self.DashSlashEnd = true
+        return
+    end
+
+    if name == "DashChargeAttackEnd" or name == "DashChargingAttackEnd" then
+        self.DashChargeAttackEnd = true
         return
     end
 end

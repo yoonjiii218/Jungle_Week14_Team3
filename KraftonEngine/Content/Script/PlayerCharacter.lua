@@ -73,18 +73,59 @@ function PlayerCharacter.ApplyMoveInput(actionCtx)
     PlayerAction.ApplyMoveInput(actionCtx)
 end
 
-function PlayerCharacter.BeginDashSlash(actionCtx)
+function PlayerCharacter.BeginDash(actionCtx)
     actionCtx.PlayerCtx = GetPlayerCtx(actionCtx)
-    PlayerAction.BeginDashSlash(actionCtx)
+    PlayerAction.BeginDash(actionCtx)
+end
+
+function PlayerCharacter.EndDash(actionCtx)
+    actionCtx.PlayerCtx = GetPlayerCtx(actionCtx)
+    PlayerAction.EndDash(actionCtx)
+end
+
+function PlayerCharacter.UpdateDash(actionCtx, dt)
+    PlayerAction.UpdateDash(actionCtx, dt)
+end
+
+function PlayerCharacter.BeginDashCharging(actionCtx)
+    actionCtx.PlayerCtx = GetPlayerCtx(actionCtx)
+    PlayerAction.BeginDashCharging(actionCtx)
+end
+
+function PlayerCharacter.EndDashCharging(actionCtx, unlockMovement)
+    actionCtx.PlayerCtx = GetPlayerCtx(actionCtx)
+    PlayerAction.EndDashCharging(actionCtx, unlockMovement)
+end
+
+function PlayerCharacter.UpdateDashCharging(actionCtx, dt)
+    PlayerAction.UpdateDashCharging(actionCtx, dt)
+end
+
+function PlayerCharacter.BeginDashChargeAttack(actionCtx)
+    actionCtx.PlayerCtx = GetPlayerCtx(actionCtx)
+    PlayerAction.BeginDashChargeAttack(actionCtx)
+end
+
+function PlayerCharacter.EndDashChargeAttack(actionCtx)
+    actionCtx.PlayerCtx = GetPlayerCtx(actionCtx)
+    PlayerAction.EndDashChargeAttack(actionCtx)
+end
+
+function PlayerCharacter.UpdateDashChargeAttack(actionCtx, dt)
+    PlayerAction.UpdateDashChargeAttack(actionCtx, dt)
+end
+
+-- Compatibility wrappers for older scripts.
+function PlayerCharacter.BeginDashSlash(actionCtx)
+    PlayerCharacter.BeginDash(actionCtx)
 end
 
 function PlayerCharacter.EndDashSlash(actionCtx)
-    actionCtx.PlayerCtx = GetPlayerCtx(actionCtx)
-    PlayerAction.EndDashSlash(actionCtx)
+    PlayerCharacter.EndDash(actionCtx)
 end
 
 function PlayerCharacter.UpdateDashSlash(actionCtx, dt)
-    PlayerAction.UpdateDashSlash(actionCtx, dt)
+    PlayerCharacter.UpdateDash(actionCtx, dt)
 end
 
 function PlayerCharacter.SetKatanaTrailActive(active)

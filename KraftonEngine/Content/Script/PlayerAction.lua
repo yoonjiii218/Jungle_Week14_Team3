@@ -11,8 +11,9 @@ local VK_SPACE = 0x20
 local VK_LBUTTON = 0x01
 local VK_SHIFT = 0x10
 
-local DASH_SLASH_DISTANCE = 8.0
-local DASH_SLASH_DURATION = 0.2
+local DASH_DISTANCE = 8.0
+local DASH_DURATION = 0.2
+local DASH_CHARGING_HOLD_THRESHOLD = 0.20
 local ATTACK_STEP_FORWARD_DISTANCE = 1.5
 local ATTACK_TURN_SPEED = 12.0
 
@@ -82,18 +83,47 @@ local function SetOrientRotationToMovement(ctx, enabled)
     end
 end
 
+local function ResetDashInput(ctx)
+    ctx.ShiftHoldTime = 0.0
+    ctx.ShiftWasDown = false
+    ctx.ShiftChargingConsumed = false
+
+    ctx.DashPressed = false
+    ctx.DashChargingPressed = false
+    ctx.DashChargingReleased = false
+end
+
 function PlayerAction.Init(ctx, owner)
     ctx.Owner = owner or ctx.Owner
     ctx.LastMoveInputDirection = nil
-    ctx.DashSlashPrevOrientRotationToMovement = nil
-    ctx.DashSlashMoveDirection = nil
+    ctx.DashPrevOrientRotationToMovement = nil
+    ctx.DashMoveDirection = nil
     ctx.PendingActionEvents = ctx.PendingActionEvents or {}
-    ctx.ShiftHoldTime = 0.0
-    ctx.ShiftWasDown = false
     ctx.AttackDown = false
     ctx.AttackPressed = false
     ctx.AttackHoldTime = 0.0
+
+    ResetDashInput(ctx)
+
+    ctx.DashActive = false
+    ctx.DashElapsed = 0.0
+    ctx.DashEnd = false
+
+    ctx.DashChargingActive = false
+    ctx.DashChargingElapsed = 0.0
+    ctx.DashChargingEnd = false
+
+    ctx.DashChargeAttackActive = false
+    ctx.DashChargeAttackElapsed = 0.0
+    ctx.DashChargeAttackEnd = false
+
+    -- Old names are cleared as well so stale values do not survive hot reload.
     ctx.DashSlashPressed = false
+    ctx.DashSlashActive = false
+    ctx.DashSlashElapsed = 0.0
+    ctx.DashSlashEnd = false
+    ctx.DashSlashPrevOrientRotationToMovement = nil
+    ctx.DashSlashMoveDirection = nil
 
     ctx.MovementComp = nil
     if ctx.Owner ~= nil then
@@ -306,12 +336,42 @@ function PlayerAction.UpdateActionInput(ctx, dt)
     end
 
     ctx.AttackDown = attackDown
-    ctx.DashSlashPressed = IsKeyPressed(VK_SHIFT)
+
+    ctx.DashPressed = false
+    ctx.DashChargingPressed = false
+    ctx.DashChargingReleased = false
+    ctx.DashSlashPressed = false
+
+    local shiftDown = IsKeyDown(VK_SHIFT)
+    local shiftReleased = IsKeyReleased(VK_SHIFT)
+
+    if shiftDown then
+        ctx.ShiftHoldTime = (ctx.ShiftHoldTime or 0.0) + (dt or 0.0)
+
+        if ctx.ShiftChargingConsumed ~= true and ctx.ShiftHoldTime >= DASH_CHARGING_HOLD_THRESHOLD then
+            ctx.DashChargingPressed = true
+            ctx.ShiftChargingConsumed = true
+        end
+    end
+
+    if (shiftReleased or (ctx.ShiftWasDown == true and not shiftDown)) then
+        if ctx.ShiftChargingConsumed == true then
+            ctx.DashChargingReleased = true
+        else
+            ctx.DashPressed = true
+            ctx.DashSlashPressed = true -- compatibility for older animation scripts
+        end
+
+        ctx.ShiftHoldTime = 0.0
+        ctx.ShiftChargingConsumed = false
+    end
+
+    ctx.ShiftWasDown = shiftDown
 end
 
-function PlayerAction.BeginDashSlash(ctx)
+function PlayerAction.BeginDash(ctx)
     if ctx.MovementComp ~= nil then
-        ctx.DashSlashPrevOrientRotationToMovement =
+        ctx.DashPrevOrientRotationToMovement =
             Reflection.GetProperty(ctx.MovementComp, "bOrientRotationToMovement")
         SetOrientRotationToMovement(ctx, false)
     end
@@ -320,50 +380,130 @@ function PlayerAction.BeginDashSlash(ctx)
 
     local dashDir = PlayerAction.ResolveDashDirection(ctx)
     PlayerAction.FaceOwnerToDirection(ctx, dashDir)
-    ctx.DashSlashMoveDirection = dashDir
+    ctx.DashMoveDirection = dashDir
+
+    ctx.DashActive = true
+    ctx.DashElapsed = 0.0
+    ctx.DashEnd = false
 
     ctx.DashSlashActive = true
     ctx.DashSlashElapsed = 0.0
     ctx.DashSlashEnd = false
+    ctx.DashSlashMoveDirection = dashDir
 
-    PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashSlashStart", Dir = dashDir })
+    PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashStart", Dir = dashDir })
 end
 
-function PlayerAction.EndDashSlash(ctx)
+function PlayerAction.EndDash(ctx)
+    ctx.DashActive = false
+    ctx.DashElapsed = 0.0
+    ctx.DashEnd = false
+
     ctx.DashSlashActive = false
     ctx.DashSlashElapsed = 0.0
     ctx.DashSlashEnd = false
 
-    if ctx.DashSlashPrevOrientRotationToMovement ~= nil then
-        SetOrientRotationToMovement(ctx, ctx.DashSlashPrevOrientRotationToMovement)
-        ctx.DashSlashPrevOrientRotationToMovement = nil
+    if ctx.DashPrevOrientRotationToMovement ~= nil then
+        SetOrientRotationToMovement(ctx, ctx.DashPrevOrientRotationToMovement)
+        ctx.DashPrevOrientRotationToMovement = nil
     end
 
+    ctx.DashMoveDirection = nil
     ctx.DashSlashMoveDirection = nil
 
     SetMovementInputEnabled(ctx, true)
-    PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashSlashEnd" })
+    PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashEnd" })
 end
 
-function PlayerAction.UpdateDashSlash(ctx, dt)
+function PlayerAction.UpdateDash(ctx, dt)
     local owner = GetOwner(ctx)
-    if owner == nil or ctx.DashSlashMoveDirection == nil then
+    if owner == nil or ctx.DashMoveDirection == nil then
         return
     end
 
-    ctx.DashSlashElapsed = ctx.DashSlashElapsed + dt
+    ctx.DashElapsed = ctx.DashElapsed + dt
+    ctx.DashSlashElapsed = ctx.DashElapsed
 
-    local dir = ctx.DashSlashMoveDirection
+    local dir = ctx.DashMoveDirection
     dir.Z = 0.0
 
     if dir:Length() > 0.001 then
-        local moveSpeed = DASH_SLASH_DISTANCE / DASH_SLASH_DURATION
+        local moveSpeed = DASH_DISTANCE / DASH_DURATION
         Reflection.Call(owner, "AddActorWorldOffset", dir:Normalized() * moveSpeed * dt)
     end
 
-    if ctx.DashSlashElapsed >= DASH_SLASH_DURATION then
+    if ctx.DashElapsed >= DASH_DURATION then
+        ctx.DashEnd = true
         ctx.DashSlashEnd = true
     end
+end
+
+function PlayerAction.BeginDashCharging(ctx)
+    SetMovementInputEnabled(ctx, false)
+    StopMovementImmediately(ctx)
+
+    ctx.DashChargingActive = true
+    ctx.DashChargingElapsed = 0.0
+    ctx.DashChargingEnd = false
+    ctx.DashChargingReleased = false
+
+    PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargingStart" })
+end
+
+function PlayerAction.EndDashCharging(ctx, unlockMovement)
+    ctx.DashChargingActive = false
+    ctx.DashChargingElapsed = 0.0
+    ctx.DashChargingEnd = false
+    ctx.DashChargingReleased = false
+
+    if unlockMovement ~= false then
+        SetMovementInputEnabled(ctx, true)
+    end
+
+    PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargingEnd" })
+end
+
+function PlayerAction.UpdateDashCharging(ctx, dt)
+    ctx.DashChargingElapsed = (ctx.DashChargingElapsed or 0.0) + (dt or 0.0)
+    StopMovementImmediately(ctx)
+end
+
+function PlayerAction.BeginDashChargeAttack(ctx)
+    SetMovementInputEnabled(ctx, false)
+    StopMovementImmediately(ctx)
+
+    ctx.DashChargeAttackActive = true
+    ctx.DashChargeAttackElapsed = 0.0
+    ctx.DashChargeAttackEnd = false
+
+    PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargeAttackStart" })
+end
+
+function PlayerAction.EndDashChargeAttack(ctx)
+    ctx.DashChargeAttackActive = false
+    ctx.DashChargeAttackElapsed = 0.0
+    ctx.DashChargeAttackEnd = false
+
+    SetMovementInputEnabled(ctx, true)
+    PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargeAttackEnd" })
+end
+
+function PlayerAction.UpdateDashChargeAttack(ctx, dt)
+    ctx.DashChargeAttackElapsed = (ctx.DashChargeAttackElapsed or 0.0) + (dt or 0.0)
+    StopMovementImmediately(ctx)
+end
+
+-- Compatibility wrappers for scripts that still call DashSlash.
+function PlayerAction.BeginDashSlash(ctx)
+    PlayerAction.BeginDash(ctx)
+end
+
+function PlayerAction.EndDashSlash(ctx)
+    PlayerAction.EndDash(ctx)
+end
+
+function PlayerAction.UpdateDashSlash(ctx, dt)
+    PlayerAction.UpdateDash(ctx, dt)
 end
 
 function PlayerAction.IsUltimateRunning(ctx)

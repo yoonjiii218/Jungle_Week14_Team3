@@ -454,9 +454,15 @@ function PlayerFeedback.HandlePlayerResult(ctx, result)
             PlayerFeedback.SetKatanaTrailActive(ctx, true)
         elseif event.Type == "AttackEnd" then
             PlayerFeedback.SetKatanaTrailActive(ctx, false)
-        elseif event.Type == "DashSlashStart" then
+        elseif event.Type == "DashStart" or event.Type == "DashSlashStart" then
             PlayerFeedback.SetKatanaTrailActive(ctx, true)
-        elseif event.Type == "DashSlashEnd" then
+        elseif event.Type == "DashEnd" or event.Type == "DashSlashEnd" then
+            PlayerFeedback.SetKatanaTrailActive(ctx, false)
+        elseif event.Type == "DashChargingStart" then
+            PlayerFeedback.SetKatanaTrailActive(ctx, false)
+        elseif event.Type == "DashChargeAttackStart" then
+            PlayerFeedback.SetKatanaTrailActive(ctx, true)
+        elseif event.Type == "DashChargeAttackEnd" then
             PlayerFeedback.SetKatanaTrailActive(ctx, false)
         elseif event.Type == "PerfectDodge" then
             if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
