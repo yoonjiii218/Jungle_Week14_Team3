@@ -34,8 +34,6 @@ local DASH_SLASH_BLEND_OUT = 0.12
 local ULTIMATE_ATTACK_BLEND_IN  = 0.05
 local ULTIMATE_ATTACK_BLEND_OUT = 0.12
 
-local VK_SHIFT = 0x10
-
 local function GetPlayerCtx(self)
     local playerCtx = CombatContext.GetPlayerByOwner(obj)
     if playerCtx ~= nil then
@@ -290,14 +288,12 @@ end
 
 function update(self, dt)
     self.PlayerCtx = GetPlayerCtx(self)
+    PlayerAction.UpdateActionInput(self, dt)
 
     self.Speed = Anim.get_owner_speed()
     local blendAlpha = math.min(dt * LOCOMOTION_SPEED_RESPONSE, 1.0)
     self.BlendSpeed = self.BlendSpeed + (self.Speed - self.BlendSpeed) * blendAlpha
     Anim.blend_space_1d_set_input(self.LocomotionBlendSpace, self.BlendSpeed)
-
-    self.AttackPressed = Anim.is_left_mouse_pressed()
-    self.DashSlashPressed = Anim.is_key_pressed(VK_SHIFT)
 
     if self.AttackPressed and self.AttackIndex > 0 and self.ComboWindow then
         self.ComboQueued = true

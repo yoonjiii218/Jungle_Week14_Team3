@@ -8,6 +8,8 @@ local VK_S = string.byte("S")
 local VK_D = string.byte("D")
 local VK_Q = string.byte("Q")
 local VK_SPACE = 0x20
+local VK_LBUTTON = 0x01
+local VK_SHIFT = 0x10
 
 local DASH_SLASH_DISTANCE = 8.0
 local DASH_SLASH_DURATION = 0.2
@@ -23,14 +25,6 @@ local function IsKeyDown(vk)
         return Input.is_key_down(vk)
     end
 
-    if Anim ~= nil and Anim.is_key_down ~= nil then
-        return Anim.is_key_down(vk)
-    end
-
-    if Anim ~= nil and Anim.is_key_pressed ~= nil then
-        return Anim.is_key_pressed(vk)
-    end
-
     return false
 end
 
@@ -43,8 +37,20 @@ local function IsKeyPressed(vk)
         return Input.is_key_pressed(vk)
     end
 
-    if Anim ~= nil and Anim.is_key_pressed ~= nil then
-        return Anim.is_key_pressed(vk)
+    return false
+end
+
+local function IsKeyReleased(vk)
+    if Input ~= nil and Input.GetKeyUp ~= nil then
+        return Input.GetKeyUp(vk)
+    end
+
+    return false
+end
+
+local function IsLeftMousePressed()
+    if Input ~= nil and Input.GetKeyDown ~= nil then
+        return Input.GetKeyDown(VK_LBUTTON)
     end
 
     return false
@@ -84,6 +90,10 @@ function PlayerAction.Init(ctx, owner)
     ctx.PendingActionEvents = ctx.PendingActionEvents or {}
     ctx.ShiftHoldTime = 0.0
     ctx.ShiftWasDown = false
+    ctx.AttackDown = false
+    ctx.AttackPressed = false
+    ctx.AttackHoldTime = 0.0
+    ctx.DashSlashPressed = false
 
     ctx.MovementComp = nil
     if ctx.Owner ~= nil then
@@ -272,6 +282,33 @@ function PlayerAction.ApplyMoveInput(ctx)
     end
 end
 
+function PlayerAction.UpdateActionInput(ctx, dt)
+    if ctx == nil then
+        return
+    end
+
+    local attackDown = IsKeyDown(VK_LBUTTON)
+
+    if attackDown then
+        ctx.AttackHoldTime = (ctx.AttackHoldTime or 0.0) + (dt or 0.0)
+    else
+        ctx.AttackHoldTime = 0.0
+    end
+
+    if ctx.AttackHoldTime > 0.05 then
+        ctx.AttackPressed = true
+    else
+        -- 첫 입력은 적용
+        if ctx.AttackIndex == 0 then
+            ctx.AttackPressed = true
+        end
+        ctx.AttackPressed = false
+    end
+
+    ctx.AttackDown = attackDown
+    ctx.DashSlashPressed = IsKeyPressed(VK_SHIFT)
+end
+
 function PlayerAction.BeginDashSlash(ctx)
     if ctx.MovementComp ~= nil then
         ctx.DashSlashPrevOrientRotationToMovement =
@@ -344,6 +381,7 @@ function PlayerAction.Update(ctx, dt)
         return result
     end
 
+    PlayerAction.UpdateActionInput(ctx, dt)
     DrainEvents(ctx, result)
 
     if not ctx.IsUltimateRunning and IsKeyPressed(VK_Q) then
