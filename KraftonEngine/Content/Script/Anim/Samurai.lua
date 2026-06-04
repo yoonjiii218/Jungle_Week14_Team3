@@ -1,7 +1,6 @@
 -- Samurai animation state script.
--- Player input, movement, and dash movement live in Script/PlayerCharacter.lua.
+-- Player input, movement, and dash movement live in Script/PlayerAction.lua.
 
-local PlayerCharacter = require("PlayerCharacter")
 local PlayerAction = require("PlayerAction")
 local CombatContext = require("CombatContext")
 
@@ -54,6 +53,19 @@ local function PushPlayerEvent(self, event)
     PlayerAction.PushEvent(GetPlayerCtx(self), event)
 end
 
+local function PrepareActionCtx(self)
+    self.PlayerCtx = GetPlayerCtx(self)
+    return self
+end
+
+local function IsUltimateRunning(self)
+    return PlayerAction.IsUltimateRunning(GetPlayerCtx(self))
+end
+
+local function IsInUltimateMode(self)
+    return PlayerAction.IsInUltimateMode(GetPlayerCtx(self))
+end
+
 local function ResetAttack(self, unlockMovement)
     local attackIndex = self.AttackIndex
 
@@ -63,7 +75,7 @@ local function ResetAttack(self, unlockMovement)
     self.AttackEnd = false
 
     if unlockMovement ~= false then
-        PlayerCharacter.SetMovementInputEnabled(self, true)
+        PlayerAction.SetMovementInputEnabled(self, true)
     end
 
     if attackIndex ~= nil and attackIndex > 0 then
@@ -76,40 +88,40 @@ local function BeginAttack(self, index)
     self.ComboWindow = false
     self.ComboQueued = false
     self.AttackEnd = false
-    PlayerCharacter.StopMovementImmediately(self)
-    PlayerCharacter.StepAttackForward(self)
+    PlayerAction.StopMovementImmediately(self)
+    PlayerAction.StepAttackForward(self)
     PushPlayerEvent(self, { Type = "AttackStart", AttackIndex = index })
 end
 
 local function BeginDash(self)
     ResetAttack(self, false)
     self.DashPressed = false
-    PlayerCharacter.BeginDash(self)
+    PlayerAction.BeginDash(PrepareActionCtx(self))
 end
 
 local function EndDash(self)
-    PlayerCharacter.EndDash(self)
+    PlayerAction.EndDash(PrepareActionCtx(self))
 end
 
 local function BeginDashCharging(self)
     ResetAttack(self, false)
     self.DashChargingPressed = false
     self.DashChargingReleased = false
-    PlayerCharacter.BeginDashCharging(self)
+    PlayerAction.BeginDashCharging(PrepareActionCtx(self))
 end
 
 local function EndDashCharging(self, unlockMovement)
-    PlayerCharacter.EndDashCharging(self, unlockMovement)
+    PlayerAction.EndDashCharging(PrepareActionCtx(self), unlockMovement)
 end
 
 local function BeginDashChargeAttack(self)
     ResetAttack(self, false)
     self.DashChargeAttackEnd = false
-    PlayerCharacter.BeginDashChargeAttack(self)
+    PlayerAction.BeginDashChargeAttack(PrepareActionCtx(self))
 end
 
 local function EndDashChargeAttack(self)
-    PlayerCharacter.EndDashChargeAttack(self)
+    PlayerAction.EndDashChargeAttack(PrepareActionCtx(self))
 end
 
 function init(self)
@@ -139,7 +151,7 @@ function init(self)
     self.DashSlashElapsed = 0.0
     self.DashSlashEnd = false
 
-    PlayerCharacter.Initialize(self, obj)
+    PlayerAction.Init(self, obj)
     self.PlayerCtx = GetPlayerCtx(self)
     ResetAttack(self)
 
@@ -171,7 +183,7 @@ function init(self)
                 and not self.DashChargingActive
                 and not self.DashChargeAttackActive
                 and not Anim.is_owner_falling()
-                and not PlayerCharacter.IsUltimateRunning(self) then
+                and not IsUltimateRunning(self) then
                 BeginDashCharging(self)
                 return true
             end
@@ -187,7 +199,7 @@ function init(self)
                 and not self.DashChargingActive
                 and not self.DashChargeAttackActive
                 and not Anim.is_owner_falling()
-                and not PlayerCharacter.IsUltimateRunning(self) then
+                and not IsUltimateRunning(self) then
                 BeginDash(self)
                 return true
             end
@@ -235,14 +247,14 @@ function init(self)
 
     Anim.sm_add_transition(top, "AnyState", "UltimateAttack",
         function()
-            return PlayerCharacter.IsInUltimateMode(self) == true
+            return IsInUltimateMode(self) == true
         end,
         ULTIMATE_ATTACK_BLEND_IN
     )
 
     Anim.sm_add_transition(top, "UltimateAttack", "Locomotion",
         function()
-            return PlayerCharacter.IsInUltimateMode(self) ~= true
+            return IsInUltimateMode(self) ~= true
         end,
         ULTIMATE_ATTACK_BLEND_OUT
     )
@@ -391,17 +403,17 @@ function update(self, dt)
     end
 
     if self.DashActive then
-        PlayerCharacter.UpdateDash(self, dt)
+        PlayerAction.UpdateDash(self, dt)
     elseif self.DashChargingActive then
-        PlayerCharacter.UpdateDashCharging(self, dt)
+        PlayerAction.UpdateDashCharging(self, dt)
     elseif self.DashChargeAttackActive then
-        PlayerCharacter.UpdateDashChargeAttack(self, dt)
+        PlayerAction.UpdateDashChargeAttack(self, dt)
     elseif self.AttackIndex == 0 then
-        PlayerCharacter.ApplyMoveInput(self)
+        PlayerAction.ApplyMoveInput(self)
     else
-        local dir = PlayerCharacter.GetMoveInputWorldDirection(self)
+        local dir = PlayerAction.GetMoveInputWorldDirection(self)
         if dir ~= nil then
-            PlayerCharacter.SmoothFaceOwnerToDirection(self, dir, dt)
+            PlayerAction.SmoothFaceOwnerToDirection(self, dir, dt)
         end
     end
 end
