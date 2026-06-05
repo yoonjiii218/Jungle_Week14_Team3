@@ -2,6 +2,8 @@
 
 local CombatContext = {}
 
+local PlayerConfig = require("PlayerConfig")
+
 local playersByOwner = {}
 
 local function GetOwnerKey(owner)
@@ -12,11 +14,20 @@ local function GetOwnerKey(owner)
     return owner.UUID or tostring(owner)
 end
 
+local function GetCombatConfig(ctx)
+    if ctx ~= nil and ctx.Config ~= nil and ctx.Config.Combat ~= nil then
+        return ctx.Config.Combat
+    end
+
+    return PlayerConfig.Default.Combat
+end
+
 function CombatContext.RegisterPlayer(ctx)
     if ctx == nil or ctx.Owner == nil then
         return
     end
 
+    ctx.MaxUltimateGauge = GetCombatConfig(ctx).MaxUltimateGauge or PlayerConfig.Default.Combat.MaxUltimateGauge
     playersByOwner[GetOwnerKey(ctx.Owner)] = ctx
 end
 
@@ -54,11 +65,13 @@ local function AddGauge(ctx, amount)
         return
     end
 
-    local maxGauge = ctx.MaxUltimateGauge or 100
+    local combatConfig = GetCombatConfig(ctx)
+    local maxGauge = combatConfig.MaxUltimateGauge or ctx.MaxUltimateGauge or PlayerConfig.Default.Combat.MaxUltimateGauge
     local gauge = (ctx.UltimateGauge or 0) + amount
     if gauge < 0 then gauge = 0 end
     if gauge > maxGauge then gauge = maxGauge end
     ctx.UltimateGauge = gauge
+    ctx.MaxUltimateGauge = maxGauge
 end
 
 function CombatContext.HandlePlayerResult(ctx, result)
@@ -76,7 +89,8 @@ function CombatContext.HandlePlayerResult(ctx, result)
             ctx.UltimateGauge = 0
         elseif event.Type == "GaugeChanged" then
             ctx.UltimateGauge = event.Value
-            ctx.MaxUltimateGauge = event.MaxValue or ctx.MaxUltimateGauge
+            local combatConfig = GetCombatConfig(ctx)
+            ctx.MaxUltimateGauge = event.MaxValue or combatConfig.MaxUltimateGauge or ctx.MaxUltimateGauge
         end
     end
 end

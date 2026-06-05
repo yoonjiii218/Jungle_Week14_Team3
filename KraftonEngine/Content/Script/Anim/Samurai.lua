@@ -3,41 +3,9 @@
 
 local PlayerAction = require("PlayerAction")
 local CombatContext = require("CombatContext")
+local PlayerConfig = require("PlayerConfig")
 
-local IDLE_PATH = "Content/Animation/Samurai_UE4/SamuraiIdle.uasset"
-local WALK_PATH = "Content/Animation/Samurai_UE4/SamuraiWalk.uasset"
-local RUN_PATH  = "Content/Animation/Samurai_UE4/SamuraiSprint.uasset"
-local JUMP_PATH = "Content/Animation/Samurai_UE4/SamuraiJump.uasset"
-
-local ATTACK1_PATH = "Content/Animation/Samurai_UE4/SamuraiAttack1.uasset"
-local ATTACK2_PATH = "Content/Animation/Samurai_UE4/SamuraiAttack2.uasset"
-local ATTACK3_PATH = "Content/Animation/Samurai_UE4/SamuraiAttack3.uasset"
-local ATTACK4_PATH = "Content/Animation/Samurai_UE4/SamuraiAttack4.uasset"
-local ATTACK5_PATH = "Content/Animation/Samurai_UE4/SamuraiAttack5.uasset"
-
-local DASH_PATH = "Content/Animation/Samurai_UE4/SamuraiAttackHeavy1_Start.uasset"
-local DASH_CHARGING_PATH = "Content/Animation/Samurai_UE4/SamuraiAttackHeavy1_Start.uasset"
-local DASH_CHARGE_ATTACK_PATH = "Content/Animation/Samurai_UE4/SamuraiAttack1.uasset"
-local ULTIMATE_ATTACK_PATH = "Content/Animation/Samurai_UE4/SamuraiAttackUltimate.uasset"
-
-local WALK_THRESHOLD = 0.1
-local RUN_THRESHOLD  = 8.0
-local RUN_SAMPLE_SPEED = 10.0
-local LOCOMOTION_SPEED_RESPONSE = 12.0
-local JUMP_LOOP = false
-
-local ATTACK_BLEND_IN  = 0.08
-local ATTACK_BLEND_OUT = 0.15
-
-local DASH_BLEND_IN  = 0.05
-local DASH_BLEND_OUT = 0.12
-local DASH_CHARGING_BLEND_IN = 0.05
-local DASH_CHARGING_TO_ATTACK_BLEND = 0.03
-local DASH_CHARGE_ATTACK_BLEND_OUT = 0.12
-local DASH_CHARGE_ATTACK_FALLBACK_DURATION = 0.65
-
-local ULTIMATE_ATTACK_BLEND_IN  = 0.05
-local ULTIMATE_ATTACK_BLEND_OUT = 0.12
+local DEFAULT_SAMURAI_CONFIG = PlayerConfig.Default.Animation.Samurai
 
 local function GetPlayerCtx(self)
     local playerCtx = CombatContext.GetPlayerByOwner(obj)
@@ -51,6 +19,18 @@ end
 
 local function PushPlayerEvent(self, event)
     PlayerAction.PushEvent(GetPlayerCtx(self), event)
+end
+
+local function GetSamuraiConfig(self)
+    local playerCtx = self.PlayerCtx or GetPlayerCtx(self)
+    if playerCtx ~= nil
+        and playerCtx.Config ~= nil
+        and playerCtx.Config.Animation ~= nil
+        and playerCtx.Config.Animation.Samurai ~= nil then
+        return playerCtx.Config.Animation.Samurai
+    end
+
+    return DEFAULT_SAMURAI_CONFIG
 end
 
 local function PrepareActionCtx(self)
@@ -155,26 +135,29 @@ function init(self)
     self.PlayerCtx = GetPlayerCtx(self)
     ResetAttack(self)
 
+    local samuraiConfig = GetSamuraiConfig(self)
+    local attackPaths = samuraiConfig.AttackPaths or DEFAULT_SAMURAI_CONFIG.AttackPaths
+
     local loco = Anim.create_blend_space_1d(0.0)
-    Anim.blend_space_1d_add_sample(loco, IDLE_PATH, 0.0, 1.0, true)
-    Anim.blend_space_1d_add_sample(loco, WALK_PATH, RUN_THRESHOLD, 1.0, true)
-    Anim.blend_space_1d_add_sample(loco, RUN_PATH, RUN_SAMPLE_SPEED, 1.0, true)
+    Anim.blend_space_1d_add_sample(loco, samuraiConfig.IdlePath or DEFAULT_SAMURAI_CONFIG.IdlePath, 0.0, 1.0, true)
+    Anim.blend_space_1d_add_sample(loco, samuraiConfig.WalkPath or DEFAULT_SAMURAI_CONFIG.WalkPath, samuraiConfig.RunThreshold or DEFAULT_SAMURAI_CONFIG.RunThreshold, 1.0, true)
+    Anim.blend_space_1d_add_sample(loco, samuraiConfig.RunPath or DEFAULT_SAMURAI_CONFIG.RunPath, samuraiConfig.RunSampleSpeed or DEFAULT_SAMURAI_CONFIG.RunSampleSpeed, 1.0, true)
     self.LocomotionBlendSpace = loco
 
     local top = Anim.create_state_machine("Top")
 
     Anim.sm_add_state(top, "Locomotion", loco)
-    Anim.sm_add_state(top, "Jump", Anim.create_sequence_player(JUMP_PATH, 1.0, JUMP_LOOP))
+    Anim.sm_add_state(top, "Jump", Anim.create_sequence_player(samuraiConfig.JumpPath or DEFAULT_SAMURAI_CONFIG.JumpPath, samuraiConfig.JumpPlayRate or DEFAULT_SAMURAI_CONFIG.JumpPlayRate, samuraiConfig.JumpLoop or DEFAULT_SAMURAI_CONFIG.JumpLoop))
 
-    Anim.sm_add_state(top, "Attack1", Anim.create_sequence_player(ATTACK1_PATH, 1.5, false))
-    Anim.sm_add_state(top, "Attack2", Anim.create_sequence_player(ATTACK2_PATH, 1.5, false))
-    Anim.sm_add_state(top, "Attack3", Anim.create_sequence_player(ATTACK3_PATH, 1.5, false))
-    Anim.sm_add_state(top, "Attack4", Anim.create_sequence_player(ATTACK4_PATH, 1.5, false))
-    Anim.sm_add_state(top, "Attack5", Anim.create_sequence_player(ATTACK5_PATH, 1.5, false))
+    Anim.sm_add_state(top, "Attack1", Anim.create_sequence_player(attackPaths[1] or DEFAULT_SAMURAI_CONFIG.AttackPaths[1], samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate, false))
+    Anim.sm_add_state(top, "Attack2", Anim.create_sequence_player(attackPaths[2] or DEFAULT_SAMURAI_CONFIG.AttackPaths[2], samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate, false))
+    Anim.sm_add_state(top, "Attack3", Anim.create_sequence_player(attackPaths[3] or DEFAULT_SAMURAI_CONFIG.AttackPaths[3], samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate, false))
+    Anim.sm_add_state(top, "Attack4", Anim.create_sequence_player(attackPaths[4] or DEFAULT_SAMURAI_CONFIG.AttackPaths[4], samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate, false))
+    Anim.sm_add_state(top, "Attack5", Anim.create_sequence_player(attackPaths[5] or DEFAULT_SAMURAI_CONFIG.AttackPaths[5], samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate, false))
 
-    Anim.sm_add_state(top, "Dash", Anim.create_sequence_player(DASH_PATH, 3.0, false))
-    Anim.sm_add_state(top, "DashCharging", Anim.create_sequence_player(DASH_CHARGING_PATH, 1.0, false))
-    Anim.sm_add_state(top, "DashChargeAttack", Anim.create_sequence_player(DASH_CHARGE_ATTACK_PATH, 1.4, false))
+    Anim.sm_add_state(top, "Dash", Anim.create_sequence_player(samuraiConfig.DashPath or DEFAULT_SAMURAI_CONFIG.DashPath, samuraiConfig.DashPlayRate or DEFAULT_SAMURAI_CONFIG.DashPlayRate, false))
+    Anim.sm_add_state(top, "DashCharging", Anim.create_sequence_player(samuraiConfig.DashChargingPath or DEFAULT_SAMURAI_CONFIG.DashChargingPath, samuraiConfig.DashChargingPlayRate or DEFAULT_SAMURAI_CONFIG.DashChargingPlayRate, false))
+    Anim.sm_add_state(top, "DashChargeAttack", Anim.create_sequence_player(samuraiConfig.DashChargeAttackPath or DEFAULT_SAMURAI_CONFIG.DashChargeAttackPath, samuraiConfig.DashChargeAttackPlayRate or DEFAULT_SAMURAI_CONFIG.DashChargeAttackPlayRate, false))
 
     Anim.sm_add_transition(top, "AnyState", "DashCharging",
         function()
@@ -189,7 +172,7 @@ function init(self)
             end
             return false
         end,
-        DASH_CHARGING_BLEND_IN
+        samuraiConfig.DashChargingBlendIn or DEFAULT_SAMURAI_CONFIG.DashChargingBlendIn
     )
 
     Anim.sm_add_transition(top, "AnyState", "Dash",
@@ -205,7 +188,7 @@ function init(self)
             end
             return false
         end,
-        DASH_BLEND_IN
+        samuraiConfig.DashBlendIn or DEFAULT_SAMURAI_CONFIG.DashBlendIn
     )
 
     Anim.sm_add_transition(top, "Dash", "Locomotion",
@@ -216,7 +199,7 @@ function init(self)
             end
             return false
         end,
-        DASH_BLEND_OUT
+        samuraiConfig.DashBlendOut or DEFAULT_SAMURAI_CONFIG.DashBlendOut
     )
 
     Anim.sm_add_transition(top, "DashCharging", "DashChargeAttack",
@@ -229,48 +212,48 @@ function init(self)
             end
             return false
         end,
-        DASH_CHARGING_TO_ATTACK_BLEND
+        samuraiConfig.DashChargingToAttackBlend or DEFAULT_SAMURAI_CONFIG.DashChargingToAttackBlend
     )
 
     Anim.sm_add_transition(top, "DashChargeAttack", "Locomotion",
         function()
-            if self.DashChargeAttackEnd or (self.DashChargeAttackElapsed or 0.0) >= DASH_CHARGE_ATTACK_FALLBACK_DURATION then
+            if self.DashChargeAttackEnd or (self.DashChargeAttackElapsed or 0.0) >= (samuraiConfig.DashChargeAttackFallbackDuration or DEFAULT_SAMURAI_CONFIG.DashChargeAttackFallbackDuration) then
                 EndDashChargeAttack(self)
                 return true
             end
             return false
         end,
-        DASH_CHARGE_ATTACK_BLEND_OUT
+        samuraiConfig.DashChargeAttackBlendOut or DEFAULT_SAMURAI_CONFIG.DashChargeAttackBlendOut
     )
 
-    Anim.sm_add_state(top, "UltimateAttack", Anim.create_sequence_player(ULTIMATE_ATTACK_PATH, 1.2, false))
+    Anim.sm_add_state(top, "UltimateAttack", Anim.create_sequence_player(samuraiConfig.UltimateAttackPath or DEFAULT_SAMURAI_CONFIG.UltimateAttackPath, samuraiConfig.UltimateAttackPlayRate or DEFAULT_SAMURAI_CONFIG.UltimateAttackPlayRate, false))
 
     Anim.sm_add_transition(top, "AnyState", "UltimateAttack",
         function()
             return IsInUltimateMode(self) == true
         end,
-        ULTIMATE_ATTACK_BLEND_IN
+        samuraiConfig.UltimateAttackBlendIn or DEFAULT_SAMURAI_CONFIG.UltimateAttackBlendIn
     )
 
     Anim.sm_add_transition(top, "UltimateAttack", "Locomotion",
         function()
             return IsInUltimateMode(self) ~= true
         end,
-        ULTIMATE_ATTACK_BLEND_OUT
+        samuraiConfig.UltimateAttackBlendOut or DEFAULT_SAMURAI_CONFIG.UltimateAttackBlendOut
     )
 
     Anim.sm_add_transition(top, "Locomotion", "Jump",
         function()
             return Anim.is_owner_falling()
         end,
-        0.1
+        samuraiConfig.JumpBlendIn or DEFAULT_SAMURAI_CONFIG.JumpBlendIn
     )
 
     Anim.sm_add_transition(top, "Jump", "Locomotion",
         function()
             return not Anim.is_owner_falling()
         end,
-        0.2
+        samuraiConfig.JumpBlendOut or DEFAULT_SAMURAI_CONFIG.JumpBlendOut
     )
 
     Anim.sm_add_transition(top, "Locomotion", "Attack1",
@@ -281,7 +264,7 @@ function init(self)
             end
             return false
         end,
-        ATTACK_BLEND_IN
+        samuraiConfig.AttackBlendIn or DEFAULT_SAMURAI_CONFIG.AttackBlendIn
     )
 
     Anim.sm_add_transition(top, "Attack1", "Attack2",
@@ -292,7 +275,7 @@ function init(self)
             end
             return false
         end,
-        ATTACK_BLEND_IN
+        samuraiConfig.AttackBlendIn or DEFAULT_SAMURAI_CONFIG.AttackBlendIn
     )
 
     Anim.sm_add_transition(top, "Attack1", "Locomotion",
@@ -303,7 +286,7 @@ function init(self)
             end
             return false
         end,
-        ATTACK_BLEND_OUT
+        samuraiConfig.AttackBlendOut or DEFAULT_SAMURAI_CONFIG.AttackBlendOut
     )
 
     Anim.sm_add_transition(top, "Attack2", "Attack3",
@@ -314,7 +297,7 @@ function init(self)
             end
             return false
         end,
-        ATTACK_BLEND_IN
+        samuraiConfig.AttackBlendIn or DEFAULT_SAMURAI_CONFIG.AttackBlendIn
     )
 
     Anim.sm_add_transition(top, "Attack2", "Locomotion",
@@ -325,7 +308,7 @@ function init(self)
             end
             return false
         end,
-        ATTACK_BLEND_OUT
+        samuraiConfig.AttackBlendOut or DEFAULT_SAMURAI_CONFIG.AttackBlendOut
     )
 
     Anim.sm_add_transition(top, "Attack3", "Attack4",
@@ -336,7 +319,7 @@ function init(self)
             end
             return false
         end,
-        ATTACK_BLEND_IN
+        samuraiConfig.AttackBlendIn or DEFAULT_SAMURAI_CONFIG.AttackBlendIn
     )
 
     Anim.sm_add_transition(top, "Attack3", "Locomotion",
@@ -347,7 +330,7 @@ function init(self)
             end
             return false
         end,
-        ATTACK_BLEND_OUT
+        samuraiConfig.AttackBlendOut or DEFAULT_SAMURAI_CONFIG.AttackBlendOut
     )
 
     Anim.sm_add_transition(top, "Attack4", "Attack5",
@@ -358,7 +341,7 @@ function init(self)
             end
             return false
         end,
-        ATTACK_BLEND_IN
+        samuraiConfig.AttackBlendIn or DEFAULT_SAMURAI_CONFIG.AttackBlendIn
     )
 
     Anim.sm_add_transition(top, "Attack4", "Locomotion",
@@ -369,7 +352,7 @@ function init(self)
             end
             return false
         end,
-        ATTACK_BLEND_OUT
+        samuraiConfig.AttackBlendOut or DEFAULT_SAMURAI_CONFIG.AttackBlendOut
     )
 
     Anim.sm_add_transition(top, "Attack5", "Locomotion",
@@ -380,7 +363,7 @@ function init(self)
             end
             return false
         end,
-        ATTACK_BLEND_OUT
+        samuraiConfig.AttackBlendOut or DEFAULT_SAMURAI_CONFIG.AttackBlendOut
     )
 
     Anim.sm_set_initial_state(top, "Locomotion")
@@ -394,7 +377,8 @@ function update(self, dt)
     PlayerAction.UpdateActionInput(self, dt)
 
     self.Speed = Anim.get_owner_speed()
-    local blendAlpha = math.min(dt * LOCOMOTION_SPEED_RESPONSE, 1.0)
+    local samuraiConfig = GetSamuraiConfig(self)
+    local blendAlpha = math.min(dt * (samuraiConfig.LocomotionSpeedResponse or DEFAULT_SAMURAI_CONFIG.LocomotionSpeedResponse), 1.0)
     self.BlendSpeed = self.BlendSpeed + (self.Speed - self.BlendSpeed) * blendAlpha
     Anim.blend_space_1d_set_input(self.LocomotionBlendSpace, self.BlendSpeed)
 

@@ -2,20 +2,37 @@
 
 local PlayerAction = {}
 
-local VK_W = string.byte("W")
-local VK_A = string.byte("A")
-local VK_S = string.byte("S")
-local VK_D = string.byte("D")
-local VK_Q = string.byte("Q")
-local VK_SPACE = 0x20
-local VK_LBUTTON = 0x01
-local VK_SHIFT = 0x10
+local PlayerConfig = require("PlayerConfig")
 
-local DASH_DISTANCE = 8.0
-local DASH_DURATION = 0.2
-local DASH_CHARGING_HOLD_THRESHOLD = 0.20
-local ATTACK_STEP_FORWARD_DISTANCE = 1.5
-local ATTACK_TURN_SPEED = 12.0
+local function GetConfig(ctx)
+    if ctx ~= nil and ctx.Config ~= nil then
+        return ctx.Config
+    end
+
+    if ctx ~= nil and ctx.PlayerCtx ~= nil and ctx.PlayerCtx.Config ~= nil then
+        return ctx.PlayerCtx.Config
+    end
+
+    return nil
+end
+
+local function GetInputConfig(ctx)
+    local config = GetConfig(ctx)
+    if config ~= nil and config.Input ~= nil then
+        return config.Input
+    end
+
+    return PlayerConfig.Default.Input
+end
+
+local function GetActionConfig(ctx)
+    local config = GetConfig(ctx)
+    if config ~= nil and config.Action ~= nil then
+        return config.Action
+    end
+
+    return PlayerConfig.Default.Action
+end
 
 local function IsKeyDown(vk)
     if Input ~= nil and Input.GetKey ~= nil then
@@ -44,14 +61,6 @@ end
 local function IsKeyReleased(vk)
     if Input ~= nil and Input.GetKeyUp ~= nil then
         return Input.GetKeyUp(vk)
-    end
-
-    return false
-end
-
-local function IsLeftMousePressed()
-    if Input ~= nil and Input.GetKeyDown ~= nil then
-        return Input.GetKeyDown(VK_LBUTTON)
     end
 
     return false
@@ -177,7 +186,8 @@ function PlayerAction.StepAttackForward(ctx)
         return
     end
 
-    Reflection.Call(owner, "AddActorWorldOffset", forward * ATTACK_STEP_FORWARD_DISTANCE)
+    local actionConfig = GetActionConfig(ctx)
+    Reflection.Call(owner, "AddActorWorldOffset", forward * (actionConfig.AttackStepForwardDistance or PlayerConfig.Default.Action.AttackStepForwardDistance))
 end
 
 function PlayerAction.GetMoveInputWorldDirection(ctx)
@@ -189,10 +199,12 @@ function PlayerAction.GetMoveInputWorldDirection(ctx)
     local moveForward = 0.0
     local moveRight = 0.0
 
-    if IsKeyDown(VK_W) then moveForward = moveForward + 1.0 end
-    if IsKeyDown(VK_S) then moveForward = moveForward - 1.0 end
-    if IsKeyDown(VK_D) then moveRight = moveRight + 1.0 end
-    if IsKeyDown(VK_A) then moveRight = moveRight - 1.0 end
+    local inputConfig = GetInputConfig(ctx)
+
+    if IsKeyDown(inputConfig.MoveForwardKey or PlayerConfig.Default.Input.MoveForwardKey) then moveForward = moveForward + 1.0 end
+    if IsKeyDown(inputConfig.MoveBackwardKey or PlayerConfig.Default.Input.MoveBackwardKey) then moveForward = moveForward - 1.0 end
+    if IsKeyDown(inputConfig.MoveRightKey or PlayerConfig.Default.Input.MoveRightKey) then moveRight = moveRight + 1.0 end
+    if IsKeyDown(inputConfig.MoveLeftKey or PlayerConfig.Default.Input.MoveLeftKey) then moveRight = moveRight - 1.0 end
 
     if math.abs(moveForward) < 0.001 and math.abs(moveRight) < 0.001 then
         return nil
@@ -286,7 +298,8 @@ function PlayerAction.SmoothFaceOwnerToDirection(ctx, dir, dt)
 
     local targetYaw = math.atan2(dir.Y, dir.X) * 180.0 / math.pi
     local deltaYaw = (targetYaw - currentRot.Z + 180.0) % 360.0 - 180.0
-    local alpha = dt * ATTACK_TURN_SPEED
+    local actionConfig = GetActionConfig(ctx)
+    local alpha = dt * (actionConfig.AttackTurnSpeed or PlayerConfig.Default.Action.AttackTurnSpeed)
     if alpha > 1.0 then
         alpha = 1.0
     end
@@ -307,7 +320,9 @@ function PlayerAction.ApplyMoveInput(ctx)
         Reflection.Call(owner, "AddMovementInput", dir, 1.0)
     end
 
-    if IsKeyPressed(VK_SPACE) then
+    local inputConfig = GetInputConfig(ctx)
+
+    if IsKeyPressed(inputConfig.JumpKey or PlayerConfig.Default.Input.JumpKey) then
         Reflection.Call(owner, "Jump")
     end
 end
@@ -317,7 +332,9 @@ function PlayerAction.UpdateActionInput(ctx, dt)
         return
     end
 
-    local attackDown = IsKeyDown(VK_LBUTTON)
+    local inputConfig = GetInputConfig(ctx)
+    local actionConfig = GetActionConfig(ctx)
+    local attackDown = IsKeyDown(inputConfig.AttackKey or PlayerConfig.Default.Input.AttackKey)
 
     if attackDown then
         ctx.AttackHoldTime = (ctx.AttackHoldTime or 0.0) + (dt or 0.0)
@@ -342,13 +359,14 @@ function PlayerAction.UpdateActionInput(ctx, dt)
     ctx.DashChargingReleased = false
     ctx.DashSlashPressed = false
 
-    local shiftDown = IsKeyDown(VK_SHIFT)
-    local shiftReleased = IsKeyReleased(VK_SHIFT)
+    local dashKey = inputConfig.DashKey or PlayerConfig.Default.Input.DashKey
+    local shiftDown = IsKeyDown(dashKey)
+    local shiftReleased = IsKeyReleased(dashKey)
 
     if shiftDown then
         ctx.ShiftHoldTime = (ctx.ShiftHoldTime or 0.0) + (dt or 0.0)
 
-        if ctx.ShiftChargingConsumed ~= true and ctx.ShiftHoldTime >= DASH_CHARGING_HOLD_THRESHOLD then
+        if ctx.ShiftChargingConsumed ~= true and ctx.ShiftHoldTime >= (actionConfig.DashChargingHoldThreshold or PlayerConfig.Default.Action.DashChargingHoldThreshold) then
             ctx.DashChargingPressed = true
             ctx.ShiftChargingConsumed = true
         end
@@ -428,11 +446,13 @@ function PlayerAction.UpdateDash(ctx, dt)
     dir.Z = 0.0
 
     if dir:Length() > 0.001 then
-        local moveSpeed = DASH_DISTANCE / DASH_DURATION
+        local actionConfig = GetActionConfig(ctx)
+        local moveSpeed = (actionConfig.DashDistance or PlayerConfig.Default.Action.DashDistance) / (actionConfig.DashDuration or PlayerConfig.Default.Action.DashDuration)
         Reflection.Call(owner, "AddActorWorldOffset", dir:Normalized() * moveSpeed * dt)
     end
 
-    if ctx.DashElapsed >= DASH_DURATION then
+    local actionConfig = GetActionConfig(ctx)
+    if ctx.DashElapsed >= (actionConfig.DashDuration or PlayerConfig.Default.Action.DashDuration) then
         ctx.DashEnd = true
         ctx.DashSlashEnd = true
     end
@@ -524,7 +544,9 @@ function PlayerAction.Update(ctx, dt)
     PlayerAction.UpdateActionInput(ctx, dt)
     DrainEvents(ctx, result)
 
-    if not ctx.IsUltimateRunning and IsKeyPressed(VK_Q) then
+    local inputConfig = GetInputConfig(ctx)
+
+    if not ctx.IsUltimateRunning and IsKeyPressed(inputConfig.UltimateKey or PlayerConfig.Default.Input.UltimateKey) then
         ctx.IsUltimateRunning = true
         table.insert(result.Events, { Type = "UltimateStart" })
     end

@@ -2,32 +2,31 @@
 
 local PlayerFeedback = {}
 
-local KATANA_MESH_PATH = "Content/Mesh/Katana/source/red cyber katana_StaticMesh.uasset"
-local KATANA_SOCKET_NAME = "WeaponR"
-local KATANA_PS_PATH = "Content/Data/SwordTrail2.uasset"
+local PlayerConfig = require("PlayerConfig")
+local DEFAULT_FEEDBACK_CONFIG = PlayerConfig.Default.Feedback
 
-local ULTIMATE_CAMERA_BACK_DISTANCE = 7.0
-local ULTIMATE_CAMERA_HEIGHT = 10
-local ULTIMATE_SLASH_SUBUV_RESOURCE = "SlashTexture"
-local ULTIMATE_SLASH_FRAME_RATE = 15.0
-local ULTIMATE_SLASH_CAMERA_DISTANCE = 30.0
-local ULTIMATE_SLASH_CAMERA_RIGHT_OFFSET = 15
-local ULTIMATE_SLASH_CAMERA_HEIGHT_OFFSET = -5.0
-local ULTIMATE_SLASH_FLASH_PATH = "Content/Data/DirectionalBeam.uasset"
-local ULTIMATE_LIGHTNING_MATERIAL_PATH = "Content/Material/VFX/M_Lightning.mat"
+local function GetFeedbackConfig(ctx)
+    if ctx ~= nil and ctx.Config ~= nil and ctx.Config.Feedback ~= nil then
+        return ctx.Config.Feedback
+    end
 
-local ULTIMATE_MOVE_START_DISTANCE = 100.0
-local ULTIMATE_MOVE_END_DISTANCE = 30
-local ULTIMATE_MOVE_SIDE_OFFSET = -10.0
-local ULTIMATE_MOVE_CONTROL_SIDE_OFFSET = 40.0
-local ULTIMATE_MOVE_DURATION = 0.3
-local ULTIMATE_FRAME_STEP = 1.0 / 60.0
-local ULTIMATE_MOVE_END_RIGHT_DISTANCE = 5
+    return DEFAULT_FEEDBACK_CONFIG
+end
 
-local ULTIMATE_CAMERA_PITCH_SWING = 0.0
-local ULTIMATE_CAMERA_YAW_SWING = 0.0
-local ULTIMATE_CAMERA_ROLL_SWING = 2.0
-local ULTIMATE_CAMERA_ROTATION_START = 0.5
+local function GetUltimateCameraConfig(ctx)
+    local feedbackConfig = GetFeedbackConfig(ctx)
+    return feedbackConfig.UltimateCamera or DEFAULT_FEEDBACK_CONFIG.UltimateCamera
+end
+
+local function GetUltimateVfxConfig(ctx)
+    local feedbackConfig = GetFeedbackConfig(ctx)
+    return feedbackConfig.UltimateVfx or DEFAULT_FEEDBACK_CONFIG.UltimateVfx
+end
+
+local function GetUltimateMoveConfig(ctx)
+    local feedbackConfig = GetFeedbackConfig(ctx)
+    return feedbackConfig.UltimateMove or DEFAULT_FEEDBACK_CONFIG.UltimateMove
+end
 
 local function Clamp(v, minValue, maxValue)
     if v < minValue then return minValue end
@@ -75,20 +74,24 @@ local function BuildGroundDecalAABBScale3(a, b, c, padding, minSize, projectionD
     return center, Vector(sizeX, sizeY, projectionDepth)
 end
 
-local function GetUltimateCameraRotation(baseRotation, t)
-    if t <= ULTIMATE_CAMERA_ROTATION_START then
+local function GetUltimateCameraRotation(cameraConfig, baseRotation, t)
+    local rotationStart = cameraConfig.RotationStart or DEFAULT_FEEDBACK_CONFIG.UltimateCamera.RotationStart
+    if t <= rotationStart then
         return baseRotation
     end
 
-    local rotationT = Clamp((t - ULTIMATE_CAMERA_ROTATION_START) / (1.0 - ULTIMATE_CAMERA_ROTATION_START), 0.0, 1.0)
+    local rotationT = Clamp((t - rotationStart) / (1.0 - rotationStart), 0.0, 1.0)
+    local pitchSwing = cameraConfig.PitchSwing or DEFAULT_FEEDBACK_CONFIG.UltimateCamera.PitchSwing
+    local yawSwing = cameraConfig.YawSwing or DEFAULT_FEEDBACK_CONFIG.UltimateCamera.YawSwing
+    local rollSwing = cameraConfig.RollSwing or DEFAULT_FEEDBACK_CONFIG.UltimateCamera.RollSwing
 
     local pitch =
         baseRotation.X
-        - math.sin(rotationT * math.pi) * ULTIMATE_CAMERA_PITCH_SWING
-        + math.sin(rotationT * math.pi * 4.0) * (ULTIMATE_CAMERA_PITCH_SWING * 0.35)
+        - math.sin(rotationT * math.pi) * pitchSwing
+        + math.sin(rotationT * math.pi * 4.0) * (pitchSwing * 0.35)
 
-    local roll = baseRotation.Y + math.sin(rotationT * math.pi * 4.0) * ULTIMATE_CAMERA_ROLL_SWING
-    local yaw = baseRotation.Z + math.sin(rotationT * math.pi * 2.0) * ULTIMATE_CAMERA_YAW_SWING
+    local roll = baseRotation.Y + math.sin(rotationT * math.pi * 4.0) * rollSwing
+    local yaw = baseRotation.Z + math.sin(rotationT * math.pi * 2.0) * yawSwing
 
     return Vector(pitch, roll, yaw)
 end
@@ -162,8 +165,9 @@ function PlayerFeedback.AttachKatanaToWeaponSocket(ctx)
         return
     end
 
-    katana:SetMeshPath(KATANA_MESH_PATH)
-    katana:AttachToComponentWithSocket(meshComp, KATANA_SOCKET_NAME)
+    local feedbackConfig = GetFeedbackConfig(ctx)
+    katana:SetMeshPath(feedbackConfig.KatanaMeshPath or DEFAULT_FEEDBACK_CONFIG.KatanaMeshPath)
+    katana:AttachToComponentWithSocket(meshComp, feedbackConfig.KatanaSocketName or DEFAULT_FEEDBACK_CONFIG.KatanaSocketName)
     katana.RelativeLocation = Vector(0.0, 0.0, 0.0)
     katana:SetRotation(Vector(0.0, 0.0, 0.0))
     katana:SetRelativeScale(Vector(1.0, 1.0, 1.0))
@@ -210,9 +214,10 @@ function PlayerFeedback.AttachPSCToWeaponSocket(ctx)
         return
     end
 
-    PSC:SetTemplatePath(KATANA_PS_PATH)
+    local feedbackConfig = GetFeedbackConfig(ctx)
+    PSC:SetTemplatePath(feedbackConfig.TrailParticlePath or DEFAULT_FEEDBACK_CONFIG.TrailParticlePath)
     PSC:SetAnimTrailSourceComponent(meshComp)
-    PSC:AttachToComponentWithSocket(meshComp, KATANA_SOCKET_NAME)
+    PSC:AttachToComponentWithSocket(meshComp, feedbackConfig.KatanaSocketName or DEFAULT_FEEDBACK_CONFIG.KatanaSocketName)
     PSC.RelativeLocation = Vector(0.0, 0.0, 0.0)
     PSC:SetRotation(Vector(0.0, 0.0, 0.0))
     PSC:SetRelativeScale(Vector(1.0, 1.0, 1.0))
@@ -283,22 +288,25 @@ function PlayerFeedback.BeginUltimate(ctx)
     end
 
     local up = Vector(0.0, 0.0, 1.0)
+    local cameraConfig = GetUltimateCameraConfig(ctx)
+    local moveConfig = GetUltimateMoveConfig(ctx)
+    local vfxConfig = GetUltimateVfxConfig(ctx)
     local cameraLocation =
         actorLocation
-        - actorForward * ULTIMATE_CAMERA_BACK_DISTANCE
-        + up * ULTIMATE_CAMERA_HEIGHT
+        - actorForward * (cameraConfig.BackDistance or DEFAULT_FEEDBACK_CONFIG.UltimateCamera.BackDistance)
+        + up * (cameraConfig.Height or DEFAULT_FEEDBACK_CONFIG.UltimateCamera.Height)
 
     local slashAnchor =
         cameraLocation
-        + actorForward * ULTIMATE_SLASH_CAMERA_DISTANCE
-        + up * ULTIMATE_SLASH_CAMERA_HEIGHT_OFFSET
-        + actorRight * ULTIMATE_SLASH_CAMERA_RIGHT_OFFSET
+        + actorForward * (cameraConfig.SlashCameraDistance or DEFAULT_FEEDBACK_CONFIG.UltimateCamera.SlashCameraDistance)
+        + up * (cameraConfig.SlashCameraHeightOffset or DEFAULT_FEEDBACK_CONFIG.UltimateCamera.SlashCameraHeightOffset)
+        + actorRight * (cameraConfig.SlashCameraRightOffset or DEFAULT_FEEDBACK_CONFIG.UltimateCamera.SlashCameraRightOffset)
 
     local cameraYaw = math.atan2(actorForward.Y, actorForward.X) * 180.0 / math.pi
     local baseCameraRotation = Vector(-10.0, 15.0, cameraYaw)
 
     Reflection.Call(ultimateCamera, "SetActorLocation", cameraLocation)
-    Reflection.Call(ultimateCamera, "SetActorRotation", GetUltimateCameraRotation(baseCameraRotation, 0.0))
+    Reflection.Call(ultimateCamera, "SetActorRotation", GetUltimateCameraRotation(cameraConfig, baseCameraRotation, 0.0))
 
     CameraManager.ToggleOwnerCamera(ultimateCamera, 0)
     Reflection.Call(movementComp, "StopMovementImmediately")
@@ -308,22 +316,22 @@ function PlayerFeedback.BeginUltimate(ctx)
 
     local startPos =
         cameraLocation
-        + actorForward * ULTIMATE_MOVE_START_DISTANCE
-        + actorRight * ULTIMATE_MOVE_SIDE_OFFSET
+        + actorForward * (moveConfig.StartDistance or DEFAULT_FEEDBACK_CONFIG.UltimateMove.StartDistance)
+        + actorRight * (moveConfig.SideOffset or DEFAULT_FEEDBACK_CONFIG.UltimateMove.SideOffset)
 
     startPos.Z = actorLocation.Z
 
     local cinematicEndPos =
         cameraLocation
-        + actorForward * ULTIMATE_MOVE_END_DISTANCE
-        + actorRight * ULTIMATE_MOVE_END_RIGHT_DISTANCE
+        + actorForward * (moveConfig.EndDistance or DEFAULT_FEEDBACK_CONFIG.UltimateMove.EndDistance)
+        + actorRight * (moveConfig.EndRightDistance or DEFAULT_FEEDBACK_CONFIG.UltimateMove.EndRightDistance)
 
     cinematicEndPos.Z = actorLocation.Z
 
     local controlPos =
         cameraLocation
-        + actorForward * ((ULTIMATE_MOVE_START_DISTANCE + ULTIMATE_MOVE_END_DISTANCE) * 0.5)
-        + actorRight * ULTIMATE_MOVE_CONTROL_SIDE_OFFSET
+        + actorForward * (((moveConfig.StartDistance or DEFAULT_FEEDBACK_CONFIG.UltimateMove.StartDistance) + (moveConfig.EndDistance or DEFAULT_FEEDBACK_CONFIG.UltimateMove.EndDistance)) * 0.5)
+        + actorRight * (moveConfig.ControlSideOffset or DEFAULT_FEEDBACK_CONFIG.UltimateMove.ControlSideOffset)
 
     controlPos.Z = actorLocation.Z
 
@@ -351,55 +359,58 @@ function PlayerFeedback.BeginUltimate(ctx)
     ctx.IsInUltimateMode = true
     PlayerFeedback.SetKatanaTrailActive(ctx, true)
 
-    while elapsed < ULTIMATE_MOVE_DURATION do
-        Wait(ULTIMATE_FRAME_STEP)
+    local moveDuration = moveConfig.Duration or DEFAULT_FEEDBACK_CONFIG.UltimateMove.Duration
+    local frameStep = moveConfig.FrameStep or DEFAULT_FEEDBACK_CONFIG.UltimateMove.FrameStep
 
-        elapsed = elapsed + ULTIMATE_FRAME_STEP
+    while elapsed < moveDuration do
+        Wait(frameStep)
 
-        local t = Clamp(elapsed / ULTIMATE_MOVE_DURATION, 0.0, 1.0)
+        elapsed = elapsed + frameStep
+
+        local t = Clamp(elapsed / moveDuration, 0.0, 1.0)
         local easedT = EaseOutCubic(t)
 
         if not spawnedSlashFlash and t >= 0.38 then
             VFX.SpawnSlashFlash(
-                ULTIMATE_SLASH_FLASH_PATH,
+                vfxConfig.SlashFlashPath or DEFAULT_FEEDBACK_CONFIG.UltimateVfx.SlashFlashPath,
                 slashAnchor + actorForward * 2.0 + up * 1.0,
                 Vector(0.0, 0.0, 0.0),
                 Vector(1.0, 1.8, 1.8),
                 0.25,
-                ULTIMATE_LIGHTNING_MATERIAL_PATH
+                vfxConfig.LightningMaterialPath or DEFAULT_FEEDBACK_CONFIG.UltimateVfx.LightningMaterialPath
             )
             spawnedSlashFlash = true
         end
 
         if not spawnedAirSlashA and t >= 0.20 then
-            VFX.SpawnSubUV(ULTIMATE_SLASH_SUBUV_RESOURCE, slashAnchor - actorForward * 6.0 - actorRight * 8.0 + up * 0.4, Vector(1.0, 88.0, 7.0), -12.0, ULTIMATE_SLASH_FRAME_RATE, false, true)
+            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource or DEFAULT_FEEDBACK_CONFIG.UltimateVfx.SlashSubUVResource, slashAnchor - actorForward * 6.0 - actorRight * 8.0 + up * 0.4, Vector(1.0, 88.0, 7.0), -12.0, vfxConfig.SlashFrameRate or DEFAULT_FEEDBACK_CONFIG.UltimateVfx.SlashFrameRate, false, true)
             spawnedAirSlashA = true
         end
 
         if not spawnedAirSlashB and t >= 0.34 then
-            VFX.SpawnSubUV(ULTIMATE_SLASH_SUBUV_RESOURCE, slashAnchor + actorForward * 2.0 + actorRight * 9.0 + up * 3.0, Vector(1.0, 65.0, 4.5), 32.0, ULTIMATE_SLASH_FRAME_RATE, false, true)
+            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource or DEFAULT_FEEDBACK_CONFIG.UltimateVfx.SlashSubUVResource, slashAnchor + actorForward * 2.0 + actorRight * 9.0 + up * 3.0, Vector(1.0, 65.0, 4.5), 32.0, vfxConfig.SlashFrameRate or DEFAULT_FEEDBACK_CONFIG.UltimateVfx.SlashFrameRate, false, true)
             spawnedAirSlashB = true
         end
 
         if not spawnedAirSlashD and t >= 0.42 then
-            VFX.SpawnSubUV(ULTIMATE_SLASH_SUBUV_RESOURCE, slashAnchor + actorForward * 8.0 - actorRight * 3.0 + up * 5.0, Vector(1.0, 72.0, 4.0), 58.0, ULTIMATE_SLASH_FRAME_RATE, false, true)
+            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource or DEFAULT_FEEDBACK_CONFIG.UltimateVfx.SlashSubUVResource, slashAnchor + actorForward * 8.0 - actorRight * 3.0 + up * 5.0, Vector(1.0, 72.0, 4.0), 58.0, vfxConfig.SlashFrameRate or DEFAULT_FEEDBACK_CONFIG.UltimateVfx.SlashFrameRate, false, true)
             spawnedAirSlashD = true
         end
 
         if not spawnedAirSlashC and t >= 0.50 then
-            VFX.SpawnSubUV(ULTIMATE_SLASH_SUBUV_RESOURCE, slashAnchor + actorForward * 12.0 - actorRight * 12.0 + up * -2.0, Vector(1.0, 55.0, 3.5), -36.0, ULTIMATE_SLASH_FRAME_RATE, false, true)
+            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource or DEFAULT_FEEDBACK_CONFIG.UltimateVfx.SlashSubUVResource, slashAnchor + actorForward * 12.0 - actorRight * 12.0 + up * -2.0, Vector(1.0, 55.0, 3.5), -36.0, vfxConfig.SlashFrameRate or DEFAULT_FEEDBACK_CONFIG.UltimateVfx.SlashFrameRate, false, true)
             spawnedAirSlashC = true
         end
 
         if not spawnedAirSlashE and t >= 0.62 then
-            VFX.SpawnSubUV(ULTIMATE_SLASH_SUBUV_RESOURCE, slashAnchor - actorForward * 2.0 + actorRight * 15.0 + up * -3.4, Vector(1.0, 50.0, 3.0), -62.0, ULTIMATE_SLASH_FRAME_RATE, false, true)
+            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource or DEFAULT_FEEDBACK_CONFIG.UltimateVfx.SlashSubUVResource, slashAnchor - actorForward * 2.0 + actorRight * 15.0 + up * -3.4, Vector(1.0, 50.0, 3.0), -62.0, vfxConfig.SlashFrameRate or DEFAULT_FEEDBACK_CONFIG.UltimateVfx.SlashFrameRate, false, true)
             spawnedAirSlashE = true
         end
 
         local nextPos = Bezier2(startPos, controlPos, cinematicEndPos, easedT)
         nextPos.Z = actorLocation.Z
 
-        Reflection.Call(ultimateCamera, "SetActorRotation", GetUltimateCameraRotation(baseCameraRotation, t))
+        Reflection.Call(ultimateCamera, "SetActorRotation", GetUltimateCameraRotation(cameraConfig, baseCameraRotation, t))
         Reflection.Call(owner, "SetActorLocation", nextPos)
 
         local moveDir = nextPos - prevPos
@@ -413,7 +424,7 @@ function PlayerFeedback.BeginUltimate(ctx)
     end
 
     local decal = VFX.SpawnGroundCrackDecal(
-        "Content/Material/VFX/M_GroundCrack.mat",
+        vfxConfig.GroundCrackMaterialPath or DEFAULT_FEEDBACK_CONFIG.UltimateVfx.GroundCrackMaterialPath,
         cinematicEndPos,
         decalScale,
         0.35,

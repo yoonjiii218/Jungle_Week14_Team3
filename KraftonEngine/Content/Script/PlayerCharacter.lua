@@ -6,6 +6,7 @@
 local PlayerAction = require("PlayerAction")
 local CombatContext = require("CombatContext")
 local PlayerFeedback = require("PlayerFeedback")
+local PlayerConfig = require("PlayerConfig")
 
 local PlayerCharacter = {}
 local ctx = nil
@@ -41,9 +42,10 @@ function BeginPlay()
     ctx = {
         Owner = obj,  -- Actor
         Component = this,
+        Config = PlayerConfig.Create(),
         State = "Locomotion",
         UltimateGauge = 0,
-        MaxUltimateGauge = 100,
+        MaxUltimateGauge = PlayerConfig.Default.Combat.MaxUltimateGauge,
         CurrentThreat = nil,
         IsUltimateRunning = false,
         IsInUltimateMode = false,
