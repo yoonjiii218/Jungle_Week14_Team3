@@ -35,10 +35,8 @@ public:
 private:
 	float GetRawDeltaTime(float FallbackDeltaTime) const;
 	USceneComponent* GetTargetSceneComponent() const;
-	void UpdateTimeDilationRegistration();
-	void RegisterTimeDilationComponent();
-	void UnregisterTimeDilationComponent();
-	static void RefreshGlobalTimeDilation();
+	float GetDesiredGlobalTimeDilation() const;
+	void RequestDesiredGlobalTimeDilation() const;
 
 	struct FTimedDilationAction
 	{
@@ -63,8 +61,7 @@ private:
 		bool bActive = false;
 		float Duration = 0.0f;
 		float RemainingTime = 0.0f;
-		bool bActorTickWasEnabled = true;
-		TArray<TPair<UActorComponent*, bool>> ComponentTickStates;
+		float PreviousCustomTimeDilation = 1.0f;
 	};
 
 	struct FKnockbackAction
@@ -83,8 +80,4 @@ private:
 	FHitSquashAction HitSquashAction;
 	FLocalHitStopAction LocalHitStopAction;
 	FKnockbackAction KnockbackAction;
-
-	static TArray<UActionComponent*> TimeDilationComponents;
-	static bool bHasCapturedGlobalBaseTimeDilation;
-	static float GlobalBaseTimeDilation;
 };
