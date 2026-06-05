@@ -1,13 +1,17 @@
 ﻿#pragma once
 
 #include "AnimNotifyState.h"
+#include "Core/Delegate.h"
 #include "Core/Types/CollisionTypes.h"
 #include "Core/Types/CoreTypes.h"
 #include "Math/Vector.h"
+#include "Object/Ptr/WeakObjectPtr.h"
 
 #include "Source/Engine/Animation/Notify/AnimNotifyState_AttackHitWindow.generated.h"
 
 class AActor;
+class UBoxComponent;
+class UPrimitiveComponent;
 class USkeletalMeshComponent;
 
 // 히트 시 대상에게 줄 충격 방향. UActionComponent::Knockback 의 Direction 인자로 사용.
@@ -85,6 +89,9 @@ public:
 	UPROPERTY(Edit, Save, Category="AttackHitWindow", DisplayName="Target Actor Tag")
 	FString TargetActorTag = "HitTarget";
 
+	UPROPERTY(Edit, Save, Category="AttackHitWindow", DisplayName="Lua Hit Function")
+	FString HitFunctionName = "on_attack_hit";
+
 	UPROPERTY(Edit, Save, Category="AttackHitWindow", DisplayName="Log Hits")
 	bool bLogHits = true;
 
@@ -96,7 +103,19 @@ public:
 	void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Anim) override;
 
 private:
-	TMap<USkeletalMeshComponent*, TSet<AActor*>> HitActorsByMesh;
-	TMap<USkeletalMeshComponent*, TSet<AActor*>> MissLoggedActorsByMesh;
-	TSet<USkeletalMeshComponent*> NoTargetLoggedMeshes;
+	struct FActiveHitWindow
+	{
+		FDelegateHandle BeginOverlapHandle;
+		TSet<AActor*> HitActors;
+	};
+
+	void HandleHitBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UBoxComponent* GetOrCreateHitBox(USkeletalMeshComponent* MeshComp);
+	void UpdateHitBoxTransform(USkeletalMeshComponent* MeshComp, UBoxComponent* HitBox) const;
+	void DisableHitBox(USkeletalMeshComponent* MeshComp);
+
+	TMap<USkeletalMeshComponent*, TWeakObjectPtr<UBoxComponent>> HitBoxesByMesh;
+	TMap<USkeletalMeshComponent*, FActiveHitWindow> ActiveWindowsByMesh;
 };

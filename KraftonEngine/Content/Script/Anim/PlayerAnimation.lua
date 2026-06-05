@@ -448,6 +448,19 @@ function on_attack_end(self)
     end
 end
 
+function on_attack_hit(self, targetActor, hitboxComponent, targetComponent, hitResult)
+    PushPlayerEvent(self, {
+        Type = "AttackHit",
+        AttackIndex = self.AttackIndex,
+        TargetActor = targetActor,
+        HitboxComponent = hitboxComponent,
+        TargetComponent = targetComponent,
+        HitResult = hitResult,
+    })
+
+    print("on attack hit " .. targetActor:GetName())
+end
+
 function on_trail_activate(self)
     PlayerFeedback.SetKatanaTrailActive(GetPlayerCtx(self), true)
 end

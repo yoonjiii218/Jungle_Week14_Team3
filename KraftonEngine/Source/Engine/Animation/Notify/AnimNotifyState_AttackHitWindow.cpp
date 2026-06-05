@@ -1,7 +1,9 @@
-#include "AnimNotifyState_AttackHitWindow.h"
+﻿#include "AnimNotifyState_AttackHitWindow.h"
 
+#include "Animation/Instance/LuaAnimInstance.h"
 #include "Component/Input/ActionComponent.h"
 #include "Component/PrimitiveComponent.h"
+#include "Component/Shape/BoxComponent.h"
 #include "Component/Primitive/SkeletalMeshComponent.h"
 #include "Core/Types/CollisionTypes.h"
 #include "Core/Types/EngineTypes.h"
@@ -11,9 +13,8 @@
 #include "GameFramework/World.h"
 #include "Mesh/Skeletal/SkeletalMesh.h"
 #include "Mesh/Skeletal/SkeletalMeshAsset.h"
+#include "Math/MathUtils.h"
 #include "Object/Object.h"
-
-#include <cfloat>
 
 namespace
 {
@@ -63,6 +64,19 @@ namespace
 		const float Y = Point.Y < Box.Min.Y ? Box.Min.Y - Point.Y : (Point.Y > Box.Max.Y ? Point.Y - Box.Max.Y : 0.0f);
 		const float Z = Point.Z < Box.Min.Z ? Box.Min.Z - Point.Z : (Point.Z > Box.Max.Z ? Point.Z - Box.Max.Z : 0.0f);
 		return X * X + Y * Y + Z * Z;
+	}
+
+	FVector ClosestPointOnAABB(const FVector& Point, const FBoundingBox& Box)
+	{
+		if (!Box.IsValid())
+		{
+			return Point;
+		}
+
+		return FVector(
+			FMath::Clamp(Point.X, Box.Min.X, Box.Max.X),
+			FMath::Clamp(Point.Y, Box.Min.Y, Box.Max.Y),
+			FMath::Clamp(Point.Z, Box.Min.Z, Box.Max.Z));
 	}
 
 	void DrawDebugBounds(UWorld* World, const FBoundingBox& Bounds, const FColor& Color, float Duration)
@@ -126,18 +140,59 @@ namespace
 		const FVector Dir = ResolveKnockbackDirection(Attacker, Target, Mode);
 		Action->Knockback(Dir, Distance, Duration);
 	}
+
+	FHitResult MakeAttackHitResult(UBoxComponent* HitBox, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+		const FHitResult& SweepResult)
+	{
+		FHitResult Hit = SweepResult;
+		Hit.bHit = true;
+		Hit.HitActor = OtherActor;
+		Hit.HitComponent = OtherComp;
+
+		const FVector Center = HitBox ? HitBox->GetWorldLocation() : FVector::ZeroVector;
+		const FBoundingBox Bounds = OtherComp ? OtherComp->GetWorldBoundingBox() : FBoundingBox();
+		const FVector HitLocation = Bounds.IsValid()
+			? ClosestPointOnAABB(Center, Bounds)
+			: (OtherActor ? OtherActor->GetActorLocation() : Center);
+		const FVector Delta = HitLocation - Center;
+		const float Distance = Delta.Length();
+		const FVector Normal = Distance > 0.001f ? Delta / Distance : FVector::ForwardVector;
+
+		Hit.WorldHitLocation = HitLocation;
+		Hit.WorldNormal = Normal;
+		Hit.ImpactNormal = Normal;
+		Hit.Distance = Distance;
+		return Hit;
+	}
 }
 
 void UAnimNotifyState_AttackHitWindow::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* /*Anim*/, float /*TotalDuration*/)
 {
-	if (!IsValid(MeshComp))
+	if (!IsValid(MeshComp) || Radius <= 0.0f)
 	{
 		return;
 	}
 
-	HitActorsByMesh[MeshComp].clear();
-	MissLoggedActorsByMesh[MeshComp].clear();
-	NoTargetLoggedMeshes.erase(MeshComp);
+	UBoxComponent* HitBox = GetOrCreateHitBox(MeshComp);
+	if (!IsValid(HitBox))
+	{
+		return;
+	}
+
+	DisableHitBox(MeshComp);
+
+	FActiveHitWindow& Active = ActiveWindowsByMesh[MeshComp];
+	Active.HitActors.clear();
+	Active.BeginOverlapHandle = HitBox->OnComponentBeginOverlap.AddRaw(
+		this,
+		&UAnimNotifyState_AttackHitWindow::HandleHitBoxBeginOverlap);
+
+	UpdateHitBoxTransform(MeshComp, HitBox);
+	HitBox->SetBoxExtent(FVector(Radius, Radius, Radius));
+	HitBox->SetCollisionObjectType(ECollisionChannel::Trigger);
+	HitBox->SetCollisionResponseToAllChannels(ECollisionResponse::Overlap);
+	HitBox->SetGenerateOverlapEvents(true);
+	HitBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
 void UAnimNotifyState_AttackHitWindow::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* /*Anim*/, float /*FrameDeltaTime*/)
@@ -154,157 +209,215 @@ void UAnimNotifyState_AttackHitWindow::NotifyTick(USkeletalMeshComponent* MeshCo
 		return;
 	}
 
-	TSet<AActor*>& HitActors = HitActorsByMesh[MeshComp];
-	TSet<AActor*>& MissLoggedActors = MissLoggedActorsByMesh[MeshComp];
-	const FVector Center = GetHitCenter(MeshComp, Owner, BoneName, LocalOffset);
+	UBoxComponent* HitBox = HitBoxesByMesh[MeshComp].Get();
+	if (!IsValid(HitBox))
+	{
+		return;
+	}
+
+	UpdateHitBoxTransform(MeshComp, HitBox);
 	if (bDrawDebugHitWindow)
 	{
-		DrawDebugSphere(World, Center, Radius, DebugDrawSegments, FColor(255, 220, 0), DebugDrawDuration);
-	}
-
-	bool bSawTargetCandidate = false;
-	for (AActor* Candidate : World->GetActors())
-	{
-		if (!IsValid(Candidate) || Candidate == Owner)
-		{
-			continue;
-		}
-
-		const bool bMatchesTargetActorTag = !TargetActorTag.empty() && Candidate->HasTag(FName(TargetActorTag));
-		if (bRequireTargetActorTag)
-		{
-			if (!bMatchesTargetActorTag)
-			{
-				continue;
-			}
-		}
-		else if (!TargetActorTag.empty() && !bMatchesTargetActorTag)
-		{
-			continue;
-		}
-
-		bSawTargetCandidate = true;
-		if (HitActors.find(Candidate) != HitActors.end())
-		{
-			continue;
-		}
-
-		UPrimitiveComponent* HitComponent = nullptr;
-		UPrimitiveComponent* ClosestComponent = nullptr;
-		const char* MissReason = "no primitive components";
-		float ClosestDistanceSquared = FLT_MAX;
-		for (UPrimitiveComponent* Primitive : Candidate->GetPrimitiveComponents())
-		{
-			if (!IsValid(Primitive))
-			{
-				continue;
-			}
-
-			const FBoundingBox Bounds = Primitive->GetWorldBoundingBox();
-			if (bRequireQueryCollision && !Primitive->IsQueryCollisionEnabled())
-			{
-				if (bDrawDebugTargetBounds)
-				{
-					DrawDebugBounds(World, Bounds, FColor(90, 90, 90), DebugDrawDuration);
-				}
-				MissReason = "query collision disabled";
-				continue;
-			}
-
-			if (!bHitWorldStatic && !bMatchesTargetActorTag && Primitive->GetCollisionObjectType() == ECollisionChannel::WorldStatic)
-			{
-				if (bDrawDebugTargetBounds)
-				{
-					DrawDebugBounds(World, Bounds, FColor(80, 80, 160), DebugDrawDuration);
-				}
-				MissReason = "world static filtered";
-				continue;
-			}
-
-			if (!Bounds.IsValid())
-			{
-				MissReason = "invalid bounds";
-				continue;
-			}
-
-			const float DistanceSquared = DistanceSquaredPointAABB(Center, Bounds);
-			const bool bIntersects = DistanceSquared <= Radius * Radius;
-			if (bDrawDebugTargetBounds)
-			{
-				DrawDebugBounds(World, Bounds, bIntersects ? FColor(255, 40, 40) : FColor(0, 180, 255), DebugDrawDuration);
-			}
-
-			if (DistanceSquared < ClosestDistanceSquared)
-			{
-				ClosestDistanceSquared = DistanceSquared;
-				ClosestComponent = Primitive;
-				MissReason = "outside radius";
-			}
-
-			if (bIntersects)
-			{
-				HitComponent = Primitive;
-				break;
-			}
-		}
-
-		if (!HitComponent)
-		{
-			if (bLogMisses && MissLoggedActors.find(Candidate) == MissLoggedActors.end())
-			{
-				MissLoggedActors.insert(Candidate);
-				UE_LOG("[AttackHitWindow] miss %s -> %s (%s%s%s center=%.1f, %.1f, %.1f radius=%.1f)",
-					Owner->GetName().c_str(),
-					Candidate->GetName().c_str(),
-					MissReason,
-					ClosestComponent ? " closest=" : "",
-					ClosestComponent ? ClosestComponent->GetName().c_str() : "",
-					Center.X,
-					Center.Y,
-					Center.Z,
-					Radius);
-			}
-			continue;
-		}
-
-		HitActors.insert(Candidate);
-		ApplyHitStop(Owner, HitStopDuration, bAutoAddActionComponent);
-		ApplyHitStop(Candidate, HitStopDuration, bAutoAddActionComponent);
-		if (bApplyKnockback)
-		{
-			ApplyKnockback(Owner, Candidate, KnockbackMode, KnockbackDistance, KnockbackDuration, bAutoAddActionComponent);
-		}
-		if (bDrawDebugHitWindow)
-		{
-			DrawDebugSphere(World, Center, Radius, DebugDrawSegments, FColor(255, 40, 40), DebugDrawDuration);
-		}
-
-		if (bLogHits)
-		{
-			UE_LOG("[AttackHitWindow] %s hit %s via %s (center=%.1f, %.1f, %.1f radius=%.1f)",
-				Owner->GetName().c_str(),
-				Candidate->GetName().c_str(),
-				HitComponent->GetName().c_str(),
-				Center.X,
-				Center.Y,
-				Center.Z,
-				Radius);
-		}
-	}
-
-	if (bLogMisses && !bSawTargetCandidate && NoTargetLoggedMeshes.find(MeshComp) == NoTargetLoggedMeshes.end())
-	{
-		NoTargetLoggedMeshes.insert(MeshComp);
-		UE_LOG("[AttackHitWindow] no target candidate for %s (RequireTargetTag=%d TargetActorTag=%s)",
-			Owner->GetName().c_str(),
-			bRequireTargetActorTag ? 1 : 0,
-			TargetActorTag.c_str());
+		DrawDebugBox(World, HitBox->GetWorldLocation(), HitBox->GetScaledBoxExtent(), FColor(255, 220, 0), DebugDrawDuration);
 	}
 }
 
 void UAnimNotifyState_AttackHitWindow::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* /*Anim*/)
 {
-	HitActorsByMesh.erase(MeshComp);
-	MissLoggedActorsByMesh.erase(MeshComp);
-	NoTargetLoggedMeshes.erase(MeshComp);
+	DisableHitBox(MeshComp);
+}
+
+UBoxComponent* UAnimNotifyState_AttackHitWindow::GetOrCreateHitBox(USkeletalMeshComponent* MeshComp)
+{
+	if (!IsValid(MeshComp))
+	{
+		return nullptr;
+	}
+
+	if (UBoxComponent* Existing = HitBoxesByMesh[MeshComp].Get())
+	{
+		return Existing;
+	}
+
+	AActor* Owner = MeshComp->GetOwner();
+	if (!IsValid(Owner))
+	{
+		return nullptr;
+	}
+
+	UBoxComponent* HitBox = Owner->AddComponent<UBoxComponent>();
+	if (!IsValid(HitBox))
+	{
+		return nullptr;
+	}
+
+	HitBox->SetHiddenInComponentTree(true);
+	HitBox->SetVisibility(false);
+	HitBox->SetBoxExtent(FVector(Radius, Radius, Radius));
+	HitBox->SetSimulatePhysics(false);
+	HitBox->SetEnableGravity(false);
+	HitBox->SetGenerateOverlapEvents(false);
+	HitBox->SetCollisionObjectType(ECollisionChannel::Trigger);
+	HitBox->SetCollisionResponseToAllChannels(ECollisionResponse::Overlap);
+	HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	if (Owner->HasActorBegunPlay())
+	{
+		HitBox->BeginPlay();
+	}
+
+	HitBoxesByMesh[MeshComp] = HitBox;
+	return HitBox;
+}
+
+void UAnimNotifyState_AttackHitWindow::UpdateHitBoxTransform(USkeletalMeshComponent* MeshComp, UBoxComponent* HitBox) const
+{
+	if (!IsValid(MeshComp) || !IsValid(HitBox))
+	{
+		return;
+	}
+
+	AActor* Owner = MeshComp->GetOwner();
+	const FVector Center = GetHitCenter(MeshComp, Owner, BoneName, LocalOffset);
+	HitBox->SetWorldLocation(Center);
+	if (IsValid(Owner))
+	{
+		HitBox->SetRelativeRotation(Owner->GetActorRotation());
+	}
+}
+
+void UAnimNotifyState_AttackHitWindow::DisableHitBox(USkeletalMeshComponent* MeshComp)
+{
+	if (!MeshComp)
+	{
+		return;
+	}
+
+	UBoxComponent* HitBox = HitBoxesByMesh[MeshComp].Get();
+	auto It = ActiveWindowsByMesh.find(MeshComp);
+	if (It != ActiveWindowsByMesh.end())
+	{
+		if (IsValid(HitBox) && It->second.BeginOverlapHandle.IsValid())
+		{
+			HitBox->OnComponentBeginOverlap.Remove(It->second.BeginOverlapHandle);
+		}
+		ActiveWindowsByMesh.erase(It);
+	}
+
+	if (IsValid(HitBox))
+	{
+		HitBox->SetGenerateOverlapEvents(false);
+		HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+}
+
+void UAnimNotifyState_AttackHitWindow::HandleHitBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent,
+	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 /*OtherBodyIndex*/, bool /*bFromSweep*/,
+	const FHitResult& SweepResult)
+{
+	if (!IsValid(OverlappedComponent) || !IsValid(OtherActor) || !IsValid(OtherComp))
+	{
+		return;
+	}
+
+	USkeletalMeshComponent* MeshComp = nullptr;
+	FActiveHitWindow* ActiveWindow = nullptr;
+	for (auto& Pair : ActiveWindowsByMesh)
+	{
+		UBoxComponent* HitBox = HitBoxesByMesh[Pair.first].Get();
+		if (HitBox == OverlappedComponent)
+		{
+			MeshComp = Pair.first;
+			ActiveWindow = &Pair.second;
+			break;
+		}
+	}
+
+	if (!IsValid(MeshComp) || !ActiveWindow)
+	{
+		return;
+	}
+
+	AActor* Owner = MeshComp->GetOwner();
+	if (!IsValid(Owner) || OtherActor == Owner)
+	{
+		return;
+	}
+
+	const bool bMatchesTargetActorTag = !TargetActorTag.empty() && OtherActor->HasTag(FName(TargetActorTag));
+	if (bRequireTargetActorTag)
+	{
+		if (!bMatchesTargetActorTag)
+		{
+			return;
+		}
+	}
+	else if (!TargetActorTag.empty() && !bMatchesTargetActorTag)
+	{
+		return;
+	}
+
+	if (bRequireQueryCollision && !OtherComp->IsQueryCollisionEnabled())
+	{
+		return;
+	}
+
+	if (!bHitWorldStatic && !bMatchesTargetActorTag && OtherComp->GetCollisionObjectType() == ECollisionChannel::WorldStatic)
+	{
+		return;
+	}
+
+	if (ActiveWindow->HitActors.find(OtherActor) != ActiveWindow->HitActors.end())
+	{
+		return;
+	}
+
+	ActiveWindow->HitActors.insert(OtherActor);
+	ApplyHitStop(Owner, HitStopDuration, bAutoAddActionComponent);
+	ApplyHitStop(OtherActor, HitStopDuration, bAutoAddActionComponent);
+	if (bApplyKnockback)
+	{
+		ApplyKnockback(Owner, OtherActor, KnockbackMode, KnockbackDistance, KnockbackDuration, bAutoAddActionComponent);
+	}
+
+	UBoxComponent* HitBox = Cast<UBoxComponent>(OverlappedComponent);
+	const FHitResult HitResult = MakeAttackHitResult(HitBox, OtherActor, OtherComp, SweepResult);
+	if (!HitFunctionName.empty())
+	{
+		if (ULuaAnimInstance* LuaAnim = Cast<ULuaAnimInstance>(MeshComp->GetAnimInstance()))
+		{
+			LuaAnim->InvokeLuaFunction(HitFunctionName, OtherActor, OverlappedComponent, OtherComp, HitResult);
+		}
+	}
+
+	if (bDrawDebugHitWindow && HitBox)
+	{
+		if (UWorld* World = MeshComp->GetWorld())
+		{
+			DrawDebugBox(World, HitBox->GetWorldLocation(), HitBox->GetScaledBoxExtent(), FColor(255, 40, 40), DebugDrawDuration);
+		}
+	}
+
+	if (bDrawDebugTargetBounds)
+	{
+		if (UWorld* World = MeshComp->GetWorld())
+		{
+			DrawDebugBounds(World, OtherComp->GetWorldBoundingBox(), FColor(255, 40, 40), DebugDrawDuration);
+		}
+	}
+
+	if (bLogHits)
+	{
+		const FVector Center = HitBox ? HitBox->GetWorldLocation() : FVector::ZeroVector;
+		UE_LOG("[AttackHitWindow] %s hit %s via %s (center=%.1f, %.1f, %.1f extent=%.1f, %.1f, %.1f)",
+			Owner->GetName().c_str(),
+			OtherActor->GetName().c_str(),
+			OtherComp->GetName().c_str(),
+			Center.X,
+			Center.Y,
+			Center.Z,
+			Radius,
+			Radius,
+			Radius);
+	}
 }
