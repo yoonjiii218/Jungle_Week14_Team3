@@ -28,6 +28,7 @@ struct FAnimNotifyEvent
 
 	UAnimNotify*      Notify      = nullptr;
 	UAnimNotifyState* NotifyState = nullptr;
+	int32             TrackIndex  = 0;
 
 	// raw 필드만 직렬화 (Notify/NotifyState 포인터는 무시).
 	// 풀 직렬화는 FAnimNotifyEvent::Serialize(Ar, Outer) — Outer 가 있어야 ObjectFactory 로

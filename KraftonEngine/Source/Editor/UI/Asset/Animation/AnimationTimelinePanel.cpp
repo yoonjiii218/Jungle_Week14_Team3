@@ -91,12 +91,14 @@ namespace
 	// 이름으로 인스턴스 만들고 DataModel 을 Outer 로 매단다 (라이프타임 체인).
 	FAnimNotifyEvent MakeNotifyFromClass(UAnimSequence* Seq, UClass* Cls,
 	                                     const FString& Name, float Time,
-	                                     float Duration, bool bAsState)
+	                                     float Duration, bool bAsState,
+	                                     int32 TrackIndex)
 	{
 		FAnimNotifyEvent Event;
 		Event.NotifyName  = FName(Name);
 		Event.TriggerTime = Time;
 		Event.Duration    = bAsState ? std::max(Duration, 0.01f) : 0.0f;
+		Event.TrackIndex  = TrackIndex;
 
 		if (Cls && Seq)
 		{
@@ -116,6 +118,7 @@ namespace
 	void PasteNotifyFromClipboard(UAnimSequence* Seq,
 	                              FAnimationTimelinePanel::FAnimNotifyClipboard& Clipboard,
 	                              float PasteTime,
+	                              int32 TargetTrackIndex,
 	                              int32& InOutSelectedNotifyIndex)
 	{
 		if (!Seq || !Clipboard.bValid)
@@ -124,11 +127,17 @@ namespace
 		}
 
 		TArray<FAnimNotifyEvent>& Notifies = Seq->GetMutableModelNotifies();
+		const TArray<FAnimNotifyTrack>& Tracks = Seq->GetNotifyTracks();
 		UObject* NewOuter = Seq->GetDataModel();
 		FAnimNotifyEvent NewEvent = Clipboard.Event.DuplicateForOuter(NewOuter);
 
 		const float PlayLength = Seq->GetPlayLength();
 		NewEvent.TriggerTime = std::clamp(PasteTime, 0.0f, PlayLength);
+		const int32 MaxTrackIndex = static_cast<int32>(Tracks.size()) - 1;
+		const int32 FallbackTrackIndex = std::clamp(Clipboard.SourceTrackIndex, 0, std::max(MaxTrackIndex, 0));
+		NewEvent.TrackIndex = (TargetTrackIndex >= 0 && TargetTrackIndex <= MaxTrackIndex)
+			? TargetTrackIndex
+			: FallbackTrackIndex;
 		if (NewEvent.NotifyState && NewEvent.Duration > 0.0f)
 		{
 			NewEvent.Duration = std::clamp(NewEvent.Duration, 0.0f, std::max(PlayLength - NewEvent.TriggerTime, 0.0f));
@@ -715,6 +724,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 	const float FrameRate  = Seq->GetFrameRate() > 0.0f ? Seq->GetFrameRate() : 30.0f;
 	const int   NumFrames  = std::max(Seq->GetNumberOfFrames(), 1);
 	const int   EndFrame   = std::max(NumFrames - 1, 0);
+	Seq->EnsureNotifyTrackLayout();
 
 	float TrackAreaH = std::max(TrackViewportH, RulerH + RowH);
 	const float CanvasX    = Origin.x + HeaderW;
@@ -757,17 +767,21 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 	// 클릭 지점 시간에 노티파이(+LogMessage 로직)를 추가 → DataModel 에 기록되어
 	// 직렬화되고, RefreshRuntimeNotifies 로 dispatch 캐시에 반영돼 프리뷰에서 실제 발사.
 	static float sPendingNotifyTime = 0.0f;
+	static int32 sPendingNotifyTrackIndex = 0;
 	if (bNotifiesExpanded && ImGui::IsItemHovered() &&
 	    ImGui::IsMouseClicked(ImGuiMouseButton_Right))
 	{
 		const float LaneTop = Origin.y + RulerH + RowH;
-		const float LaneBot = LaneTop + NotifyLaneH;
+		const int32 TrackCount = static_cast<int32>(Seq->GetNotifyTracks().size());
+		const float LaneBot = LaneTop + NotifyLaneH * static_cast<float>(TrackCount);
 		const float MouseY  = ImGui::GetIO().MousePos.y;
 		if (MouseY >= LaneTop && MouseY <= LaneBot)
 		{
 			const float Frac = std::clamp(
 				(ImGui::GetIO().MousePos.x - CanvasX) / CanvasW, 0.0f, 1.0f);
 			sPendingNotifyTime = Frac * PlayLength;
+			sPendingNotifyTrackIndex = std::clamp(
+				static_cast<int32>((MouseY - LaneTop) / NotifyLaneH), 0, std::max(TrackCount - 1, 0));
 			ImGui::OpenPopup("##addNotifyCtx");
 		}
 	}
@@ -778,7 +792,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 
 		if (ImGui::MenuItem("Paste Notify", nullptr, false, NotifyClipboard.bValid))
 		{
-			PasteNotifyFromClipboard(Seq, NotifyClipboard, sPendingNotifyTime, InOutSelectedNotifyIndex);
+			PasteNotifyFromClipboard(Seq, NotifyClipboard, sPendingNotifyTime, sPendingNotifyTrackIndex, InOutSelectedNotifyIndex);
 		}
 		ImGui::Separator();
 
@@ -797,7 +811,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 					static int sNotifyCounter = 0;
 					const FString Name = FString(Cls->GetName()) + "_" + std::to_string(++sNotifyCounter);
 					Seq->GetMutableModelNotifies().push_back(
-						MakeNotifyFromClass(Seq, Cls, Name, sPendingNotifyTime, 0.0f, false));
+						MakeNotifyFromClass(Seq, Cls, Name, sPendingNotifyTime, 0.0f, false, sPendingNotifyTrackIndex));
 					Seq->RefreshRuntimeNotifies();
 					InOutSelectedNotifyIndex = static_cast<int32>(Seq->GetMutableModelNotifies().size()) - 1;
 					SaveSeqNow();
@@ -822,7 +836,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 					const FString Name = FString(Cls->GetName()) + "_" + std::to_string(++sStateCounter);
 					const float DefaultDur = std::min(0.3f, std::max(PlayLength - sPendingNotifyTime, 0.05f));
 					Seq->GetMutableModelNotifies().push_back(
-						MakeNotifyFromClass(Seq, Cls, Name, sPendingNotifyTime, DefaultDur, true));
+						MakeNotifyFromClass(Seq, Cls, Name, sPendingNotifyTime, DefaultDur, true, sPendingNotifyTrackIndex));
 					Seq->RefreshRuntimeNotifies();
 					InOutSelectedNotifyIndex = static_cast<int32>(Seq->GetMutableModelNotifies().size()) - 1;
 					SaveSeqNow();
@@ -856,7 +870,6 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 	            ImVec2(Origin.x + HeaderW - 6.0f, Origin.y + RulerH - 3.0f), ColTick);
 
 	// 좌측 헤더 우측 끝에 "+" 추가 어포던스를 그린다. 클릭 시 true 반환.
-	// (실제 추가 로직은 미연결 — 호출부에서 TODO 처리)
 	auto DrawAddButton = [&](const char* Id, float RowTop, float RowHeight) -> bool
 	{
 		const float BtnSize = 16.0f;
@@ -870,7 +883,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 		{
 			DL->AddRectFilled(BtnPos, ImVec2(BtnPos.x + BtnSize, BtnPos.y + BtnSize),
 			                  IM_COL32(255, 255, 255, 28), 2.0f);
-			ImGui::SetTooltip("Add (not wired yet)");
+			ImGui::SetTooltip("Add");
 		}
 		const ImVec2 C(BtnPos.x + BtnSize * 0.5f, BtnPos.y + BtnSize * 0.5f);
 		DL->AddLine(ImVec2(C.x - 4.0f, C.y), ImVec2(C.x + 4.0f, C.y), Col, 1.5f);
@@ -878,13 +891,40 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 		return ImGui::IsItemClicked();
 	};
 
+	auto DrawDeleteButton = [&](const char* Id, float RowTop, float RowHeight, bool bEnabled) -> bool
+	{
+		const float BtnSize = 16.0f;
+		const ImVec2 BtnPos(Origin.x + HeaderW - BtnSize - 6.0f,
+		                    RowTop + (RowHeight - BtnSize) * 0.5f);
+		ImGui::SetCursorScreenPos(BtnPos);
+		ImGui::BeginDisabled(!bEnabled);
+		ImGui::InvisibleButton(Id, ImVec2(BtnSize, BtnSize));
+		const bool bClicked = bEnabled && ImGui::IsItemClicked();
+		const bool bHov = ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled);
+		ImGui::EndDisabled();
+
+		const ImU32 Col = bEnabled
+			? (bHov ? IM_COL32(230, 230, 230, 255) : IM_COL32(150, 150, 150, 255))
+			: IM_COL32(85, 85, 85, 255);
+		if (bHov)
+		{
+			DL->AddRectFilled(BtnPos, ImVec2(BtnPos.x + BtnSize, BtnPos.y + BtnSize),
+			                  IM_COL32(255, 255, 255, bEnabled ? 28 : 12), 2.0f);
+			ImGui::SetTooltip(bEnabled ? "Delete track" : "At least one notify track is required");
+		}
+		const ImVec2 C(BtnPos.x + BtnSize * 0.5f, BtnPos.y + BtnSize * 0.5f);
+		DL->AddLine(ImVec2(C.x - 4.0f, C.y), ImVec2(C.x + 4.0f, C.y), Col, 1.5f);
+		return bClicked;
+	};
+
 	// ── 트랙 행 ──
 	float RowY = Origin.y + RulerH;
+	const float HeaderToggleW = HeaderW - 28.0f;
 
 	// Notifies (펼침 가능 + 트랙 추가 어포던스)
 	const ImVec2 NotifyHeaderPos(Origin.x, RowY);
 	ImGui::SetCursorScreenPos(ImVec2(Origin.x, RowY));
-	ImGui::InvisibleButton("##notifyToggle", ImVec2(HeaderW, RowH));
+	ImGui::InvisibleButton("##notifyToggle", ImVec2(HeaderToggleW, RowH));
 	if (ImGui::IsItemClicked())
 	{
 		bNotifiesExpanded = !bNotifiesExpanded;
@@ -892,8 +932,13 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 	DrawTrackHeaderRow(DL, NotifyHeaderPos, HeaderW, RowH, "Notifies", true, bNotifiesExpanded);
 	if (DrawAddButton("##addNotifyTrack", RowY, RowH))
 	{
-		// TODO: 노티파이 트랙 추가 — 엔진에 노티파이 트랙(인덱스) 데이터 모델이
-		// 생기면 여기서 새 트랙을 push 하도록 연결한다. (현재는 표시 전용)
+		TArray<FAnimNotifyTrack>& Tracks = Seq->GetMutableNotifyTracks();
+		FAnimNotifyTrack NewTrack;
+		NewTrack.TrackName = FName(std::to_string(Tracks.size() + 1));
+		Tracks.push_back(NewTrack);
+		bNotifiesExpanded = true;
+		Seq->EnsureNotifyTrackLayout();
+		SaveSeqNow();
 	}
 	DL->AddRectFilled(ImVec2(CanvasX, RowY), ImVec2(CanvasX + CanvasW, RowY + RowH),
 	                  IM_COL32(30, 30, 30, 255));
@@ -903,32 +948,66 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 
 	if (bNotifiesExpanded)
 	{
-		const float LaneY = RowY;
-		DL->AddRectFilled(ImVec2(Origin.x, LaneY),
-		                  ImVec2(Origin.x + HeaderW, LaneY + NotifyLaneH), ColHeaderBg);
-		DL->AddText(ImVec2(Origin.x + 26.0f, LaneY + NotifyLaneH * 0.5f - 7.0f),
-		            ColLabel, "1");
-		if (DrawAddButton("##addNotify", LaneY, NotifyLaneH))
+		const TArray<FAnimNotifyTrack>& Tracks = Seq->GetNotifyTracks();
+		for (int32 TrackIndex = 0; TrackIndex < static_cast<int32>(Tracks.size()); ++TrackIndex)
 		{
-			// 같은 컨텍스트 popup 재사용 — playhead 시각으로 진입. 클래스 picker 제공.
-			sPendingNotifyTime = CurrentTime;
-			ImGui::OpenPopup("##addNotifyCtx");
-		}
-		DL->AddRectFilled(ImVec2(CanvasX, LaneY),
-		                  ImVec2(CanvasX + CanvasW, LaneY + NotifyLaneH), IM_COL32(24, 24, 24, 255));
+			const float LaneY = RowY;
+			const int32 TrackCount = static_cast<int32>(Tracks.size());
+			DL->AddRectFilled(ImVec2(Origin.x, LaneY),
+			                  ImVec2(Origin.x + HeaderW, LaneY + NotifyLaneH), ColHeaderBg);
+			std::string TrackName = Tracks[TrackIndex].TrackName.ToString();
+			if (TrackName.empty())
+			{
+				TrackName = std::to_string(TrackIndex + 1);
+			}
+			DL->AddText(ImVec2(Origin.x + 26.0f, LaneY + NotifyLaneH * 0.5f - 7.0f),
+			            ColLabel, TrackName.c_str());
+			ImGui::PushID(TrackIndex);
+			if (DrawDeleteButton("##deleteNotifyTrack", LaneY, NotifyLaneH, TrackCount > 1))
+			{
+				TArray<FAnimNotifyTrack>& MutableTracks = Seq->GetMutableNotifyTracks();
+				TArray<FAnimNotifyEvent>& Notifies = Seq->GetMutableModelNotifies();
+				const int32 NewTrackCount = TrackCount - 1;
+				const int32 TargetTrackIndex = std::clamp(TrackIndex - 1, 0, NewTrackCount - 1);
+
+				for (FAnimNotifyEvent& Notify : Notifies)
+				{
+					if (Notify.TrackIndex == TrackIndex)
+					{
+						Notify.TrackIndex = TargetTrackIndex;
+					}
+					else if (Notify.TrackIndex > TrackIndex)
+					{
+						--Notify.TrackIndex;
+					}
+				}
+				MutableTracks.erase(MutableTracks.begin() + TrackIndex);
+				Seq->RefreshRuntimeNotifies();
+				SaveSeqNow();
+				ImGui::PopID();
+				RowY += NotifyLaneH;
+				continue;
+			}
+			ImGui::PopID();
+			DL->AddRectFilled(ImVec2(CanvasX, LaneY),
+			                  ImVec2(CanvasX + CanvasW, LaneY + NotifyLaneH), IM_COL32(24, 24, 24, 255));
 
 		// 드래그로 시간 이동 / 우클릭으로 삭제(루프 후 지연 적용).
 		// 직렬화 소스(DataModel)를 직접 편집 → 아래에서 dispatch 캐시 동기화.
-		TArray<FAnimNotifyEvent>& Notifies = Seq->GetMutableModelNotifies();
-		int PendingDelete = -1;
-		static char  sRenameBuf[64]   = {};
-		static float sGrabOffsetTime  = 0.0f; // 잡은 지점과 앵커의 시간 차(점프 방지)
-		const float BadgeTop  = LaneY + 5.0f;
-		const float BadgeBot  = LaneY + NotifyLaneH - 5.0f;
-		const float BadgeMidY = (BadgeTop + BadgeBot) * 0.5f;
-		for (int i = 0; i < static_cast<int>(Notifies.size()); ++i)
-		{
-			FAnimNotifyEvent& N   = Notifies[i];
+			TArray<FAnimNotifyEvent>& Notifies = Seq->GetMutableModelNotifies();
+			int PendingDelete = -1;
+			static char  sRenameBuf[64]   = {};
+			static float sGrabOffsetTime  = 0.0f; // 잡은 지점과 앵커의 시간 차(점프 방지)
+			const float BadgeTop  = LaneY + 5.0f;
+			const float BadgeBot  = LaneY + NotifyLaneH - 5.0f;
+			const float BadgeMidY = (BadgeTop + BadgeBot) * 0.5f;
+			for (int i = 0; i < static_cast<int>(Notifies.size()); ++i)
+			{
+				FAnimNotifyEvent& N   = Notifies[i];
+				if (N.TrackIndex != TrackIndex)
+				{
+					continue;
+				}
 			const float       NX  = TimeToX(N.TriggerTime);
 			const std::string Nm  = N.NotifyName.ToString();
 			const ImVec2      TSz = ImGui::CalcTextSize(Nm.c_str());
@@ -1043,6 +1122,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 					NotifyClipboard.bValid = true;
 					NotifyClipboard.Event = N;
 					NotifyClipboard.SourceTriggerTime = N.TriggerTime;
+					NotifyClipboard.SourceTrackIndex = N.TrackIndex;
 				}
 				if (ImGui::MenuItem("Delete"))
 				{
@@ -1155,6 +1235,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 		DL->AddLine(ImVec2(CanvasX, LaneY + NotifyLaneH - 1.0f),
 		            ImVec2(CanvasX + CanvasW, LaneY + NotifyLaneH - 1.0f), ColSeparator);
 		RowY += NotifyLaneH;
+		}
 	}
 
 	auto DrawSimpleHeaderRow = [&](const char* Label, bool bExpandable, bool bExpanded)
@@ -1174,7 +1255,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 
 		const ImVec2 MorphHeaderPos(Origin.x, RowY);
 		ImGui::SetCursorScreenPos(ImVec2(Origin.x, RowY));
-		ImGui::InvisibleButton("##morphCurveToggle", ImVec2(HeaderW, RowH));
+		ImGui::InvisibleButton("##morphCurveToggle", ImVec2(HeaderToggleW, RowH));
 		if (ImGui::IsItemClicked())
 		{
 			bMorphCurvesExpanded = !bMorphCurvesExpanded;
@@ -1583,6 +1664,42 @@ bool FAnimationTimelinePanel::RenderNotifyDetails(UAnimSequence* Seq, int32 Sele
 		if (ImGui::DragFloat("##dur", &N.Duration, 0.01f, 0.01f, MaxDur, "%.3f"))
 		{
 			bChanged = true;
+		}
+	}
+
+	{
+		TArray<FAnimNotifyTrack>& Tracks = Seq->GetMutableNotifyTracks();
+		const int32 TrackCount = static_cast<int32>(Tracks.size());
+		N.TrackIndex = std::clamp(N.TrackIndex, 0, std::max(TrackCount - 1, 0));
+		std::string CurrentTrackName = TrackCount > 0 ? Tracks[N.TrackIndex].TrackName.ToString() : "1";
+		if (CurrentTrackName.empty())
+		{
+			CurrentTrackName = std::to_string(N.TrackIndex + 1);
+		}
+
+		ImGui::TextUnformatted("Track");
+		ImGui::SetNextItemWidth(-FLT_MIN);
+		if (ImGui::BeginCombo("##notifyTrack", CurrentTrackName.c_str()))
+		{
+			for (int32 TrackIndex = 0; TrackIndex < TrackCount; ++TrackIndex)
+			{
+				std::string TrackName = Tracks[TrackIndex].TrackName.ToString();
+				if (TrackName.empty())
+				{
+					TrackName = std::to_string(TrackIndex + 1);
+				}
+				const bool bSelected = (N.TrackIndex == TrackIndex);
+				if (ImGui::Selectable(TrackName.c_str(), bSelected))
+				{
+					N.TrackIndex = TrackIndex;
+					bChanged = true;
+				}
+				if (bSelected)
+				{
+					ImGui::SetItemDefaultFocus();
+				}
+			}
+			ImGui::EndCombo();
 		}
 	}
 

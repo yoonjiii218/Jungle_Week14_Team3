@@ -498,9 +498,11 @@ void UAnimSequence::Serialize(FArchive& Ar)
     if (!DataModel)
     {
         DataModel = UObjectManager::Get().CreateObject<UAnimDataModel>(this);
+        DataModel->EnsureNotifyTrackLayout();
     }
 
     DataModel->Serialize(Ar);
+    DataModel->EnsureNotifyTrackLayout();
 
     PlayLength = DataModel->PlayLength;
     FrameRate  = DataModel->FrameRate;
@@ -513,6 +515,7 @@ void UAnimSequence::SetDataModel(UAnimDataModel* InModel)
 
     if (DataModel)
     {
+        DataModel->EnsureNotifyTrackLayout();
         PlayLength = DataModel->PlayLength;
         FrameRate  = DataModel->FrameRate;
         Notifies   = DataModel->Notifies;
@@ -532,6 +535,7 @@ TArray<FBoneAnimationTrack>& UAnimSequence::GetMutableBoneTracks()
     if (!DataModel)
     {
         DataModel = UObjectManager::Get().CreateObject<UAnimDataModel>(this);
+        DataModel->EnsureNotifyTrackLayout();
         PlayLength = DataModel->PlayLength;
         FrameRate  = DataModel->FrameRate;
         Notifies   = DataModel->Notifies;
@@ -553,6 +557,7 @@ TArray<FMorphTargetCurve>& UAnimSequence::GetMutableMorphTargetCurves()
     if (!DataModel)
     {
         DataModel  = UObjectManager::Get().CreateObject<UAnimDataModel>(this);
+        DataModel->EnsureNotifyTrackLayout();
         PlayLength = DataModel->PlayLength;
         FrameRate  = DataModel->FrameRate;
         Notifies   = DataModel->Notifies;
@@ -607,17 +612,56 @@ TArray<FAnimNotifyEvent>& UAnimSequence::GetMutableModelNotifies()
     if (!DataModel)
     {
         DataModel = UObjectManager::Get().CreateObject<UAnimDataModel>(this);
+        DataModel->EnsureNotifyTrackLayout();
         PlayLength = DataModel->PlayLength;
         FrameRate  = DataModel->FrameRate;
         Notifies   = DataModel->Notifies;
     }
+    DataModel->EnsureNotifyTrackLayout();
     return DataModel->Notifies;
+}
+
+const TArray<FAnimNotifyTrack>& UAnimSequence::GetNotifyTracks() const
+{
+    static const TArray<FAnimNotifyTrack> EmptyTracks;
+    return DataModel ? DataModel->NotifyTracks : EmptyTracks;
+}
+
+TArray<FAnimNotifyTrack>& UAnimSequence::GetMutableNotifyTracks()
+{
+    static TArray<FAnimNotifyTrack> EmptyTracks;
+
+    if (!DataModel)
+    {
+        DataModel = UObjectManager::Get().CreateObject<UAnimDataModel>(this);
+        DataModel->EnsureNotifyTrackLayout();
+        PlayLength = DataModel->PlayLength;
+        FrameRate  = DataModel->FrameRate;
+        Notifies   = DataModel->Notifies;
+    }
+
+    if (DataModel)
+    {
+        DataModel->EnsureNotifyTrackLayout();
+        return DataModel->NotifyTracks;
+    }
+    return EmptyTracks;
+}
+
+void UAnimSequence::EnsureNotifyTrackLayout()
+{
+    if (DataModel)
+    {
+        DataModel->EnsureNotifyTrackLayout();
+        Notifies = DataModel->Notifies;
+    }
 }
 
 void UAnimSequence::RefreshRuntimeNotifies()
 {
     if (DataModel)
     {
+        DataModel->EnsureNotifyTrackLayout();
         // 베이스 캐시 = UAnimInstance::AddAnimNotifies 가 읽는 dispatch 소스.
         Notifies = DataModel->Notifies;
     }

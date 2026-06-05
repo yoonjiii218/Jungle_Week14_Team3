@@ -147,6 +147,7 @@ FAnimNotifyEvent FAnimNotifyEvent::DuplicateForOuter(UObject* NewOuter) const
 	Copy.Duration     = Duration;
 	Copy.Notify       = DuplicateNotifyPointerForOuter<UAnimNotify>(Notify, NewOuter);
 	Copy.NotifyState  = DuplicateNotifyPointerForOuter<UAnimNotifyState>(NotifyState, NewOuter);
+	Copy.TrackIndex   = TrackIndex;
 	return Copy;
 }
 
