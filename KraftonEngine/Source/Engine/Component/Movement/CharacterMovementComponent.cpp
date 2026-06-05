@@ -239,7 +239,7 @@ void UCharacterMovementComponent::ApplyInputToVelocity(const FVector& Input, flo
 		const float Speed2D = V2D.Length();
 		if (Speed2D > 0.0f)
 		{
-			const float NewSpeed = std::max(0.0f, Speed2D - BrakingFriction * DeltaTime);
+			const float NewSpeed = std::max<float>(0.0f, Speed2D - BrakingFriction * DeltaTime);
 			const FVector Dir    = V2D * (1.0f / Speed2D);
 			Velocity.X = Dir.X * NewSpeed;
 			Velocity.Y = Dir.Y * NewSpeed;

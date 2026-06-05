@@ -1,4 +1,4 @@
-#include "AnimInstance.h"
+﻿#include "AnimInstance.h"
 #include "Animation/Montage/AnimMontage.h"
 #include "Animation/Montage/AnimMontageInstance.h"
 #include "Animation/Notify/AnimNotify.h"
@@ -231,9 +231,9 @@ void UAnimInstance::AddAnimNotifies(float PreviousTime, float CurrentTime, const
 	// [a, b) 와 [c, d) 의 교집합 폭. 음수면 0.
 	auto OverlapWidth = [](float a, float b, float c, float d) -> float
 	{
-		const float Lo = std::max(a, c);
-		const float Hi = std::min(b, d);
-		return std::max(0.0f, Hi - Lo);
+		const float Lo = std::max<float>(a, c);
+		const float Hi = std::min<float>(b, d);
+		return std::max<float>(0.0f, Hi - Lo);
 	};
 
 	// 활성 set 안에서 (state, sequence, name) 매칭 entry 조회.
