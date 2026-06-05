@@ -7,12 +7,31 @@ local BossAttacks = {}
 local ctx_ref       = nil   -- BossCharacter.lua 에서 Init 으로 주입
 local CombatContext = nil   -- 순환 require 방지: Init 시점에 로드
 local Feedback      = nil   -- 순환 require 방지: Init 시점에 로드
+local Hitbox        = nil   -- 순환 require 방지: Init 시점에 로드
 
 -- ────────────────────────────────────────────
 function BossAttacks.Init(ctx)
     ctx_ref       = ctx
     CombatContext = require("CombatContext")
     Feedback      = require("Boss/BossFeedback")
+    Hitbox        = require("Boss/BossHitbox")
+end
+
+-- 공통 판정 + 로그 (1단계: print 만, 데미지 없음)
+local function ResolveHit(tag, zone)
+    -- 죽은 보스의 공격은 판정 무효
+    if ctx_ref.bb.IsDead then
+        if ctx_ref.BB.DEBUG then print("[" .. tag .. "] 판정 무효 (보스 사망)") end
+        return false
+    end
+
+    if Hitbox.Check(zone, ctx_ref.playerRef) then
+        if ctx_ref.BB.DEBUG then print("[" .. tag .. "] ★ HIT! 플레이어 맞음") end
+        return true
+    else
+        if ctx_ref.BB.DEBUG then print("[" .. tag .. "] 빗나감 (플레이어 회피)") end
+        return false
+    end
 end
 
 -- ────────────────────────────────────────────
@@ -88,10 +107,11 @@ local function Pattern1_BasicSlash()
     Feedback.FlashZone(zone)
     if BB.DEBUG then print("[P1] " .. BB.P1.WINDUP .. "s  장판 번쩍임") end
 
-    -- 0.5초: 데미지 판정 + 장판 제거 (AnimNotify 가 실제 히트박스 처리 - 2단계)
+    -- 0.5초: 데미지 판정 (플레이어 위치 ∈ 부채꼴?) + 장판 제거
     Wait(BB.P1.HIT - BB.P1.WINDUP)
+    ResolveHit("P1", zone)
     Feedback.HideZone(zone)
-    if BB.DEBUG then print("[P1] " .. BB.P1.HIT .. "s  HIT 판정 + 장판 제거") end
+    if BB.DEBUG then print("[P1] " .. BB.P1.HIT .. "s  판정 완료 + 장판 제거") end
 
     -- ④ 후딜 Wait: ActionLock 이 이 구간 동안 유지됨 (플레이어 반격 타임)
     Wait(BB.P1.TOTAL - BB.P1.HIT)
@@ -110,20 +130,26 @@ local function Pattern2_DoubleSlash()
     BeginPattern("P2")
     PlayMontage("BossDoubleSlash")
 
-    -- 0.0초: 1타 예고선 표시
-    if BB.DEBUG then print("[P2] 0.0s  1타 예고선") end
+    -- 0.0초: 1타 가로 예고선 스폰
+    local zone1 = Feedback.ShowSlashLine(ctx_ref.playerRef)
+    if BB.DEBUG then print("[P2] 0.0s  1타 가로 예고선") end
 
-    -- 0.4초: 1타 판정
+    -- 0.4초: 1타 판정 + 제거
     Wait(BB.P2.HIT1)
-    if BB.DEBUG then print("[P2] " .. BB.P2.HIT1 .. "s  1타 HIT") end
+    ResolveHit("P2-1", zone1)
+    Feedback.HideZone(zone1)
+    if BB.DEBUG then print("[P2] " .. BB.P2.HIT1 .. "s  1타 판정") end
 
-    -- 0.5초: 2타 예고선 표시 (반대 방향 검 꺾음)
+    -- 0.5초: 2타 가로 예고선 스폰 (반대 방향 꺾음)
     Wait(BB.P2.SECOND_WIND - BB.P2.HIT1)
-    if BB.DEBUG then print("[P2] " .. BB.P2.SECOND_WIND .. "s  2타 예고선") end
+    local zone2 = Feedback.ShowSlashLine(ctx_ref.playerRef)
+    if BB.DEBUG then print("[P2] " .. BB.P2.SECOND_WIND .. "s  2타 가로 예고선") end
 
-    -- 0.9초: 2타 판정
+    -- 0.9초: 2타 판정 + 제거
     Wait(BB.P2.HIT2 - BB.P2.SECOND_WIND)
-    if BB.DEBUG then print("[P2] " .. BB.P2.HIT2 .. "s  2타 HIT") end
+    ResolveHit("P2-2", zone2)
+    Feedback.HideZone(zone2)
+    if BB.DEBUG then print("[P2] " .. BB.P2.HIT2 .. "s  2타 판정") end
 
     -- ④ 후딜 Wait
     Wait(BB.P2.TOTAL - BB.P2.HIT2)
@@ -163,11 +189,12 @@ local function Pattern3_HeavySmash()
               .. BB.P3.PERFECT_WINDOW .. "s)")
     end
 
-    -- 1.4초: 데미지 판정 + 카메라 흔들림 + 장판 제거
-    --        (퍼펙트 회피 성공 시 이 시점 직전에 Slomo 발동됨)
+    -- 1.4초: 데미지 판정 (플레이어 위치 ∈ 직사각형?) + 장판 제거
+    --        (2단계에서 퍼펙트 회피 무효화 연동 예정)
     Wait(BB.P3.HIT - BB.P3.FLASH)
+    ResolveHit("P3", zone)
     Feedback.HideZone(zone)
-    if BB.DEBUG then print("[P3] " .. BB.P3.HIT .. "s  HIT 판정 + 카메라 흔들림") end
+    if BB.DEBUG then print("[P3] " .. BB.P3.HIT .. "s  판정 완료 + 카메라 흔들림") end
 
     -- ④ 긴 후딜 Wait: ActionLock 이 3.0초까지 유지
     --    이 구간이 플레이어의 발도 대시/폭딜 타임

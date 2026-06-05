@@ -6,6 +6,7 @@ local BB            = require("Boss/BossBlackboard")
 local Action        = require("Boss/BossAction")
 local Attacks       = require("Boss/BossAttacks")
 local Feedback      = require("Boss/BossFeedback")
+local Hitbox        = require("Boss/BossHitbox")
 local CombatContext = require("CombatContext")
 
 -- Runtime Blackboard (매 판마다 초기화되는 가변 상태)
@@ -20,6 +21,11 @@ local function InitBB()
     bb.LastPattern         = nil     -- 직전 패턴 ("P1"/"P2"/"P3")
     bb.TimeScale           = 1.0     -- ⑤ Slomo 보상용 스케일
     bb.SlomoRemaining      = 0.0     -- ⑤ Slomo 남은 시간
+
+    -- 체력
+    bb.HP     = BB.MAX_HP            -- 현재 체력
+    bb.MaxHP  = BB.MAX_HP            -- 최대 체력
+    bb.IsDead = false                -- 사망 여부 (한 번만 처리)
 end
 
 -- ────────────────────────────────────────────
@@ -40,6 +46,11 @@ function BeginPlay()
         playerRef  = nil,
     }
 
+    -- 보스 식별용 태그 (플레이어팀이 World.FindFirstActorByTag("Boss")로 찾음)
+    if not obj:HasTag("Boss") then
+        obj:AddTag("Boss")
+    end
+
     -- 더미 or 실제 플레이어 찾기 (태그 "Player")
     ctx.playerRef = World.FindFirstActorByTag("Player")
 
@@ -59,6 +70,7 @@ function BeginPlay()
     Action.Init(ctx)
     Attacks.Init(ctx)
     Feedback.Init(ctx)
+    Hitbox.Init(ctx)
 
     -- ⑥ CombatContext에 보스 등록
     CombatContext.RegisterBoss(obj, bb, BB)
@@ -102,10 +114,16 @@ function Tick(dt)
     -- AI 의사결정
     Action.UpdateAI(dt)
 
-    -- ── 임시: F1 키로 퍼펙트 회피 강제 발동 (1단계 테스트용) ──
-    if BB.DEBUG and Input.GetKeyDown(Key.VK_F1) then
+    -- ── 임시: F1 키로 퍼펙트 회피 강제 발동 (테스트용) ──
+    if BB.DEBUG and Input.GetKeyDown(Key.F1) then
         print("[BossCharacter] F1 - 퍼펙트 회피 강제 발동")
         CombatContext.TriggerPerfectDodge()
+    end
+
+    -- ── 임시: R 키로 보스 데미지 테스트 (플레이어팀 연동 전 검증용) ──
+    if BB.DEBUG and Input.GetKeyDown(Key.R) then
+        print("[BossCharacter] R - 보스 데미지 테스트 -10")
+        CombatContext.ApplyDamageToBoss(10)
     end
 end
 

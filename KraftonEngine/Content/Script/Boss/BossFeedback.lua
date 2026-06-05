@@ -70,7 +70,13 @@ function BossFeedback.ShowRectZone(target)
         print("[BossFeedback] ShowRectZone - 데칼 스폰 실패 (머티리얼 경로 확인)")
     end
 
-    return { decals = decals, locked = false }
+    -- 판정용 영역 메타 (히트박스가 그대로 참조 → 보이는 대로 맞음)
+    return {
+        decals = decals, locked = false,
+        kind   = "rect",
+        origin = Vector(bossPos.X, bossPos.Y, bossPos.Z),
+        yaw    = yaw,
+    }
 end
 
 -- ════════════════════════════════════════════
@@ -108,7 +114,48 @@ function BossFeedback.ShowFanZone(target)
         print("[BossFeedback] ShowFanZone - 데칼 스폰 실패 (머티리얼 경로 확인)")
     end
 
-    return { decals = decals, locked = false }
+    -- 판정용 영역 메타 (부채꼴: 중심 방향 = baseYaw)
+    return {
+        decals = decals, locked = false,
+        kind   = "fan",
+        origin = Vector(bossPos.X, bossPos.Y, bossPos.Z),
+        yaw    = baseYaw,
+    }
+end
+
+-- ════════════════════════════════════════════
+-- P2: 가로 베기 예고선 (보스 앞에 좌우로 긴 직사각형)
+--   방향 = 보스→플레이어에 수직(90°) → 가로로 베는 궤적
+-- ════════════════════════════════════════════
+function BossFeedback.ShowSlashLine(target)
+    local F = ctx_ref.BB.FEEDBACK
+    local bossPos = ctx_ref.obj.Location
+    local dir, baseYaw = ResolveDirection(bossPos, target)
+
+    -- 직사각형 중심 = 보스 앞쪽 P2_DIST 거리
+    local cx = bossPos.X + dir.X * F.P2_DIST
+    local cy = bossPos.Y + dir.Y * F.P2_DIST
+    local cz = bossPos.Z + F.ZONE_Z_OFFSET
+
+    -- 가로 방향: 보스→플레이어에 수직 (데칼 길이축이 좌우를 향함)
+    local lineYaw = baseYaw + 90.0
+
+    local decal = SpawnPiece(F, cx, cy, cz, lineYaw, F.P2_LENGTH, F.P2_WIDTH)
+
+    local decals = {}
+    if decal then
+        table.insert(decals, decal)
+    elseif ctx_ref.BB.DEBUG then
+        print("[BossFeedback] ShowSlashLine - 데칼 스폰 실패 (머티리얼 경로 확인)")
+    end
+
+    -- 판정용 메타 (중심 기준 박스)
+    return {
+        decals = decals, locked = false,
+        kind   = "box",
+        center = Vector(cx, cy, cz),
+        yaw    = lineYaw,
+    }
 end
 
 -- ────────────────────────────────────────────

@@ -127,6 +127,12 @@ function BossAction.UpdateAI(dt)
     local bb = ctx_ref.bb
     local BB = ctx_ref.BB
 
+    -- 사망: 모든 행동 정지
+    if bb.IsDead then
+        LogState("Dead(사망)", bb.Distance)
+        return
+    end
+
     -- ③ 슈퍼아머: ActionLock 중에는 AI 진입 완전 차단
     if bb.ActionLock then
         LogState("ActionLock(공격중)", bb.Distance)
