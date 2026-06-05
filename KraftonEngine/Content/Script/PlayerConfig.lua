@@ -107,6 +107,13 @@ PlayerConfig.Default = {
             AttackBlendIn = 0.08,
             AttackBlendOut = 0.15,
             AttackPlayRate = 1.5,
+            AttackPlayRates = {
+                3,
+                3,
+                3,
+                3,
+                3,
+            },
 
             DashBlendIn = 0.05,
             DashBlendOut = 0.12,

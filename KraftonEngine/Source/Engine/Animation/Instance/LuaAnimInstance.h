@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Animation/AnimInstance.h"
 #include "Object/Ptr/WeakObjectPtr.h"
@@ -6,6 +6,9 @@
 #include <sol/sol.hpp>
 
 class UAnimSequenceBase;
+class AActor;
+class UPrimitiveComponent;
+struct FHitResult;
 
 // Lua 로 AnimGraph 트리를 정의하는 AnimInstance. UCharacterAnimInstance 의 sibling — 같은
 // AnimGraph 인프라 위에서 동작하지만 트리 build (SM 노드 / Slot / LayeredBlend 등) 와
@@ -47,6 +50,8 @@ public:
 	void PostEvaluatePose(FPoseContext& Output) override;
 
 	bool InvokeLuaFunction(const FString& FunctionName);
+	bool InvokeLuaFunction(const FString& FunctionName, AActor* OtherActor, UPrimitiveComponent* HitComponent,
+		UPrimitiveComponent* OtherComp, const FHitResult& HitResult);
 
 	void PostEditProperty(const char* PropertyName) override;
 	void Serialize(FArchive& Ar) override;
