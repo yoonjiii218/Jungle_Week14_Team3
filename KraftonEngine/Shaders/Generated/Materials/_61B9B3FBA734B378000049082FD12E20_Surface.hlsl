@@ -1,4 +1,4 @@
-// Generated from Content/Material/Auto/MI_HAIR_Straight_01.mat
+// Generated from Content/Material/VFX/M_Refraction.mat
 // Domain: Surface
 
 #include "Common/ConstantBuffers.hlsli"
@@ -11,7 +11,15 @@
 #include "Common/GeneratedSurfacePass.hlsli"
 Texture2D GeneratedSceneColorTexture : register(t17);
 
-Texture2D Tex_Diffuse : register(t0);
+Texture2D Tex_Custom0 : register(t6);
+
+cbuffer PerMaterial : register(b2)
+{
+    float Param_Opacity;
+    float3 _Pad0;
+    float Param_RefractionStrength;
+    float3 _Pad1;
+};
 
 struct FMaterialEvalResult
 {
@@ -23,29 +31,30 @@ struct FMaterialEvalResult
 
 FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
+    float3 n_35 = float3(1.000000f, 0.650000f, 0.150000f);
+    float n_37 = Param_Opacity;
     float2 n_3 = Input.UV0;
-    float4 n_5 = Tex_Diffuse.Sample(LinearWrapSampler, n_3);
-    float4 n_14 = Input.VertexColor;
-    float3 n_21 = ((n_5).rgb * (n_14).rgb);
-    float3 n_25 = (float4(n_21, 0.0f)).rgb;
-    float3 n_61 = float3(0.491000f, 0.181000f, 0.329000f);
-    float3 n_70 = float3(0.000000f, 0.300000f, 0.300000f);
-    float n_72 = (float4(n_3, 0.0f, 0.0f)).g;
-    float3 n_75 = lerp(n_61, n_70, n_72);
-    float3 n_63 = (n_25 * n_75);
+    float4 n_5 = Tex_Custom0.Sample(LinearWrapSampler, n_3);
+    float2 n_14 = (n_5).rg;
+    float n_17 = 2.000000f;
+    float2 n_19 = (n_14 * float2(n_17, n_17));
+    float n_23 = 1.000000f;
+    float2 n_25 = (n_19 - float2(n_23, n_23));
+    float n_29 = Param_RefractionStrength;
+    float2 n_31 = (n_25 * float2(n_29, n_29));
     FMaterialResult Result;
-    Result.BaseColor = n_63;
+    Result.BaseColor = n_35;
     Result.Normal = float3(0, 0, 1);
     Result.Roughness = 0.5f;
     Result.Metallic = 0.0f;
     Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = (n_5).x;
+    Result.Opacity = n_37;
     Result.OpacityMask = 1.0f;
     Result.NormalConnected = 0.0f;
     FMaterialEvalResult Eval;
     Eval.Material = Result;
-    Eval.RefractionOffset = float2(0, 0);
-    Eval.RefractionEnabled = 0.0f;
+    Eval.RefractionOffset = n_31;
+    Eval.RefractionEnabled = 1.0f;
     Eval._Pad = 0.0f;
     return Eval;
 }

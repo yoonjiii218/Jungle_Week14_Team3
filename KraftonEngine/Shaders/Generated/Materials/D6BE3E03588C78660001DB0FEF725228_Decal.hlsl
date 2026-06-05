@@ -1,4 +1,4 @@
-// Generated from Content/Material/VFX/GroundCrack.mat
+// Generated from Content/Material/VFX/M_GroundCrack.mat
 // Domain: Decal
 
 #include "Common/ConstantBuffers.hlsli"

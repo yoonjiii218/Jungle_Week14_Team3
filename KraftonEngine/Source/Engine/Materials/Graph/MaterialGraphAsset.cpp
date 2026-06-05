@@ -669,6 +669,12 @@ void FMaterialGraph::RebuildOutputPinsForDomain(EMaterialDomain Domain)
 	switch (Domain)
 	{
 	case EMaterialDomain::ParticleSprite:
+		AddOutPin("Color", EMaterialGraphPinType::Float3);
+		AddOutPin("Emissive", EMaterialGraphPinType::Float3);
+		AddOutPin("Opacity", EMaterialGraphPinType::Float);
+		AddOutPin("UVOffset", EMaterialGraphPinType::Float2);
+		AddOutPin("RefractionOffset", EMaterialGraphPinType::Float2);
+		break;
 	case EMaterialDomain::ParticleMesh:
 		AddOutPin("Color", EMaterialGraphPinType::Float3);
 		AddOutPin("Emissive", EMaterialGraphPinType::Float3);
@@ -695,8 +701,80 @@ void FMaterialGraph::RebuildOutputPinsForDomain(EMaterialDomain Domain)
 		AddOutPin("Emissive", EMaterialGraphPinType::Float3);
 		AddOutPin("Opacity", EMaterialGraphPinType::Float);
 		AddOutPin("OpacityMask", EMaterialGraphPinType::Float);
+		AddOutPin("RefractionOffset", EMaterialGraphPinType::Float2);
 		break;
 	}
+}
+
+bool FMaterialGraph::EnsureOutputPinsForDomain(EMaterialDomain Domain)
+{
+	FMaterialGraphNode* Output = FindFirstNodeOfType(EMaterialGraphNodeType::Output);
+	if (!Output)
+	{
+		return false;
+	}
+
+	bool bChanged = false;
+	auto HasPin = [Output](const char* Name)
+	{
+		for (const FMaterialGraphPin& Pin : Output->Pins)
+		{
+			if (Pin.Kind == EMaterialGraphPinKind::Input && Pin.DisplayName.ToString() == Name)
+			{
+				return true;
+			}
+		}
+		return false;
+	};
+	auto AddMissingPin = [this, Output, &HasPin, &bChanged](const char* Name, EMaterialGraphPinType Type)
+	{
+		if (!HasPin(Name))
+		{
+			AddPin(*Output, EMaterialGraphPinKind::Input, Type, FName(Name));
+			bChanged = true;
+		}
+	};
+
+	switch (Domain)
+	{
+	case EMaterialDomain::ParticleSprite:
+		AddMissingPin("Color", EMaterialGraphPinType::Float3);
+		AddMissingPin("Emissive", EMaterialGraphPinType::Float3);
+		AddMissingPin("Opacity", EMaterialGraphPinType::Float);
+		AddMissingPin("UVOffset", EMaterialGraphPinType::Float2);
+		AddMissingPin("RefractionOffset", EMaterialGraphPinType::Float2);
+		break;
+	case EMaterialDomain::ParticleMesh:
+		AddMissingPin("Color", EMaterialGraphPinType::Float3);
+		AddMissingPin("Emissive", EMaterialGraphPinType::Float3);
+		AddMissingPin("Opacity", EMaterialGraphPinType::Float);
+		AddMissingPin("UVOffset", EMaterialGraphPinType::Float2);
+		break;
+	case EMaterialDomain::Decal:
+		AddMissingPin("BaseColor", EMaterialGraphPinType::Float3);
+		AddMissingPin("Normal", EMaterialGraphPinType::Float3);
+		AddMissingPin("Roughness", EMaterialGraphPinType::Float);
+		AddMissingPin("Metallic", EMaterialGraphPinType::Float);
+		AddMissingPin("Opacity", EMaterialGraphPinType::Float);
+		break;
+	case EMaterialDomain::PostProcess:
+		AddMissingPin("Color", EMaterialGraphPinType::Float3);
+		AddMissingPin("Opacity", EMaterialGraphPinType::Float);
+		break;
+	case EMaterialDomain::Surface:
+	default:
+		AddMissingPin("BaseColor", EMaterialGraphPinType::Float3);
+		AddMissingPin("Normal", EMaterialGraphPinType::Float3);
+		AddMissingPin("Roughness", EMaterialGraphPinType::Float);
+		AddMissingPin("Metallic", EMaterialGraphPinType::Float);
+		AddMissingPin("Emissive", EMaterialGraphPinType::Float3);
+		AddMissingPin("Opacity", EMaterialGraphPinType::Float);
+		AddMissingPin("OpacityMask", EMaterialGraphPinType::Float);
+		AddMissingPin("RefractionOffset", EMaterialGraphPinType::Float2);
+		break;
+	}
+
+	return bChanged;
 }
 
 const char* ToString(EMaterialDomain Domain)
