@@ -4,7 +4,7 @@
     "BlendState" : "Opaque",
     "Domain" : "Surface",
     "GeneratorVersion" : "GeneratedMaterialPass_v4_Decal",
-    "GraphHash" : "AB96FF8BE70268FD",
+    "GraphHash" : "723D4F50040797B5",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
 
@@ -13,14 +13,14 @@
     "RenderPass" : "Opaque",
     "Textures" : {
       "DiffuseTexture" : {
-        "Path" : "Content/Texture/T_CYBER_SF_CLOTHES_BaseColor_02.PNG",
+        "Path" : "Content/Texture/T_EYES_BaseColor_20.PNG",
         "Slot" : "Diffuse"
       }
     }
   },
   "DepthStencilState" : "Default",
   "Domain" : "Surface",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/_18DA1DAD28B72C0A_Surface.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/_3156042E86675BA5_Surface.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 2,
@@ -47,7 +47,7 @@
         "LinkId" : 45,
         "ToPinId" : 32
       }],
-    "NextId" : 48,
+    "NextId" : 47,
     "Nodes" : [{
         "DisplayName" : "Texture Object",
         "Mask" : "RGBA",
@@ -60,9 +60,9 @@
             "PinId" : 2,
             "Type" : "Texture2D"
           }],
-        "PosX" : -709.000000,
-        "PosY" : -82.000000,
-        "TexturePath" : "Content/Texture/T_CYBER_SF_CLOTHES_BaseColor_02.PNG",
+        "PosX" : -720.000000,
+        "PosY" : -80.000000,
+        "TexturePath" : "Content/Texture/T_EYES_BaseColor_20.PNG",
         "TextureSlot" : "Diffuse",
         "Type" : "TextureObject",
         "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
@@ -303,17 +303,18 @@
       }]
   },
   "GraphShaderMode" : "Generated",
-  "MaterialGuid" : "18DA1DAD28B72C0A",
+  "MaterialGuid" : "3156042E86675BA5",
   "Origin" : "FbxImport",
   "Parameters" : {
+    "HasDiffuseTexture" : 0.000000,
     "HasNormalMap" : 0.000000,
     "SectionColor" : [0.800000, 0.800000, 0.800000, 0.000000],
-    "_pad" : [0.000000, 0.000000, 0.000000]
+    "_pad" : null
   },
-  "PathFileName" : "Content/Material/Auto/MI_CYBER_SF_CLOTHES_01.mat",
+  "PathFileName" : "Content/Material/Auto/MI_EYES_20_1.mat",
   "RasterizerState" : "SolidBackCull",
   "ReceiveLighting" : false,
   "RenderPass" : "Opaque",
-  "ShaderPath" : "Shaders/Generated/Materials/_18DA1DAD28B72C0A_Surface.hlsl",
+  "ShaderPath" : "Shaders/Generated/Materials/_3156042E86675BA5_Surface.hlsl",
   "Version" : 2
 }
