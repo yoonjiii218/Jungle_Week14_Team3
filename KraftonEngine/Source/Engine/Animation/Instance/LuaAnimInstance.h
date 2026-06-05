@@ -46,6 +46,8 @@ public:
 	void HandleAnimNotify(const FAnimNotifyEvent& Notify) override;
 	void PostEvaluatePose(FPoseContext& Output) override;
 
+	bool InvokeLuaFunction(const FString& FunctionName);
+
 	void PostEditProperty(const char* PropertyName) override;
 	void Serialize(FArchive& Ar) override;
 

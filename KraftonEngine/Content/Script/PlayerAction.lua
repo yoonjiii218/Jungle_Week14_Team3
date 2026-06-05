@@ -1,4 +1,4 @@
--- 마우스, 키보드 등 입력 Event 처리 및 결과 보관
+-- Semantic input event 처리 및 결과 보관
 
 local PlayerAction = {}
 
@@ -34,36 +34,67 @@ local function GetActionConfig(ctx)
     return PlayerConfig.Default.Action
 end
 
-local function IsKeyDown(vk)
-    if Input ~= nil and Input.GetKey ~= nil then
-        return Input.GetKey(vk)
+local semanticInputValidated = false
+
+local function RequireSemanticInputApi()
+    if semanticInputValidated then
+        return
     end
 
-    if Input ~= nil and Input.is_key_down ~= nil then
-        return Input.is_key_down(vk)
+    if Input == nil then
+        error("[PlayerAction] Input table is missing")
     end
 
-    return false
+    local required = {
+        "IsActionDown",
+        "WasActionStarted",
+        "WasActionCompleted",
+        "GetAxis2D",
+    }
+
+    for _, name in ipairs(required) do
+        if Input[name] == nil then
+            error("[PlayerAction] Missing semantic input API: Input." .. name)
+        end
+    end
+
+    semanticInputValidated = true
 end
 
-local function IsKeyPressed(vk)
-    if Input ~= nil and Input.GetKeyDown ~= nil then
-        return Input.GetKeyDown(vk)
-    end
-
-    if Input ~= nil and Input.is_key_pressed ~= nil then
-        return Input.is_key_pressed(vk)
-    end
-
-    return false
+local function ResolveActionName(ctx, actionName)
+    local inputConfig = GetInputConfig(ctx)
+    local fieldName = actionName .. "Action"
+    return inputConfig[fieldName] or PlayerConfig.Default.Input[fieldName] or actionName
 end
 
-local function IsKeyReleased(vk)
-    if Input ~= nil and Input.GetKeyUp ~= nil then
-        return Input.GetKeyUp(vk)
-    end
+local function ResolveAxisName(ctx, axisName)
+    local inputConfig = GetInputConfig(ctx)
+    local fieldName = axisName .. "Axis"
+    return inputConfig[fieldName] or PlayerConfig.Default.Input[fieldName] or axisName
+end
 
-    return false
+local function ActionDown(ctx, actionName)
+    RequireSemanticInputApi()
+    return Input.IsActionDown(ResolveActionName(ctx, actionName)) == true
+end
+
+local function ActionStarted(ctx, actionName)
+    RequireSemanticInputApi()
+    return Input.WasActionStarted(ResolveActionName(ctx, actionName)) == true
+end
+
+local function ActionCompleted(ctx, actionName)
+    RequireSemanticInputApi()
+    return Input.WasActionCompleted(ResolveActionName(ctx, actionName)) == true
+end
+
+local function Axis2D(ctx, axisName)
+    RequireSemanticInputApi()
+    local axis = Input.GetAxis2D(ResolveAxisName(ctx, axisName))
+    if axis == nil then
+        error("[PlayerAction] Input.GetAxis2D returned nil")
+    end
+    return axis
 end
 
 local function GetOwner(ctx)
@@ -93,9 +124,8 @@ local function SetOrientRotationToMovement(ctx, enabled)
 end
 
 local function ResetDashInput(ctx)
-    ctx.ShiftHoldTime = 0.0
-    ctx.ShiftWasDown = false
-    ctx.ShiftChargingConsumed = false
+    ctx.DashHoldTime = 0.0
+    ctx.DashChargingConsumedInput = false
 
     ctx.DashPressed = false
     ctx.DashChargingPressed = false
@@ -103,6 +133,8 @@ local function ResetDashInput(ctx)
 end
 
 function PlayerAction.Init(ctx, owner)
+    RequireSemanticInputApi()
+
     ctx.Owner = owner or ctx.Owner
     ctx.LastMoveInputDirection = nil
     ctx.DashPrevOrientRotationToMovement = nil
@@ -297,12 +329,9 @@ function PlayerAction.GetMoveInputWorldDirection(ctx)
     local moveForward = 0.0
     local moveRight = 0.0
 
-    local inputConfig = GetInputConfig(ctx)
-
-    if IsKeyDown(inputConfig.MoveForwardKey or PlayerConfig.Default.Input.MoveForwardKey) then moveForward = moveForward + 1.0 end
-    if IsKeyDown(inputConfig.MoveBackwardKey or PlayerConfig.Default.Input.MoveBackwardKey) then moveForward = moveForward - 1.0 end
-    if IsKeyDown(inputConfig.MoveRightKey or PlayerConfig.Default.Input.MoveRightKey) then moveRight = moveRight + 1.0 end
-    if IsKeyDown(inputConfig.MoveLeftKey or PlayerConfig.Default.Input.MoveLeftKey) then moveRight = moveRight - 1.0 end
+    local moveAxis = Axis2D(ctx, "Move")
+    moveRight = moveAxis.X or 0.0
+    moveForward = moveAxis.Y or 0.0
 
     if math.abs(moveForward) < 0.001 and math.abs(moveRight) < 0.001 then
         return nil
@@ -418,9 +447,7 @@ function PlayerAction.ApplyMoveInput(ctx)
         Reflection.Call(owner, "AddMovementInput", dir, 1.0)
     end
 
-    local inputConfig = GetInputConfig(ctx)
-
-    if IsKeyPressed(inputConfig.JumpKey or PlayerConfig.Default.Input.JumpKey) then
+    if ActionStarted(ctx, "Jump") then
         Reflection.Call(owner, "Jump")
     end
 end
@@ -430,9 +457,8 @@ function PlayerAction.UpdateActionInput(ctx, dt)
         return
     end
 
-    local inputConfig = GetInputConfig(ctx)
     local actionConfig = GetActionConfig(ctx)
-    local attackDown = IsKeyDown(inputConfig.AttackKey or PlayerConfig.Default.Input.AttackKey)
+    local attackDown = ActionDown(ctx, "Attack")
 
     if attackDown then
         ctx.AttackHoldTime = (ctx.AttackHoldTime or 0.0) + (dt or 0.0)
@@ -457,37 +483,39 @@ function PlayerAction.UpdateActionInput(ctx, dt)
     ctx.DashChargingReleased = false
     ctx.DashSlashPressed = false
 
-    local dashKey = inputConfig.DashKey or PlayerConfig.Default.Input.DashKey
-    local shiftDown = IsKeyDown(dashKey)
-    local shiftReleased = IsKeyReleased(dashKey)
-    local shiftPressed = shiftDown and ctx.ShiftWasDown ~= true
+    local dashDown = ActionDown(ctx, "Dash")
+    local dashPressed = ActionStarted(ctx, "Dash")
+    local dashReleased = ActionCompleted(ctx, "Dash")
 
-    if shiftDown then
-        ctx.ShiftHoldTime = (ctx.ShiftHoldTime or 0.0) + (dt or 0.0)
+    if dashDown then
+        ctx.DashHoldTime = (ctx.DashHoldTime or 0.0) + (dt or 0.0)
 
-        if shiftPressed then
+        if dashPressed then
             ctx.DashPressed = true
             ctx.DashSlashPressed = true -- compatibility for older animation scripts
         end
 
-        if ctx.ShiftChargingConsumed == true then
+        if ctx.DashChargingConsumedInput == true then
             ctx.DashChargingPressed = true
-        elseif ctx.ShiftHoldTime >= (actionConfig.DashChargingHoldThreshold or PlayerConfig.Default.Action.DashChargingHoldThreshold) then
+        elseif ctx.DashHoldTime >= (actionConfig.DashChargingHoldThreshold or PlayerConfig.Default.Action.DashChargingHoldThreshold) then
             ctx.DashChargingPressed = true
-            ctx.ShiftChargingConsumed = true
+            ctx.DashChargingConsumedInput = true
         end
     end
 
-    if (shiftReleased or (ctx.ShiftWasDown == true and not shiftDown)) then
-        if ctx.ShiftChargingConsumed == true then
+    if dashReleased then
+        if ctx.DashChargingConsumedInput == true then
             ctx.DashChargingReleased = true
         end
 
-        ctx.ShiftHoldTime = 0.0
-        ctx.ShiftChargingConsumed = false
+        ctx.DashHoldTime = 0.0
+        ctx.DashChargingConsumedInput = false
     end
 
-    ctx.ShiftWasDown = shiftDown
+    if ActionStarted(ctx, "SecondaryDash") then
+        ctx.DashPressed = true
+        ctx.DashSlashPressed = true
+    end
 end
 
 function PlayerAction.BeginDash(ctx)
@@ -700,9 +728,14 @@ function PlayerAction.Update(ctx, dt)
     PlayerAction.UpdateActionInput(ctx, dt)
     DrainEvents(ctx, result)
 
-    local inputConfig = GetInputConfig(ctx)
+    local maxUltimateGauge = ctx.MaxUltimateGauge or PlayerConfig.Default.Combat.MaxUltimateGauge
+    local ultimateGauge = ctx.UltimateGauge or 0
 
-    if not ctx.IsUltimateRunning and IsKeyPressed(inputConfig.UltimateKey or PlayerConfig.Default.Input.UltimateKey) then
+    ultimateGauge = 1000
+
+    if not ctx.IsUltimateRunning
+        and ActionStarted(ctx, "Ultimate")
+        and ultimateGauge >= maxUltimateGauge then
         ctx.IsUltimateRunning = true
         table.insert(result.Events, { Type = "UltimateStart" })
     end

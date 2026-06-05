@@ -1,4 +1,4 @@
-#include "AnimationTransportBar.h"
+﻿#include "AnimationTransportBar.h"
 
 #include "Animation/Instance/AnimSingleNodeInstance.h"
 #include "Component/Primitive/SkeletalMeshComponent.h"
@@ -58,7 +58,7 @@ void FAnimationTransportBar::Render(UAnimSingleNodeInstance* NodeInst,
 	const bool  bIsLooping  = NodeInst ? NodeInst->IsLooping() : true;
 	const float PlayRate    = NodeInst ? NodeInst->GetPlayRate() : 1.0f;
 	const bool  bReverse    = PlayRate < 0.0f;
-	const float RateMag     = std::max(std::fabs(PlayRate), 0.01f);
+	const float RateMag     = std::max<float>(std::fabs(PlayRate), 0.01f);
 
 	const float FrameDelta = (TotalFrames > 1) ? (TotalLength / static_cast<float>(TotalFrames - 1)) : 0.0f;
 
@@ -74,7 +74,7 @@ void FAnimationTransportBar::Render(UAnimSingleNodeInstance* NodeInst,
 	// 이전 프레임
 	if (IconButton("##StepBack", L"Step_Backwards_24x.png", "<|", false) && NodeInst)
 	{
-		NodeInst->SetCurrentTime(std::max(CurrentTime - FrameDelta, 0.0f));
+		NodeInst->SetCurrentTime(std::max<float>(CurrentTime - FrameDelta, 0.0f));
 	}
 	ImGui::SameLine(0.0f, ButtonGap);
 
@@ -114,7 +114,7 @@ void FAnimationTransportBar::Render(UAnimSingleNodeInstance* NodeInst,
 	// 다음 프레임
 	if (IconButton("##StepFwd", L"Step_Forward_24x.png", "|>", false) && NodeInst)
 	{
-		NodeInst->SetCurrentTime(std::min(CurrentTime + FrameDelta, TotalLength));
+		NodeInst->SetCurrentTime(std::min<float>(CurrentTime + FrameDelta, TotalLength));
 	}
 	ImGui::SameLine(0.0f, ButtonGap);
 

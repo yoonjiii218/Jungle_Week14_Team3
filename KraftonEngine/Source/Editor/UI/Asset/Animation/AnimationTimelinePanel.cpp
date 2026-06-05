@@ -7,6 +7,7 @@
 #include "Animation/Notify/AnimNotify.h"
 #include "Animation/Notify/AnimNotifyState.h"
 #include "Animation/AnimationManager.h"
+#include "Asset/AssetRegistry.h"
 #include "Component/Primitive/SkeletalMeshComponent.h"
 #include "Mesh/Skeletal/SkeletalMesh.h"
 #include "Mesh/Skeletal/SkeletalMeshAsset.h"
@@ -14,6 +15,7 @@
 #include "Object/GarbageCollection.h"
 #include "Object/Reflection/ObjectFactory.h"
 #include "Object/Reflection/UClass.h"
+#include "Core/Property/SoftObjectProperty.h"
 #include "Core/Types/PropertyTypes.h"
 #include "Editor/UI/Asset/Animation/MorphCurveEditObject.h"
 
@@ -97,7 +99,7 @@ namespace
 		FAnimNotifyEvent Event;
 		Event.NotifyName  = FName(Name);
 		Event.TriggerTime = Time;
-		Event.Duration    = bAsState ? std::max(Duration, 0.01f) : 0.0f;
+		Event.Duration    = bAsState ? std::max<float>(Duration, 0.01f) : 0.0f;
 		Event.TrackIndex  = TrackIndex;
 
 		if (Cls && Seq)
@@ -134,13 +136,13 @@ namespace
 		const float PlayLength = Seq->GetPlayLength();
 		NewEvent.TriggerTime = std::clamp(PasteTime, 0.0f, PlayLength);
 		const int32 MaxTrackIndex = static_cast<int32>(Tracks.size()) - 1;
-		const int32 FallbackTrackIndex = std::clamp(Clipboard.SourceTrackIndex, 0, std::max(MaxTrackIndex, 0));
+		const int32 FallbackTrackIndex = std::clamp<int32>(Clipboard.SourceTrackIndex, 0, std::max<int32>(MaxTrackIndex, 0));
 		NewEvent.TrackIndex = (TargetTrackIndex >= 0 && TargetTrackIndex <= MaxTrackIndex)
 			? TargetTrackIndex
 			: FallbackTrackIndex;
 		if (NewEvent.NotifyState && NewEvent.Duration > 0.0f)
 		{
-			NewEvent.Duration = std::clamp(NewEvent.Duration, 0.0f, std::max(PlayLength - NewEvent.TriggerTime, 0.0f));
+			NewEvent.Duration = std::clamp(NewEvent.Duration, 0.0f, std::max<float>(PlayLength - NewEvent.TriggerTime, 0.0f));
 		}
 		else
 		{
@@ -275,12 +277,93 @@ namespace
 					FString* S = static_cast<FString*>(Prop.GetValuePtr());
 					if (S)
 					{
-						char Buf[256];
-						strncpy_s(Buf, sizeof(Buf), S->c_str(), _TRUNCATE);
-						if (ImGui::InputText("##v", Buf, sizeof(Buf)))
+						const TMap<FString, FString>& Metadata = Prop.GetMetadata();
+						auto AssetTypeIt = Metadata.find("assettype");
+						if (AssetTypeIt != Metadata.end() && AssetTypeIt->second == "Audio")
 						{
-							*S = Buf;
-							bChanged = true;
+							const FString Preview = (S->empty() || *S == "None") ? "None" : *S;
+							if (ImGui::BeginCombo("##v", Preview.c_str()))
+							{
+								const bool bSelectedNone = (S->empty() || *S == "None");
+								if (ImGui::Selectable("None", bSelectedNone))
+								{
+									*S = "None";
+									bChanged = true;
+								}
+								if (bSelectedNone) ImGui::SetItemDefaultFocus();
+
+								const TArray<FAssetListItem>& AudioFiles = FAssetRegistry::ListByTypeName("Audio");
+								for (const FAssetListItem& Item : AudioFiles)
+								{
+									const bool bSelected = (*S == Item.FullPath);
+									if (ImGui::Selectable(Item.DisplayName.c_str(), bSelected))
+									{
+										*S = Item.FullPath;
+										bChanged = true;
+									}
+									if (bSelected) ImGui::SetItemDefaultFocus();
+								}
+								ImGui::EndCombo();
+							}
+						}
+						else
+						{
+							char Buf[256];
+							strncpy_s(Buf, sizeof(Buf), S->c_str(), _TRUNCATE);
+							if (ImGui::InputText("##v", Buf, sizeof(Buf)))
+							{
+								*S = Buf;
+								bChanged = true;
+							}
+						}
+					}
+					break;
+				}
+				case EPropertyType::SoftObjectRef:
+				{
+					const FSoftObjectProperty* SoftProperty = Prop.Property ? Prop.Property->AsSoftObjectProperty() : nullptr;
+					if (SoftProperty)
+					{
+						FString CurrentPath = SoftProperty->GetPath(Prop.ContainerPtr);
+						const FString AssetType = SoftProperty->GetAssetType();
+						if (AssetType == "Audio")
+						{
+							const FString Preview = (CurrentPath.empty() || CurrentPath == "None") ? "None" : CurrentPath;
+							if (ImGui::BeginCombo("##v", Preview.c_str()))
+							{
+								const bool bSelectedNone = (CurrentPath.empty() || CurrentPath == "None");
+								if (ImGui::Selectable("None", bSelectedNone))
+								{
+									SoftProperty->SetPath(Prop.ContainerPtr, "None");
+									CurrentPath = "None";
+									bChanged = true;
+								}
+								if (bSelectedNone) ImGui::SetItemDefaultFocus();
+
+								const TArray<FAssetListItem>& AudioFiles = FAssetRegistry::ListByTypeName("Audio");
+								for (const FAssetListItem& Item : AudioFiles)
+								{
+									const bool bSelected = (CurrentPath == Item.FullPath);
+									if (ImGui::Selectable(Item.DisplayName.c_str(), bSelected))
+									{
+										SoftProperty->SetPath(Prop.ContainerPtr, Item.FullPath);
+										CurrentPath = Item.FullPath;
+										bChanged = true;
+									}
+									if (bSelected) ImGui::SetItemDefaultFocus();
+								}
+								ImGui::EndCombo();
+							}
+						}
+						else
+						{
+							char Buf[256];
+							strncpy_s(Buf, sizeof(Buf), CurrentPath.c_str(), _TRUNCATE);
+							if (ImGui::InputText("##v", Buf, sizeof(Buf)))
+							{
+								SoftProperty->SetPath(Prop.ContainerPtr, Buf);
+								bChanged = true;
+							}
 						}
 					}
 					break;
@@ -434,8 +517,8 @@ namespace
 			return 0.0f;
 		}
 
-		const int32 PrevIndex = std::max(0, KeyIndex - 1);
-		const int32 NextIndex = std::min(NumKeys - 1, KeyIndex + 1);
+		const int32 PrevIndex = std::max<float>(0, KeyIndex - 1);
+		const int32 NextIndex = std::min<float>(NumKeys - 1, KeyIndex + 1);
 		const FRawFloatCurveKey& Prev = Curve.Keys[PrevIndex];
 		const FRawFloatCurveKey& Next = Curve.Keys[NextIndex];
 		const float DeltaTime = Next.TimeSeconds - Prev.TimeSeconds;
@@ -553,26 +636,26 @@ namespace
 
 	static float MorphValueToY(float Value, float GraphTop, float GraphH, float MinValue, float MaxValue)
 	{
-		const float Alpha = std::clamp((Value - MinValue) / std::max(MaxValue - MinValue, 1.0e-6f), 0.0f, 1.0f);
+		const float Alpha = std::clamp((Value - MinValue) / std::max<float>(MaxValue - MinValue, 1.0e-6f), 0.0f, 1.0f);
 		return GraphTop + (1.0f - Alpha) * GraphH;
 	}
 
 	static float MorphYToValue(float Y, float GraphTop, float GraphH, float MinValue, float MaxValue)
 	{
-		const float Alpha = 1.0f - std::clamp((Y - GraphTop) / std::max(GraphH, 1.0f), 0.0f, 1.0f);
+		const float Alpha = 1.0f - std::clamp((Y - GraphTop) / std::max<float>(GraphH, 1.0f), 0.0f, 1.0f);
 		return MinValue + Alpha * (MaxValue - MinValue);
 	}
 
 	static float GetLeaveHandleTime(const FRawFloatCurveKey& Key, const FRawFloatCurveKey& Next)
 	{
-		const float Segment = std::max(Next.TimeSeconds - Key.TimeSeconds, 1.0e-5f);
+		const float Segment = std::max<float>(Next.TimeSeconds - Key.TimeSeconds, 1.0e-5f);
 		const float Weight = Key.bLeaveTangentWeighted ? Key.LeaveTangentWeight : Segment / 3.0f;
 		return Key.TimeSeconds + std::clamp(Weight, 1.0e-5f, Segment);
 	}
 
 	static float GetArriveHandleTime(const FRawFloatCurveKey& Prev, const FRawFloatCurveKey& Key)
 	{
-		const float Segment = std::max(Key.TimeSeconds - Prev.TimeSeconds, 1.0e-5f);
+		const float Segment = std::max<float>(Key.TimeSeconds - Prev.TimeSeconds, 1.0e-5f);
 		const float Weight = Key.bArriveTangentWeighted ? Key.ArriveTangentWeight : Segment / 3.0f;
 		return Key.TimeSeconds - std::clamp(Weight, 1.0e-5f, Segment);
 	}
@@ -584,7 +667,7 @@ namespace
 		{
 			Key.TangentMode = 2;
 		}
-		const float Segment = std::max(Next.TimeSeconds - Key.TimeSeconds, 1.0e-5f);
+		const float Segment = std::max<float>(Next.TimeSeconds - Key.TimeSeconds, 1.0e-5f);
 		const float Weight = std::clamp(HandleTime - Key.TimeSeconds, 1.0e-5f, Segment);
 		Key.LeaveTangentWeight = Weight;
 		Key.bLeaveTangentWeighted = true;
@@ -604,7 +687,7 @@ namespace
 		{
 			Key.TangentMode = 2;
 		}
-		const float Segment = std::max(Key.TimeSeconds - Prev.TimeSeconds, 1.0e-5f);
+		const float Segment = std::max<float>(Key.TimeSeconds - Prev.TimeSeconds, 1.0e-5f);
 		const float Weight = std::clamp(Key.TimeSeconds - HandleTime, 1.0e-5f, Segment);
 		Key.ArriveTangentWeight = Weight;
 		Key.bArriveTangentWeighted = true;
@@ -697,7 +780,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 	ImGui::BeginChild("##AnimTimelinePanel", ImVec2(0.0f, PanelHeight), false,
 	                  ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
-	const float TrackViewportH = std::max(PanelHeight - TransportH, RulerH + RowH);
+	const float TrackViewportH = std::max<float>(PanelHeight - TransportH, RulerH + RowH);
 	ImGui::BeginChild("##AnimTimelineTrackScroll", ImVec2(0.0f, TrackViewportH), false,
 	                  ImGuiWindowFlags_HorizontalScrollbar);
 
@@ -722,13 +805,13 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 
 	const float PlayLength = Seq->GetPlayLength();
 	const float FrameRate  = Seq->GetFrameRate() > 0.0f ? Seq->GetFrameRate() : 30.0f;
-	const int   NumFrames  = std::max(Seq->GetNumberOfFrames(), 1);
-	const int   EndFrame   = std::max(NumFrames - 1, 0);
+	const int   NumFrames  = std::max<int>(Seq->GetNumberOfFrames(), 1);
+	const int   EndFrame   = std::max<int>(NumFrames - 1, 0);
 	Seq->EnsureNotifyTrackLayout();
 
-	float TrackAreaH = std::max(TrackViewportH, RulerH + RowH);
+	float TrackAreaH = std::max<float>(TrackViewportH, RulerH + RowH);
 	const float CanvasX    = Origin.x + HeaderW;
-	const float CanvasW    = std::max(FullW - HeaderW, 1.0f);
+	const float CanvasW    = std::max<float>(FullW - HeaderW, 1.0f);
 
 	auto TimeToX = [&](float T) { return CanvasX + (T / PlayLength) * CanvasW; };
 
@@ -780,8 +863,8 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 			const float Frac = std::clamp(
 				(ImGui::GetIO().MousePos.x - CanvasX) / CanvasW, 0.0f, 1.0f);
 			sPendingNotifyTime = Frac * PlayLength;
-			sPendingNotifyTrackIndex = std::clamp(
-				static_cast<int32>((MouseY - LaneTop) / NotifyLaneH), 0, std::max(TrackCount - 1, 0));
+			sPendingNotifyTrackIndex = std::clamp<int32>(
+				static_cast<int32>((MouseY - LaneTop) / NotifyLaneH), 0, std::max<int32>(TrackCount - 1, 0));
 			ImGui::OpenPopup("##addNotifyCtx");
 		}
 	}
@@ -834,7 +917,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 				{
 					static int sStateCounter = 0;
 					const FString Name = FString(Cls->GetName()) + "_" + std::to_string(++sStateCounter);
-					const float DefaultDur = std::min(0.3f, std::max(PlayLength - sPendingNotifyTime, 0.05f));
+					const float DefaultDur = std::min<float>(0.3f, std::max<float>(PlayLength - sPendingNotifyTime, 0.05f));
 					Seq->GetMutableModelNotifies().push_back(
 						MakeNotifyFromClass(Seq, Cls, Name, sPendingNotifyTime, DefaultDur, true, sPendingNotifyTrackIndex));
 					Seq->RefreshRuntimeNotifies();
@@ -849,7 +932,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 
 	// ── 룰러 눈금 / 프레임 번호 ──
 	const int RawStep = static_cast<int>(std::lround(NumFrames * 55.0f / CanvasW));
-	const int Step    = NiceFrameStep(std::max(RawStep, 1));
+	const int Step    = NiceFrameStep(std::max<float>(RawStep, 1));
 	for (int F = 0; F <= EndFrame; ++F)
 	{
 		const float X = TimeToX((static_cast<float>(F) / EndFrame) * PlayLength);
@@ -1017,7 +1100,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 			float BadgeW;
 			if (N.Duration > 0.0f)
 			{
-				BadgeW = std::max(TimeToX(N.TriggerTime + N.Duration) - NX, 6.0f);
+				BadgeW = std::max<float>(TimeToX(N.TriggerTime + N.Duration) - NX, 6.0f);
 			}
 			else
 			{
@@ -1031,7 +1114,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 			constexpr float HandleW = 6.0f;
 			const bool      bHasDur  = (N.Duration > 0.0f);
 			const float     FullW    = BadgeW + 12.0f;
-			const float     BodyW    = bHasDur ? std::max(FullW - HandleW, 8.0f) : FullW;
+			const float     BodyW    = bHasDur ? std::max<float>(FullW - HandleW, 8.0f) : FullW;
 
 			ImGui::SetCursorScreenPos(ImVec2(NX - 6.0f, BadgeTop));
 			ImGui::InvisibleButton("##notify", ImVec2(BodyW, BadgeBot - BadgeTop));
@@ -1060,7 +1143,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 			// + 시퀀스 우측 경계 클램프 시 (TriggerTime + Duration) 가 PlayLength 넘지 않게.
 			if (bActive && ImGui::IsMouseDragging(ImGuiMouseButton_Left, -1.0f))
 			{
-				const float MaxStart = bHasDur ? std::max(PlayLength - N.Duration, 0.0f)
+				const float MaxStart = bHasDur ? std::max<float>(PlayLength - N.Duration, 0.0f)
 				                               : PlayLength;
 				N.TriggerTime    = std::clamp(MouseTime() - sGrabOffsetTime, 0.0f, MaxStart);
 				sPendingSave    = true;   // 마우스 release 시 일괄 save.
@@ -1190,7 +1273,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 				// State notify 는 시각적 폭이 우선 — 이름이 길면 "..." 으로 잘라 표기.
 				// (Instant 는 BadgeW 가 이름 폭에 맞춰 자동 확장되므로 truncation 무영향.)
 				const float TextStartX = MarkNX + 8.0f;
-				const float MaxTextW   = std::max(BMax.x - TextStartX - 4.0f, 0.0f);
+				const float MaxTextW   = std::max<float>(BMax.x - TextStartX - 4.0f, 0.0f);
 				const std::string Disp = TruncateWithEllipsis(Nm, MaxTextW);
 				if (!Disp.empty())
 				{
@@ -1377,7 +1460,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 					{
 						ImVec2 PrevPoint;
 						bool bHasPrevPoint = false;
-						const int32 SampleCount = std::max(32, static_cast<int32>(CanvasW / 8.0f));
+						const int32 SampleCount = std::max<float>(32, static_cast<int32>(CanvasW / 8.0f));
 						for (int32 Sample = 0; Sample <= SampleCount; ++Sample)
 						{
 							const float T = (static_cast<float>(Sample) / static_cast<float>(SampleCount)) * PlayLength;
@@ -1533,7 +1616,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 
 	// 실제 트랙 행 높이가 viewport보다 커져도 transport는 고정하고,
 	// 위쪽 track child만 스크롤되도록 content height만 확장한다.
-	TrackAreaH = std::max(TrackAreaH, RowY - Origin.y);
+	TrackAreaH = std::max<float>(TrackAreaH, RowY - Origin.y);
 
 	// 남은 캔버스 빈 영역
 	if (RowY < Origin.y + TrackAreaH)
@@ -1649,7 +1732,7 @@ bool FAnimationTimelinePanel::RenderNotifyDetails(UAnimSequence* Seq, int32 Sele
 		ImGui::TextUnformatted("Trigger Time (sec)");
 		ImGui::SetNextItemWidth(-FLT_MIN);
 		const float MaxStart = bIsState
-			? std::max(Seq->GetPlayLength() - N.Duration, 0.0f)
+			? std::max<float>(Seq->GetPlayLength() - N.Duration, 0.0f)
 			: Seq->GetPlayLength();
 		if (ImGui::DragFloat("##trig", &N.TriggerTime, 0.01f, 0.0f, MaxStart, "%.3f"))
 		{
@@ -1660,7 +1743,7 @@ bool FAnimationTimelinePanel::RenderNotifyDetails(UAnimSequence* Seq, int32 Sele
 	{
 		ImGui::TextUnformatted("Duration (sec)");
 		ImGui::SetNextItemWidth(-FLT_MIN);
-		const float MaxDur = std::max(Seq->GetPlayLength() - N.TriggerTime, 0.01f);
+		const float MaxDur = std::max<float>(Seq->GetPlayLength() - N.TriggerTime, 0.01f);
 		if (ImGui::DragFloat("##dur", &N.Duration, 0.01f, 0.01f, MaxDur, "%.3f"))
 		{
 			bChanged = true;
@@ -1670,7 +1753,7 @@ bool FAnimationTimelinePanel::RenderNotifyDetails(UAnimSequence* Seq, int32 Sele
 	{
 		TArray<FAnimNotifyTrack>& Tracks = Seq->GetMutableNotifyTracks();
 		const int32 TrackCount = static_cast<int32>(Tracks.size());
-		N.TrackIndex = std::clamp(N.TrackIndex, 0, std::max(TrackCount - 1, 0));
+		N.TrackIndex = std::clamp(N.TrackIndex, 0, std::max<int32>(TrackCount - 1, 0));
 		std::string CurrentTrackName = TrackCount > 0 ? Tracks[N.TrackIndex].TrackName.ToString() : "1";
 		if (CurrentTrackName.empty())
 		{

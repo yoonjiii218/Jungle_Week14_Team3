@@ -75,7 +75,7 @@ void USpringArmComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	{
 		if (bEnableCameraRotationLag && CameraRotationLagSpeed > 0.0f)
 		{
-			const float Alpha = std::min(DeltaTime * CameraRotationLagSpeed, 1.0f);
+			const float Alpha = std::min<float>(DeltaTime * CameraRotationLagSpeed, 1.0f);
 			LaggedAttachRot = FQuat::Slerp(LaggedAttachRot, DesiredAttachRot, Alpha).GetNormalized();
 		}
 		else
@@ -85,7 +85,7 @@ void USpringArmComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 		if (bEnableCameraLag && CameraLagSpeed > 0.0f)
 		{
-			const float Alpha = std::min(DeltaTime * CameraLagSpeed, 1.0f);
+			const float Alpha = std::min<float>(DeltaTime * CameraLagSpeed, 1.0f);
 			FVector NewLoc = LaggedAttachLoc + (DesiredAttachLoc - LaggedAttachLoc) * Alpha;
 
 			// 너무 멀어지면 클램프 — 빠른 텔레포트/리스폰 직후 카메라가 한참 뒤따라오는 현상 방지.
@@ -135,7 +135,7 @@ void USpringArmComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 				FHitResult Hit;
 				if (World->PhysicsRaycast(LaggedAttachLoc, Dir, Distance, Hit, ProbeChannel, Owner))
 				{
-					const float SafeDist = std::max(Hit.Distance - ProbeSize, 0.0f);
+					const float SafeDist = std::max<float>(Hit.Distance - ProbeSize, 0.0f);
 					ArmEndWorld = LaggedAttachLoc + Dir * SafeDist;
 				}
 			}

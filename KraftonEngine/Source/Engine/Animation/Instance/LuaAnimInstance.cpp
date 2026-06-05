@@ -141,6 +141,30 @@ void ULuaAnimInstance::HandleAnimNotify(const FAnimNotifyEvent& Notify)
 	}
 }
 
+bool ULuaAnimInstance::InvokeLuaFunction(const FString& FunctionName)
+{
+	if (FunctionName.empty() || !Env.valid() || !LuaSelf.valid())
+	{
+		return false;
+	}
+
+	sol::protected_function Function = Env[FunctionName];
+	if (!Function.valid())
+	{
+		return false;
+	}
+
+	FLuaCallScope Scope(this);
+	auto R = Function(LuaSelf);
+	if (!R.valid())
+	{
+		sol::error Err = R;
+		UE_LOG("[LuaAnimInstance] %s() error: %s", FunctionName.c_str(), Err.what());
+		return false;
+	}
+	return true;
+}
+
 
 void ULuaAnimInstance::PostEvaluatePose(FPoseContext& Output)
 {

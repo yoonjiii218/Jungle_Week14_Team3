@@ -1,24 +1,16 @@
 local PlayerConfig = {}
 
-local VK_W = string.byte("W")
-local VK_A = string.byte("A")
-local VK_S = string.byte("S")
-local VK_D = string.byte("D")
-local VK_Q = string.byte("Q")
-local VK_SPACE = 0x20
-local VK_LBUTTON = 0x01
-local VK_SHIFT = 0x10
-
 PlayerConfig.Default = {
+    -- Gameplay scripts read only semantic names. Physical device mapping lives in C++
+    -- Lua Input bindings: WASD/LeftStick -> Move, LMB/X -> Attack, Shift/RT -> Dash, Q/Y -> Ultimate.
     Input = {
-        MoveForwardKey = VK_W,
-        MoveBackwardKey = VK_S,
-        MoveRightKey = VK_D,
-        MoveLeftKey = VK_A,
-        JumpKey = VK_SPACE,
-        DashKey = VK_SHIFT,
-        AttackKey = VK_LBUTTON,
-        UltimateKey = VK_Q,
+        MoveAxis = "Move",
+        LookAxis = "Look",
+        JumpAction = "Jump",
+        DashAction = "Dash",
+        AttackAction = "Attack",
+        UltimateAction = "Ultimate",
+        SecondaryDashAction = "SecondaryDash",
     },
 
     Action = {
@@ -28,11 +20,11 @@ PlayerConfig.Default = {
         AttackStepForwardDistance = 1.5,
         AttackStepForwardDuration = 0.12,
         AttackStepForwardDistances = {
-            1.5,
-            1.5,
-            1.5,
-            1.5,
-            1.5,
+            3,
+            3,
+            3,
+            3,
+            3,
         },
         AttackStepForwardDurations = {
             0.12,
