@@ -20,6 +20,8 @@
 #include "Particles/ParticleSystemManager.h"
 #include "Physics/PhysicsAsset.h"
 #include "Physics/PhysicsAssetManager.h"
+#include "UI/RmlUiDocumentAsset.h"
+#include "UI/RmlUiDocumentManager.h"
 #include "Mesh/Skeletal/SkeletalMesh.h"
 #include "Editor/UI/Asset/Mesh/MeshEditorWidget.h"
 #include "EditorEngine.h"
@@ -457,6 +459,10 @@ void FEditorContentBrowserWidget::RefreshContent()
 				case EAssetPackageType::LuaBlueprint:
 					Element = std::make_shared<LuaBlueprintElement>();
 					break;
+				case EAssetPackageType::RmlUiDocument:
+					Element = std::make_shared<RmlUiElement>();
+					Icon = FEditorTextureManager::Get().GetOrLoadIcon(FPaths::ToUtf8(FPaths::Combine(FPaths::AssetDir(), L"Editor/Icons/", L"StartMerge_42x.png")));
+					break;
 				default:
 					Element = std::make_shared<ContentBrowserElement>();
 					break;
@@ -624,6 +630,21 @@ void FEditorContentBrowserWidget::DrawContents()
 						if (ULuaBlueprintAsset* BlueprintAsset = FLuaBlueprintManager::Get().Load(CreatedPath))
 						{
 							BrowserContext.EditorEngine->OpenAssetEditorForObject(BlueprintAsset);
+						}
+					}
+				}
+			}
+			if (ImGui::MenuItem("RmlUi Widget"))
+			{
+				FString CreatedPath;
+				if (FAssetFactory::CreateRmlUiWidget(FPaths::ToUtf8(BrowserContext.CurrentPath), "NewRmlUiWidget", CreatedPath))
+				{
+					Refresh();
+					if (BrowserContext.EditorEngine)
+					{
+						if (URmlUiDocumentAsset* DocumentAsset = FRmlUiDocumentManager::Get().Load(CreatedPath))
+						{
+							BrowserContext.EditorEngine->OpenAssetEditorForObject(DocumentAsset);
 						}
 					}
 				}

@@ -82,6 +82,9 @@
     <Filter Include="Source\Editor\UI\Asset\Physics">
       <UniqueIdentifier>{a9510143-b9c8-a4a8-aa42-31438e50f6bb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Editor\UI\Asset\RmlUi">
+      <UniqueIdentifier>{d51f3116-4c7c-4d46-b426-d7d54a0f5a57}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Editor\UI\ContentBrowser">
       <UniqueIdentifier>{09a2ea7f-e891-b580-bef0-471bcd9b5d4b}</UniqueIdentifier>
     </Filter>
@@ -802,6 +805,9 @@
     </ClCompile>
     <ClCompile Include="Source\Editor\UI\Asset\Particle\ParticleSystemEditorWidget.cpp">
       <Filter>Source\Editor\UI\Asset\Particle</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Editor\UI\Asset\RmlUi\RmlUiEditorWidget.cpp">
+      <Filter>Source\Editor\UI\Asset\RmlUi</Filter>
     </ClCompile>
     <ClCompile Include="Source\Editor\UI\Asset\Physics\PhysicsAssetEditorWidget.cpp">
       <Filter>Source\Editor\UI\Asset\Physics</Filter>
@@ -1859,6 +1865,12 @@
     <ClCompile Include="Source\Engine\UI\UserWidget.cpp">
       <Filter>Source\Engine\UI</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\UI\RmlUiDocumentAsset.cpp">
+      <Filter>Source\Engine\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\UI\RmlUiDocumentManager.cpp">
+      <Filter>Source\Engine\UI</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Engine\Viewport\GameViewportClient.cpp">
       <Filter>Source\Engine\Viewport</Filter>
     </ClCompile>
@@ -2014,6 +2026,9 @@
     </ClInclude>
     <ClInclude Include="Source\Editor\UI\Asset\Physics\PhysicsAssetEditorWidget.h">
       <Filter>Source\Editor\UI\Asset\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Editor\UI\Asset\RmlUi\RmlUiEditorWidget.h">
+      <Filter>Source\Editor\UI\Asset\RmlUi</Filter>
     </ClInclude>
     <ClInclude Include="Source\Editor\UI\ContentBrowser\ContentBrowser.h">
       <Filter>Source\Editor\UI\ContentBrowser</Filter>
@@ -3330,6 +3345,12 @@
       <Filter>Source\Engine\UI</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\UI\UserWidget.h">
+      <Filter>Source\Engine\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\UI\RmlUiDocumentAsset.h">
+      <Filter>Source\Engine\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\UI\RmlUiDocumentManager.h">
       <Filter>Source\Engine\UI</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Viewport\GameViewportClient.h">

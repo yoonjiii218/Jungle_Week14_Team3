@@ -11,5 +11,6 @@ public:
 	static bool CreateParticleSystem(const FString& DirectoryPath, const FString& AssetName, FString& OutCreatedPath);
 	static bool CreatePhysicsAsset(const FString& DirectoryPath, const FString& AssetName, FString& OutCreatedPath);
 	static bool CreateLuaBlueprint(const FString& DirectoryPath, const FString& AssetName, FString& OutCreatedPath);
+	static bool CreateRmlUiWidget(const FString& DirectoryPath, const FString& AssetName, FString& OutCreatedPath);
 	static bool CreateMaterial(const FString& DirectoryPath, const FString& AssetName, FString& OutCreatedPath);
 };

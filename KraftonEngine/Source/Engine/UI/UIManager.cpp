@@ -1,4 +1,5 @@
-#include "UI/UIManager.h"
+﻿#include "UI/UIManager.h"
+#include "Asset/AssetPackage.h"
 #include "Object/GarbageCollection.h"
 
 #include "Core/Logging/Log.h"
@@ -11,6 +12,8 @@
 #include "Render/Resource/RenderResources.h"
 #include "Render/Shader/ShaderManager.h"
 #include "Render/Types/FrameContext.h"
+#include "UI/RmlUiDocumentAsset.h"
+#include "UI/RmlUiDocumentManager.h"
 #include "UI/UserWidget.h"
 #include "WICTextureLoader.h"
 
@@ -747,17 +750,40 @@ bool UUIManager::LoadDocument(UUserWidget* Widget)
 		return false;
 	}
 
-	const std::filesystem::path Path = ToProjectPath(Widget->GetDocumentPath());
+	const FString& DocumentPath = Widget->GetDocumentPath();
+	const std::filesystem::path Path = ToProjectPath(DocumentPath);
 	if (!std::filesystem::exists(Path))
 	{
-		UE_LOG("[RmlUi] Document not found: %s", Widget->GetDocumentPath().c_str());
+		UE_LOG("[RmlUi] Document not found: %s", DocumentPath.c_str());
 		return false;
 	}
 
-	Rml::ElementDocument* Document = RmlContext->LoadDocument(ToRmlPath(Path));
+	Rml::ElementDocument* Document = nullptr;
+	if (FAssetPackage::IsAssetPackagePath(DocumentPath))
+	{
+		EAssetPackageType PackageType = EAssetPackageType::Unknown;
+		if (!FAssetPackage::GetPackageType(DocumentPath, PackageType) || PackageType != EAssetPackageType::RmlUiDocument)
+		{
+			UE_LOG("[RmlUi] Unsupported UI asset package: %s", DocumentPath.c_str());
+			return false;
+		}
+
+		URmlUiDocumentAsset* Asset = FRmlUiDocumentManager::Get().Load(DocumentPath);
+		if (!Asset || Asset->GetDocumentSource().empty())
+		{
+			UE_LOG("[RmlUi] Failed to load UI widget asset: %s", DocumentPath.c_str());
+			return false;
+		}
+
+		Document = RmlContext->LoadDocumentFromMemory(Asset->GetDocumentSource(), ToRmlPath(Path));
+	}
+	else
+	{
+		Document = RmlContext->LoadDocument(ToRmlPath(Path));
+	}
 	if (!Document)
 	{
-		UE_LOG("[RmlUi] Failed to load document: %s", Widget->GetDocumentPath().c_str());
+		UE_LOG("[RmlUi] Failed to load document: %s", DocumentPath.c_str());
 		return false;
 	}
 

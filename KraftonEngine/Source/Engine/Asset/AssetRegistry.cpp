@@ -10,6 +10,7 @@
 #include "Particles/ParticleSystemManager.h"
 #include "Physics/PhysicsAssetManager.h"
 #include "LuaBlueprint/LuaBlueprintManager.h"
+#include "UI/RmlUiDocumentManager.h"
 #include "Platform/Paths.h"
 
 #include <cstring>
@@ -87,6 +88,11 @@ namespace FAssetRegistry
 		{
 			FLuaBlueprintManager::Get().RefreshAvailableBlueprints();
 			return FLuaBlueprintManager::Get().GetAvailableBlueprintFiles();
+		}
+		if (std::strcmp(AssetTypeName, "URmlUiDocumentAsset") == 0 || std::strcmp(AssetTypeName, "RmlUiWidget") == 0)
+		{
+			FRmlUiDocumentManager::Get().RefreshAvailableDocuments();
+			return FRmlUiDocumentManager::Get().GetAvailableDocumentFiles();
 		}
 
 		return Empty;

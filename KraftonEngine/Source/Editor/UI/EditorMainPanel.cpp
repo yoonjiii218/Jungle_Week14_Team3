@@ -29,6 +29,7 @@
 #include "Editor/UI/Asset/Animation/AnimGraphEditorWidget.h"
 #include "Editor/UI/Asset/Material/MaterialEditorWidget.h"
 #include "Editor/UI/Asset/LuaBlueprint/LuaBlueprintEditorWidget.h"
+#include "Editor/UI/Asset/RmlUi/RmlUiEditorWidget.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -137,6 +138,7 @@ void FEditorMainPanel::Create(FWindowsWindow* InWindow, FRenderer& InRenderer, U
 	AssetEditorManager.RegisterEditor<FStaticMeshEditorWidget>();
 	AssetEditorManager.RegisterEditor<FAnimGraphEditorWidget>();
 	AssetEditorManager.RegisterEditor<FLuaBlueprintEditorWidget>();
+	AssetEditorManager.RegisterEditor<FRmlUiEditorWidget>();
     AssetEditorManager.RegisterEditor<FMaterialEditorWidget>();
 	AssetEditorManager.RegisterEditor<FParticleSystemEditorWidget>();
 }

@@ -29,6 +29,8 @@
 #include "Materials/MaterialManager.h"
 #include "Physics/PhysicsAsset.h"
 #include "Physics/PhysicsAssetManager.h"
+#include "UI/RmlUiDocumentAsset.h"
+#include "UI/RmlUiDocumentManager.h"
 
 #include <algorithm>
 #include <chrono>
@@ -939,5 +941,19 @@ void PhysicsAssetElement::OnDoubleLeftClicked(ContentBrowserContext& Context)
 	if (UPhysicsAsset* PhysicsAsset = FPhysicsAssetManager::Get().Load(FilePath))
 	{
 		Context.EditorEngine->OpenPhysicsAssetEditorForObject(PhysicsAsset);
+	}
+}
+
+void RmlUiElement::OnDoubleLeftClicked(ContentBrowserContext& Context)
+{
+	if (!Context.EditorEngine)
+	{
+		return;
+	}
+
+	const FString FilePath = FPaths::ToUtf8(ContentItem.Path.wstring());
+	if (URmlUiDocumentAsset* Document = FRmlUiDocumentManager::Get().Load(FilePath))
+	{
+		Context.EditorEngine->OpenAssetEditorForObject(Document);
 	}
 }

@@ -17,7 +17,8 @@ enum class EAssetPackageType : uint32
 	AnimGraph,
 	ParticleSystem,
 	LuaBlueprint,
-	PhysicsAsset
+	PhysicsAsset,
+	RmlUiDocument
 };
 
 struct FAssetPackageHeader

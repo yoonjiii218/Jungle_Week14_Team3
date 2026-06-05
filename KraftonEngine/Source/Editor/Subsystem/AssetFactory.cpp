@@ -13,6 +13,8 @@
 #include "Platform/Paths.h"
 #include "Physics/PhysicsAsset.h"
 #include "Physics/PhysicsAssetManager.h"
+#include "UI/RmlUiDocumentAsset.h"
+#include "UI/RmlUiDocumentManager.h"
 
 #include <chrono>
 #include <cstdio>
@@ -225,6 +227,32 @@ bool FAssetFactory::CreateLuaBlueprint(const FString& DirectoryPath, const FStri
 	NewAsset->InitializeDefault();
 
 	bool bSaved = FLuaBlueprintManager::Get().Save(NewAsset);
+	UObjectManager::Get().DestroyObject(NewAsset);
+
+	if (!bSaved)
+	{
+		return false;
+	}
+
+	OutCreatedPath = FPaths::ToUtf8(AssetPath.wstring());
+	return true;
+}
+
+bool FAssetFactory::CreateRmlUiWidget(const FString& DirectoryPath, const FString& AssetName, FString& OutCreatedPath)
+{
+	const std::filesystem::path Directory(FPaths::ToWide(DirectoryPath));
+	if (!std::filesystem::exists(Directory) || !std::filesystem::is_directory(Directory))
+	{
+		return false;
+	}
+
+	const std::filesystem::path AssetPath = BuildUniqueAssetPath(Directory, AssetName.empty() ? "NewRmlUiWidget" : AssetName, L".uasset");
+
+	URmlUiDocumentAsset* NewAsset = UObjectManager::Get().CreateObject<URmlUiDocumentAsset>();
+	NewAsset->SetSourcePath(FPaths::ToUtf8(AssetPath.wstring()));
+	NewAsset->InitializeDefault();
+
+	const bool bSaved = FRmlUiDocumentManager::Get().Save(NewAsset);
 	UObjectManager::Get().DestroyObject(NewAsset);
 
 	if (!bSaved)
