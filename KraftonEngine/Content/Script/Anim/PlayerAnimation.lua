@@ -248,7 +248,11 @@ function init(self)
 
     Anim.sm_add_transition(top, "AnyState", "UltimateAttack",
         function()
-            return IsInUltimateMode(self) == true
+            if IsInUltimateMode(self) == true then
+                PlayerAction.CancelDashActions(PrepareActionCtx(self), false)
+                return true
+            end
+            return false
         end,
         samuraiConfig.UltimateAttackBlendIn or DEFAULT_SAMURAI_CONFIG.UltimateAttackBlendIn
     )

@@ -612,6 +612,58 @@ function PlayerAction.EndDashChargeAttack(ctx)
     PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargeAttackEnd" })
 end
 
+function PlayerAction.CancelDashActions(ctx, unlockMovement)
+    if ctx == nil then
+        return
+    end
+
+    local wasDashActive = ctx.DashActive == true or ctx.DashSlashActive == true
+    local wasDashChargingActive = ctx.DashChargingActive == true
+    local wasDashChargeAttackActive = ctx.DashChargeAttackActive == true
+
+    ctx.DashPressed = false
+    ctx.DashChargingPressed = false
+    ctx.DashChargingReleased = false
+    ctx.DashSlashPressed = false
+
+    ctx.DashActive = false
+    ctx.DashElapsed = 0.0
+    ctx.DashEnd = false
+    ctx.DashMoveDirection = nil
+
+    ctx.DashSlashActive = false
+    ctx.DashSlashElapsed = 0.0
+    ctx.DashSlashEnd = false
+    ctx.DashSlashMoveDirection = nil
+
+    ctx.DashChargingActive = false
+    ctx.DashChargingElapsed = 0.0
+    ctx.DashChargingEnd = false
+
+    ctx.DashChargeAttackActive = false
+    ctx.DashChargeAttackElapsed = 0.0
+    ctx.DashChargeAttackEnd = false
+
+    if ctx.DashPrevOrientRotationToMovement ~= nil then
+        SetOrientRotationToMovement(ctx, ctx.DashPrevOrientRotationToMovement)
+        ctx.DashPrevOrientRotationToMovement = nil
+    end
+
+    if unlockMovement ~= false then
+        SetMovementInputEnabled(ctx, true)
+    end
+
+    if wasDashActive then
+        PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashEnd" })
+    end
+    if wasDashChargingActive then
+        PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargingEnd" })
+    end
+    if wasDashChargeAttackActive then
+        PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargeAttackEnd" })
+    end
+end
+
 function PlayerAction.UpdateDashChargeAttack(ctx, dt)
     ctx.DashChargeAttackElapsed = (ctx.DashChargeAttackElapsed or 0.0) + (dt or 0.0)
     StopMovementImmediately(ctx)
