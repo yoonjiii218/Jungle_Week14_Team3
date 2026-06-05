@@ -9,6 +9,17 @@
 
 #include "Source/Engine/Animation/Sequence/AnimDataModel.generated.h"
 
+struct FAnimNotifyTrack
+{
+    FName TrackName;
+
+    friend FArchive& operator<<(FArchive& Ar, FAnimNotifyTrack& Track)
+    {
+        Ar << Track.TrackName;
+        return Ar;
+    }
+};
+
 UCLASS()
 class UAnimDataModel : public UObject
 {
@@ -19,6 +30,7 @@ public:
 
     void Serialize(FArchive& Ar) override;
     void AddReferencedObjects(FReferenceCollector& Collector) override;
+    void EnsureNotifyTrackLayout();
 
     float PlayLength = 0.0f;  // sec
     float FrameRate  = 30.0f; // fps
@@ -27,6 +39,7 @@ public:
     TArray<FBoneAnimationTrack> BoneAnimationTracks;
     TArray<FMorphTargetCurve>   MorphTargetCurves;
     TArray<FAnimNotifyEvent>    Notifies;
+    TArray<FAnimNotifyTrack>    NotifyTracks;
 
     const TArray<FBoneAnimationTrack>& GetBoneAnimationTracks() const
     {

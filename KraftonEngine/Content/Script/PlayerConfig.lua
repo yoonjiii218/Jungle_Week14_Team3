@@ -26,6 +26,23 @@ PlayerConfig.Default = {
         DashDuration = 0.2,
         DashChargingHoldThreshold = 0.20,
         AttackStepForwardDistance = 1.5,
+        AttackStepForwardDuration = 0.12,
+        AttackStepForwardDistances = {
+            1.5,
+            1.5,
+            1.5,
+            1.5,
+            1.5,
+        },
+        AttackStepForwardDurations = {
+            0.12,
+            0.12,
+            0.12,
+            0.12,
+            0.12,
+        },
+        DashChargeAttackStepForwardDistance = 10.0,
+        DashChargeAttackStepForwardDuration = 0.12,
         AttackTurnSpeed = 12.0,
     },
 
@@ -71,23 +88,23 @@ PlayerConfig.Default = {
 
     Animation = {
         Samurai = {
-            IdlePath = "Content/Animation/Samurai_UE4/SamuraiIdle.uasset",
-            WalkPath = "Content/Animation/Samurai_UE4/SamuraiWalk.uasset",
-            RunPath = "Content/Animation/Samurai_UE4/SamuraiSprint.uasset",
-            JumpPath = "Content/Animation/Samurai_UE4/SamuraiJump.uasset",
+            IdlePath = "Content/Animation/Samurai_Player/SamuraiIdle.uasset",
+            WalkPath = "Content/Animation/Samurai_Player/SamuraiWalk.uasset",
+            RunPath = "Content/Animation/Samurai_Player/SamuraiSprint.uasset",
+            JumpPath = "Content/Animation/Samurai_Player/SamuraiJump.uasset",
 
             AttackPaths = {
-                "Content/Animation/Samurai_UE4/SamuraiAttack1.uasset",
-                "Content/Animation/Samurai_UE4/SamuraiAttack2.uasset",
-                "Content/Animation/Samurai_UE4/SamuraiAttack3.uasset",
-                "Content/Animation/Samurai_UE4/SamuraiAttack4.uasset",
-                "Content/Animation/Samurai_UE4/SamuraiAttack5.uasset",
+                "Content/Animation/Samurai_Player/SamuraiAttack1.uasset",
+                "Content/Animation/Samurai_Player/SamuraiAttack2.uasset",
+                "Content/Animation/Samurai_Player/SamuraiAttack3.uasset",
+                "Content/Animation/Samurai_Player/SamuraiAttack4.uasset",
+                "Content/Animation/Samurai_Player/SamuraiAttack5.uasset",
             },
 
-            DashPath = "Content/Animation/Samurai_UE4/SamuraiAttackHeavy1_Start.uasset",
-            DashChargingPath = "Content/Animation/Samurai_UE4/SamuraiAttackHeavy1_Start.uasset",
-            DashChargeAttackPath = "Content/Animation/Samurai_UE4/SamuraiAttack1.uasset",
-            UltimateAttackPath = "Content/Animation/Samurai_UE4/SamuraiAttackUltimate.uasset",
+            DashPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1_Start.uasset",
+            DashChargingPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1_Start.uasset",
+            DashChargeAttackPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1.uasset",
+            UltimateAttackPath = "Content/Animation/Samurai_Player/SamuraiAttackUltimate.uasset",
 
             WalkThreshold = 0.1,
             RunThreshold = 8.0,

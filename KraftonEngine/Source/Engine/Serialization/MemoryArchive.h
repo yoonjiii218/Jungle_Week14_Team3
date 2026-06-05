@@ -27,6 +27,7 @@ public:
 	}
 
 	const TArray<uint8>& GetBuffer() const { return Buffer; }
+	bool HasRemaining() override { return Offset < Buffer.size(); }
 
 	void Serialize(void* Data, size_t Num) override
 	{

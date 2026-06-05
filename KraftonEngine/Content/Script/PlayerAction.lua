@@ -111,6 +111,12 @@ function PlayerAction.Init(ctx, owner)
     ctx.AttackDown = false
     ctx.AttackPressed = false
     ctx.AttackHoldTime = 0.0
+    ctx.StepForwardActive = false
+    ctx.StepForwardElapsed = 0.0
+    ctx.StepForwardDuration = 0.0
+    ctx.StepForwardDistance = 0.0
+    ctx.StepForwardAppliedDistance = 0.0
+    ctx.StepForwardDirection = nil
 
     ResetDashInput(ctx)
 
@@ -175,7 +181,29 @@ function PlayerAction.StopMovementImmediately(ctx)
     StopMovementImmediately(ctx)
 end
 
-function PlayerAction.StepAttackForward(ctx)
+local function GetAttackStepForwardDistance(actionConfig, attackIndex)
+    if actionConfig.AttackStepForwardDistances ~= nil and attackIndex ~= nil then
+        local distance = actionConfig.AttackStepForwardDistances[attackIndex]
+        if distance ~= nil then
+            return distance
+        end
+    end
+
+    return actionConfig.AttackStepForwardDistance or PlayerConfig.Default.Action.AttackStepForwardDistance
+end
+
+local function GetAttackStepForwardDuration(actionConfig, attackIndex)
+    if actionConfig.AttackStepForwardDurations ~= nil and attackIndex ~= nil then
+        local duration = actionConfig.AttackStepForwardDurations[attackIndex]
+        if duration ~= nil then
+            return duration
+        end
+    end
+
+    return actionConfig.AttackStepForwardDuration or PlayerConfig.Default.Action.AttackStepForwardDuration
+end
+
+local function BeginStepForward(ctx, distance, duration)
     local owner = GetOwner(ctx)
     if owner == nil then
         return
@@ -186,8 +214,78 @@ function PlayerAction.StepAttackForward(ctx)
         return
     end
 
+    if distance == nil or distance == 0.0 then
+        return
+    end
+
+    if duration == nil or duration <= 0.0 then
+        Reflection.Call(owner, "AddActorWorldOffset", forward * distance)
+        return
+    end
+
+    ctx.StepForwardActive = true
+    ctx.StepForwardElapsed = 0.0
+    ctx.StepForwardDuration = duration
+    ctx.StepForwardDistance = distance
+    ctx.StepForwardAppliedDistance = 0.0
+    ctx.StepForwardDirection = forward
+end
+
+function PlayerAction.StepAttackForward(ctx, attackIndex)
     local actionConfig = GetActionConfig(ctx)
-    Reflection.Call(owner, "AddActorWorldOffset", forward * (actionConfig.AttackStepForwardDistance or PlayerConfig.Default.Action.AttackStepForwardDistance))
+    BeginStepForward(
+        ctx,
+        GetAttackStepForwardDistance(actionConfig, attackIndex),
+        GetAttackStepForwardDuration(actionConfig, attackIndex)
+    )
+end
+
+function PlayerAction.StepDashChargeAttackForward(ctx)
+    local actionConfig = GetActionConfig(ctx)
+    BeginStepForward(
+        ctx,
+        actionConfig.DashChargeAttackStepForwardDistance or PlayerConfig.Default.Action.DashChargeAttackStepForwardDistance,
+        actionConfig.DashChargeAttackStepForwardDuration or PlayerConfig.Default.Action.DashChargeAttackStepForwardDuration
+    )
+end
+
+function PlayerAction.UpdateStepForward(ctx, dt)
+    if ctx == nil or ctx.StepForwardActive ~= true then
+        return
+    end
+
+    local owner = GetOwner(ctx)
+    local dir = ctx.StepForwardDirection
+    if owner == nil or dir == nil then
+        ctx.StepForwardActive = false
+        return
+    end
+
+    local duration = ctx.StepForwardDuration or 0.0
+    if duration <= 0.0 then
+        ctx.StepForwardActive = false
+        return
+    end
+
+    ctx.StepForwardElapsed = (ctx.StepForwardElapsed or 0.0) + (dt or 0.0)
+
+    local alpha = ctx.StepForwardElapsed / duration
+    if alpha > 1.0 then
+        alpha = 1.0
+    end
+
+    local targetDistance = (ctx.StepForwardDistance or 0.0) * alpha
+    local deltaDistance = targetDistance - (ctx.StepForwardAppliedDistance or 0.0)
+
+    if math.abs(deltaDistance) > 0.001 then
+        Reflection.Call(owner, "AddActorWorldOffset", dir * deltaDistance)
+        ctx.StepForwardAppliedDistance = targetDistance
+    end
+
+    if alpha >= 1.0 then
+        ctx.StepForwardActive = false
+        ctx.StepForwardDirection = nil
+    end
 end
 
 function PlayerAction.GetMoveInputWorldDirection(ctx)
@@ -362,11 +460,19 @@ function PlayerAction.UpdateActionInput(ctx, dt)
     local dashKey = inputConfig.DashKey or PlayerConfig.Default.Input.DashKey
     local shiftDown = IsKeyDown(dashKey)
     local shiftReleased = IsKeyReleased(dashKey)
+    local shiftPressed = shiftDown and ctx.ShiftWasDown ~= true
 
     if shiftDown then
         ctx.ShiftHoldTime = (ctx.ShiftHoldTime or 0.0) + (dt or 0.0)
 
-        if ctx.ShiftChargingConsumed ~= true and ctx.ShiftHoldTime >= (actionConfig.DashChargingHoldThreshold or PlayerConfig.Default.Action.DashChargingHoldThreshold) then
+        if shiftPressed then
+            ctx.DashPressed = true
+            ctx.DashSlashPressed = true -- compatibility for older animation scripts
+        end
+
+        if ctx.ShiftChargingConsumed == true then
+            ctx.DashChargingPressed = true
+        elseif ctx.ShiftHoldTime >= (actionConfig.DashChargingHoldThreshold or PlayerConfig.Default.Action.DashChargingHoldThreshold) then
             ctx.DashChargingPressed = true
             ctx.ShiftChargingConsumed = true
         end
@@ -375,9 +481,6 @@ function PlayerAction.UpdateActionInput(ctx, dt)
     if (shiftReleased or (ctx.ShiftWasDown == true and not shiftDown)) then
         if ctx.ShiftChargingConsumed == true then
             ctx.DashChargingReleased = true
-        else
-            ctx.DashPressed = true
-            ctx.DashSlashPressed = true -- compatibility for older animation scripts
         end
 
         ctx.ShiftHoldTime = 0.0
@@ -491,6 +594,7 @@ end
 function PlayerAction.BeginDashChargeAttack(ctx)
     SetMovementInputEnabled(ctx, false)
     StopMovementImmediately(ctx)
+    PlayerAction.StepDashChargeAttackForward(ctx)
 
     ctx.DashChargeAttackActive = true
     ctx.DashChargeAttackElapsed = 0.0
@@ -506,6 +610,58 @@ function PlayerAction.EndDashChargeAttack(ctx)
 
     SetMovementInputEnabled(ctx, true)
     PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargeAttackEnd" })
+end
+
+function PlayerAction.CancelDashActions(ctx, unlockMovement)
+    if ctx == nil then
+        return
+    end
+
+    local wasDashActive = ctx.DashActive == true or ctx.DashSlashActive == true
+    local wasDashChargingActive = ctx.DashChargingActive == true
+    local wasDashChargeAttackActive = ctx.DashChargeAttackActive == true
+
+    ctx.DashPressed = false
+    ctx.DashChargingPressed = false
+    ctx.DashChargingReleased = false
+    ctx.DashSlashPressed = false
+
+    ctx.DashActive = false
+    ctx.DashElapsed = 0.0
+    ctx.DashEnd = false
+    ctx.DashMoveDirection = nil
+
+    ctx.DashSlashActive = false
+    ctx.DashSlashElapsed = 0.0
+    ctx.DashSlashEnd = false
+    ctx.DashSlashMoveDirection = nil
+
+    ctx.DashChargingActive = false
+    ctx.DashChargingElapsed = 0.0
+    ctx.DashChargingEnd = false
+
+    ctx.DashChargeAttackActive = false
+    ctx.DashChargeAttackElapsed = 0.0
+    ctx.DashChargeAttackEnd = false
+
+    if ctx.DashPrevOrientRotationToMovement ~= nil then
+        SetOrientRotationToMovement(ctx, ctx.DashPrevOrientRotationToMovement)
+        ctx.DashPrevOrientRotationToMovement = nil
+    end
+
+    if unlockMovement ~= false then
+        SetMovementInputEnabled(ctx, true)
+    end
+
+    if wasDashActive then
+        PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashEnd" })
+    end
+    if wasDashChargingActive then
+        PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargingEnd" })
+    end
+    if wasDashChargeAttackActive then
+        PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargeAttackEnd" })
+    end
 end
 
 function PlayerAction.UpdateDashChargeAttack(ctx, dt)

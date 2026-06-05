@@ -69,7 +69,7 @@ local function BeginAttack(self, index)
     self.ComboQueued = false
     self.AttackEnd = false
     PlayerAction.StopMovementImmediately(self)
-    PlayerAction.StepAttackForward(self)
+    PlayerAction.StepAttackForward(self, index)
     PushPlayerEvent(self, { Type = "AttackStart", AttackIndex = index })
 end
 
@@ -162,6 +162,7 @@ function init(self)
     Anim.sm_add_transition(top, "AnyState", "DashCharging",
         function()
             if self.DashChargingPressed
+                and not self.DashPressed
                 and not self.DashActive
                 and not self.DashChargingActive
                 and not self.DashChargeAttackActive
@@ -193,13 +194,30 @@ function init(self)
 
     Anim.sm_add_transition(top, "Dash", "Locomotion",
         function()
-            if self.DashEnd then
+            if self.DashEnd and not self.DashChargingPressed then
                 EndDash(self)
                 return true
             end
             return false
         end,
         samuraiConfig.DashBlendOut or DEFAULT_SAMURAI_CONFIG.DashBlendOut
+    )
+
+    Anim.sm_add_transition(top, "Dash", "DashCharging",
+        function()
+            if self.DashChargingPressed
+                and not self.DashChargingActive
+                and not self.DashChargeAttackActive
+                and not Anim.is_owner_falling()
+                and not IsUltimateRunning(self) then
+                self.DashChargingPressed = false
+                EndDash(self)
+                BeginDashCharging(self)
+                return true
+            end
+            return false
+        end,
+        samuraiConfig.DashChargingBlendIn or DEFAULT_SAMURAI_CONFIG.DashChargingBlendIn
     )
 
     Anim.sm_add_transition(top, "DashCharging", "DashChargeAttack",
@@ -230,7 +248,11 @@ function init(self)
 
     Anim.sm_add_transition(top, "AnyState", "UltimateAttack",
         function()
-            return IsInUltimateMode(self) == true
+            if IsInUltimateMode(self) == true then
+                PlayerAction.CancelDashActions(PrepareActionCtx(self), false)
+                return true
+            end
+            return false
         end,
         samuraiConfig.UltimateAttackBlendIn or DEFAULT_SAMURAI_CONFIG.UltimateAttackBlendIn
     )
@@ -385,6 +407,8 @@ function update(self, dt)
     if self.AttackPressed and self.AttackIndex > 0 and self.ComboWindow then
         self.ComboQueued = true
     end
+
+    PlayerAction.UpdateStepForward(self, dt)
 
     if self.DashActive then
         PlayerAction.UpdateDash(self, dt)
