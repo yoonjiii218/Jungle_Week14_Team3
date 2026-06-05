@@ -45,6 +45,36 @@ static FParticleRenderState ResolveParticleRenderState(EParticleBlendMode BlendM
 	}
 }
 
+static FShader* ResolveBeamTrailMaterialShader(UMaterial* Material)
+{
+	if (!Material)
+	{
+		return nullptr;
+	}
+
+	// AnimTrail/BeamTrail emitters do not use the ParticleSprite billboard vertex factory.
+	// However, Cascade assets commonly reuse ParticleSprite graph materials for trails.
+	// Compile the same generated material with a BeamTrail VS entry/input layout so
+	// RefractionOffset, texture slots, opacity, and color graph evaluation still work.
+	if (Material->GetDomain() == EMaterialDomain::ParticleSprite
+		&& Material->GetGraphShaderMode() == EMaterialGraphShaderMode::Generated
+		&& !Material->GetGeneratedShaderPath().empty())
+	{
+		FShaderKey BeamTrailKey(Material->GetGeneratedShaderPath(), EShaderVertexFactory::ParticleBeamTrail);
+		BeamTrailKey.SetEntryPoints("VS_BeamTrail", "PS");
+
+		FShader* Shader = FShaderManager::Get().GetOrCreate(BeamTrailKey);
+		if (Shader && Shader->IsValid())
+		{
+			return Shader;
+		}
+
+		UE_LOG("[ParticleProxy] Invalid ParticleSprite BeamTrail material shader. Fallback to fixed BeamTrail shader.");
+	}
+
+	return nullptr;
+}
+
 
 FParticleSystemSceneProxy::FParticleSystemSceneProxy(UParticleSystemComponent* InComponent)
 	: FPrimitiveSceneProxy(InComponent)
@@ -593,8 +623,12 @@ void FParticleSystemSceneProxy::SubmitBeamTrailEmitter(
 		return;
 	}
 
-	FShader* Shader = FShaderManager::Get().GetOrCreate(EShaderPath::ParticleBeamTrail);
+	FShader* Shader = ResolveBeamTrailMaterialShader(Buffer.Material);
 	if (!Shader)
+	{
+		Shader = FShaderManager::Get().GetOrCreate(EShaderPath::ParticleBeamTrail);
+	}
+	if (!Shader || !Shader->IsValid())
 	{
 		UE_LOG("[ParticleProxy] SubmitBeamTrailEmitter: ParticleBeamTrail shader not found (%s)", EShaderPath::ParticleBeamTrail);
 		return;

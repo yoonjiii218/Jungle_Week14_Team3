@@ -8,7 +8,15 @@
 #include "Common/ForwardLighting.hlsli"
 #include "Common/GeneratedSurfacePass.hlsli"
 
-FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)
+struct FMaterialEvalResult
+{
+    FMaterialResult Material;
+    float2 RefractionOffset;
+    float RefractionEnabled;
+    float _Pad;
+};
+
+FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
     float3 n_152 = float3(1.000000f, 1.000000f, 1.000000f);
     float n_47 = 1.000000f;
@@ -21,7 +29,17 @@ FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)
     Result.Opacity = n_47;
     Result.OpacityMask = 1.0f;
     Result.NormalConnected = 0.0f;
-    return Result;
+    FMaterialEvalResult Eval;
+    Eval.Material = Result;
+    Eval.RefractionOffset = float2(0, 0);
+    Eval.RefractionEnabled = 0.0f;
+    Eval._Pad = 0.0f;
+    return Eval;
+}
+
+FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)
+{
+    return EvaluateMaterialWithRefraction(Input).Material;
 }
 
 

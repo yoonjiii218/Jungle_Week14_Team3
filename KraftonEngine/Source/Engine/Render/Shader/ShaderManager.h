@@ -14,6 +14,7 @@ enum class EShaderVertexFactory : uint8
 	SkeletalMesh,
 	ParticleSprite,
 	ParticleMesh,
+	ParticleBeamTrail,
 	Fullscreen
 };
 

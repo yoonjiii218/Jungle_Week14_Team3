@@ -3,8 +3,8 @@
   "Compiled" : {
     "BlendState" : "Opaque",
     "Domain" : "Surface",
-    "GeneratorVersion" : "GeneratedMaterialPass_v4_Decal",
-    "GraphHash" : "AB96FF8BE70268FD",
+    "GeneratorVersion" : "GeneratedMaterialPass_v7_ParticleBeamTrailRefraction",
+    "GraphHash" : "2FA0910879D7B94E",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
 
@@ -47,7 +47,7 @@
         "LinkId" : 45,
         "ToPinId" : 32
       }],
-    "NextId" : 48,
+    "NextId" : 49,
     "Nodes" : [{
         "DisplayName" : "Texture Object",
         "Mask" : "RGBA",
@@ -293,6 +293,12 @@
             "OwningNodeId" : 31,
             "PinId" : 38,
             "Type" : "Float"
+          }, {
+            "DisplayName" : "RefractionOffset",
+            "Kind" : "Input",
+            "OwningNodeId" : 31,
+            "PinId" : 48,
+            "Type" : "Float2"
           }],
         "PosX" : 260.000000,
         "PosY" : 80.000000,

@@ -750,10 +750,26 @@ namespace
 	{
 		const FMaterialGraphNode* Output = Graph.FindFirstNodeOfType(EMaterialGraphNodeType::Output);
 		const bool bGeneratedSurface = Domain == EMaterialDomain::Surface;
+		const bool bGeneratedParticleSprite = Domain == EMaterialDomain::ParticleSprite;
+		const bool bSupportsRefraction = bGeneratedSurface || bGeneratedParticleSprite;
 		const bool bSurfaceLike = Domain == EMaterialDomain::Surface || Domain == EMaterialDomain::Decal;
 
 		std::stringstream SS;
-		SS << "FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)\n";
+		if (bSupportsRefraction)
+		{
+			SS << "struct FMaterialEvalResult\n";
+			SS << "{\n";
+			SS << "    FMaterialResult Material;\n";
+			SS << "    float2 RefractionOffset;\n";
+			SS << "    float RefractionEnabled;\n";
+			SS << "    float _Pad;\n";
+			SS << "};\n\n";
+			SS << "FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)\n";
+		}
+		else
+		{
+			SS << "FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)\n";
+		}
 		SS << "{\n";
 
 		if (!Output)
@@ -786,13 +802,31 @@ namespace
 				SS << "    Result.Opacity = 1.0f;\n";
 				SS << "    Result.UVOffset = float2(0, 0);\n";
 			}
-			SS << "    return Result;\n";
-			SS << "}\n\n";
+			if (bSupportsRefraction)
+			{
+				SS << "    FMaterialEvalResult Eval;\n";
+				SS << "    Eval.Material = Result;\n";
+				SS << "    Eval.RefractionOffset = float2(0, 0);\n";
+				SS << "    Eval.RefractionEnabled = 0.0f;\n";
+				SS << "    Eval._Pad = 0.0f;\n";
+				SS << "    return Eval;\n";
+				SS << "}\n\n";
+				SS << "FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)\n";
+				SS << "{\n";
+				SS << "    return EvaluateMaterialWithRefraction(Input).Material;\n";
+				SS << "}\n\n";
+			}
+			else
+			{
+				SS << "    return Result;\n";
+				SS << "}\n\n";
+			}
 			return SS.str();
 		}
 
-		FString ColorExpr, NormalExpr, RoughExpr, MetalExpr, EmissiveExpr, OpacityExpr, OpacityMaskExpr, UVOffsetExpr;
+		FString ColorExpr, NormalExpr, RoughExpr, MetalExpr, EmissiveExpr, OpacityExpr, OpacityMaskExpr, UVOffsetExpr, RefractionOffsetExpr;
 		const bool bNormalConnected = bGeneratedSurface && IsInputConnected(Graph, *Output, "Normal");
+		const bool bRefractionConnected = bSupportsRefraction && IsInputConnected(Graph, *Output, "RefractionOffset");
 
 		if (bSurfaceLike)
 		{
@@ -804,7 +838,8 @@ namespace
 			OpacityExpr  = OutputInputExpr(Context, Graph, *Output, "Opacity",   "1.0f",            EMaterialGraphPinType::Float,  EMaterialGraphPinType::Float,  Result);
 			if (bGeneratedSurface)
 			{
-				OpacityMaskExpr = OutputInputExpr(Context, Graph, *Output, "OpacityMask", "1.0f", EMaterialGraphPinType::Float, EMaterialGraphPinType::Float, Result);
+				OpacityMaskExpr = OutputInputExpr(Context, Graph, *Output, "OpacityMask", "1.0f",        EMaterialGraphPinType::Float,  EMaterialGraphPinType::Float,  Result);
+				RefractionOffsetExpr = OutputInputExpr(Context, Graph, *Output, "RefractionOffset", "float2(0, 0)", EMaterialGraphPinType::Float2, EMaterialGraphPinType::Float2, Result);
 			}
 		}
 		else
@@ -815,6 +850,10 @@ namespace
 			EmissiveExpr = OutputInputExpr(Context, Graph, *Output, "Emissive", "float3(0, 0, 0)",  EMaterialGraphPinType::Float3, EMaterialGraphPinType::Float3, Result);
 			OpacityExpr  = OutputInputExpr(Context, Graph, *Output, "Opacity",  "1.0f",             EMaterialGraphPinType::Float,  EMaterialGraphPinType::Float,  Result);
 			UVOffsetExpr = OutputInputExpr(Context, Graph, *Output, "UVOffset", "float2(0, 0)",     EMaterialGraphPinType::Float2, EMaterialGraphPinType::Float2, Result);
+			if (bGeneratedParticleSprite)
+			{
+				RefractionOffsetExpr = OutputInputExpr(Context, Graph, *Output, "RefractionOffset", "float2(0, 0)", EMaterialGraphPinType::Float2, EMaterialGraphPinType::Float2, Result);
+			}
 		}
 
 		// 모든 노드 로컬 선언을 먼저 흘려보내고, 마지막에 Result로 모은다.
@@ -841,8 +880,25 @@ namespace
 			SS << "    Result.Opacity = "  << OpacityExpr << ";\n";
 			SS << "    Result.UVOffset = " << UVOffsetExpr << ";\n";
 		}
-		SS << "    return Result;\n";
-		SS << "}\n\n";
+		if (bSupportsRefraction)
+		{
+			SS << "    FMaterialEvalResult Eval;\n";
+			SS << "    Eval.Material = Result;\n";
+			SS << "    Eval.RefractionOffset = " << RefractionOffsetExpr << ";\n";
+			SS << "    Eval.RefractionEnabled = " << (bRefractionConnected ? "1.0f" : "0.0f") << ";\n";
+			SS << "    Eval._Pad = 0.0f;\n";
+			SS << "    return Eval;\n";
+			SS << "}\n\n";
+			SS << "FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)\n";
+			SS << "{\n";
+			SS << "    return EvaluateMaterialWithRefraction(Input).Material;\n";
+			SS << "}\n\n";
+		}
+		else
+		{
+			SS << "    return Result;\n";
+			SS << "}\n\n";
+		}
 		return SS.str();
 	}
 
@@ -864,7 +920,15 @@ namespace
 				SS << "#include \"Common/Fog.hlsli\"\n";
 			}
 			SS << "#include \"Common/ForwardLighting.hlsli\"\n";
-			SS << "#include \"Common/GeneratedSurfacePass.hlsli\"\n\n";
+			SS << "#include \"Common/GeneratedSurfacePass.hlsli\"\n";
+			if (bUseFog)
+			{
+				SS << "Texture2D GeneratedSceneColorTexture : register(t" << ESystemTexSlot::SceneColor << ");\n\n";
+			}
+			else
+			{
+				SS << "\n";
+			}
 			return SS.str();
 		}
 
@@ -882,6 +946,10 @@ namespace
 		{
 			SS << "#define USE_FOG 1\n";
 			SS << "#include \"Common/Fog.hlsli\"\n";
+		}
+		if (Domain == EMaterialDomain::ParticleSprite)
+		{
+			SS << "Texture2D GeneratedSceneColorTexture : register(t" << ESystemTexSlot::SceneColor << ");\n";
 		}
 		if (Domain == EMaterialDomain::ParticleMesh && bReceiveLighting)
 		{
@@ -933,6 +1001,8 @@ struct PS_Input_MaterialParticle
     float  subImageIndex  : TEXCOORD1;
     float4 dynamicParam   : TEXCOORD2;
     float3 worldPos       : TEXCOORD3;
+    float2 texcoord2      : TEXCOORD4;
+    float2 texcoord3      : TEXCOORD5;
 };
 
 PS_Input_MaterialParticle VS(VS_Input_ParticleQuad quad, VS_Input_ParticleInstance inst)
@@ -956,6 +1026,38 @@ PS_Input_MaterialParticle VS(VS_Input_ParticleQuad quad, VS_Input_ParticleInstan
     output.subImageIndex  = inst.subImageIndex;
     output.dynamicParam   = inst.dynamicParam;
     output.worldPos       = worldPos;
+    output.texcoord2      = float2(0, 0);
+    output.texcoord3      = float2(0, 0);
+    return output;
+}
+
+struct VS_Input_GeneratedParticleBeamTrail
+{
+    float3 position       : POSITION;
+    float  relativeTime   : RELATIVE_TIME;
+    float3 oldPosition    : OLD_POSITION;
+    float  particleId     : PARTICLE_ID;
+    float2 size           : SIZE;
+    float  rotation       : ROTATION;
+    float  subImageIndex  : SUBIMAGE_INDEX;
+    float4 color          : COLOR;
+    float2 texcoord       : TEXCOORD0;
+    float2 texcoord2      : TEXCOORD1;
+};
+
+PS_Input_MaterialParticle VS_BeamTrail(VS_Input_GeneratedParticleBeamTrail input)
+{
+    float4 worldPos = float4(input.position, 1.0f);
+
+    PS_Input_MaterialParticle output;
+    output.position       = mul(worldPos, mul(View, Projection));
+    output.texcoord       = input.texcoord;
+    output.color          = input.color;
+    output.subImageIndex  = input.subImageIndex;
+    output.dynamicParam   = float4(input.relativeTime, input.particleId, input.size.x + input.size.y, input.rotation);
+    output.worldPos       = worldPos.xyz;
+    output.texcoord2      = input.texcoord2;
+    output.texcoord3      = input.oldPosition.xy;
     return output;
 }
 
@@ -963,18 +1065,38 @@ float4 PS(PS_Input_MaterialParticle input) : SV_TARGET
 {
     FMaterialPixelInput MaterialInput;
     MaterialInput.UV0           = input.texcoord;
-    MaterialInput.UV1           = float2(0, 0);
-    MaterialInput.UV2           = float2(0, 0);
+    MaterialInput.UV1           = input.texcoord2;
+    MaterialInput.UV2           = input.texcoord3;
     MaterialInput.ParticleColor = input.color;
     MaterialInput.VertexColor   = input.color;
     MaterialInput.Time          = Time;
     MaterialInput.SubImageIndex = input.subImageIndex;
     MaterialInput.DynamicParam  = input.dynamicParam;
 
-    FMaterialResult Result = EvaluateMaterial(MaterialInput);
+    FMaterialEvalResult Eval = EvaluateMaterialWithRefraction(MaterialInput);
+    FMaterialResult Result = Eval.Material;
     float4 FinalColor = float4(Result.Color + Result.Emissive, Result.Opacity);
     clip(FinalColor.a - 0.01f);
-    return ApplyFogTranslucent(FinalColor, input.worldPos, CameraWorldPos);
+
+    float4 ForegroundColor = ApplyFogTranslucent(FinalColor, input.worldPos, CameraWorldPos);
+    if (Eval.RefractionEnabled < 0.5f)
+    {
+        return ForegroundColor;
+    }
+
+    // ParticleSprite refraction uses the same opaque SceneColor copy as Surface translucent refraction.
+    // The material output is manually composited to avoid sampling the active render target directly.
+    uint SceneWidth = 1;
+    uint SceneHeight = 1;
+    GeneratedSceneColorTexture.GetDimensions(SceneWidth, SceneHeight);
+    float2 SceneSize = max(float2((float)SceneWidth, (float)SceneHeight), float2(1.0f, 1.0f));
+    float2 ScreenUV = input.position.xy / SceneSize;
+    float2 RefractedUV = saturate(ScreenUV + Eval.RefractionOffset);
+    float4 BackgroundColor = GeneratedSceneColorTexture.Sample(LinearClampSampler, RefractedUV);
+
+    float Alpha = saturate(ForegroundColor.a);
+    float3 OutColor = ForegroundColor.rgb * Alpha + BackgroundColor.rgb * (1.0f - Alpha);
+    return float4(OutColor, 1.0f);
 }
 )";
 	}
@@ -1092,12 +1214,33 @@ MaterialSurfaceVSOutput VS(VS_Input_PNCTT input)
 float4 PS(MaterialSurfaceVSOutput input) : SV_TARGET
 {
     FMaterialPixelInput MaterialInput = BuildGeneratedSurfaceMaterialInput(input);
-    FMaterialResult Result = EvaluateMaterial(MaterialInput);
+    FMaterialEvalResult Eval = EvaluateMaterialWithRefraction(MaterialInput);
+    FMaterialResult Result = Eval.Material;
 
     const float3 N = ApplyGeneratedSurfaceNormal(input, Result);
     float4 FinalColor = float4(ComputeGeneratedSurfaceLighting(input.worldPos, input.position, N, Result), Result.Opacity);
     clip(FinalColor.a - 0.01f);
-    return ApplyFogTranslucent(FinalColor, input.worldPos, CameraWorldPos);
+
+    // Without RefractionOffset, keep the existing hardware alpha blending path.
+    if (Eval.RefractionEnabled < 0.5f)
+    {
+        return ApplyFogTranslucent(FinalColor, input.worldPos, CameraWorldPos);
+    }
+
+    // Refraction path: sample the copied opaque scene color at screen UV + user offset,
+    // then manually composite: final = foreground * alpha + refractedBackground * (1 - alpha).
+    uint SceneWidth = 1;
+    uint SceneHeight = 1;
+    GeneratedSceneColorTexture.GetDimensions(SceneWidth, SceneHeight);
+    float2 SceneSize = max(float2((float)SceneWidth, (float)SceneHeight), float2(1.0f, 1.0f));
+    float2 ScreenUV = input.position.xy / SceneSize;
+    float2 RefractedUV = saturate(ScreenUV + Eval.RefractionOffset);
+    float4 BackgroundColor = GeneratedSceneColorTexture.Sample(LinearClampSampler, RefractedUV);
+
+    float4 ForegroundColor = ApplyFogTranslucent(FinalColor, input.worldPos, CameraWorldPos);
+    float Alpha = saturate(ForegroundColor.a);
+    float3 OutColor = ForegroundColor.rgb * Alpha + BackgroundColor.rgb * (1.0f - Alpha);
+    return float4(OutColor, 1.0f);
 }
 )";
 		}

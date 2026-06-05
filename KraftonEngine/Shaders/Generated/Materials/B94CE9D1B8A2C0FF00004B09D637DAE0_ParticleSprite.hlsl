@@ -1,4 +1,4 @@
-// Generated from Content/Material/VFX/M_UltimateSlash_SubUV.mat
+// Generated from Content/Material/VFX/NewMaterial.mat
 // Domain: ParticleSprite
 
 #include "Common/ConstantBuffers.hlsli"
@@ -39,12 +39,11 @@ struct FMaterialEvalResult
 
 FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
-    float3 n_15 = float3(1.000000f, 0.000000f, 0.000000f);
-    float n_17 = 1.000000f;
+    float4 n_1 = Input.ParticleColor;
     FMaterialResult Result;
-    Result.Color = n_15;
+    Result.Color = (n_1).xyz;
     Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = n_17;
+    Result.Opacity = (n_1).x;
     Result.UVOffset = float2(0, 0);
     FMaterialEvalResult Eval;
     Eval.Material = Result;

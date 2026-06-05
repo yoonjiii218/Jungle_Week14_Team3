@@ -9,8 +9,17 @@
 #include "Common/Fog.hlsli"
 #include "Common/ForwardLighting.hlsli"
 #include "Common/GeneratedSurfacePass.hlsli"
+Texture2D GeneratedSceneColorTexture : register(t17);
 
-FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)
+struct FMaterialEvalResult
+{
+    FMaterialResult Material;
+    float2 RefractionOffset;
+    float RefractionEnabled;
+    float _Pad;
+};
+
+FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
     float3 n_22 = float3(1.000000f, 0.000000f, 0.000000f);
     float n_25 = 0.500000f;
@@ -23,7 +32,17 @@ FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)
     Result.Opacity = n_25;
     Result.OpacityMask = 1.0f;
     Result.NormalConnected = 0.0f;
-    return Result;
+    FMaterialEvalResult Eval;
+    Eval.Material = Result;
+    Eval.RefractionOffset = float2(0, 0);
+    Eval.RefractionEnabled = 0.0f;
+    Eval._Pad = 0.0f;
+    return Eval;
+}
+
+FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)
+{
+    return EvaluateMaterialWithRefraction(Input).Material;
 }
 
 
@@ -47,10 +66,31 @@ MaterialSurfaceVSOutput VS(VS_Input_PNCTT input)
 float4 PS(MaterialSurfaceVSOutput input) : SV_TARGET
 {
     FMaterialPixelInput MaterialInput = BuildGeneratedSurfaceMaterialInput(input);
-    FMaterialResult Result = EvaluateMaterial(MaterialInput);
+    FMaterialEvalResult Eval = EvaluateMaterialWithRefraction(MaterialInput);
+    FMaterialResult Result = Eval.Material;
 
     const float3 N = ApplyGeneratedSurfaceNormal(input, Result);
     float4 FinalColor = float4(ComputeGeneratedSurfaceLighting(input.worldPos, input.position, N, Result), Result.Opacity);
     clip(FinalColor.a - 0.01f);
-    return ApplyFogTranslucent(FinalColor, input.worldPos, CameraWorldPos);
+
+    // Without RefractionOffset, keep the existing hardware alpha blending path.
+    if (Eval.RefractionEnabled < 0.5f)
+    {
+        return ApplyFogTranslucent(FinalColor, input.worldPos, CameraWorldPos);
+    }
+
+    // Refraction path: sample the copied opaque scene color at screen UV + user offset,
+    // then manually composite: final = foreground * alpha + refractedBackground * (1 - alpha).
+    uint SceneWidth = 1;
+    uint SceneHeight = 1;
+    GeneratedSceneColorTexture.GetDimensions(SceneWidth, SceneHeight);
+    float2 SceneSize = max(float2((float)SceneWidth, (float)SceneHeight), float2(1.0f, 1.0f));
+    float2 ScreenUV = input.position.xy / SceneSize;
+    float2 RefractedUV = saturate(ScreenUV + Eval.RefractionOffset);
+    float4 BackgroundColor = GeneratedSceneColorTexture.Sample(LinearClampSampler, RefractedUV);
+
+    float4 ForegroundColor = ApplyFogTranslucent(FinalColor, input.worldPos, CameraWorldPos);
+    float Alpha = saturate(ForegroundColor.a);
+    float3 OutColor = ForegroundColor.rgb * Alpha + BackgroundColor.rgb * (1.0f - Alpha);
+    return float4(OutColor, 1.0f);
 }

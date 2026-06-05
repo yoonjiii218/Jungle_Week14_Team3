@@ -153,7 +153,7 @@ namespace
 		}
 	}
 
-    constexpr const char* MaterialGraphGeneratorVersion = "GeneratedMaterialPass_v4_Decal";
+    constexpr const char* MaterialGraphGeneratorVersion = "GeneratedMaterialPass_v7_ParticleBeamTrailRefraction";
 }
 
 void FMaterialManager::ScanMaterialAssets()
@@ -477,20 +477,29 @@ void FMaterialManager::ApplyParameters(UMaterial* Material, json::JSON& JsonData
     for (auto& Pair : ParamsJson->ObjectRange())
 	{
 		FString ParamName = Pair.first.c_str();
+        FString ParamType;
+        if (Pair.second.JSONType() == json::JSON::Class::Object && Pair.second.hasKey("Type"))
+        {
+            ParamType = Pair.second["Type"].ToString().c_str();
+        }
         // Object 형태({Type,Value})면 Value만 꺼내 로컬로 복사. 순회 중 원본 mutate 금지.
         json::JSON Value = (Pair.second.JSONType() == json::JSON::Class::Object && Pair.second.hasKey("Value"))
         ? Pair.second["Value"] : Pair.second;
 
 		if (Value.JSONType() == json::JSON::Class::Array)
 		{
-			if (Value.length() == 3)
+			if (ParamType == "Float" && Value.length() > 0)
+			{
+                Material->SetScalarParameter(ParamName, JsonNumberToFloat(Value[0]));
+			}
+			else if (ParamType == "Float3" || (ParamType.empty() && Value.length() == 3))
 			{
                 Material->SetVector3Parameter(
                     ParamName,
                     FVector(JsonNumberToFloat(Value[0]), JsonNumberToFloat(Value[1]), JsonNumberToFloat(Value[2]))
                 );
 			}
-			else if (Value.length() == 4)
+			else if (ParamType == "Float4" || ParamType == "Color" || (ParamType.empty() && Value.length() == 4))
 			{
                 Material->SetVector4Parameter(
                     ParamName,
@@ -976,6 +985,18 @@ bool FMaterialManager::EnsureGraphMaterialJsonDefaults(const FString& MatFilePat
 		bChanged = true;
 	}
 
+	{
+		FMaterialGraph Graph;
+		if (MaterialGraphAsset::LoadFromJson(JsonData[MatKeys::Graph], Graph)
+			&& Graph.EnsureOutputPinsForDomain(Domain))
+		{
+			json::JSON GraphJson;
+			MaterialGraphAsset::SaveToJson(Graph, GraphJson);
+			JsonData[MatKeys::Graph] = std::move(GraphJson);
+			bChanged = true;
+		}
+	}
+
 	const ERenderPass RenderPass = StringToRenderPass(JsonData[MatKeys::RenderPass].ToString());
 	const EBlendState BlendState = StringToBlendState(JsonData[MatKeys::BlendState].ToString(), RenderPass);
 	ESupportedGraphMaterialMode Mode = ResolveGraphMaterialMode(RenderPass, BlendState);
@@ -1084,14 +1105,14 @@ bool FMaterialManager::PurgeStaleParameters(json::JSON& JsonData, FMaterialTempl
 {
 	if (!JsonData.hasKey(MatKeys::Parameters)) return false;
 
-	const auto& Layout = Template->GetParameterInfo();
 	json::JSON CleanParams = json::JSON::Make(json::JSON::Class::Object);
 	bool bPurged = false;
 
 	for (auto& Pair : JsonData[MatKeys::Parameters].ObjectRange())
 	{
 		FString ParamName = Pair.first.c_str();
-		if (Layout.find(ParamName) != Layout.end())
+		FMaterialParameterInfo Info;
+		if (Template->GetParameterInfo(ParamName, Info))
 		{
 			CleanParams[Pair.first] = Pair.second;
 		}

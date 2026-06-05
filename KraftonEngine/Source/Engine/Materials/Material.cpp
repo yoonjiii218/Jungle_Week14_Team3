@@ -6,6 +6,24 @@
 #include "Object/GarbageCollection.h"
 #include "Render/Pipeline/Renderer.h"
 #include "Render/Types/MaterialTextureSlot.h"
+#include "Core/Logging/Log.h"
+
+#include <cctype>
+
+namespace
+{
+	FString SanitizeMaterialParameterIdentifier(FString In)
+	{
+		if (In.empty()) return "Value";
+		for (char& Ch : In)
+		{
+			const unsigned char U = static_cast<unsigned char>(Ch);
+			if (!std::isalnum(U) && Ch != '_') Ch = '_';
+		}
+		if (std::isdigit(static_cast<unsigned char>(In[0]))) In = "_" + In;
+		return In;
+	}
+}
 
 // ─── FMaterialTemplate ───
 
@@ -23,10 +41,19 @@ bool FMaterialTemplate::GetParameterInfo(const FString& Name, FMaterialParameter
 		OutInfo = *(it->second);
 		return true;
 	}
-	else
+
+	const FString AliasName = "Param_" + SanitizeMaterialParameterIdentifier(Name);
+	if (AliasName != Name)
 	{
-		return false;
+		it = ParameterLayout.find(AliasName);
+		if (it != ParameterLayout.end())
+		{
+			OutInfo = *(it->second);
+			return true;
+		}
 	}
+
+	return false;
 }
 
 // ─── FMaterialConstantBuffer ───
@@ -138,6 +165,11 @@ bool UMaterial::SetParameter(const FString& Name, const void* Data, uint32 Size)
 
 	FMaterialParameterInfo Info;
 	if (!Template->GetParameterInfo(Name, Info)) {
+		static TSet<FString> LoggedMissingParameters;
+		if (LoggedMissingParameters.insert(Name).second)
+		{
+			UE_LOG("[Material] Missing parameter binding: material=%s parameter=%s", PathFileName.c_str(), Name.c_str());
+		}
 		return false;
 	}
 	auto It = ConstantBufferMap.find(Info.BufferName);
