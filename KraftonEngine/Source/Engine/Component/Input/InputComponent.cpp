@@ -9,6 +9,7 @@ void UInputComponent::AddAxisMapping(const FString& Name, int VKey, float Scale)
 	M.Name  = Name;
 	M.VKey  = VKey;
 	M.Scale = Scale;
+	M.bGamepad = false;
 	AxisMappings.push_back(std::move(M));
 }
 
@@ -17,6 +18,26 @@ void UInputComponent::AddActionMapping(const FString& Name, int VKey)
 	FActionMapping M;
 	M.Name = Name;
 	M.VKey = VKey;
+	M.bGamepad = false;
+	ActionMappings.push_back(std::move(M));
+}
+
+void UInputComponent::AddGamepadAxisMapping(const FString& Name, EGamepadAxis Axis, float Scale)
+{
+	FAxisMapping M;
+	M.Name = Name;
+	M.GamepadAxis = Axis;
+	M.Scale = Scale;
+	M.bGamepad = true;
+	AxisMappings.push_back(std::move(M));
+}
+
+void UInputComponent::AddGamepadActionMapping(const FString& Name, EGamepadButton Button)
+{
+	FActionMapping M;
+	M.Name = Name;
+	M.GamepadButton = Button;
+	M.bGamepad = true;
 	ActionMappings.push_back(std::move(M));
 }
 
@@ -56,7 +77,13 @@ void UInputComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 		float Value = 0.0f;
 		for (const FAxisMapping& M : AxisMappings)
 		{
-			if (M.Name == B.Name && In.GetKey(M.VKey))
+			if (M.Name != B.Name) continue;
+
+			if (M.bGamepad)
+			{
+				Value += In.GetGamepadAxis(M.GamepadAxis) * M.Scale;
+			}
+			else if (In.GetKey(M.VKey))
 			{
 				Value += M.Scale;
 			}
@@ -70,9 +97,21 @@ void UInputComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 		for (const FActionMapping& M : ActionMappings)
 		{
 			if (M.Name != B.Name) continue;
-			const bool bFired = (B.Event == EInputEvent::Pressed)
-				? In.GetKeyDown(M.VKey)
-				: In.GetKeyUp(M.VKey);
+
+			bool bFired = false;
+			if (M.bGamepad)
+			{
+				bFired = (B.Event == EInputEvent::Pressed)
+					? In.GetGamepadButtonDown(M.GamepadButton)
+					: In.GetGamepadButtonUp(M.GamepadButton);
+			}
+			else
+			{
+				bFired = (B.Event == EInputEvent::Pressed)
+					? In.GetKeyDown(M.VKey)
+					: In.GetKeyUp(M.VKey);
+			}
+
 			if (bFired && B.Callback)
 			{
 				B.Callback();

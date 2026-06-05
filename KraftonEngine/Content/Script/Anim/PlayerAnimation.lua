@@ -4,6 +4,7 @@
 local PlayerAction = require("PlayerAction")
 local CombatContext = require("CombatContext")
 local PlayerConfig = require("PlayerConfig")
+local PlayerFeedback = require("PlayerFeedback")
 
 local DEFAULT_SAMURAI_CONFIG = PlayerConfig.Default.Animation.Samurai
 
@@ -31,6 +32,20 @@ local function GetSamuraiConfig(self)
     end
 
     return DEFAULT_SAMURAI_CONFIG
+end
+
+local function GetAttackPlayRate(samuraiConfig, attackIndex)
+    local playRates = samuraiConfig.AttackPlayRates
+    if playRates ~= nil and playRates[attackIndex] ~= nil then
+        return playRates[attackIndex]
+    end
+
+    local defaultPlayRates = DEFAULT_SAMURAI_CONFIG.AttackPlayRates
+    if defaultPlayRates ~= nil and defaultPlayRates[attackIndex] ~= nil then
+        return defaultPlayRates[attackIndex]
+    end
+
+    return samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate
 end
 
 local function PrepareActionCtx(self)
@@ -69,7 +84,7 @@ local function BeginAttack(self, index)
     self.ComboQueued = false
     self.AttackEnd = false
     PlayerAction.StopMovementImmediately(self)
-    PlayerAction.StepAttackForward(self)
+    PlayerAction.StepAttackForward(self, index)
     PushPlayerEvent(self, { Type = "AttackStart", AttackIndex = index })
 end
 
@@ -149,11 +164,11 @@ function init(self)
     Anim.sm_add_state(top, "Locomotion", loco)
     Anim.sm_add_state(top, "Jump", Anim.create_sequence_player(samuraiConfig.JumpPath or DEFAULT_SAMURAI_CONFIG.JumpPath, samuraiConfig.JumpPlayRate or DEFAULT_SAMURAI_CONFIG.JumpPlayRate, samuraiConfig.JumpLoop or DEFAULT_SAMURAI_CONFIG.JumpLoop))
 
-    Anim.sm_add_state(top, "Attack1", Anim.create_sequence_player(attackPaths[1] or DEFAULT_SAMURAI_CONFIG.AttackPaths[1], samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate, false))
-    Anim.sm_add_state(top, "Attack2", Anim.create_sequence_player(attackPaths[2] or DEFAULT_SAMURAI_CONFIG.AttackPaths[2], samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate, false))
-    Anim.sm_add_state(top, "Attack3", Anim.create_sequence_player(attackPaths[3] or DEFAULT_SAMURAI_CONFIG.AttackPaths[3], samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate, false))
-    Anim.sm_add_state(top, "Attack4", Anim.create_sequence_player(attackPaths[4] or DEFAULT_SAMURAI_CONFIG.AttackPaths[4], samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate, false))
-    Anim.sm_add_state(top, "Attack5", Anim.create_sequence_player(attackPaths[5] or DEFAULT_SAMURAI_CONFIG.AttackPaths[5], samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate, false))
+    Anim.sm_add_state(top, "Attack1", Anim.create_sequence_player(attackPaths[1] or DEFAULT_SAMURAI_CONFIG.AttackPaths[1], GetAttackPlayRate(samuraiConfig, 1), false))
+    Anim.sm_add_state(top, "Attack2", Anim.create_sequence_player(attackPaths[2] or DEFAULT_SAMURAI_CONFIG.AttackPaths[2], GetAttackPlayRate(samuraiConfig, 2), false))
+    Anim.sm_add_state(top, "Attack3", Anim.create_sequence_player(attackPaths[3] or DEFAULT_SAMURAI_CONFIG.AttackPaths[3], GetAttackPlayRate(samuraiConfig, 3), false))
+    Anim.sm_add_state(top, "Attack4", Anim.create_sequence_player(attackPaths[4] or DEFAULT_SAMURAI_CONFIG.AttackPaths[4], GetAttackPlayRate(samuraiConfig, 4), false))
+    Anim.sm_add_state(top, "Attack5", Anim.create_sequence_player(attackPaths[5] or DEFAULT_SAMURAI_CONFIG.AttackPaths[5], GetAttackPlayRate(samuraiConfig, 5), false))
 
     Anim.sm_add_state(top, "Dash", Anim.create_sequence_player(samuraiConfig.DashPath or DEFAULT_SAMURAI_CONFIG.DashPath, samuraiConfig.DashPlayRate or DEFAULT_SAMURAI_CONFIG.DashPlayRate, false))
     Anim.sm_add_state(top, "DashCharging", Anim.create_sequence_player(samuraiConfig.DashChargingPath or DEFAULT_SAMURAI_CONFIG.DashChargingPath, samuraiConfig.DashChargingPlayRate or DEFAULT_SAMURAI_CONFIG.DashChargingPlayRate, false))
@@ -162,6 +177,7 @@ function init(self)
     Anim.sm_add_transition(top, "AnyState", "DashCharging",
         function()
             if self.DashChargingPressed
+                and not self.DashPressed
                 and not self.DashActive
                 and not self.DashChargingActive
                 and not self.DashChargeAttackActive
@@ -193,13 +209,30 @@ function init(self)
 
     Anim.sm_add_transition(top, "Dash", "Locomotion",
         function()
-            if self.DashEnd then
+            if self.DashEnd and not self.DashChargingPressed then
                 EndDash(self)
                 return true
             end
             return false
         end,
         samuraiConfig.DashBlendOut or DEFAULT_SAMURAI_CONFIG.DashBlendOut
+    )
+
+    Anim.sm_add_transition(top, "Dash", "DashCharging",
+        function()
+            if self.DashChargingPressed
+                and not self.DashChargingActive
+                and not self.DashChargeAttackActive
+                and not Anim.is_owner_falling()
+                and not IsUltimateRunning(self) then
+                self.DashChargingPressed = false
+                EndDash(self)
+                BeginDashCharging(self)
+                return true
+            end
+            return false
+        end,
+        samuraiConfig.DashChargingBlendIn or DEFAULT_SAMURAI_CONFIG.DashChargingBlendIn
     )
 
     Anim.sm_add_transition(top, "DashCharging", "DashChargeAttack",
@@ -230,14 +263,22 @@ function init(self)
 
     Anim.sm_add_transition(top, "AnyState", "UltimateAttack",
         function()
-            return IsInUltimateMode(self) == true
+            if IsInUltimateMode(self) == true then
+                PlayerAction.CancelDashActions(PrepareActionCtx(self), false)
+                return true
+            end
+            return false
         end,
         samuraiConfig.UltimateAttackBlendIn or DEFAULT_SAMURAI_CONFIG.UltimateAttackBlendIn
     )
 
     Anim.sm_add_transition(top, "UltimateAttack", "Locomotion",
         function()
-            return IsInUltimateMode(self) ~= true
+            if IsInUltimateMode(self) ~= true then
+                ResetAttack(self)
+                return true
+            end
+            return false
         end,
         samuraiConfig.UltimateAttackBlendOut or DEFAULT_SAMURAI_CONFIG.UltimateAttackBlendOut
     )
@@ -386,6 +427,8 @@ function update(self, dt)
         self.ComboQueued = true
     end
 
+    PlayerAction.UpdateStepForward(self, dt)
+
     if self.DashActive then
         PlayerAction.UpdateDash(self, dt)
     elseif self.DashChargingActive then
@@ -402,26 +445,69 @@ function update(self, dt)
     end
 end
 
+function on_combo_window_open(self)
+    self.ComboWindow = true
+end
+
+function on_combo_window_close(self)
+    self.ComboWindow = false
+end
+
+function on_attack_end(self)
+    self.ComboWindow = false
+    if self.DashChargeAttackActive then
+        self.DashChargeAttackEnd = true
+    else
+        self.AttackEnd = true
+    end
+end
+
+function on_attack_hit(self, targetActor, hitboxComponent, targetComponent, hitResult)
+    PushPlayerEvent(self, {
+        Type = "AttackHit",
+        AttackIndex = self.AttackIndex,
+        TargetActor = targetActor,
+        HitboxComponent = hitboxComponent,
+        TargetComponent = targetComponent,
+        HitResult = hitResult,
+    })
+
+    print("on attack hit " .. targetActor:GetName())
+end
+
+function on_trail_activate(self)
+    PlayerFeedback.SetKatanaTrailActive(GetPlayerCtx(self), true)
+end
+
+function on_trail_deactivate(self)
+    PlayerFeedback.SetKatanaTrailActive(GetPlayerCtx(self), false)
+end
+
 function on_notify(self, name)
     print("[LuaAnim] notify: " .. name)
 
     if name == "ComboWindowOpen" then
-        self.ComboWindow = true
+        on_combo_window_open(self)
         return
     end
 
     if name == "ComboWindowClose" then
-        self.ComboWindow = false
+        on_combo_window_close(self)
         return
     end
 
     if name == "AttackEnd" then
-        self.ComboWindow = false
-        if self.DashChargeAttackActive then
-            self.DashChargeAttackEnd = true
-        else
-            self.AttackEnd = true
-        end
+        on_attack_end(self)
+        return
+    end
+
+    if name == "TrailActivate" or name == "TrailOn" then
+        on_trail_activate(self)
+        return
+    end
+
+    if name == "TrailDeactivate" or name == "TrailOff" then
+        on_trail_deactivate(self)
         return
     end
 

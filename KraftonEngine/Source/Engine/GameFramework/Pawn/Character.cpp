@@ -10,6 +10,7 @@
 #include "Runtime/Engine.h"
 
 #include <algorithm>
+#include <cmath>
 void ACharacter::InitDefaultComponents(const FString& SkeletalMeshFileName)
 {
 	// 1) Capsule — Root. CharacterMovement 의 UpdatedComponent 가 이걸 가리킴.
@@ -84,6 +85,8 @@ void ACharacter::SetupInputComponent()
 	InputComponent->AddAxisMapping("MoveForward", 'S', -1.0f);
 	InputComponent->AddAxisMapping("MoveRight",   'D',  1.0f);
 	InputComponent->AddAxisMapping("MoveRight",   'A', -1.0f);
+	InputComponent->AddGamepadAxisMapping("MoveForward", EGamepadAxis::LeftY, 1.0f);
+	InputComponent->AddGamepadAxisMapping("MoveRight",   EGamepadAxis::LeftX, 1.0f);
 
 	// WASD 의 forward/right 는 ControlRotation.Yaw 기준 — capsule rotation 과 무관.
 	// "카메라가 보는 방향" (yaw 만, pitch 무시) 으로 이동.
@@ -100,8 +103,9 @@ void ACharacter::SetupInputComponent()
 		AddMovementInput(YawOnly.GetRightVector(), Value);
 	});
 
-	// Space = Jump (VK_SPACE = 0x20). Walking 중에만 effective (CharacterMovement::Jump 가 guard).
+	// Space / Gamepad A = Jump. Walking 중에만 effective (CharacterMovement::Jump 가 guard).
 	InputComponent->AddActionMapping("Jump", 0x20);
+	InputComponent->AddGamepadActionMapping("Jump", EGamepadButton::A);
 	InputComponent->BindAction("Jump", EInputEvent::Pressed, [this]()
 	{
 		Jump();
@@ -117,13 +121,17 @@ void ACharacter::Tick(float DeltaTime)
 		const InputSystem& In = InputSystem::Get();
 		const int DX = In.MouseDeltaX();
 		const int DY = In.MouseDeltaY();
-		if (DX != 0 || DY != 0)
+		const float PadLookX = In.GetGamepadAxis(EGamepadAxis::RightX);
+		const float PadLookY = In.GetGamepadAxis(EGamepadAxis::RightY);
+		if (DX != 0 || DY != 0 || std::fabs(PadLookX) > 0.001f || std::fabs(PadLookY) > 0.001f)
 		{
 			// APawn::ControlRotation 누적. SpringArm 이 bUsePawnControlRotation 통해 이걸 사용.
-			// capsule 회전은 옵션 (bUseControllerRotationYaw 등) — 아래 ApplyControllerRotationToRoot 가 처리.
+			// mouse 는 pixel delta, gamepad 는 normalized axis 이므로 gamepad 쪽에 DeltaTime 을 곱한다.
 			FRotator Rot = GetControlRotation();
-			Rot.Yaw   += static_cast<float>(DX) * MouseSensitivity;
-			Rot.Pitch += static_cast<float>(DY) * MouseSensitivity;
+			Rot.Yaw   += static_cast<float>(DX) * MouseSensitivity
+				+ PadLookX * GamepadLookYawSpeed * DeltaTime;
+			Rot.Pitch += static_cast<float>(DY) * MouseSensitivity
+				- PadLookY * GamepadLookPitchSpeed * DeltaTime;
 			Rot.Pitch  = std::clamp(Rot.Pitch, MinCameraPitch, MaxCameraPitch);
 			SetControlRotation(Rot);
 		}

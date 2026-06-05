@@ -968,7 +968,13 @@
     <ClCompile Include="Source\Engine\Animation\Notify\AnimNotifyState_AttackHitWindow.cpp">
       <Filter>Source\Engine\Animation\Notify</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\Animation\Notify\AnimNotifyState_LuaFunction.cpp">
+      <Filter>Source\Engine\Animation\Notify</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Engine\Animation\Notify\AnimNotifyState_LogDuration.cpp">
+      <Filter>Source\Engine\Animation\Notify</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Animation\Notify\AnimNotify_LuaFunction.cpp">
       <Filter>Source\Engine\Animation\Notify</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Animation\Notify\AnimNotify_LogMessage.cpp">
@@ -2222,7 +2228,13 @@
     <ClInclude Include="Source\Engine\Animation\Notify\AnimNotifyState_AttackHitWindow.h">
       <Filter>Source\Engine\Animation\Notify</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\Animation\Notify\AnimNotifyState_LuaFunction.h">
+      <Filter>Source\Engine\Animation\Notify</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Engine\Animation\Notify\AnimNotifyState_LogDuration.h">
+      <Filter>Source\Engine\Animation\Notify</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Animation\Notify\AnimNotify_LuaFunction.h">
       <Filter>Source\Engine\Animation\Notify</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Animation\Notify\AnimNotify_LogMessage.h">

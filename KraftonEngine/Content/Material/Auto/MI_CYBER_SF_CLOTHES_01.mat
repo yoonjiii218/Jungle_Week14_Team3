@@ -4,7 +4,7 @@
     "BlendState" : "Opaque",
     "Domain" : "Surface",
     "GeneratorVersion" : "GeneratedMaterialPass_v4_Decal",
-    "GraphHash" : "CBBB8E9B3A6DE80F",
+    "GraphHash" : "AB96FF8BE70268FD",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
 
@@ -13,7 +13,7 @@
     "RenderPass" : "Opaque",
     "Textures" : {
       "DiffuseTexture" : {
-        "Path" : "Content/Texture/T_CYBER_SF_CLOTHES_BaseColor_01.PNG",
+        "Path" : "Content/Texture/T_CYBER_SF_CLOTHES_BaseColor_02.PNG",
         "Slot" : "Diffuse"
       }
     }
@@ -60,9 +60,9 @@
             "PinId" : 2,
             "Type" : "Texture2D"
           }],
-        "PosX" : -720.000000,
-        "PosY" : -80.000000,
-        "TexturePath" : "Content/Texture/T_CYBER_SF_CLOTHES_BaseColor_01.PNG",
+        "PosX" : -709.000000,
+        "PosY" : -82.000000,
+        "TexturePath" : "Content/Texture/T_CYBER_SF_CLOTHES_BaseColor_02.PNG",
         "TextureSlot" : "Diffuse",
         "Type" : "TextureObject",
         "Value" : [1.000000, 1.000000, 1.000000, 1.000000]

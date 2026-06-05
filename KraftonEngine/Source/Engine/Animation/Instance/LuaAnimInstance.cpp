@@ -13,7 +13,9 @@
 #include "Animation/Nodes/AnimNode_StateMachine.h"
 #include "Animation/Nodes/AnimNode_SequencePlayer.h"
 #include "Component/Movement/CharacterMovementComponent.h"
+#include "Component/PrimitiveComponent.h"
 #include "Component/Primitive/SkeletalMeshComponent.h"
+#include "Core/Types/CollisionTypes.h"
 #include "Core/Logging/Log.h"
 #include "Core/Types/PropertyTypes.h"
 #include "GameFramework/AActor.h"
@@ -139,6 +141,55 @@ void ULuaAnimInstance::HandleAnimNotify(const FAnimNotifyEvent& Notify)
 		sol::error Err = R;
 		UE_LOG("[LuaAnimInstance] on_notify() error: %s", Err.what());
 	}
+}
+
+bool ULuaAnimInstance::InvokeLuaFunction(const FString& FunctionName)
+{
+	if (FunctionName.empty() || !Env.valid() || !LuaSelf.valid())
+	{
+		return false;
+	}
+
+	sol::protected_function Function = Env[FunctionName];
+	if (!Function.valid())
+	{
+		return false;
+	}
+
+	FLuaCallScope Scope(this);
+	auto R = Function(LuaSelf);
+	if (!R.valid())
+	{
+		sol::error Err = R;
+		UE_LOG("[LuaAnimInstance] %s() error: %s", FunctionName.c_str(), Err.what());
+		return false;
+	}
+	return true;
+}
+
+bool ULuaAnimInstance::InvokeLuaFunction(const FString& FunctionName, AActor* OtherActor,
+	UPrimitiveComponent* HitComponent, UPrimitiveComponent* OtherComp, const FHitResult& HitResult)
+{
+	if (FunctionName.empty() || !Env.valid() || !LuaSelf.valid())
+	{
+		return false;
+	}
+
+	sol::protected_function Function = Env[FunctionName];
+	if (!Function.valid())
+	{
+		return false;
+	}
+
+	FLuaCallScope Scope(this);
+	auto R = Function(LuaSelf, OtherActor, HitComponent, OtherComp, HitResult);
+	if (!R.valid())
+	{
+		sol::error Err = R;
+		UE_LOG("[LuaAnimInstance] %s() error: %s", FunctionName.c_str(), Err.what());
+		return false;
+	}
+	return true;
 }
 
 

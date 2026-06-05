@@ -357,7 +357,6 @@ function PlayerFeedback.BeginUltimate(ctx)
     local spawnedSlashFlash = false
 
     ctx.IsInUltimateMode = true
-    PlayerFeedback.SetKatanaTrailActive(ctx, true)
 
     local moveDuration = moveConfig.Duration or DEFAULT_FEEDBACK_CONFIG.UltimateMove.Duration
     local frameStep = moveConfig.FrameStep or DEFAULT_FEEDBACK_CONFIG.UltimateMove.FrameStep
@@ -449,7 +448,6 @@ function PlayerFeedback.BeginUltimate(ctx)
 
     ctx.IsInUltimateMode = false
     ctx.IsUltimateRunning = false
-    PlayerFeedback.SetKatanaTrailActive(ctx, false)
     PlayerFeedback.HandlePlayerResult(ctx, { Events = { { Type = "UltimateEnd" } } })
 
     print("End Ultimate")
@@ -461,21 +459,7 @@ function PlayerFeedback.HandlePlayerResult(ctx, result)
     end
 
     for _, event in ipairs(result.Events) do
-        if event.Type == "AttackStart" then
-            PlayerFeedback.SetKatanaTrailActive(ctx, true)
-        elseif event.Type == "AttackEnd" then
-            PlayerFeedback.SetKatanaTrailActive(ctx, false)
-        elseif event.Type == "DashStart" or event.Type == "DashSlashStart" then
-            PlayerFeedback.SetKatanaTrailActive(ctx, true)
-        elseif event.Type == "DashEnd" or event.Type == "DashSlashEnd" then
-            PlayerFeedback.SetKatanaTrailActive(ctx, false)
-        elseif event.Type == "DashChargingStart" then
-            PlayerFeedback.SetKatanaTrailActive(ctx, false)
-        elseif event.Type == "DashChargeAttackStart" then
-            PlayerFeedback.SetKatanaTrailActive(ctx, true)
-        elseif event.Type == "DashChargeAttackEnd" then
-            PlayerFeedback.SetKatanaTrailActive(ctx, false)
-        elseif event.Type == "PerfectDodge" then
+        if event.Type == "PerfectDodge" then
             if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
                 CameraManager.StartWaveShake(0.5)
             end

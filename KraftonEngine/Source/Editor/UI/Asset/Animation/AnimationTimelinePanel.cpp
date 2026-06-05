@@ -7,6 +7,7 @@
 #include "Animation/Notify/AnimNotify.h"
 #include "Animation/Notify/AnimNotifyState.h"
 #include "Animation/AnimationManager.h"
+#include "Asset/AssetRegistry.h"
 #include "Component/Primitive/SkeletalMeshComponent.h"
 #include "Mesh/Skeletal/SkeletalMesh.h"
 #include "Mesh/Skeletal/SkeletalMeshAsset.h"
@@ -14,6 +15,7 @@
 #include "Object/GarbageCollection.h"
 #include "Object/Reflection/ObjectFactory.h"
 #include "Object/Reflection/UClass.h"
+#include "Core/Property/SoftObjectProperty.h"
 #include "Core/Types/PropertyTypes.h"
 #include "Editor/UI/Asset/Animation/MorphCurveEditObject.h"
 
@@ -91,12 +93,14 @@ namespace
 	// 이름으로 인스턴스 만들고 DataModel 을 Outer 로 매단다 (라이프타임 체인).
 	FAnimNotifyEvent MakeNotifyFromClass(UAnimSequence* Seq, UClass* Cls,
 	                                     const FString& Name, float Time,
-	                                     float Duration, bool bAsState)
+	                                     float Duration, bool bAsState,
+	                                     int32 TrackIndex)
 	{
 		FAnimNotifyEvent Event;
 		Event.NotifyName  = FName(Name);
 		Event.TriggerTime = Time;
-		Event.Duration    = bAsState ? std::max(Duration, 0.01f) : 0.0f;
+		Event.Duration    = bAsState ? std::max<float>(Duration, 0.01f) : 0.0f;
+		Event.TrackIndex  = TrackIndex;
 
 		if (Cls && Seq)
 		{
@@ -116,6 +120,7 @@ namespace
 	void PasteNotifyFromClipboard(UAnimSequence* Seq,
 	                              FAnimationTimelinePanel::FAnimNotifyClipboard& Clipboard,
 	                              float PasteTime,
+	                              int32 TargetTrackIndex,
 	                              int32& InOutSelectedNotifyIndex)
 	{
 		if (!Seq || !Clipboard.bValid)
@@ -124,14 +129,20 @@ namespace
 		}
 
 		TArray<FAnimNotifyEvent>& Notifies = Seq->GetMutableModelNotifies();
+		const TArray<FAnimNotifyTrack>& Tracks = Seq->GetNotifyTracks();
 		UObject* NewOuter = Seq->GetDataModel();
 		FAnimNotifyEvent NewEvent = Clipboard.Event.DuplicateForOuter(NewOuter);
 
 		const float PlayLength = Seq->GetPlayLength();
 		NewEvent.TriggerTime = std::clamp(PasteTime, 0.0f, PlayLength);
+		const int32 MaxTrackIndex = static_cast<int32>(Tracks.size()) - 1;
+		const int32 FallbackTrackIndex = std::clamp<int32>(Clipboard.SourceTrackIndex, 0, std::max<int32>(MaxTrackIndex, 0));
+		NewEvent.TrackIndex = (TargetTrackIndex >= 0 && TargetTrackIndex <= MaxTrackIndex)
+			? TargetTrackIndex
+			: FallbackTrackIndex;
 		if (NewEvent.NotifyState && NewEvent.Duration > 0.0f)
 		{
-			NewEvent.Duration = std::clamp(NewEvent.Duration, 0.0f, std::max(PlayLength - NewEvent.TriggerTime, 0.0f));
+			NewEvent.Duration = std::clamp(NewEvent.Duration, 0.0f, std::max<float>(PlayLength - NewEvent.TriggerTime, 0.0f));
 		}
 		else
 		{
@@ -266,12 +277,122 @@ namespace
 					FString* S = static_cast<FString*>(Prop.GetValuePtr());
 					if (S)
 					{
-						char Buf[256];
-						strncpy_s(Buf, sizeof(Buf), S->c_str(), _TRUNCATE);
-						if (ImGui::InputText("##v", Buf, sizeof(Buf)))
+						const TMap<FString, FString>& Metadata = Prop.GetMetadata();
+						auto AssetTypeIt = Metadata.find("assettype");
+						if (AssetTypeIt != Metadata.end() && AssetTypeIt->second == "Audio")
 						{
-							*S = Buf;
-							bChanged = true;
+							const FString Preview = (S->empty() || *S == "None") ? "None" : *S;
+							if (ImGui::BeginCombo("##v", Preview.c_str()))
+							{
+								const bool bSelectedNone = (S->empty() || *S == "None");
+								if (ImGui::Selectable("None", bSelectedNone))
+								{
+									*S = "None";
+									bChanged = true;
+								}
+								if (bSelectedNone) ImGui::SetItemDefaultFocus();
+
+								const TArray<FAssetListItem>& AudioFiles = FAssetRegistry::ListByTypeName("Audio");
+								for (const FAssetListItem& Item : AudioFiles)
+								{
+									const bool bSelected = (*S == Item.FullPath);
+									if (ImGui::Selectable(Item.DisplayName.c_str(), bSelected))
+									{
+										*S = Item.FullPath;
+										bChanged = true;
+									}
+									if (bSelected) ImGui::SetItemDefaultFocus();
+								}
+								ImGui::EndCombo();
+							}
+						}
+						else
+						{
+							char Buf[256];
+							strncpy_s(Buf, sizeof(Buf), S->c_str(), _TRUNCATE);
+							if (ImGui::InputText("##v", Buf, sizeof(Buf)))
+							{
+								*S = Buf;
+								bChanged = true;
+							}
+						}
+					}
+					break;
+				}
+				case EPropertyType::SoftObjectRef:
+				{
+					const FSoftObjectProperty* SoftProperty = Prop.Property ? Prop.Property->AsSoftObjectProperty() : nullptr;
+					if (SoftProperty)
+					{
+						FString CurrentPath = SoftProperty->GetPath(Prop.ContainerPtr);
+						const FString AssetType = SoftProperty->GetAssetType();
+						if (AssetType == "Audio")
+						{
+							const FString Preview = (CurrentPath.empty() || CurrentPath == "None") ? "None" : CurrentPath;
+							if (ImGui::BeginCombo("##v", Preview.c_str()))
+							{
+								const bool bSelectedNone = (CurrentPath.empty() || CurrentPath == "None");
+								if (ImGui::Selectable("None", bSelectedNone))
+								{
+									SoftProperty->SetPath(Prop.ContainerPtr, "None");
+									CurrentPath = "None";
+									bChanged = true;
+								}
+								if (bSelectedNone) ImGui::SetItemDefaultFocus();
+
+								const TArray<FAssetListItem>& AudioFiles = FAssetRegistry::ListByTypeName("Audio");
+								for (const FAssetListItem& Item : AudioFiles)
+								{
+									const bool bSelected = (CurrentPath == Item.FullPath);
+									if (ImGui::Selectable(Item.DisplayName.c_str(), bSelected))
+									{
+										SoftProperty->SetPath(Prop.ContainerPtr, Item.FullPath);
+										CurrentPath = Item.FullPath;
+										bChanged = true;
+									}
+									if (bSelected) ImGui::SetItemDefaultFocus();
+								}
+								ImGui::EndCombo();
+							}
+						}
+						else if (AssetType == "UParticleSystem")
+						{
+							const FString Preview = (CurrentPath.empty() || CurrentPath == "None") ? "None" : CurrentPath;
+							if (ImGui::BeginCombo("##v", Preview.c_str()))
+							{
+								const bool bSelectedNone = (CurrentPath.empty() || CurrentPath == "None");
+								if (ImGui::Selectable("None", bSelectedNone))
+								{
+									SoftProperty->SetPath(Prop.ContainerPtr, "None");
+									CurrentPath = "None";
+									bChanged = true;
+								}
+								if (bSelectedNone) ImGui::SetItemDefaultFocus();
+
+								const TArray<FAssetListItem>& ParticleSystems = FAssetRegistry::ListByTypeName("UParticleSystem");
+								for (const FAssetListItem& Item : ParticleSystems)
+								{
+									const bool bSelected = (CurrentPath == Item.FullPath);
+									if (ImGui::Selectable(Item.DisplayName.c_str(), bSelected))
+									{
+										SoftProperty->SetPath(Prop.ContainerPtr, Item.FullPath);
+										CurrentPath = Item.FullPath;
+										bChanged = true;
+									}
+									if (bSelected) ImGui::SetItemDefaultFocus();
+								}
+								ImGui::EndCombo();
+							}
+						}
+						else
+						{
+							char Buf[256];
+							strncpy_s(Buf, sizeof(Buf), CurrentPath.c_str(), _TRUNCATE);
+							if (ImGui::InputText("##v", Buf, sizeof(Buf)))
+							{
+								SoftProperty->SetPath(Prop.ContainerPtr, Buf);
+								bChanged = true;
+							}
 						}
 					}
 					break;
@@ -425,8 +546,8 @@ namespace
 			return 0.0f;
 		}
 
-		const int32 PrevIndex = std::max(0, KeyIndex - 1);
-		const int32 NextIndex = std::min(NumKeys - 1, KeyIndex + 1);
+		const int32 PrevIndex = std::max<float>(0, KeyIndex - 1);
+		const int32 NextIndex = std::min<float>(NumKeys - 1, KeyIndex + 1);
 		const FRawFloatCurveKey& Prev = Curve.Keys[PrevIndex];
 		const FRawFloatCurveKey& Next = Curve.Keys[NextIndex];
 		const float DeltaTime = Next.TimeSeconds - Prev.TimeSeconds;
@@ -544,26 +665,26 @@ namespace
 
 	static float MorphValueToY(float Value, float GraphTop, float GraphH, float MinValue, float MaxValue)
 	{
-		const float Alpha = std::clamp((Value - MinValue) / std::max(MaxValue - MinValue, 1.0e-6f), 0.0f, 1.0f);
+		const float Alpha = std::clamp((Value - MinValue) / std::max<float>(MaxValue - MinValue, 1.0e-6f), 0.0f, 1.0f);
 		return GraphTop + (1.0f - Alpha) * GraphH;
 	}
 
 	static float MorphYToValue(float Y, float GraphTop, float GraphH, float MinValue, float MaxValue)
 	{
-		const float Alpha = 1.0f - std::clamp((Y - GraphTop) / std::max(GraphH, 1.0f), 0.0f, 1.0f);
+		const float Alpha = 1.0f - std::clamp((Y - GraphTop) / std::max<float>(GraphH, 1.0f), 0.0f, 1.0f);
 		return MinValue + Alpha * (MaxValue - MinValue);
 	}
 
 	static float GetLeaveHandleTime(const FRawFloatCurveKey& Key, const FRawFloatCurveKey& Next)
 	{
-		const float Segment = std::max(Next.TimeSeconds - Key.TimeSeconds, 1.0e-5f);
+		const float Segment = std::max<float>(Next.TimeSeconds - Key.TimeSeconds, 1.0e-5f);
 		const float Weight = Key.bLeaveTangentWeighted ? Key.LeaveTangentWeight : Segment / 3.0f;
 		return Key.TimeSeconds + std::clamp(Weight, 1.0e-5f, Segment);
 	}
 
 	static float GetArriveHandleTime(const FRawFloatCurveKey& Prev, const FRawFloatCurveKey& Key)
 	{
-		const float Segment = std::max(Key.TimeSeconds - Prev.TimeSeconds, 1.0e-5f);
+		const float Segment = std::max<float>(Key.TimeSeconds - Prev.TimeSeconds, 1.0e-5f);
 		const float Weight = Key.bArriveTangentWeighted ? Key.ArriveTangentWeight : Segment / 3.0f;
 		return Key.TimeSeconds - std::clamp(Weight, 1.0e-5f, Segment);
 	}
@@ -575,7 +696,7 @@ namespace
 		{
 			Key.TangentMode = 2;
 		}
-		const float Segment = std::max(Next.TimeSeconds - Key.TimeSeconds, 1.0e-5f);
+		const float Segment = std::max<float>(Next.TimeSeconds - Key.TimeSeconds, 1.0e-5f);
 		const float Weight = std::clamp(HandleTime - Key.TimeSeconds, 1.0e-5f, Segment);
 		Key.LeaveTangentWeight = Weight;
 		Key.bLeaveTangentWeighted = true;
@@ -595,7 +716,7 @@ namespace
 		{
 			Key.TangentMode = 2;
 		}
-		const float Segment = std::max(Key.TimeSeconds - Prev.TimeSeconds, 1.0e-5f);
+		const float Segment = std::max<float>(Key.TimeSeconds - Prev.TimeSeconds, 1.0e-5f);
 		const float Weight = std::clamp(Key.TimeSeconds - HandleTime, 1.0e-5f, Segment);
 		Key.ArriveTangentWeight = Weight;
 		Key.bArriveTangentWeighted = true;
@@ -688,7 +809,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 	ImGui::BeginChild("##AnimTimelinePanel", ImVec2(0.0f, PanelHeight), false,
 	                  ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
-	const float TrackViewportH = std::max(PanelHeight - TransportH, RulerH + RowH);
+	const float TrackViewportH = std::max<float>(PanelHeight - TransportH, RulerH + RowH);
 	ImGui::BeginChild("##AnimTimelineTrackScroll", ImVec2(0.0f, TrackViewportH), false,
 	                  ImGuiWindowFlags_HorizontalScrollbar);
 
@@ -713,12 +834,13 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 
 	const float PlayLength = Seq->GetPlayLength();
 	const float FrameRate  = Seq->GetFrameRate() > 0.0f ? Seq->GetFrameRate() : 30.0f;
-	const int   NumFrames  = std::max(Seq->GetNumberOfFrames(), 1);
-	const int   EndFrame   = std::max(NumFrames - 1, 0);
+	const int   NumFrames  = std::max<int>(Seq->GetNumberOfFrames(), 1);
+	const int   EndFrame   = std::max<int>(NumFrames - 1, 0);
+	Seq->EnsureNotifyTrackLayout();
 
-	float TrackAreaH = std::max(TrackViewportH, RulerH + RowH);
+	float TrackAreaH = std::max<float>(TrackViewportH, RulerH + RowH);
 	const float CanvasX    = Origin.x + HeaderW;
-	const float CanvasW    = std::max(FullW - HeaderW, 1.0f);
+	const float CanvasW    = std::max<float>(FullW - HeaderW, 1.0f);
 
 	auto TimeToX = [&](float T) { return CanvasX + (T / PlayLength) * CanvasW; };
 
@@ -757,17 +879,21 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 	// 클릭 지점 시간에 노티파이(+LogMessage 로직)를 추가 → DataModel 에 기록되어
 	// 직렬화되고, RefreshRuntimeNotifies 로 dispatch 캐시에 반영돼 프리뷰에서 실제 발사.
 	static float sPendingNotifyTime = 0.0f;
+	static int32 sPendingNotifyTrackIndex = 0;
 	if (bNotifiesExpanded && ImGui::IsItemHovered() &&
 	    ImGui::IsMouseClicked(ImGuiMouseButton_Right))
 	{
 		const float LaneTop = Origin.y + RulerH + RowH;
-		const float LaneBot = LaneTop + NotifyLaneH;
+		const int32 TrackCount = static_cast<int32>(Seq->GetNotifyTracks().size());
+		const float LaneBot = LaneTop + NotifyLaneH * static_cast<float>(TrackCount);
 		const float MouseY  = ImGui::GetIO().MousePos.y;
 		if (MouseY >= LaneTop && MouseY <= LaneBot)
 		{
 			const float Frac = std::clamp(
 				(ImGui::GetIO().MousePos.x - CanvasX) / CanvasW, 0.0f, 1.0f);
 			sPendingNotifyTime = Frac * PlayLength;
+			sPendingNotifyTrackIndex = std::clamp<int32>(
+				static_cast<int32>((MouseY - LaneTop) / NotifyLaneH), 0, std::max<int32>(TrackCount - 1, 0));
 			ImGui::OpenPopup("##addNotifyCtx");
 		}
 	}
@@ -778,7 +904,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 
 		if (ImGui::MenuItem("Paste Notify", nullptr, false, NotifyClipboard.bValid))
 		{
-			PasteNotifyFromClipboard(Seq, NotifyClipboard, sPendingNotifyTime, InOutSelectedNotifyIndex);
+			PasteNotifyFromClipboard(Seq, NotifyClipboard, sPendingNotifyTime, sPendingNotifyTrackIndex, InOutSelectedNotifyIndex);
 		}
 		ImGui::Separator();
 
@@ -797,7 +923,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 					static int sNotifyCounter = 0;
 					const FString Name = FString(Cls->GetName()) + "_" + std::to_string(++sNotifyCounter);
 					Seq->GetMutableModelNotifies().push_back(
-						MakeNotifyFromClass(Seq, Cls, Name, sPendingNotifyTime, 0.0f, false));
+						MakeNotifyFromClass(Seq, Cls, Name, sPendingNotifyTime, 0.0f, false, sPendingNotifyTrackIndex));
 					Seq->RefreshRuntimeNotifies();
 					InOutSelectedNotifyIndex = static_cast<int32>(Seq->GetMutableModelNotifies().size()) - 1;
 					SaveSeqNow();
@@ -820,9 +946,9 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 				{
 					static int sStateCounter = 0;
 					const FString Name = FString(Cls->GetName()) + "_" + std::to_string(++sStateCounter);
-					const float DefaultDur = std::min(0.3f, std::max(PlayLength - sPendingNotifyTime, 0.05f));
+					const float DefaultDur = std::min<float>(0.3f, std::max<float>(PlayLength - sPendingNotifyTime, 0.05f));
 					Seq->GetMutableModelNotifies().push_back(
-						MakeNotifyFromClass(Seq, Cls, Name, sPendingNotifyTime, DefaultDur, true));
+						MakeNotifyFromClass(Seq, Cls, Name, sPendingNotifyTime, DefaultDur, true, sPendingNotifyTrackIndex));
 					Seq->RefreshRuntimeNotifies();
 					InOutSelectedNotifyIndex = static_cast<int32>(Seq->GetMutableModelNotifies().size()) - 1;
 					SaveSeqNow();
@@ -835,7 +961,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 
 	// ── 룰러 눈금 / 프레임 번호 ──
 	const int RawStep = static_cast<int>(std::lround(NumFrames * 55.0f / CanvasW));
-	const int Step    = NiceFrameStep(std::max(RawStep, 1));
+	const int Step    = NiceFrameStep(std::max<float>(RawStep, 1));
 	for (int F = 0; F <= EndFrame; ++F)
 	{
 		const float X = TimeToX((static_cast<float>(F) / EndFrame) * PlayLength);
@@ -856,7 +982,6 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 	            ImVec2(Origin.x + HeaderW - 6.0f, Origin.y + RulerH - 3.0f), ColTick);
 
 	// 좌측 헤더 우측 끝에 "+" 추가 어포던스를 그린다. 클릭 시 true 반환.
-	// (실제 추가 로직은 미연결 — 호출부에서 TODO 처리)
 	auto DrawAddButton = [&](const char* Id, float RowTop, float RowHeight) -> bool
 	{
 		const float BtnSize = 16.0f;
@@ -870,7 +995,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 		{
 			DL->AddRectFilled(BtnPos, ImVec2(BtnPos.x + BtnSize, BtnPos.y + BtnSize),
 			                  IM_COL32(255, 255, 255, 28), 2.0f);
-			ImGui::SetTooltip("Add (not wired yet)");
+			ImGui::SetTooltip("Add");
 		}
 		const ImVec2 C(BtnPos.x + BtnSize * 0.5f, BtnPos.y + BtnSize * 0.5f);
 		DL->AddLine(ImVec2(C.x - 4.0f, C.y), ImVec2(C.x + 4.0f, C.y), Col, 1.5f);
@@ -878,13 +1003,40 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 		return ImGui::IsItemClicked();
 	};
 
+	auto DrawDeleteButton = [&](const char* Id, float RowTop, float RowHeight, bool bEnabled) -> bool
+	{
+		const float BtnSize = 16.0f;
+		const ImVec2 BtnPos(Origin.x + HeaderW - BtnSize - 6.0f,
+		                    RowTop + (RowHeight - BtnSize) * 0.5f);
+		ImGui::SetCursorScreenPos(BtnPos);
+		ImGui::BeginDisabled(!bEnabled);
+		ImGui::InvisibleButton(Id, ImVec2(BtnSize, BtnSize));
+		const bool bClicked = bEnabled && ImGui::IsItemClicked();
+		const bool bHov = ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled);
+		ImGui::EndDisabled();
+
+		const ImU32 Col = bEnabled
+			? (bHov ? IM_COL32(230, 230, 230, 255) : IM_COL32(150, 150, 150, 255))
+			: IM_COL32(85, 85, 85, 255);
+		if (bHov)
+		{
+			DL->AddRectFilled(BtnPos, ImVec2(BtnPos.x + BtnSize, BtnPos.y + BtnSize),
+			                  IM_COL32(255, 255, 255, bEnabled ? 28 : 12), 2.0f);
+			ImGui::SetTooltip(bEnabled ? "Delete track" : "At least one notify track is required");
+		}
+		const ImVec2 C(BtnPos.x + BtnSize * 0.5f, BtnPos.y + BtnSize * 0.5f);
+		DL->AddLine(ImVec2(C.x - 4.0f, C.y), ImVec2(C.x + 4.0f, C.y), Col, 1.5f);
+		return bClicked;
+	};
+
 	// ── 트랙 행 ──
 	float RowY = Origin.y + RulerH;
+	const float HeaderToggleW = HeaderW - 28.0f;
 
 	// Notifies (펼침 가능 + 트랙 추가 어포던스)
 	const ImVec2 NotifyHeaderPos(Origin.x, RowY);
 	ImGui::SetCursorScreenPos(ImVec2(Origin.x, RowY));
-	ImGui::InvisibleButton("##notifyToggle", ImVec2(HeaderW, RowH));
+	ImGui::InvisibleButton("##notifyToggle", ImVec2(HeaderToggleW, RowH));
 	if (ImGui::IsItemClicked())
 	{
 		bNotifiesExpanded = !bNotifiesExpanded;
@@ -892,8 +1044,13 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 	DrawTrackHeaderRow(DL, NotifyHeaderPos, HeaderW, RowH, "Notifies", true, bNotifiesExpanded);
 	if (DrawAddButton("##addNotifyTrack", RowY, RowH))
 	{
-		// TODO: 노티파이 트랙 추가 — 엔진에 노티파이 트랙(인덱스) 데이터 모델이
-		// 생기면 여기서 새 트랙을 push 하도록 연결한다. (현재는 표시 전용)
+		TArray<FAnimNotifyTrack>& Tracks = Seq->GetMutableNotifyTracks();
+		FAnimNotifyTrack NewTrack;
+		NewTrack.TrackName = FName(std::to_string(Tracks.size() + 1));
+		Tracks.push_back(NewTrack);
+		bNotifiesExpanded = true;
+		Seq->EnsureNotifyTrackLayout();
+		SaveSeqNow();
 	}
 	DL->AddRectFilled(ImVec2(CanvasX, RowY), ImVec2(CanvasX + CanvasW, RowY + RowH),
 	                  IM_COL32(30, 30, 30, 255));
@@ -903,32 +1060,66 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 
 	if (bNotifiesExpanded)
 	{
-		const float LaneY = RowY;
-		DL->AddRectFilled(ImVec2(Origin.x, LaneY),
-		                  ImVec2(Origin.x + HeaderW, LaneY + NotifyLaneH), ColHeaderBg);
-		DL->AddText(ImVec2(Origin.x + 26.0f, LaneY + NotifyLaneH * 0.5f - 7.0f),
-		            ColLabel, "1");
-		if (DrawAddButton("##addNotify", LaneY, NotifyLaneH))
+		const TArray<FAnimNotifyTrack>& Tracks = Seq->GetNotifyTracks();
+		for (int32 TrackIndex = 0; TrackIndex < static_cast<int32>(Tracks.size()); ++TrackIndex)
 		{
-			// 같은 컨텍스트 popup 재사용 — playhead 시각으로 진입. 클래스 picker 제공.
-			sPendingNotifyTime = CurrentTime;
-			ImGui::OpenPopup("##addNotifyCtx");
-		}
-		DL->AddRectFilled(ImVec2(CanvasX, LaneY),
-		                  ImVec2(CanvasX + CanvasW, LaneY + NotifyLaneH), IM_COL32(24, 24, 24, 255));
+			const float LaneY = RowY;
+			const int32 TrackCount = static_cast<int32>(Tracks.size());
+			DL->AddRectFilled(ImVec2(Origin.x, LaneY),
+			                  ImVec2(Origin.x + HeaderW, LaneY + NotifyLaneH), ColHeaderBg);
+			std::string TrackName = Tracks[TrackIndex].TrackName.ToString();
+			if (TrackName.empty())
+			{
+				TrackName = std::to_string(TrackIndex + 1);
+			}
+			DL->AddText(ImVec2(Origin.x + 26.0f, LaneY + NotifyLaneH * 0.5f - 7.0f),
+			            ColLabel, TrackName.c_str());
+			ImGui::PushID(TrackIndex);
+			if (DrawDeleteButton("##deleteNotifyTrack", LaneY, NotifyLaneH, TrackCount > 1))
+			{
+				TArray<FAnimNotifyTrack>& MutableTracks = Seq->GetMutableNotifyTracks();
+				TArray<FAnimNotifyEvent>& Notifies = Seq->GetMutableModelNotifies();
+				const int32 NewTrackCount = TrackCount - 1;
+				const int32 TargetTrackIndex = std::clamp(TrackIndex - 1, 0, NewTrackCount - 1);
+
+				for (FAnimNotifyEvent& Notify : Notifies)
+				{
+					if (Notify.TrackIndex == TrackIndex)
+					{
+						Notify.TrackIndex = TargetTrackIndex;
+					}
+					else if (Notify.TrackIndex > TrackIndex)
+					{
+						--Notify.TrackIndex;
+					}
+				}
+				MutableTracks.erase(MutableTracks.begin() + TrackIndex);
+				Seq->RefreshRuntimeNotifies();
+				SaveSeqNow();
+				ImGui::PopID();
+				RowY += NotifyLaneH;
+				continue;
+			}
+			ImGui::PopID();
+			DL->AddRectFilled(ImVec2(CanvasX, LaneY),
+			                  ImVec2(CanvasX + CanvasW, LaneY + NotifyLaneH), IM_COL32(24, 24, 24, 255));
 
 		// 드래그로 시간 이동 / 우클릭으로 삭제(루프 후 지연 적용).
 		// 직렬화 소스(DataModel)를 직접 편집 → 아래에서 dispatch 캐시 동기화.
-		TArray<FAnimNotifyEvent>& Notifies = Seq->GetMutableModelNotifies();
-		int PendingDelete = -1;
-		static char  sRenameBuf[64]   = {};
-		static float sGrabOffsetTime  = 0.0f; // 잡은 지점과 앵커의 시간 차(점프 방지)
-		const float BadgeTop  = LaneY + 5.0f;
-		const float BadgeBot  = LaneY + NotifyLaneH - 5.0f;
-		const float BadgeMidY = (BadgeTop + BadgeBot) * 0.5f;
-		for (int i = 0; i < static_cast<int>(Notifies.size()); ++i)
-		{
-			FAnimNotifyEvent& N   = Notifies[i];
+			TArray<FAnimNotifyEvent>& Notifies = Seq->GetMutableModelNotifies();
+			int PendingDelete = -1;
+			static char  sRenameBuf[64]   = {};
+			static float sGrabOffsetTime  = 0.0f; // 잡은 지점과 앵커의 시간 차(점프 방지)
+			const float BadgeTop  = LaneY + 5.0f;
+			const float BadgeBot  = LaneY + NotifyLaneH - 5.0f;
+			const float BadgeMidY = (BadgeTop + BadgeBot) * 0.5f;
+			for (int i = 0; i < static_cast<int>(Notifies.size()); ++i)
+			{
+				FAnimNotifyEvent& N   = Notifies[i];
+				if (N.TrackIndex != TrackIndex)
+				{
+					continue;
+				}
 			const float       NX  = TimeToX(N.TriggerTime);
 			const std::string Nm  = N.NotifyName.ToString();
 			const ImVec2      TSz = ImGui::CalcTextSize(Nm.c_str());
@@ -938,7 +1129,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 			float BadgeW;
 			if (N.Duration > 0.0f)
 			{
-				BadgeW = std::max(TimeToX(N.TriggerTime + N.Duration) - NX, 6.0f);
+				BadgeW = std::max<float>(TimeToX(N.TriggerTime + N.Duration) - NX, 6.0f);
 			}
 			else
 			{
@@ -952,7 +1143,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 			constexpr float HandleW = 6.0f;
 			const bool      bHasDur  = (N.Duration > 0.0f);
 			const float     FullW    = BadgeW + 12.0f;
-			const float     BodyW    = bHasDur ? std::max(FullW - HandleW, 8.0f) : FullW;
+			const float     BodyW    = bHasDur ? std::max<float>(FullW - HandleW, 8.0f) : FullW;
 
 			ImGui::SetCursorScreenPos(ImVec2(NX - 6.0f, BadgeTop));
 			ImGui::InvisibleButton("##notify", ImVec2(BodyW, BadgeBot - BadgeTop));
@@ -981,7 +1172,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 			// + 시퀀스 우측 경계 클램프 시 (TriggerTime + Duration) 가 PlayLength 넘지 않게.
 			if (bActive && ImGui::IsMouseDragging(ImGuiMouseButton_Left, -1.0f))
 			{
-				const float MaxStart = bHasDur ? std::max(PlayLength - N.Duration, 0.0f)
+				const float MaxStart = bHasDur ? std::max<float>(PlayLength - N.Duration, 0.0f)
 				                               : PlayLength;
 				N.TriggerTime    = std::clamp(MouseTime() - sGrabOffsetTime, 0.0f, MaxStart);
 				sPendingSave    = true;   // 마우스 release 시 일괄 save.
@@ -1043,6 +1234,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 					NotifyClipboard.bValid = true;
 					NotifyClipboard.Event = N;
 					NotifyClipboard.SourceTriggerTime = N.TriggerTime;
+					NotifyClipboard.SourceTrackIndex = N.TrackIndex;
 				}
 				if (ImGui::MenuItem("Delete"))
 				{
@@ -1110,7 +1302,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 				// State notify 는 시각적 폭이 우선 — 이름이 길면 "..." 으로 잘라 표기.
 				// (Instant 는 BadgeW 가 이름 폭에 맞춰 자동 확장되므로 truncation 무영향.)
 				const float TextStartX = MarkNX + 8.0f;
-				const float MaxTextW   = std::max(BMax.x - TextStartX - 4.0f, 0.0f);
+				const float MaxTextW   = std::max<float>(BMax.x - TextStartX - 4.0f, 0.0f);
 				const std::string Disp = TruncateWithEllipsis(Nm, MaxTextW);
 				if (!Disp.empty())
 				{
@@ -1155,6 +1347,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 		DL->AddLine(ImVec2(CanvasX, LaneY + NotifyLaneH - 1.0f),
 		            ImVec2(CanvasX + CanvasW, LaneY + NotifyLaneH - 1.0f), ColSeparator);
 		RowY += NotifyLaneH;
+		}
 	}
 
 	auto DrawSimpleHeaderRow = [&](const char* Label, bool bExpandable, bool bExpanded)
@@ -1174,7 +1367,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 
 		const ImVec2 MorphHeaderPos(Origin.x, RowY);
 		ImGui::SetCursorScreenPos(ImVec2(Origin.x, RowY));
-		ImGui::InvisibleButton("##morphCurveToggle", ImVec2(HeaderW, RowH));
+		ImGui::InvisibleButton("##morphCurveToggle", ImVec2(HeaderToggleW, RowH));
 		if (ImGui::IsItemClicked())
 		{
 			bMorphCurvesExpanded = !bMorphCurvesExpanded;
@@ -1296,7 +1489,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 					{
 						ImVec2 PrevPoint;
 						bool bHasPrevPoint = false;
-						const int32 SampleCount = std::max(32, static_cast<int32>(CanvasW / 8.0f));
+						const int32 SampleCount = std::max<float>(32, static_cast<int32>(CanvasW / 8.0f));
 						for (int32 Sample = 0; Sample <= SampleCount; ++Sample)
 						{
 							const float T = (static_cast<float>(Sample) / static_cast<float>(SampleCount)) * PlayLength;
@@ -1452,7 +1645,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 
 	// 실제 트랙 행 높이가 viewport보다 커져도 transport는 고정하고,
 	// 위쪽 track child만 스크롤되도록 content height만 확장한다.
-	TrackAreaH = std::max(TrackAreaH, RowY - Origin.y);
+	TrackAreaH = std::max<float>(TrackAreaH, RowY - Origin.y);
 
 	// 남은 캔버스 빈 영역
 	if (RowY < Origin.y + TrackAreaH)
@@ -1539,7 +1732,7 @@ bool FAnimationTimelinePanel::RenderNotifyDetails(UAnimSequence* Seq, int32 Sele
 	const FString ClsName = N.Notify      ? FString(N.Notify->GetClass()->GetName())
 	                      : N.NotifyState ? FString(N.NotifyState->GetClass()->GetName())
 	                                      : FString("None");
-	const bool bIsState = (N.NotifyState != nullptr) && (N.Duration > 0.0f);
+	const bool bIsState = (N.NotifyState != nullptr);
 
 	ImGui::TextUnformatted("Notify Details");
 	ImGui::Separator();
@@ -1568,10 +1761,13 @@ bool FAnimationTimelinePanel::RenderNotifyDetails(UAnimSequence* Seq, int32 Sele
 		ImGui::TextUnformatted("Trigger Time (sec)");
 		ImGui::SetNextItemWidth(-FLT_MIN);
 		const float MaxStart = bIsState
-			? std::max(Seq->GetPlayLength() - N.Duration, 0.0f)
+			? std::max<float>(Seq->GetPlayLength() - N.Duration, 0.0f)
 			: Seq->GetPlayLength();
-		if (ImGui::DragFloat("##trig", &N.TriggerTime, 0.01f, 0.0f, MaxStart, "%.3f"))
+		float TriggerTime = N.TriggerTime;
+		ImGui::InputFloat("##trig", &TriggerTime, 0.0f, 0.0f, "%.3f");
+		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
+			N.TriggerTime = std::clamp(TriggerTime, 0.0f, MaxStart);
 			bChanged = true;
 		}
 	}
@@ -1579,10 +1775,49 @@ bool FAnimationTimelinePanel::RenderNotifyDetails(UAnimSequence* Seq, int32 Sele
 	{
 		ImGui::TextUnformatted("Duration (sec)");
 		ImGui::SetNextItemWidth(-FLT_MIN);
-		const float MaxDur = std::max(Seq->GetPlayLength() - N.TriggerTime, 0.01f);
-		if (ImGui::DragFloat("##dur", &N.Duration, 0.01f, 0.01f, MaxDur, "%.3f"))
+		const float MaxDur = std::max<float>(Seq->GetPlayLength() - N.TriggerTime, 0.01f);
+		float Duration = N.Duration;
+		ImGui::InputFloat("##dur", &Duration, 0.0f, 0.0f, "%.3f");
+		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
+			N.Duration = std::clamp(Duration, 0.0f, MaxDur);
 			bChanged = true;
+		}
+	}
+
+	{
+		TArray<FAnimNotifyTrack>& Tracks = Seq->GetMutableNotifyTracks();
+		const int32 TrackCount = static_cast<int32>(Tracks.size());
+		N.TrackIndex = std::clamp(N.TrackIndex, 0, std::max<int32>(TrackCount - 1, 0));
+		std::string CurrentTrackName = TrackCount > 0 ? Tracks[N.TrackIndex].TrackName.ToString() : "1";
+		if (CurrentTrackName.empty())
+		{
+			CurrentTrackName = std::to_string(N.TrackIndex + 1);
+		}
+
+		ImGui::TextUnformatted("Track");
+		ImGui::SetNextItemWidth(-FLT_MIN);
+		if (ImGui::BeginCombo("##notifyTrack", CurrentTrackName.c_str()))
+		{
+			for (int32 TrackIndex = 0; TrackIndex < TrackCount; ++TrackIndex)
+			{
+				std::string TrackName = Tracks[TrackIndex].TrackName.ToString();
+				if (TrackName.empty())
+				{
+					TrackName = std::to_string(TrackIndex + 1);
+				}
+				const bool bSelected = (N.TrackIndex == TrackIndex);
+				if (ImGui::Selectable(TrackName.c_str(), bSelected))
+				{
+					N.TrackIndex = TrackIndex;
+					bChanged = true;
+				}
+				if (bSelected)
+				{
+					ImGui::SetItemDefaultFocus();
+				}
+			}
+			ImGui::EndCombo();
 		}
 	}
 

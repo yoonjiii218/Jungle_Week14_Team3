@@ -21,6 +21,7 @@ namespace FAnimationTimelinePanel
 		bool bValid = false;
 		FAnimNotifyEvent Event;
 		float SourceTriggerTime = 0.0f;
+		int32 SourceTrackIndex = 0;
 	};
 
 	void Render(UAnimSingleNodeInstance* NodeInst,

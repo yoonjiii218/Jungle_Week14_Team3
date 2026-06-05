@@ -2,6 +2,7 @@
 
 #include "Component/ActorComponent.h"
 #include "Core/Types/CoreTypes.h"
+#include "Input/InputSystem.h"
 
 // UE 의 EInputEvent 의 minimal subset — Repeat/DoubleClick 등은 후속.
 enum class EInputEvent : uint8
@@ -32,6 +33,8 @@ public:
 	// 매핑 — 코드 또는 ProjectSettings(.ini) 가 호출. 같은 이름에 여러 키 가능.
 	void AddAxisMapping(const FString& Name, int VKey, float Scale = 1.0f);
 	void AddActionMapping(const FString& Name, int VKey);
+	void AddGamepadAxisMapping(const FString& Name, EGamepadAxis Axis, float Scale = 1.0f);
+	void AddGamepadActionMapping(const FString& Name, EGamepadButton Button);
 
 	// Binding — Pawn 자식이 SetupInputComponent 안에서 호출.
 	void BindAxis(const FString& Name, TFunction<void(float)> Callback);
@@ -43,8 +46,21 @@ public:
 	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction& ThisTickFunction) override;
 
 private:
-	struct FAxisMapping   { FString Name; int VKey = 0; float Scale = 1.0f; };
-	struct FActionMapping { FString Name; int VKey = 0; };
+	struct FAxisMapping
+	{
+		FString Name;
+		int VKey = 0;
+		EGamepadAxis GamepadAxis = EGamepadAxis::LeftX;
+		float Scale = 1.0f;
+		bool bGamepad = false;
+	};
+	struct FActionMapping
+	{
+		FString Name;
+		int VKey = 0;
+		EGamepadButton GamepadButton = EGamepadButton::A;
+		bool bGamepad = false;
+	};
 	struct FAxisBinding   { FString Name; TFunction<void(float)> Callback; };
 	struct FActionBinding { FString Name; EInputEvent Event = EInputEvent::Pressed; TFunction<void()> Callback; };
 

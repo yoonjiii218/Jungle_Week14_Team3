@@ -19,8 +19,11 @@ FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)
     float4 n_14 = Input.VertexColor;
     float3 n_21 = ((n_5).rgb * (n_14).rgb);
     float3 n_25 = (float4(n_21, 0.0f)).rgb;
-    float3 n_61 = float3(0.000000f, 0.000000f, 0.000000f);
-    float3 n_63 = (n_25 * n_61);
+    float3 n_61 = float3(0.491000f, 0.181000f, 0.329000f);
+    float3 n_70 = float3(0.000000f, 0.300000f, 0.300000f);
+    float n_72 = (float4(n_3, 0.0f, 0.0f)).g;
+    float3 n_75 = lerp(n_61, n_70, n_72);
+    float3 n_63 = (n_25 * n_75);
     FMaterialResult Result;
     Result.BaseColor = n_63;
     Result.Normal = float3(0, 0, 1);

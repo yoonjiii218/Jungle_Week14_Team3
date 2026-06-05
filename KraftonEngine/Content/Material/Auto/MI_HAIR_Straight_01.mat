@@ -4,7 +4,7 @@
     "BlendState" : "AlphaBlend",
     "Domain" : "Surface",
     "GeneratorVersion" : "GeneratedMaterialPass_v4_Decal",
-    "GraphHash" : "44CEB41F56846B0F",
+    "GraphHash" : "C5B8A7196D6CAE9A",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
 
@@ -47,19 +47,35 @@
         "LinkId" : 50,
         "ToPinId" : 37
       }, {
-        "FromPinId" : 27,
-        "LinkId" : 67,
-        "ToPinId" : 64
-      }, {
-        "FromPinId" : 62,
+        "FromPinId" : 79,
         "LinkId" : 68,
         "ToPinId" : 65
       }, {
         "FromPinId" : 66,
         "LinkId" : 69,
         "ToPinId" : 32
+      }, {
+        "FromPinId" : 4,
+        "LinkId" : 80,
+        "ToPinId" : 73
+      }, {
+        "FromPinId" : 62,
+        "LinkId" : 81,
+        "ToPinId" : 76
+      }, {
+        "FromPinId" : 71,
+        "LinkId" : 82,
+        "ToPinId" : 77
+      }, {
+        "FromPinId" : 74,
+        "LinkId" : 83,
+        "ToPinId" : 78
+      }, {
+        "FromPinId" : 27,
+        "LinkId" : 85,
+        "ToPinId" : 64
       }],
-    "NextId" : 70,
+    "NextId" : 86,
     "Nodes" : [{
         "DisplayName" : "Texture Object",
         "Mask" : "RGBA",
@@ -313,7 +329,7 @@
         "Type" : "Output",
         "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
       }, {
-        "DisplayName" : "ConstantFloat3",
+        "DisplayName" : "Hair Root Color",
         "Mask" : "RGBA",
         "NodeId" : 61,
         "ParameterName" : "",
@@ -324,12 +340,12 @@
             "PinId" : 62,
             "Type" : "Float3"
           }],
-        "PosX" : -48.000000,
-        "PosY" : 306.000000,
+        "PosX" : -480.000000,
+        "PosY" : 420.000000,
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "ConstantFloat3",
-        "Value" : [0.000000, 0.000000, 0.000000, 1.000000]
+        "Value" : [0.491000, 0.181000, 0.329000, 1.000000]
       }, {
         "DisplayName" : "Multiply",
         "Mask" : "RGBA",
@@ -354,11 +370,89 @@
             "PinId" : 66,
             "Type" : "Float4"
           }],
-        "PosX" : 152.000000,
-        "PosY" : 249.000000,
+        "PosX" : 46.000000,
+        "PosY" : 226.000000,
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "Multiply",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
+        "DisplayName" : "Hair Tip Color",
+        "Mask" : "RGBA",
+        "NodeId" : 70,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "Value",
+            "Kind" : "Output",
+            "OwningNodeId" : 70,
+            "PinId" : 71,
+            "Type" : "Float3"
+          }],
+        "PosX" : -480.000000,
+        "PosY" : 546.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "ConstantFloat3",
+        "Value" : [0.000000, 0.300000, 0.300000, 1.000000]
+      }, {
+        "DisplayName" : "UV V Mask",
+        "Mask" : "G",
+        "NodeId" : 72,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "Value",
+            "Kind" : "Input",
+            "OwningNodeId" : 72,
+            "PinId" : 73,
+            "Type" : "Float4"
+          }, {
+            "DisplayName" : "Result",
+            "Kind" : "Output",
+            "OwningNodeId" : 72,
+            "PinId" : 74,
+            "Type" : "Float"
+          }],
+        "PosX" : -480.000000,
+        "PosY" : 700.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "ComponentMask",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
+        "DisplayName" : "Hair UV Color Lerp",
+        "Mask" : "RGBA",
+        "NodeId" : 75,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "A",
+            "Kind" : "Input",
+            "OwningNodeId" : 75,
+            "PinId" : 76,
+            "Type" : "Float4"
+          }, {
+            "DisplayName" : "B",
+            "Kind" : "Input",
+            "OwningNodeId" : 75,
+            "PinId" : 77,
+            "Type" : "Float4"
+          }, {
+            "DisplayName" : "Alpha",
+            "Kind" : "Input",
+            "OwningNodeId" : 75,
+            "PinId" : 78,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "Result",
+            "Kind" : "Output",
+            "OwningNodeId" : 75,
+            "PinId" : 79,
+            "Type" : "Float4"
+          }],
+        "PosX" : -200.000000,
+        "PosY" : 520.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "Lerp",
         "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
       }]
   },
