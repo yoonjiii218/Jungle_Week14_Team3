@@ -1,4 +1,4 @@
-#include "AnimMontageInstance.h"
+﻿#include "AnimMontageInstance.h"
 
 #include "Animation/Montage/AnimMontage.h"
 #include "Animation/Sequence/AnimSequence.h"
@@ -96,7 +96,7 @@ void UAnimMontageInstance::EnterBlendingIn(float InBlendInTime)
 {
     State       = EState::BlendingIn;
     BlendAlpha  = 0.0f;
-    BlendInTime = std::max(InBlendInTime, 0.0f);
+    BlendInTime = std::max<float>(InBlendInTime, 0.0f);
     if (BlendInTime <= 0.0f)
     {
         BlendAlpha = 1.0f;
@@ -108,7 +108,7 @@ void UAnimMontageInstance::EnterBlendingOut(float InBlendOutTime)
 {
     State        = EState::BlendingOut;
     BlendAlpha   = 1.0f;
-    BlendOutTime = std::max(InBlendOutTime, 0.0f);
+    BlendOutTime = std::max<float>(InBlendOutTime, 0.0f);
     if (BlendOutTime <= 0.0f)
     {
         FinishStop();
@@ -205,14 +205,14 @@ void UAnimMontageInstance::Tick(float DeltaSeconds, UAnimInstance* Owner)
     if (CurrentSectionIndex < 0 || CurrentSectionIndex >= static_cast<int32>(Sections.size())) return;
 
     const FCompositeSection& Cur     = Sections[CurrentSectionIndex];
-    const float              CurLen  = std::max(Cur.LinkTime - Cur.StartTime, 0.0f);
+    const float              CurLen  = std::max<float>(Cur.LinkTime - Cur.StartTime, 0.0f);
 
     // Notify 큐 적재 + Root motion 누적 — 둘 다 source sequence 의 시간 구간 [PrevSeqTime, NextSeqTime).
     if (Owner && CurrentMontage->GetSourceSequence() && CurLen > 0.0f)
     {
         UAnimSequence* SrcSeq       = CurrentMontage->GetSourceSequence();
         const float    PrevSeqTime  = Cur.StartTime + SectionTime;
-        const float    NextSeqTime  = Cur.StartTime + std::min(SectionTime + Step, CurLen);
+        const float    NextSeqTime  = Cur.StartTime + std::min<float>(SectionTime + Step, CurLen);
 
         // Notify 가시성 임계 가드 — Slot.GetBlendWeight 가 임계 이하면 안 보이는 가지로 간주.
         // SequencePlayer 의 동일 패턴 (FinalBlendWeight > ZERO_ANIMWEIGHT_THRESH) 과 비대칭 해소.
@@ -246,7 +246,7 @@ void UAnimMontageInstance::Tick(float DeltaSeconds, UAnimInstance* Owner)
     //   BlendingOut 은 위 BlendAlpha 카운트다운으로만 종료된다.
     if (State == EState::BlendingOut)
     {
-        SectionTime = std::min(SectionTime, CurLen);   // 마지막 frame clamp — 시각적 안정.
+        SectionTime = std::min<float>(SectionTime, CurLen);   // 마지막 frame clamp — 시각적 안정.
         return;
     }
 
@@ -260,9 +260,9 @@ void UAnimMontageInstance::Tick(float DeltaSeconds, UAnimInstance* Owner)
             break;
         }
         // 새 section 으로 넘어왔으면 남은 시간만큼 다시 진행.
-        SectionTime = std::max(SectionTime - CurLen, 0.0f);
+        SectionTime = std::max<float>(SectionTime - CurLen, 0.0f);
         const FCompositeSection& NewCur = Sections[CurrentSectionIndex];
-        const float NewLen = std::max(NewCur.LinkTime - NewCur.StartTime, 0.0f);
+        const float NewLen = std::max<float>(NewCur.LinkTime - NewCur.StartTime, 0.0f);
         if (NewLen <= 0.0f) break;
         if (SectionTime < NewLen) break;
         // 다음 iteration 에서 SectionTime >= NewLen 이면 또 advance.
@@ -287,7 +287,7 @@ void UAnimMontageInstance::EvaluateMontagePose(FPoseContext& OutMontagePose)
     const FCompositeSection& Cur = Sections[CurrentSectionIndex];
 
     FAnimExtractContext Ctx;
-    Ctx.CurrentTime = Cur.StartTime + std::min(SectionTime, std::max(Cur.LinkTime - Cur.StartTime, 0.0f));
+    Ctx.CurrentTime = Cur.StartTime + std::min<float>(SectionTime, std::max<float>(Cur.LinkTime - Cur.StartTime, 0.0f));
     Ctx.bLooping    = false;   // section 내부에서는 wrap 없음 — chain 으로 처리.
     CurrentMontage->GetBonePose(OutMontagePose, Ctx);
 }

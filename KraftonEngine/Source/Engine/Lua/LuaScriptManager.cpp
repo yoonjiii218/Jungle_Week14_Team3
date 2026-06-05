@@ -52,6 +52,7 @@
 #include "UI/UIManager.h"
 #include "UI/UserWidget.h"
 #include <algorithm>
+#include <cmath>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -95,6 +96,144 @@ namespace
 			}
 			++It;
 		}
+	}
+
+
+	bool IsPadButtonDown(const FInputSystemSnapshot& Snapshot, EGamepadButton Button)
+	{
+		return Snapshot.Gamepads[0].IsButtonDown(Button);
+	}
+
+	bool WasPadButtonDown(const FInputSystemSnapshot& Snapshot, EGamepadButton Button)
+	{
+		const FGamepadSnapshot& Pad = Snapshot.Gamepads[0];
+		return (Pad.IsButtonDown(Button) && !Pad.WasButtonPressed(Button)) || Pad.WasButtonReleased(Button);
+	}
+
+	bool IsKeyPreviouslyDown(const FInputSystemSnapshot& Snapshot, int VK)
+	{
+		return (Snapshot.KeyDown[VK] && !Snapshot.KeyPressed[VK]) || Snapshot.KeyReleased[VK];
+	}
+
+	bool GetActionCurrentDown(const FInputSystemSnapshot& Snapshot, const FString& ActionName)
+	{
+		if (ActionName == "Attack")
+		{
+			return Snapshot.bLeftMouseDown || IsPadButtonDown(Snapshot, EGamepadButton::X);
+		}
+		if (ActionName == "Dash")
+		{
+			return Snapshot.KeyDown[VK_SHIFT] || IsPadButtonDown(Snapshot, EGamepadButton::RightTrigger);
+		}
+		if (ActionName == "Ultimate")
+		{
+			return Snapshot.KeyDown['Q'] || IsPadButtonDown(Snapshot, EGamepadButton::Y);
+		}
+		if (ActionName == "SecondaryDash")
+		{
+			return IsPadButtonDown(Snapshot, EGamepadButton::B);
+		}
+		if (ActionName == "Jump")
+		{
+			return Snapshot.KeyDown[VK_SPACE] || IsPadButtonDown(Snapshot, EGamepadButton::A);
+		}
+
+		return false;
+	}
+
+	bool GetActionPreviousDown(const FInputSystemSnapshot& Snapshot, const FString& ActionName)
+	{
+		if (ActionName == "Attack")
+		{
+			return IsKeyPreviouslyDown(Snapshot, VK_LBUTTON) || WasPadButtonDown(Snapshot, EGamepadButton::X);
+		}
+		if (ActionName == "Dash")
+		{
+			return IsKeyPreviouslyDown(Snapshot, VK_SHIFT) || WasPadButtonDown(Snapshot, EGamepadButton::RightTrigger);
+		}
+		if (ActionName == "Ultimate")
+		{
+			return IsKeyPreviouslyDown(Snapshot, 'Q') || WasPadButtonDown(Snapshot, EGamepadButton::Y);
+		}
+		if (ActionName == "SecondaryDash")
+		{
+			return WasPadButtonDown(Snapshot, EGamepadButton::B);
+		}
+		if (ActionName == "Jump")
+		{
+			return IsKeyPreviouslyDown(Snapshot, VK_SPACE) || WasPadButtonDown(Snapshot, EGamepadButton::A);
+		}
+
+		return false;
+	}
+
+	float ClampAxis(float Value)
+	{
+		if (Value > 1.0f) return 1.0f;
+		if (Value < -1.0f) return -1.0f;
+		return Value;
+	}
+
+	FVector GetSemanticAxis2D(const FInputSystemSnapshot& Snapshot, const FString& AxisName)
+	{
+		if (AxisName == "Move")
+		{
+			float X = 0.0f;
+			float Y = 0.0f;
+			if (Snapshot.KeyDown['D']) X += 1.0f;
+			if (Snapshot.KeyDown['A']) X -= 1.0f;
+			if (Snapshot.KeyDown['W']) Y += 1.0f;
+			if (Snapshot.KeyDown['S']) Y -= 1.0f;
+
+			const FGamepadSnapshot& Pad = Snapshot.Gamepads[0];
+			X += Pad.GetAxis(EGamepadAxis::LeftX);
+			Y += Pad.GetAxis(EGamepadAxis::LeftY);
+
+			const float LenSq = X * X + Y * Y;
+			if (LenSq > 1.0f)
+			{
+				const float InvLen = 1.0f / std::sqrt(LenSq);
+				X *= InvLen;
+				Y *= InvLen;
+			}
+			return FVector(X, Y, 0.0f);
+		}
+
+		if (AxisName == "Look")
+		{
+			const FGamepadSnapshot& Pad = Snapshot.Gamepads[0];
+			return FVector(
+				static_cast<float>(Snapshot.MouseDeltaX) + Pad.GetAxis(EGamepadAxis::RightX),
+				static_cast<float>(Snapshot.MouseDeltaY) + Pad.GetAxis(EGamepadAxis::RightY),
+				0.0f);
+		}
+
+		return FVector::ZeroVector;
+	}
+
+	float GetSemanticAxis1D(const FInputSystemSnapshot& Snapshot, const FString& AxisName)
+	{
+		if (AxisName == "MoveRight")
+		{
+			return ClampAxis(GetSemanticAxis2D(Snapshot, "Move").X);
+		}
+		if (AxisName == "MoveForward")
+		{
+			return ClampAxis(GetSemanticAxis2D(Snapshot, "Move").Y);
+		}
+		if (AxisName == "LookYaw")
+		{
+			return GetSemanticAxis2D(Snapshot, "Look").X;
+		}
+		if (AxisName == "LookPitch")
+		{
+			return GetSemanticAxis2D(Snapshot, "Look").Y;
+		}
+		if (AxisName == "Dash")
+		{
+			return Snapshot.Gamepads[0].GetAxis(EGamepadAxis::RightTrigger);
+		}
+		return 0.0f;
 	}
 }
 
@@ -1760,6 +1899,29 @@ void FLuaScriptManager::RegisterCoreBindings(sol::state& Lua)
 	Input.set_function("GetMouseDeltaY", []()
 	{
 		return GetLuaInputSnapshot().MouseDeltaY;
+	});
+	Input.set_function("IsActionDown", [](const FString& ActionName)
+	{
+		const FInputSystemSnapshot Snapshot = GetLuaInputSnapshot();
+		return GetActionCurrentDown(Snapshot, ActionName);
+	});
+	Input.set_function("WasActionStarted", [](const FString& ActionName)
+	{
+		const FInputSystemSnapshot Snapshot = GetLuaInputSnapshot();
+		return GetActionCurrentDown(Snapshot, ActionName) && !GetActionPreviousDown(Snapshot, ActionName);
+	});
+	Input.set_function("WasActionCompleted", [](const FString& ActionName)
+	{
+		const FInputSystemSnapshot Snapshot = GetLuaInputSnapshot();
+		return !GetActionCurrentDown(Snapshot, ActionName) && GetActionPreviousDown(Snapshot, ActionName);
+	});
+	Input.set_function("GetAxis1D", [](const FString& AxisName)
+	{
+		return GetSemanticAxis1D(GetLuaInputSnapshot(), AxisName);
+	});
+	Input.set_function("GetAxis2D", [](const FString& AxisName)
+	{
+		return GetSemanticAxis2D(GetLuaInputSnapshot(), AxisName);
 	});
 
 	// Engine — 게임 일시정지 / 종료.

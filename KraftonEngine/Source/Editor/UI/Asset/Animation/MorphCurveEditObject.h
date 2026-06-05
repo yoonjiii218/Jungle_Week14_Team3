@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Core/Types/CoreTypes.h"
 #include "Object/Object.h"
@@ -142,7 +142,7 @@ private:
 
 	static float ClampValue(float Value, float MinValue, float MaxValue)
 	{
-		return std::max(MinValue, std::min(Value, MaxValue));
+		return std::max<float>(MinValue, std::min<float>(Value, MaxValue));
 	}
 
 	static EMorphCurveEditInterpolation ToEditInterpolation(int32 Raw)

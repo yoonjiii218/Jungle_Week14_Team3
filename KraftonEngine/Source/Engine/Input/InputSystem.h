@@ -1,12 +1,62 @@
 #pragma once
 #include <windows.h>
 #include "Core/Singleton.h"
+#include "Core/Types/CoreTypes.h"
 
 struct FGuiInputState
 {
     bool bUsingMouse = false;
     bool bUsingKeyboard = false;
     bool bUsingTextInput = false;
+};
+
+enum class EGamepadButton : uint8
+{
+    A = 0,
+    B,
+    X,
+    Y,
+    LeftShoulder,
+    RightShoulder,
+    Back,
+    Start,
+    LeftThumb,
+    RightThumb,
+    DPadUp,
+    DPadDown,
+    DPadLeft,
+    DPadRight,
+    LeftTrigger,
+    RightTrigger,
+    Count,
+};
+
+enum class EGamepadAxis : uint8
+{
+    LeftX = 0,
+    LeftY,
+    RightX,
+    RightY,
+    LeftTrigger,
+    RightTrigger,
+    Count,
+};
+
+struct FGamepadSnapshot
+{
+    static constexpr int32 MaxButtons = static_cast<int32>(EGamepadButton::Count);
+    static constexpr int32 MaxAxes = static_cast<int32>(EGamepadAxis::Count);
+
+    bool bConnected = false;
+    bool ButtonDown[MaxButtons] = {};
+    bool ButtonPressed[MaxButtons] = {};
+    bool ButtonReleased[MaxButtons] = {};
+    float Axes[MaxAxes] = {};
+
+    bool IsButtonDown(EGamepadButton Button) const { return ButtonDown[static_cast<int32>(Button)]; }
+    bool WasButtonPressed(EGamepadButton Button) const { return ButtonPressed[static_cast<int32>(Button)]; }
+    bool WasButtonReleased(EGamepadButton Button) const { return ButtonReleased[static_cast<int32>(Button)]; }
+    float GetAxis(EGamepadAxis Axis) const { return Axes[static_cast<int32>(Axis)]; }
 };
 
 struct FInputSystemSnapshot
@@ -52,6 +102,9 @@ struct FInputSystemSnapshot
     bool bGuiUsingTextInput = false;
     bool bWindowFocused = true;
 
+    static constexpr int32 MaxGamepads = 4;
+    FGamepadSnapshot Gamepads[MaxGamepads] = {};
+
     bool IsDown(int VK) const { return KeyDown[VK]; }
     bool WasPressed(int VK) const { return KeyPressed[VK]; }
     bool WasReleased(int VK) const { return KeyReleased[VK]; }
@@ -80,6 +133,13 @@ public:
     bool GetKeyDown(int VK) const { return CurrentStates[VK] && !PrevStates[VK]; }
     bool GetKey(int VK) const { return CurrentStates[VK]; }
     bool GetKeyUp(int VK) const { return !CurrentStates[VK] && PrevStates[VK]; }
+
+    // Gamepad
+    bool IsGamepadConnected(int32 GamepadIndex = 0) const;
+    bool GetGamepadButton(EGamepadButton Button, int32 GamepadIndex = 0) const;
+    bool GetGamepadButtonDown(EGamepadButton Button, int32 GamepadIndex = 0) const;
+    bool GetGamepadButtonUp(EGamepadButton Button, int32 GamepadIndex = 0) const;
+    float GetGamepadAxis(EGamepadAxis Axis, int32 GamepadIndex = 0) const;
 
     // Mouse position
     POINT GetMousePos() const { return MousePos; }
@@ -136,6 +196,9 @@ private:
     bool CurrentStates[256] = { false };
     bool PrevStates[256] = { false };
 
+    FGamepadSnapshot CurrentGamepads[FInputSystemSnapshot::MaxGamepads] = {};
+    FGamepadSnapshot PrevGamepads[FInputSystemSnapshot::MaxGamepads] = {};
+
     // Mouse members
     POINT MousePos = { 0, 0 };
     POINT PrevMousePos = { 0, 0 };
@@ -181,4 +244,6 @@ private:
         const POINT& MouseDownPos, POINT& DragStartPos);
     void UpdateCurrentSnapshot();
     void ResetDragState();
+    void PollGamepads();
+    void ResetGamepadStates();
 };
