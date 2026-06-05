@@ -4,7 +4,7 @@
     "BlendState" : "AlphaBlend",
     "Domain" : "ParticleSprite",
     "GeneratorVersion" : "GeneratedMaterialPass_v7_ParticleBeamTrailRefraction",
-    "GraphHash" : "70D8164A06A9DB0B",
+    "GraphHash" : "BC629BB6E743DD52",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
       "Opacity" : {
@@ -20,7 +20,7 @@
     "RenderPass" : "AlphaBlend",
     "Textures" : {
       "Custom0Texture" : {
-        "Path" : "Content/Texture/RefractionMap_Test_RGBA.png",
+        "Path" : "Content/Texture/SwordTrail_Refraction_RGBA.png",
         "Slot" : "Custom0"
       }
     }
@@ -93,7 +93,7 @@
           }],
         "PosX" : -920.000000,
         "PosY" : -120.000000,
-        "TexturePath" : "Content/Texture/RefractionMap_Test_RGBA.png",
+        "TexturePath" : "Content/Texture/SwordTrail_Refraction_RGBA.png",
         "TextureSlot" : "Custom0",
         "Type" : "TextureObject",
         "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
