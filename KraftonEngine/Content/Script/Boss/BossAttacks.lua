@@ -6,11 +6,13 @@ local BossAttacks = {}
 
 local ctx_ref       = nil   -- BossCharacter.lua 에서 Init 으로 주입
 local CombatContext = nil   -- 순환 require 방지: Init 시점에 로드
+local Feedback      = nil   -- 순환 require 방지: Init 시점에 로드
 
 -- ────────────────────────────────────────────
 function BossAttacks.Init(ctx)
     ctx_ref       = ctx
     CombatContext = require("CombatContext")
+    Feedback      = require("Boss/BossFeedback")
 end
 
 -- ────────────────────────────────────────────
@@ -77,20 +79,23 @@ local function Pattern1_BasicSlash()
     BeginPattern("P1")
     PlayMontage("BossSlash1")
 
-    -- 0.0초: 보스 정지. 부채꼴 빨간 장판 표시 (1단계: print 대체)
-    if BB.DEBUG then print("[P1] 0.0s  부채꼴 장판 표시") end
+    -- 0.0초: 보스 정지. 부채꼴 빨간 장판 스폰
+    local zone = Feedback.ShowFanZone(ctx_ref.playerRef)
+    if BB.DEBUG then print("[P1] 0.0s  부채꼴 장판 스폰") end
 
     -- 0.4초: 장판 번쩍임 (회피 타이밍 가이드)
     Wait(BB.P1.WINDUP)
+    Feedback.FlashZone(zone)
     if BB.DEBUG then print("[P1] " .. BB.P1.WINDUP .. "s  장판 번쩍임") end
 
-    -- 0.5초: 데미지 판정 (AnimNotify 가 실제 히트박스 처리 - 2단계)
+    -- 0.5초: 데미지 판정 + 장판 제거 (AnimNotify 가 실제 히트박스 처리 - 2단계)
     Wait(BB.P1.HIT - BB.P1.WINDUP)
-    if BB.DEBUG then print("[P1] " .. BB.P1.HIT .. "s  HIT 판정") end
+    Feedback.HideZone(zone)
+    if BB.DEBUG then print("[P1] " .. BB.P1.HIT .. "s  HIT 판정 + 장판 제거") end
 
     -- ④ 후딜 Wait: ActionLock 이 이 구간 동안 유지됨 (플레이어 반격 타임)
     Wait(BB.P1.TOTAL - BB.P1.HIT)
-    if BB.DEBUG then print("[P1] " .. BB.P1.TOTAL .. "s  장판 제거") end
+    if BB.DEBUG then print("[P1] " .. BB.P1.TOTAL .. "s  후딜 종료") end
 
     EndPattern("P1", BB.PATTERN_COOLDOWN.AFTER_P1, nil)
 end
@@ -137,27 +142,31 @@ local function Pattern3_HeavySmash()
     BeginPattern("P3")
     PlayMontage("BossHeavySmash")
 
-    -- 0.0초: 직사각형 장판 표시 + 플레이어 방향 추적 시작
-    if BB.DEBUG then print("[P3] 0.0s  직사각형 장판 + 추적 시작") end
+    -- 0.0초: 직사각형 장판 스폰 (플레이어 방향 정렬)
+    local zone = Feedback.ShowRectZone(ctx_ref.playerRef)
+    if BB.DEBUG then print("[P3] 0.0s  직사각형 장판 스폰") end
 
     -- 0.8초: 추적 멈춤 → 장판 위치 고정
     -- (플레이어가 옆으로 피해 반격할 공간 보장)
     Wait(BB.P3.TRACK_END)
     bb.IsTracking = false
+    Feedback.LockZone(zone)
     if BB.DEBUG then print("[P3] " .. BB.P3.TRACK_END .. "s  추적 멈춤 (IsTracking=false)") end
 
     -- 1.2초: 붉은 섬광 + 날카로운 사운드 (퍼펙트 회피 신호)
     --        퍼펙트 회피 윈도우 오픈
     Wait(BB.P3.FLASH - BB.P3.TRACK_END)
     CombatContext.BeginPerfectDodgeWindow(BB.P3.PERFECT_WINDOW)
+    Feedback.FlashZone(zone)
     if BB.DEBUG then
         print("[P3] " .. BB.P3.FLASH .. "s  섬광 + 퍼펙트 회피 윈도우 OPEN ("
               .. BB.P3.PERFECT_WINDOW .. "s)")
     end
 
-    -- 1.4초: 데미지 판정 + 카메라 흔들림
+    -- 1.4초: 데미지 판정 + 카메라 흔들림 + 장판 제거
     --        (퍼펙트 회피 성공 시 이 시점 직전에 Slomo 발동됨)
     Wait(BB.P3.HIT - BB.P3.FLASH)
+    Feedback.HideZone(zone)
     if BB.DEBUG then print("[P3] " .. BB.P3.HIT .. "s  HIT 판정 + 카메라 흔들림") end
 
     -- ④ 긴 후딜 Wait: ActionLock 이 3.0초까지 유지

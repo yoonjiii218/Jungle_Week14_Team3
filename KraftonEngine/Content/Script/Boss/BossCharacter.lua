@@ -5,6 +5,7 @@
 local BB            = require("Boss/BossBlackboard")
 local Action        = require("Boss/BossAction")
 local Attacks       = require("Boss/BossAttacks")
+local Feedback      = require("Boss/BossFeedback")
 local CombatContext = require("CombatContext")
 
 -- Runtime Blackboard (매 판마다 초기화되는 가변 상태)
@@ -57,6 +58,7 @@ function BeginPlay()
     -- 모듈 초기화 (ctx 주입)
     Action.Init(ctx)
     Attacks.Init(ctx)
+    Feedback.Init(ctx)
 
     -- ⑥ CombatContext에 보스 등록
     CombatContext.RegisterBoss(obj, bb, BB)

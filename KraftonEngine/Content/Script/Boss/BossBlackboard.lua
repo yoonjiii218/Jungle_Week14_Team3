@@ -5,8 +5,8 @@
 local BB = {}
 
 -- ── 거리 임계값 ──────────────────────────────
-BB.CHASE_DISTANCE  = 7.0   -- 이 이상이면 추격
-BB.ATTACK_DISTANCE = 3.0   -- 이 이하이면 공격 가능
+BB.CHASE_DISTANCE  = 10.0   -- 이 이상이면 추격
+BB.ATTACK_DISTANCE = 7.0   -- 이 이하이면 공격 가능
 
 -- ── LookAt 회전 속도 (도/초) ─────────────────
 BB.LOOK_AT_SPEED = 540.0   -- 너무 작으면 허공 칼질, 너무 크면 스냅
@@ -48,6 +48,30 @@ BB.P3 = {
     PERFECT_WINDOW         = 0.2,    -- FLASH ~ HIT 사이 퍼펙트 회피 창 (초)
     PERFECT_SLOMO_DURATION = 1.5,    -- 퍼펙트 회피 슬로우모션 지속 시간
     PERFECT_SLOMO_SCALE    = 0.1,    -- 퍼펙트 회피 타임스케일 (0.1 = 10% 속도)
+}
+
+-- ── 장판(텔레그래프) 연출 수치 ──────────────
+BB.FEEDBACK = {
+    DECAL_MATERIAL = "Content/Material/VFX/M_GroundCrack.mat",
+
+    -- P3 직사각형 장판 크기 (데칼 볼륨 OBB)
+    ZONE_LENGTH   = 8.0,    -- 보스 앞으로 뻗는 길이
+    ZONE_WIDTH    = 2.5,    -- 폭
+    ZONE_HEIGHT   = 2.0,    -- 위아래 볼륨 (바닥 투영용)
+    ZONE_Z_OFFSET = -2.5,   -- 보스 위치 기준 Z 보정 (발밑으로) — 띄워보고 조절
+
+    -- 색 (R,G,B,A)
+    ZONE_COLOR_IDLE  = { 1.0, 0.0, 0.0, 0.4 },   -- 평소 흐릿한 빨강
+    ZONE_COLOR_FLASH = { 1.0, 0.0, 0.0, 0.9 },   -- 번쩍임 (진해짐)
+
+    -- P1 부채꼴 장판 (가는 데칼 조각을 방사형으로 펼쳐서 근사)
+    FAN_ANGLE    = 80.0,   -- 총 중심각 (도)
+    FAN_SEGMENTS = 7,      -- 조각 개수 (많을수록 매끈, 무거움)
+    FAN_RADIUS   = 6.0,    -- 부채꼴 반지름 (조각 길이)
+    FAN_SEG_WIDTH = 1.6,   -- 조각 폭 (인접 조각과 겹치게 넉넉히 → 빈틈 방지)
+
+    -- 자동 페이드 방지용 큰 값 (HideZone 에서 직접 제거)
+    NO_FADE_DELAY = 9999.0,
 }
 
 -- ── 디버그 ───────────────────────────────────
