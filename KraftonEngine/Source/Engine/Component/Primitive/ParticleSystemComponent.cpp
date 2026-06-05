@@ -6,6 +6,7 @@
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemManager.h"
 #include "Particles/TypeData/ParticleModuleTypeDataBase.h"
+#include "Particles/TypeData/ParticleModuleTypeDataAnimTrail.h"
 #include "Render/Proxy/ParticleSystemSceneProxy.h"
 #include "Materials/Material.h"
 #include "Materials/MaterialManager.h"
@@ -34,21 +35,42 @@ UParticleSystemComponent::~UParticleSystemComponent()
 
 void UParticleSystemComponent::Activate()
 {
+	bDeactivatePendingAfterStopSpawning = false;
+	DeactivateAfterStopSpawningRemaining = 0.0f;
+
     UPrimitiveComponent::Activate();
     ResetSystem();
 }
 
 void UParticleSystemComponent::Deactivate()
 {
-    UPrimitiveComponent::Deactivate();
+	StopSpawning();
+	if (bDeactivatePendingAfterStopSpawning)
+	{
+		return;
+	}
 
-    ClearRenderData();
-    ClearEmitterInstances();
-    CachedWorldTimeSeconds = 0.0f;
-    bInitialized = false;
+	const float DelaySeconds = GetDeactivateDelayAfterStopSpawning();
+	if (DelaySeconds <= 0.0f || !HasLiveParticles())
+	{
+		CompleteDeactivate();
+		return;
+	}
 
-    MarkRenderStateDirty();
-    MarkWorldBoundsDirty();
+	bDeactivatePendingAfterStopSpawning = true;
+	DeactivateAfterStopSpawningRemaining = DelaySeconds;
+	PrimaryComponentTick.SetTickEnabled(true);
+}
+
+void UParticleSystemComponent::StopSpawning()
+{
+	for (FParticleEmitterInstance* Instance : EmitterInstances)
+	{
+		if (Instance)
+		{
+			Instance->bHaltSpawningExternal = true;
+		}
+	}
 }
 
 void UParticleSystemComponent::SetTemplate(UParticleSystem* InTemplate)
@@ -94,6 +116,9 @@ void UParticleSystemComponent::InitializeSystem()
 
 void UParticleSystemComponent::ResetSystem()
 {
+	bDeactivatePendingAfterStopSpawning = false;
+	DeactivateAfterStopSpawningRemaining = 0.0f;
+
     ClearRenderData();
     ClearEmitterInstances();
 	CachedWorldTimeSeconds = 0.0f;
@@ -493,6 +518,15 @@ void UParticleSystemComponent::TickComponent(
     BuildDynamicData();
 
     MarkProxyDirty(EDirtyFlag::Mesh);
+
+	if (bDeactivatePendingAfterStopSpawning)
+	{
+		DeactivateAfterStopSpawningRemaining -= DeltaTime;
+		if (DeactivateAfterStopSpawningRemaining <= 0.0f || !HasLiveParticles())
+		{
+			CompleteDeactivate();
+		}
+	}
 }
 
 void UParticleSystemComponent::ClearEmitterInstances()
@@ -503,6 +537,68 @@ void UParticleSystemComponent::ClearEmitterInstances()
     }
 
     EmitterInstances.clear();
+}
+
+void UParticleSystemComponent::CompleteDeactivate()
+{
+	bDeactivatePendingAfterStopSpawning = false;
+	DeactivateAfterStopSpawningRemaining = 0.0f;
+
+	UPrimitiveComponent::Deactivate();
+
+	ClearRenderData();
+	ClearEmitterInstances();
+	CachedWorldTimeSeconds = 0.0f;
+	bInitialized = false;
+
+	MarkRenderStateDirty();
+	MarkWorldBoundsDirty();
+}
+
+float UParticleSystemComponent::GetDeactivateDelayAfterStopSpawning() const
+{
+	float DelaySeconds = 0.0f;
+	const UParticleSystem* ParticleTemplate = Template.Get();
+	if (!ParticleTemplate)
+	{
+		return DelaySeconds;
+	}
+
+	for (const UParticleEmitter* Emitter : ParticleTemplate->GetEmitters())
+	{
+		if (!Emitter)
+		{
+			continue;
+		}
+
+		for (const UParticleLODLevel* LODLevel : Emitter->GetLODLevels())
+		{
+			if (!LODLevel)
+			{
+				continue;
+			}
+
+			if (const UParticleModuleTypeDataAnimTrail* AnimTrail = Cast<UParticleModuleTypeDataAnimTrail>(LODLevel->TypeDataModule))
+			{
+				DelaySeconds = (std::max)(DelaySeconds, AnimTrail->TrailLifeTime);
+			}
+		}
+	}
+
+	return DelaySeconds;
+}
+
+bool UParticleSystemComponent::HasLiveParticles() const
+{
+	for (const FParticleEmitterInstance* Instance : EmitterInstances)
+	{
+		if (Instance && Instance->ActiveParticles > 0)
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void UParticleSystemComponent::ResolveEmitterMaterialsFromSlots()

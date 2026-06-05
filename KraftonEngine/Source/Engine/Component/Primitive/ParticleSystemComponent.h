@@ -106,6 +106,8 @@ public:
 
     void Activate() override;
     void Deactivate() override;
+	UFUNCTION(Callable)
+	void StopSpawning();
 
     void InitializeSystem();
     void ResetSystem();
@@ -173,6 +175,9 @@ private:
 private:
     void ClearEmitterInstances();
     void ClearRenderData();
+    void CompleteDeactivate();
+	float GetDeactivateDelayAfterStopSpawning() const;
+	bool HasLiveParticles() const;
     void BuildEmitterInstances();
     void BuildDynamicData();
     void ResolveEmitterMaterialsFromSlots();
@@ -206,4 +211,7 @@ private:
 
 	bool  bAutoDestroyOwnerAfter = false;
 	float AutoDestroyOwnerRemaining = 0.0f;
+
+	bool  bDeactivatePendingAfterStopSpawning = false;
+	float DeactivateAfterStopSpawningRemaining = 0.0f;
 };
