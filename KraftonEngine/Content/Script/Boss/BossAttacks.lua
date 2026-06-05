@@ -18,6 +18,8 @@ function BossAttacks.Init(ctx)
 end
 
 -- 공통 판정 + 로그 (1단계: print 만, 데미지 없음)
+-- 퍼펙트 회피 판정은 플레이어가 함 (회피 무적 중 피격 = 퍼펙트).
+-- 보스는 "맞았다"만 판단하고, 무적 여부/무효 처리는 플레이어 책임.
 local function ResolveHit(tag, zone)
     -- 죽은 보스의 공격은 판정 무효
     if ctx_ref.bb.IsDead then
@@ -130,12 +132,19 @@ local function Pattern2_DoubleSlash()
     BeginPattern("P2")
     PlayMontage("BossDoubleSlash")
 
+    local LEAD = BB.P2.FLASH_LEAD   -- 판정 직전 번쩍 선행 시간
+
     -- 0.0초: 1타 가로 예고선 스폰
     local zone1 = Feedback.ShowSlashLine(ctx_ref.playerRef)
     if BB.DEBUG then print("[P2] 0.0s  1타 가로 예고선") end
 
+    -- 1타 판정 직전: 번쩍 (회피 가이드)
+    Wait(BB.P2.HIT1 - LEAD)
+    Feedback.FlashZone(zone1)
+    if BB.DEBUG then print("[P2] 1타 번쩍") end
+
     -- 0.4초: 1타 판정 + 제거
-    Wait(BB.P2.HIT1)
+    Wait(LEAD)
     ResolveHit("P2-1", zone1)
     Feedback.HideZone(zone1)
     if BB.DEBUG then print("[P2] " .. BB.P2.HIT1 .. "s  1타 판정") end
@@ -145,8 +154,13 @@ local function Pattern2_DoubleSlash()
     local zone2 = Feedback.ShowSlashLine(ctx_ref.playerRef)
     if BB.DEBUG then print("[P2] " .. BB.P2.SECOND_WIND .. "s  2타 가로 예고선") end
 
+    -- 2타 판정 직전: 번쩍 (회피 가이드)
+    Wait((BB.P2.HIT2 - LEAD) - BB.P2.SECOND_WIND)
+    Feedback.FlashZone(zone2)
+    if BB.DEBUG then print("[P2] 2타 번쩍") end
+
     -- 0.9초: 2타 판정 + 제거
-    Wait(BB.P2.HIT2 - BB.P2.SECOND_WIND)
+    Wait(LEAD)
     ResolveHit("P2-2", zone2)
     Feedback.HideZone(zone2)
     if BB.DEBUG then print("[P2] " .. BB.P2.HIT2 .. "s  2타 판정") end
@@ -168,29 +182,32 @@ local function Pattern3_HeavySmash()
     BeginPattern("P3")
     PlayMontage("BossHeavySmash")
 
-    -- 0.0초: 직사각형 장판 스폰 (플레이어 방향 정렬)
+    -- 0.0초: 직사각형 장판 스폰 (플레이어 방향 정렬) + 차오름 시작
     local zone = Feedback.ShowRectZone(ctx_ref.playerRef)
-    if BB.DEBUG then print("[P3] 0.0s  직사각형 장판 스폰") end
+    Feedback.FillZone(zone, 0.0)   -- 빈 상태에서 시작
+    if BB.DEBUG then print("[P3] 0.0s  직사각형 장판 스폰 (차오름 시작)") end
 
-    -- 0.8초: 추적 멈춤 → 장판 위치 고정
-    -- (플레이어가 옆으로 피해 반격할 공간 보장)
+    -- 차오름 코루틴: 0 → HIT 시점까지 장판이 점점 채워짐 (가득 = 타격)
+    StartCoroutine(function()
+        local elapsed = 0.0
+        while elapsed < BB.P3.HIT do
+            elapsed = elapsed + WaitFrame()   -- WaitFrame()이 scaledDt 반환 (Slomo 보정됨)
+            Feedback.FillZone(zone, math.min(elapsed / BB.P3.HIT, 1.0))
+        end
+    end)
+
+    -- 0.8초: 보스 회전 멈춤 → 플레이어가 옆으로 피해 반격할 공간 보장
+    -- (장판 자체는 스폰 시점 방향으로 고정 — 추적 안 함)
     Wait(BB.P3.TRACK_END)
     bb.IsTracking = false
-    Feedback.LockZone(zone)
-    if BB.DEBUG then print("[P3] " .. BB.P3.TRACK_END .. "s  추적 멈춤 (IsTracking=false)") end
+    if BB.DEBUG then print("[P3] " .. BB.P3.TRACK_END .. "s  보스 회전 멈춤 (IsTracking=false)") end
 
-    -- 1.2초: 붉은 섬광 + 날카로운 사운드 (퍼펙트 회피 신호)
-    --        퍼펙트 회피 윈도우 오픈
+    -- 1.2초: 붉은 섬광 (회피 신호) — 가득 차기 직전, 플레이어 회피 유도
     Wait(BB.P3.FLASH - BB.P3.TRACK_END)
-    CombatContext.BeginPerfectDodgeWindow(BB.P3.PERFECT_WINDOW)
     Feedback.FlashZone(zone)
-    if BB.DEBUG then
-        print("[P3] " .. BB.P3.FLASH .. "s  섬광 + 퍼펙트 회피 윈도우 OPEN ("
-              .. BB.P3.PERFECT_WINDOW .. "s)")
-    end
+    if BB.DEBUG then print("[P3] " .. BB.P3.FLASH .. "s  섬광 (회피 신호)") end
 
     -- 1.4초: 데미지 판정 (플레이어 위치 ∈ 직사각형?) + 장판 제거
-    --        (2단계에서 퍼펙트 회피 무효화 연동 예정)
     Wait(BB.P3.HIT - BB.P3.FLASH)
     ResolveHit("P3", zone)
     Feedback.HideZone(zone)

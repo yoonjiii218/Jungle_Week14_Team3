@@ -72,7 +72,7 @@ function BossFeedback.ShowRectZone(target)
 
     -- 판정용 영역 메타 (히트박스가 그대로 참조 → 보이는 대로 맞음)
     return {
-        decals = decals, locked = false,
+        decals = decals,
         kind   = "rect",
         origin = Vector(bossPos.X, bossPos.Y, bossPos.Z),
         yaw    = yaw,
@@ -116,7 +116,7 @@ function BossFeedback.ShowFanZone(target)
 
     -- 판정용 영역 메타 (부채꼴: 중심 방향 = baseYaw)
     return {
-        decals = decals, locked = false,
+        decals = decals,
         kind   = "fan",
         origin = Vector(bossPos.X, bossPos.Y, bossPos.Z),
         yaw    = baseYaw,
@@ -151,38 +151,39 @@ function BossFeedback.ShowSlashLine(target)
 
     -- 판정용 메타 (중심 기준 박스)
     return {
-        decals = decals, locked = false,
+        decals = decals,
         kind   = "box",
         center = Vector(cx, cy, cz),
         yaw    = lineYaw,
     }
 end
 
--- ────────────────────────────────────────────
--- 추적: 직사각형(P3) 장판을 플레이어 위치/방향으로 갱신
--- ※ BossCharacter.Tick 에서 매 프레임 호출 예정 (다음 단계 연결)
---    부채꼴은 추적하지 않는다 (P1 은 고정 패턴)
--- ────────────────────────────────────────────
-function BossFeedback.TrackZone(zone, target)
-    if zone == nil or zone.locked or zone.decals == nil then return end
-    if #zone.decals ~= 1 then return end   -- 단일 직사각형만 추적
-    if not (target and target:IsValid()) then return end
-
-    local F = ctx_ref.BB.FEEDBACK
-    local bossPos = ctx_ref.obj.Location
-    local dir, yaw = ResolveDirection(bossPos, target)
+-- ════════════════════════════════════════════
+-- 차오름(fill-up): 직사각형 장판 길이를 0→full 로 늘림
+--   ratio 0.0~1.0. 보스쪽 끝(origin) 고정, 플레이어쪽으로 늘어남.
+--   ※ 시각 연출만. 판정(Hitbox)은 가득 찬 full 영역 기준(HIT 시점).
+-- ════════════════════════════════════════════
+function BossFeedback.FillZone(zone, ratio)
+    if zone == nil or zone.decals == nil or #zone.decals == 0 then return end
+    if zone.kind ~= "rect" then return end   -- 직사각형만
 
     local d = zone.decals[1]
-    d:SetLocation(Vector(
-        bossPos.X + dir.X * (F.ZONE_LENGTH * 0.5),
-        bossPos.Y + dir.Y * (F.ZONE_LENGTH * 0.5),
-        bossPos.Z + F.ZONE_Z_OFFSET))
-    d:SetRotation(Vector(0.0, 0.0, yaw))
-end
+    if d == nil then return end
 
--- 추적 정지 (위치/방향 고정)
-function BossFeedback.LockZone(zone)
-    if zone then zone.locked = true end
+    local F = ctx_ref.BB.FEEDBACK
+    local len = math.max(0.01, F.ZONE_LENGTH * ratio)   -- 0 방지
+
+    -- 방향 단위벡터 (zone.yaw 기준)
+    local rad = zone.yaw * math.pi / 180.0
+    local dx, dy = math.cos(rad), math.sin(rad)
+
+    -- 중심 = origin(보스쪽 끝)에서 dir 방향으로 len/2
+    local cx = zone.origin.X + dx * (len * 0.5)
+    local cy = zone.origin.Y + dy * (len * 0.5)
+    local cz = zone.origin.Z + F.ZONE_Z_OFFSET
+
+    d:SetLocation(Vector(cx, cy, cz))
+    d:SetRelativeScale(Vector(len, F.ZONE_WIDTH, F.ZONE_HEIGHT))
 end
 
 -- 번쩍임 (모든 조각 색 진해짐)

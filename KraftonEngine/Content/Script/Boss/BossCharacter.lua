@@ -113,18 +113,6 @@ function Tick(dt)
 
     -- AI 의사결정
     Action.UpdateAI(dt)
-
-    -- ── 임시: F1 키로 퍼펙트 회피 강제 발동 (테스트용) ──
-    if BB.DEBUG and Input.GetKeyDown(Key.F1) then
-        print("[BossCharacter] F1 - 퍼펙트 회피 강제 발동")
-        CombatContext.TriggerPerfectDodge()
-    end
-
-    -- ── 임시: R 키로 보스 데미지 테스트 (플레이어팀 연동 전 검증용) ──
-    if BB.DEBUG and Input.GetKeyDown(Key.R) then
-        print("[BossCharacter] R - 보스 데미지 테스트 -10")
-        CombatContext.ApplyDamageToBoss(10)
-    end
 end
 
 -- ────────────────────────────────────────────

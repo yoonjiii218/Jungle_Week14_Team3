@@ -99,17 +99,15 @@ end
 -- 보스 관련 (Boss/ 에서 호출)
 -- ════════════════════════════════════════════
 
-local bossRef             = nil   -- 보스 액터
-local bossBB              = nil   -- 보스 런타임 Blackboard
-local bossBBConfig        = nil   -- 보스 수치 Blackboard
-local perfectDodgeActive  = false -- 퍼펙트 회피 윈도우 활성 여부
+local bossRef      = nil   -- 보스 액터
+local bossBB       = nil   -- 보스 런타임 Blackboard
+local bossBBConfig = nil   -- 보스 수치 Blackboard
 
 -- ⑥ 재시작/레벨 언로드 시 BossCharacter.EndPlay 에서 호출
 function CombatContext.Clear()
-    bossRef            = nil
-    bossBB             = nil
-    bossBBConfig       = nil
-    perfectDodgeActive = false
+    bossRef      = nil
+    bossBB       = nil
+    bossBBConfig = nil
 end
 
 -- 보스 등록 (BossCharacter.BeginPlay 에서 호출)
@@ -119,48 +117,27 @@ function CombatContext.RegisterBoss(obj, bb, BB)
     bossBBConfig = BB
 end
 
--- 퍼펙트 회피 윈도우 열기 (BossAttacks.Pattern3 에서 호출)
-function CombatContext.BeginPerfectDodgeWindow(duration)
-    perfectDodgeActive = true
-    StartCoroutine(function()
-        Wait(duration)
-        if perfectDodgeActive then
-            perfectDodgeActive = false
-        end
-    end)
-end
+-- ════════════════════════════════════════════
+-- 퍼펙트 회피 / 슬로모 (★ 플레이어팀이 호출 ★)
+--   퍼펙트 회피 판정은 플레이어가 함 (회피 무적 중 피격 = 퍼펙트).
+--   슬로모는 글로벌이라 플레이어가 직접 Slomo 호출.
+--   단, 보스 코루틴/쿨타임 보정(bb.TimeScale)을 위해 보스도 알아야 한다.
+-- ════════════════════════════════════════════
 
--- 플레이어 회피 입력 시 호출 (PlayerAction.lua 연동 - 2단계)
-function CombatContext.OnPlayerDodge()
-    if perfectDodgeActive then
-        CombatContext.TriggerPerfectDodge()
-    end
-end
+-- [플레이어팀 호출] 글로벌 슬로모를 시작했다고 보스에 알림.
+--   ⚠️ 플레이어가 ActionComponent.Slomo 를 부른 직후 반드시 같이 호출.
+--      안 그러면 보스 코루틴이 보정 안 돼서 혼자 정상 속도로 폭주함.
+function CombatContext.OnSlomoStarted(duration, scale)
+    if not bossBB then return end
+    duration = duration or (bossBBConfig and bossBBConfig.PERFECT.SLOMO_DURATION) or 1.5
+    scale    = scale    or (bossBBConfig and bossBBConfig.PERFECT.SLOMO_SCALE)    or 0.1
 
--- 퍼펙트 회피 발동: Slomo 적용
-function CombatContext.TriggerPerfectDodge()
-    perfectDodgeActive = false
+    -- ⑤ 보스 코루틴/쿨타임/LookAt 보정 → Tick 의 scaledDt 에 반영
+    bossBB.TimeScale      = scale
+    bossBB.SlomoRemaining = duration
 
-    -- ⑥ bossRef 유효성 검증 (재시작 시 dangling 참조 방지)
-    if not bossRef or not bossRef:IsValid() then return end
-    if not bossBB or not bossBBConfig then return end
-
-    local cfg = bossBBConfig.P3
-    if cfg == nil then return end
-
-    -- ActionComponent 로 실제 Slomo 걸기 (시각/물리 효과)
-    local actionComp = bossRef:GetActionComponent()
-    if actionComp then
-        actionComp:Slomo(cfg.PERFECT_SLOMO_DURATION, cfg.PERFECT_SLOMO_SCALE)
-    end
-
-    -- ⑤ Lua TimeScale 도 동기화 → Tick 의 scaledDt 에 반영
-    bossBB.TimeScale      = cfg.PERFECT_SLOMO_SCALE
-    bossBB.SlomoRemaining = cfg.PERFECT_SLOMO_DURATION
-
-    print("[CombatContext] 퍼펙트 회피 발동! Slomo x"
-          .. cfg.PERFECT_SLOMO_SCALE
-          .. " / " .. cfg.PERFECT_SLOMO_DURATION .. "s")
+    print(string.format("[CombatContext] 슬로모 시작 알림 → 보스 보정 (x%.2f / %.1fs)",
+          scale, duration))
 end
 
 -- ════════════════════════════════════════════
