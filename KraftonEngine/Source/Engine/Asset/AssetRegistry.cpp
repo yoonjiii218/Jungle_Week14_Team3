@@ -73,6 +73,30 @@ namespace FAssetRegistry
 			}
 			return Cache;
 		}
+		if (std::strcmp(AssetTypeName, "Audio") == 0)
+		{
+			static TArray<FAssetListItem> Cache;
+			Cache.clear();
+
+			namespace fs = std::filesystem;
+			const fs::path Dir = fs::path(FPaths::RootDir()) / L"Content" / L"Audio";
+			if (fs::exists(Dir) && fs::is_directory(Dir))
+			{
+				for (const auto& Entry : fs::recursive_directory_iterator(Dir))
+				{
+					if (!Entry.is_regular_file()) continue;
+					const fs::path Ext = Entry.path().extension();
+					if (Ext != L".wav" && Ext != L".mp3" && Ext != L".ogg") continue;
+
+					FAssetListItem Item;
+					Item.DisplayName = FPaths::ToUtf8(Entry.path().stem().wstring());
+					Item.FullPath = FPaths::ToUtf8(
+						fs::relative(Entry.path(), Dir).generic_wstring());
+					Cache.push_back(Item);
+				}
+			}
+			return Cache;
+		}
 		if (std::strcmp(AssetTypeName, "UParticleSystem") == 0)
 		{
 			FParticleSystemManager::Get().RefreshAvailableParticleSystems();

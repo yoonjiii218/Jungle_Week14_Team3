@@ -19,7 +19,7 @@ public:
 	UAnimNotify_PlaySound() = default;
 	~UAnimNotify_PlaySound() override = default;
 
-	UPROPERTY(Edit, Save, Category="PlaySound", DisplayName="Sound Path")
+	UPROPERTY(Edit, Save, Category="PlaySound", DisplayName="Sound Path", AssetType="Audio")
 	FString SoundPath;
 
 	UPROPERTY(Edit, Save, Category="PlaySound", DisplayName="Volume")

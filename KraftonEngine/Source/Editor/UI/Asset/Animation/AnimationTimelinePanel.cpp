@@ -7,6 +7,7 @@
 #include "Animation/Notify/AnimNotify.h"
 #include "Animation/Notify/AnimNotifyState.h"
 #include "Animation/AnimationManager.h"
+#include "Asset/AssetRegistry.h"
 #include "Component/Primitive/SkeletalMeshComponent.h"
 #include "Mesh/Skeletal/SkeletalMesh.h"
 #include "Mesh/Skeletal/SkeletalMeshAsset.h"
@@ -14,6 +15,7 @@
 #include "Object/GarbageCollection.h"
 #include "Object/Reflection/ObjectFactory.h"
 #include "Object/Reflection/UClass.h"
+#include "Core/Property/SoftObjectProperty.h"
 #include "Core/Types/PropertyTypes.h"
 #include "Editor/UI/Asset/Animation/MorphCurveEditObject.h"
 
@@ -275,12 +277,93 @@ namespace
 					FString* S = static_cast<FString*>(Prop.GetValuePtr());
 					if (S)
 					{
-						char Buf[256];
-						strncpy_s(Buf, sizeof(Buf), S->c_str(), _TRUNCATE);
-						if (ImGui::InputText("##v", Buf, sizeof(Buf)))
+						const TMap<FString, FString>& Metadata = Prop.GetMetadata();
+						auto AssetTypeIt = Metadata.find("assettype");
+						if (AssetTypeIt != Metadata.end() && AssetTypeIt->second == "Audio")
 						{
-							*S = Buf;
-							bChanged = true;
+							const FString Preview = (S->empty() || *S == "None") ? "None" : *S;
+							if (ImGui::BeginCombo("##v", Preview.c_str()))
+							{
+								const bool bSelectedNone = (S->empty() || *S == "None");
+								if (ImGui::Selectable("None", bSelectedNone))
+								{
+									*S = "None";
+									bChanged = true;
+								}
+								if (bSelectedNone) ImGui::SetItemDefaultFocus();
+
+								const TArray<FAssetListItem>& AudioFiles = FAssetRegistry::ListByTypeName("Audio");
+								for (const FAssetListItem& Item : AudioFiles)
+								{
+									const bool bSelected = (*S == Item.FullPath);
+									if (ImGui::Selectable(Item.DisplayName.c_str(), bSelected))
+									{
+										*S = Item.FullPath;
+										bChanged = true;
+									}
+									if (bSelected) ImGui::SetItemDefaultFocus();
+								}
+								ImGui::EndCombo();
+							}
+						}
+						else
+						{
+							char Buf[256];
+							strncpy_s(Buf, sizeof(Buf), S->c_str(), _TRUNCATE);
+							if (ImGui::InputText("##v", Buf, sizeof(Buf)))
+							{
+								*S = Buf;
+								bChanged = true;
+							}
+						}
+					}
+					break;
+				}
+				case EPropertyType::SoftObjectRef:
+				{
+					const FSoftObjectProperty* SoftProperty = Prop.Property ? Prop.Property->AsSoftObjectProperty() : nullptr;
+					if (SoftProperty)
+					{
+						FString CurrentPath = SoftProperty->GetPath(Prop.ContainerPtr);
+						const FString AssetType = SoftProperty->GetAssetType();
+						if (AssetType == "Audio")
+						{
+							const FString Preview = (CurrentPath.empty() || CurrentPath == "None") ? "None" : CurrentPath;
+							if (ImGui::BeginCombo("##v", Preview.c_str()))
+							{
+								const bool bSelectedNone = (CurrentPath.empty() || CurrentPath == "None");
+								if (ImGui::Selectable("None", bSelectedNone))
+								{
+									SoftProperty->SetPath(Prop.ContainerPtr, "None");
+									CurrentPath = "None";
+									bChanged = true;
+								}
+								if (bSelectedNone) ImGui::SetItemDefaultFocus();
+
+								const TArray<FAssetListItem>& AudioFiles = FAssetRegistry::ListByTypeName("Audio");
+								for (const FAssetListItem& Item : AudioFiles)
+								{
+									const bool bSelected = (CurrentPath == Item.FullPath);
+									if (ImGui::Selectable(Item.DisplayName.c_str(), bSelected))
+									{
+										SoftProperty->SetPath(Prop.ContainerPtr, Item.FullPath);
+										CurrentPath = Item.FullPath;
+										bChanged = true;
+									}
+									if (bSelected) ImGui::SetItemDefaultFocus();
+								}
+								ImGui::EndCombo();
+							}
+						}
+						else
+						{
+							char Buf[256];
+							strncpy_s(Buf, sizeof(Buf), CurrentPath.c_str(), _TRUNCATE);
+							if (ImGui::InputText("##v", Buf, sizeof(Buf)))
+							{
+								SoftProperty->SetPath(Prop.ContainerPtr, Buf);
+								bChanged = true;
+							}
 						}
 					}
 					break;

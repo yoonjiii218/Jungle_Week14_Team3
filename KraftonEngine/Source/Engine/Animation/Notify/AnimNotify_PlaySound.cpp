@@ -13,7 +13,7 @@ namespace
 
 void UAnimNotify_PlaySound::Notify(USkeletalMeshComponent* /*MeshComp*/, UAnimSequenceBase* /*Anim*/)
 {
-	if (SoundPath.empty()) return;
+	if (SoundPath.empty() || SoundPath == "None") return;
 
 	// 캐시 key — path 자체. "AnimNotify:" prefix 로 게임 측 pre-loaded key 들과 namespace 분리.
 	const FString Key = FString("AnimNotify:") + SoundPath;

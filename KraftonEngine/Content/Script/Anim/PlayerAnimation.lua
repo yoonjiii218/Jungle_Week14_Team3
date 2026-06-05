@@ -4,6 +4,7 @@
 local PlayerAction = require("PlayerAction")
 local CombatContext = require("CombatContext")
 local PlayerConfig = require("PlayerConfig")
+local PlayerFeedback = require("PlayerFeedback")
 
 local DEFAULT_SAMURAI_CONFIG = PlayerConfig.Default.Animation.Samurai
 
@@ -426,26 +427,56 @@ function update(self, dt)
     end
 end
 
+function on_combo_window_open(self)
+    self.ComboWindow = true
+end
+
+function on_combo_window_close(self)
+    self.ComboWindow = false
+end
+
+function on_attack_end(self)
+    self.ComboWindow = false
+    if self.DashChargeAttackActive then
+        self.DashChargeAttackEnd = true
+    else
+        self.AttackEnd = true
+    end
+end
+
+function on_trail_activate(self)
+    PlayerFeedback.SetKatanaTrailActive(GetPlayerCtx(self), true)
+end
+
+function on_trail_deactivate(self)
+    PlayerFeedback.SetKatanaTrailActive(GetPlayerCtx(self), false)
+end
+
 function on_notify(self, name)
     print("[LuaAnim] notify: " .. name)
 
     if name == "ComboWindowOpen" then
-        self.ComboWindow = true
+        on_combo_window_open(self)
         return
     end
 
     if name == "ComboWindowClose" then
-        self.ComboWindow = false
+        on_combo_window_close(self)
         return
     end
 
     if name == "AttackEnd" then
-        self.ComboWindow = false
-        if self.DashChargeAttackActive then
-            self.DashChargeAttackEnd = true
-        else
-            self.AttackEnd = true
-        end
+        on_attack_end(self)
+        return
+    end
+
+    if name == "TrailActivate" or name == "TrailOn" then
+        on_trail_activate(self)
+        return
+    end
+
+    if name == "TrailDeactivate" or name == "TrailOff" then
+        on_trail_deactivate(self)
         return
     end
 
