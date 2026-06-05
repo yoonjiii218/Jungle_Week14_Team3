@@ -260,7 +260,11 @@ function init(self)
 
     Anim.sm_add_transition(top, "UltimateAttack", "Locomotion",
         function()
-            return IsInUltimateMode(self) ~= true
+            if IsInUltimateMode(self) ~= true then
+                ResetAttack(self)
+                return true
+            end
+            return false
         end,
         samuraiConfig.UltimateAttackBlendOut or DEFAULT_SAMURAI_CONFIG.UltimateAttackBlendOut
     )

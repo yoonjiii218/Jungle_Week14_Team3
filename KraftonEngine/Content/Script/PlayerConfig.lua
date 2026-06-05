@@ -20,11 +20,11 @@ PlayerConfig.Default = {
         AttackStepForwardDistance = 1.5,
         AttackStepForwardDuration = 0.12,
         AttackStepForwardDistances = {
-            1.5,
-            1.5,
-            1.5,
-            1.5,
-            1.5,
+            3,
+            3,
+            3,
+            3,
+            3,
         },
         AttackStepForwardDurations = {
             0.12,
