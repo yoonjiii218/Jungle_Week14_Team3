@@ -34,6 +34,20 @@ local function GetSamuraiConfig(self)
     return DEFAULT_SAMURAI_CONFIG
 end
 
+local function GetAttackPlayRate(samuraiConfig, attackIndex)
+    local playRates = samuraiConfig.AttackPlayRates
+    if playRates ~= nil and playRates[attackIndex] ~= nil then
+        return playRates[attackIndex]
+    end
+
+    local defaultPlayRates = DEFAULT_SAMURAI_CONFIG.AttackPlayRates
+    if defaultPlayRates ~= nil and defaultPlayRates[attackIndex] ~= nil then
+        return defaultPlayRates[attackIndex]
+    end
+
+    return samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate
+end
+
 local function PrepareActionCtx(self)
     self.PlayerCtx = GetPlayerCtx(self)
     return self
@@ -150,11 +164,11 @@ function init(self)
     Anim.sm_add_state(top, "Locomotion", loco)
     Anim.sm_add_state(top, "Jump", Anim.create_sequence_player(samuraiConfig.JumpPath or DEFAULT_SAMURAI_CONFIG.JumpPath, samuraiConfig.JumpPlayRate or DEFAULT_SAMURAI_CONFIG.JumpPlayRate, samuraiConfig.JumpLoop or DEFAULT_SAMURAI_CONFIG.JumpLoop))
 
-    Anim.sm_add_state(top, "Attack1", Anim.create_sequence_player(attackPaths[1] or DEFAULT_SAMURAI_CONFIG.AttackPaths[1], samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate, false))
-    Anim.sm_add_state(top, "Attack2", Anim.create_sequence_player(attackPaths[2] or DEFAULT_SAMURAI_CONFIG.AttackPaths[2], samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate, false))
-    Anim.sm_add_state(top, "Attack3", Anim.create_sequence_player(attackPaths[3] or DEFAULT_SAMURAI_CONFIG.AttackPaths[3], samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate, false))
-    Anim.sm_add_state(top, "Attack4", Anim.create_sequence_player(attackPaths[4] or DEFAULT_SAMURAI_CONFIG.AttackPaths[4], samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate, false))
-    Anim.sm_add_state(top, "Attack5", Anim.create_sequence_player(attackPaths[5] or DEFAULT_SAMURAI_CONFIG.AttackPaths[5], samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate, false))
+    Anim.sm_add_state(top, "Attack1", Anim.create_sequence_player(attackPaths[1] or DEFAULT_SAMURAI_CONFIG.AttackPaths[1], GetAttackPlayRate(samuraiConfig, 1), false))
+    Anim.sm_add_state(top, "Attack2", Anim.create_sequence_player(attackPaths[2] or DEFAULT_SAMURAI_CONFIG.AttackPaths[2], GetAttackPlayRate(samuraiConfig, 2), false))
+    Anim.sm_add_state(top, "Attack3", Anim.create_sequence_player(attackPaths[3] or DEFAULT_SAMURAI_CONFIG.AttackPaths[3], GetAttackPlayRate(samuraiConfig, 3), false))
+    Anim.sm_add_state(top, "Attack4", Anim.create_sequence_player(attackPaths[4] or DEFAULT_SAMURAI_CONFIG.AttackPaths[4], GetAttackPlayRate(samuraiConfig, 4), false))
+    Anim.sm_add_state(top, "Attack5", Anim.create_sequence_player(attackPaths[5] or DEFAULT_SAMURAI_CONFIG.AttackPaths[5], GetAttackPlayRate(samuraiConfig, 5), false))
 
     Anim.sm_add_state(top, "Dash", Anim.create_sequence_player(samuraiConfig.DashPath or DEFAULT_SAMURAI_CONFIG.DashPath, samuraiConfig.DashPlayRate or DEFAULT_SAMURAI_CONFIG.DashPlayRate, false))
     Anim.sm_add_state(top, "DashCharging", Anim.create_sequence_player(samuraiConfig.DashChargingPath or DEFAULT_SAMURAI_CONFIG.DashChargingPath, samuraiConfig.DashChargingPlayRate or DEFAULT_SAMURAI_CONFIG.DashChargingPlayRate, false))
