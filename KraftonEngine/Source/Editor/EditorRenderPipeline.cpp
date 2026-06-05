@@ -271,7 +271,7 @@ void FEditorRenderPipeline::BuildFrame(FLevelEditorViewportClient* VC, const FMi
 		}
 
 		const FCineDepthOfFieldSettings& DepthOfFieldSettings = CineCamera->GetDepthOfFieldSettings();
-		Frame.bDepthOfFieldEnabled = Frame.RenderOptions.ShowFlags.bDepthOfField;
+		Frame.bDepthOfFieldEnabled = Frame.RenderOptions.ShowFlags.bDepthOfField && DepthOfFieldSettings.bEnabled;
 		Frame.DepthOfFieldFocalLength = DepthOfFieldSettings.FocalLength;
 		Frame.DepthOfFieldAperture = DepthOfFieldSettings.Aperture;
 		Frame.DepthOfFieldFocusDistance = DepthOfFieldSettings.FocusDistance;
