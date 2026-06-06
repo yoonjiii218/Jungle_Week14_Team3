@@ -1820,7 +1820,11 @@ void FPhysXPhysicsScene::Tick(float DeltaTime)
 	const float FixedPhysicsFPS = (std::max)(1.0f, (std::min)(FProjectSettings::Get().Physics.FixedPhysicsFPS, 1000.0f));
 	const float FixedPhysicsStep = 1.0f / FixedPhysicsFPS;
 	constexpr int32 MaxSubsteps = 6;
-	const float MaxAccumulatedTime = FixedPhysicsStep * MaxSubsteps;
+	constexpr float MinFixedPhysicsStepScale = 0.0001f;
+	const float GlobalTimeDilation = World ? World->GetGlobalTimeDilation() : 1.0f;
+	const float FixedPhysicsStepScale = (std::max)(MinFixedPhysicsStepScale, (std::min)(GlobalTimeDilation, 1.0f));
+	const float EffectiveFixedPhysicsStep = FixedPhysicsStep * FixedPhysicsStepScale;
+	const float MaxAccumulatedTime = EffectiveFixedPhysicsStep * MaxSubsteps;
 	constexpr float MaxClampedPhysicsDeltaTime = 0.1f;
 
 	PruneInvalidBodyInstanceComponents();
@@ -1885,18 +1889,18 @@ void FPhysXPhysicsScene::Tick(float DeltaTime)
 		PhysicsAccumulator = (std::min)(PhysicsAccumulator + DeltaTime, MaxAccumulatedTime);
 
 		int32 SubstepCount = 0;
-		while (PhysicsAccumulator >= FixedPhysicsStep && SubstepCount < MaxSubsteps)
+		while (PhysicsAccumulator >= EffectiveFixedPhysicsStep && SubstepCount < MaxSubsteps)
 		{
 			RunVehicleSuspensionRaycasts();
 			ApplyPendingForces();
 
 			// ── Simulate ──
-			Scene->simulate(FixedPhysicsStep);
+			Scene->simulate(EffectiveFixedPhysicsStep);
 			Scene->fetchResults(true);
 
-			RunVehicleUpdates(FixedPhysicsStep);
+			RunVehicleUpdates(EffectiveFixedPhysicsStep);
 
-			PhysicsAccumulator -= FixedPhysicsStep;
+			PhysicsAccumulator -= EffectiveFixedPhysicsStep;
 			++SubstepCount;
 			bRanSimulationStep = true;
 		}

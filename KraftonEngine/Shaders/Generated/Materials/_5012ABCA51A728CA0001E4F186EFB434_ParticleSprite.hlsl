@@ -1,4 +1,4 @@
-// Generated from Content/Material/VFX/SlashFragments.mat
+// Generated from Content/Material/VFX/M_SlashFragments.mat
 // Domain: ParticleSprite
 
 #include "Common/ConstantBuffers.hlsli"

@@ -3,16 +3,13 @@
 #include "Component/PrimitiveComponent.h"
 #include "Component/SceneComponent.h"
 #include "GameFramework/AActor.h"
+#include "GameFramework/World.h"
 #include "Math/MathUtils.h"
 #include "Object/Object.h"
 #include "Profiling/Time/Timer.h"
 #include "Runtime/Engine.h"
 
 #include <algorithm>
-
-TArray<UActionComponent*> UActionComponent::TimeDilationComponents;
-bool UActionComponent::bHasCapturedGlobalBaseTimeDilation = false;
-float UActionComponent::GlobalBaseTimeDilation = 1.0f;
 
 namespace
 {
@@ -47,28 +44,6 @@ void UActionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 	const float RawDeltaTime = GetRawDeltaTime(DeltaTime);
 
-	if (HitStopAction.bActive)
-	{
-		HitStopAction.RemainingTime -= RawDeltaTime;
-		if (HitStopAction.RemainingTime <= 0.0f)
-		{
-			HitStopAction.bActive = false;
-			HitStopAction.RemainingTime = 0.0f;
-			UpdateTimeDilationRegistration();
-		}
-	}
-
-	if (SlomoAction.bActive)
-	{
-		SlomoAction.RemainingTime -= RawDeltaTime;
-		if (SlomoAction.RemainingTime <= 0.0f)
-		{
-			SlomoAction.bActive = false;
-			SlomoAction.RemainingTime = 0.0f;
-			UpdateTimeDilationRegistration();
-		}
-	}
-
 	if (LocalHitStopAction.bActive)
 	{
 		LocalHitStopAction.RemainingTime -= RawDeltaTime;
@@ -77,6 +52,26 @@ void UActionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 			StopLocalHitStop();
 		}
 	}
+
+	if (HitStopAction.bActive)
+	{
+		HitStopAction.RemainingTime -= RawDeltaTime;
+		if (HitStopAction.RemainingTime <= 0.0f)
+		{
+			HitStopAction = FTimedDilationAction();
+		}
+	}
+
+	if (SlomoAction.bActive)
+	{
+		SlomoAction.RemainingTime -= RawDeltaTime;
+		if (SlomoAction.RemainingTime <= 0.0f)
+		{
+			SlomoAction = FTimedDilationAction();
+		}
+	}
+
+	RequestDesiredGlobalTimeDilation();
 
 	if (HitSquashAction.bActive)
 	{
@@ -155,7 +150,7 @@ void UActionComponent::HitStop(float Duration, float TimeDilation)
 	HitStopAction.Duration = Duration;
 	HitStopAction.RemainingTime = Duration;
 	HitStopAction.TimeDilation = FMath::Clamp(TimeDilation, 0.0f, 1.0f);
-	UpdateTimeDilationRegistration();
+	RequestDesiredGlobalTimeDilation();
 }
 
 void UActionComponent::LocalHitStop(float Duration)
@@ -175,27 +170,15 @@ void UActionComponent::LocalHitStop(float Duration)
 	{
 		LocalHitStopAction.RemainingTime = (std::max)(LocalHitStopAction.RemainingTime, Duration);
 		LocalHitStopAction.Duration = (std::max)(LocalHitStopAction.Duration, Duration);
+		OwnerActor->SetCustomTimeDilation(0.0f);
 		return;
 	}
 
 	LocalHitStopAction.bActive = true;
 	LocalHitStopAction.Duration = Duration;
 	LocalHitStopAction.RemainingTime = Duration;
-	LocalHitStopAction.bActorTickWasEnabled = OwnerActor->PrimaryActorTick.bTickEnabled;
-	LocalHitStopAction.ComponentTickStates.clear();
-
-	OwnerActor->PrimaryActorTick.SetTickEnabled(false);
-
-	for (UActorComponent* Component : OwnerActor->GetComponents())
-	{
-		if (!IsValid(Component) || Component == this)
-		{
-			continue;
-		}
-
-		LocalHitStopAction.ComponentTickStates.push_back({ Component, Component->PrimaryComponentTick.bTickEnabled });
-		Component->SetComponentTickEnabled(false);
-	}
+	LocalHitStopAction.PreviousCustomTimeDilation = OwnerActor->GetCustomTimeDilation();
+	OwnerActor->SetCustomTimeDilation(0.0f);
 }
 
 void UActionComponent::HitSquash(const FVector& SquashedScale, float SquashInDuration, float RecoverDuration)
@@ -282,13 +265,13 @@ void UActionComponent::Slomo(float Duration, float TimeDilation)
 	SlomoAction.Duration = Duration;
 	SlomoAction.RemainingTime = Duration;
 	SlomoAction.TimeDilation = FMath::Clamp(TimeDilation, 0.0f, 1.0f);
-	UpdateTimeDilationRegistration();
+	RequestDesiredGlobalTimeDilation();
 }
 
 void UActionComponent::StopHitStop()
 {
 	HitStopAction = FTimedDilationAction();
-	UpdateTimeDilationRegistration();
+	RequestDesiredGlobalTimeDilation();
 }
 
 void UActionComponent::StopLocalHitStop()
@@ -300,16 +283,7 @@ void UActionComponent::StopLocalHitStop()
 
 	if (AActor* OwnerActor = GetOwner())
 	{
-		OwnerActor->PrimaryActorTick.SetTickEnabled(LocalHitStopAction.bActorTickWasEnabled);
-	}
-
-	for (const TPair<UActorComponent*, bool>& State : LocalHitStopAction.ComponentTickStates)
-	{
-		UActorComponent* Component = State.first;
-		if (IsAliveObject(Component))
-		{
-			Component->SetComponentTickEnabled(State.second);
-		}
+		OwnerActor->SetCustomTimeDilation(LocalHitStopAction.PreviousCustomTimeDilation);
 	}
 
 	LocalHitStopAction = FLocalHitStopAction();
@@ -335,7 +309,7 @@ void UActionComponent::StopKnockback()
 void UActionComponent::StopSlomo()
 {
 	SlomoAction = FTimedDilationAction();
-	UpdateTimeDilationRegistration();
+	RequestDesiredGlobalTimeDilation();
 }
 
 void UActionComponent::StopAllActions()
@@ -345,7 +319,7 @@ void UActionComponent::StopAllActions()
 	StopKnockback();
 	HitStopAction = FTimedDilationAction();
 	SlomoAction = FTimedDilationAction();
-	UnregisterTimeDilationComponent();
+	RequestDesiredGlobalTimeDilation();
 }
 
 float UActionComponent::GetRawDeltaTime(float FallbackDeltaTime) const
@@ -363,108 +337,32 @@ USceneComponent* UActionComponent::GetTargetSceneComponent() const
 	return OwnerActor ? OwnerActor->GetRootComponent() : nullptr;
 }
 
-void UActionComponent::UpdateTimeDilationRegistration()
+float UActionComponent::GetDesiredGlobalTimeDilation() const
 {
-	if (HasActiveTimeDilation())
+	float DesiredDilation = 1.0f;
+	if (HasActiveTimeDilationAction(HitStopAction))
 	{
-		RegisterTimeDilationComponent();
-		return;
+		DesiredDilation = (std::min)(DesiredDilation, HitStopAction.TimeDilation);
 	}
 
-	UnregisterTimeDilationComponent();
+	if (HasActiveTimeDilationAction(SlomoAction))
+	{
+		DesiredDilation = (std::min)(DesiredDilation, SlomoAction.TimeDilation);
+	}
+
+	return DesiredDilation;
 }
 
-void UActionComponent::RegisterTimeDilationComponent()
+void UActionComponent::RequestDesiredGlobalTimeDilation() const
 {
-	if (!GEngine || !GEngine->GetTimer())
+	if (!HasActiveTimeDilation())
 	{
 		return;
 	}
 
-	if (!bHasCapturedGlobalBaseTimeDilation)
+	if (UWorld* World = GetWorld())
 	{
-		GlobalBaseTimeDilation = GEngine->GetTimer()->GetTimeDilation();
-		bHasCapturedGlobalBaseTimeDilation = true;
-	}
-
-	if (std::find(TimeDilationComponents.begin(), TimeDilationComponents.end(), this) == TimeDilationComponents.end())
-	{
-		TimeDilationComponents.push_back(this);
-	}
-
-	RefreshGlobalTimeDilation();
-}
-
-void UActionComponent::UnregisterTimeDilationComponent()
-{
-	auto It = std::find(TimeDilationComponents.begin(), TimeDilationComponents.end(), this);
-	if (It != TimeDilationComponents.end())
-	{
-		TimeDilationComponents.erase(It);
-	}
-
-	RefreshGlobalTimeDilation();
-}
-
-void UActionComponent::RefreshGlobalTimeDilation()
-{
-	if (!GEngine || !GEngine->GetTimer())
-	{
-		return;
-	}
-
-	float SelectedDilation = 1.0f;
-	bool bHasHitStop = false;
-	bool bHasSlomo = false;
-
-	auto It = TimeDilationComponents.begin();
-	while (It != TimeDilationComponents.end())
-	{
-		UActionComponent* Component = *It;
-		if (!IsAliveObject(Component) || !Component->HasActiveTimeDilation())
-		{
-			It = TimeDilationComponents.erase(It);
-			continue;
-		}
-
-		if (Component->HasActiveTimeDilationAction(Component->HitStopAction))
-		{
-			SelectedDilation = bHasHitStop
-				? (std::min)(SelectedDilation, Component->HitStopAction.TimeDilation)
-				: Component->HitStopAction.TimeDilation;
-			bHasHitStop = true;
-		}
-
-		++It;
-	}
-
-	if (!bHasHitStop)
-	{
-		for (UActionComponent* Component : TimeDilationComponents)
-		{
-			if (!IsAliveObject(Component) || !Component->HasActiveTimeDilationAction(Component->SlomoAction))
-			{
-				continue;
-			}
-
-			SelectedDilation = bHasSlomo
-				? (std::min)(SelectedDilation, Component->SlomoAction.TimeDilation)
-				: Component->SlomoAction.TimeDilation;
-			bHasSlomo = true;
-		}
-	}
-
-	if (bHasHitStop || bHasSlomo)
-	{
-		GEngine->GetTimer()->SetTimeDilation(SelectedDilation);
-		return;
-	}
-
-	TimeDilationComponents.clear();
-	if (bHasCapturedGlobalBaseTimeDilation)
-	{
-		GEngine->GetTimer()->SetTimeDilation(GlobalBaseTimeDilation);
-		bHasCapturedGlobalBaseTimeDilation = false;
+		World->RequestGlobalTimeDilation(GetDesiredGlobalTimeDilation());
 	}
 }
 

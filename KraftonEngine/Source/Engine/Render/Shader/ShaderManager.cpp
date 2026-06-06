@@ -72,6 +72,8 @@ namespace
 			return &ParticleSpriteLayoutDesc;
 		case EShaderVertexFactory::ParticleMesh:
 			return &ParticleMeshLayoutDesc;
+		case EShaderVertexFactory::ParticleBeamTrail:
+			return &ParticleBeamTrailLayoutDesc;
 		default:
 			break;
 		}

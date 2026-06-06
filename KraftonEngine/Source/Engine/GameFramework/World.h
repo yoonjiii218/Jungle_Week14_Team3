@@ -74,6 +74,10 @@ public:
 	void BeginPlay();      // Triggers BeginPlay on all actors
 	void Tick(float DeltaTime, ELevelTick TickType);  // Drives the game loop every frame
 	float GetGameTimeSeconds() const { return GameTimeSeconds; }
+	float GetGlobalTimeDilation() const;
+	float GetBaseGlobalTimeDilation() const { return BaseGlobalTimeDilation; }
+	void SetGlobalTimeDilation(float InTimeDilation);
+	void RequestGlobalTimeDilation(float InTimeDilation);
 	void EndPlay();        // Stop gameplay without owning memory lifetime.
 	void RouteWorldDestroyed();
 
@@ -132,6 +136,10 @@ private:
 	bool bHasBegunPlay = false;
 	bool bPaused = false;
 	float GameTimeSeconds = 0.0f;
+	float BaseGlobalTimeDilation = 1.0f;
+	float ActiveGlobalTimeDilationRequest = 1.0f;
+	float FrameGlobalTimeDilationRequest = 1.0f;
+	bool bCollectingGlobalTimeDilationRequests = false;
 	bool bWorldDestroyRouted = false;
 	FWorldSettings WorldSettings;
 	bool bHasLastFullLODUpdateCameraPos = false;

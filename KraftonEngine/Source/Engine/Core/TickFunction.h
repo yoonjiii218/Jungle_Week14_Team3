@@ -62,6 +62,7 @@ public:
 
 	virtual void ExecuteTick(float DeltaTime, ELevelTick TickType) = 0;
 	virtual const char* GetDebugName() const = 0;
+	virtual float GetEffectiveDeltaTime(float DeltaTime) const { return DeltaTime; }
 
 	void RegisterTickFunction();
 	void UnRegisterTickFunction();
@@ -129,9 +130,10 @@ private:
 public:
     void SetTarget(AActor* InTarget) { Target = InTarget; }
 
-    virtual void ExecuteTick(
+	virtual void ExecuteTick(
         float DeltaTime,
         ELevelTick TickType) override;
+	float GetEffectiveDeltaTime(float DeltaTime) const override;
 
 
 	// FTickFunction을(를) 통해 상속됨
@@ -144,6 +146,7 @@ struct FActorComponentTickFunction : public FTickFunction {
 public:
 	void SetTarget(UActorComponent* InTarget) { Target = InTarget; }
 	virtual void ExecuteTick(float DeltaTime, ELevelTick TickType) override;
+	float GetEffectiveDeltaTime(float DeltaTime) const override;
 
 	// FTickFunction을(를) 통해 상속됨
 	const char* GetDebugName() const override;

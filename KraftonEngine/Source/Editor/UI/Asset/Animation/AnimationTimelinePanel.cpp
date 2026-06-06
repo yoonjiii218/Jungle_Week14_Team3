@@ -355,6 +355,35 @@ namespace
 								ImGui::EndCombo();
 							}
 						}
+						else if (AssetType == "UParticleSystem")
+						{
+							const FString Preview = (CurrentPath.empty() || CurrentPath == "None") ? "None" : CurrentPath;
+							if (ImGui::BeginCombo("##v", Preview.c_str()))
+							{
+								const bool bSelectedNone = (CurrentPath.empty() || CurrentPath == "None");
+								if (ImGui::Selectable("None", bSelectedNone))
+								{
+									SoftProperty->SetPath(Prop.ContainerPtr, "None");
+									CurrentPath = "None";
+									bChanged = true;
+								}
+								if (bSelectedNone) ImGui::SetItemDefaultFocus();
+
+								const TArray<FAssetListItem>& ParticleSystems = FAssetRegistry::ListByTypeName("UParticleSystem");
+								for (const FAssetListItem& Item : ParticleSystems)
+								{
+									const bool bSelected = (CurrentPath == Item.FullPath);
+									if (ImGui::Selectable(Item.DisplayName.c_str(), bSelected))
+									{
+										SoftProperty->SetPath(Prop.ContainerPtr, Item.FullPath);
+										CurrentPath = Item.FullPath;
+										bChanged = true;
+									}
+									if (bSelected) ImGui::SetItemDefaultFocus();
+								}
+								ImGui::EndCombo();
+							}
+						}
 						else
 						{
 							char Buf[256];
@@ -1703,7 +1732,7 @@ bool FAnimationTimelinePanel::RenderNotifyDetails(UAnimSequence* Seq, int32 Sele
 	const FString ClsName = N.Notify      ? FString(N.Notify->GetClass()->GetName())
 	                      : N.NotifyState ? FString(N.NotifyState->GetClass()->GetName())
 	                                      : FString("None");
-	const bool bIsState = (N.NotifyState != nullptr) && (N.Duration > 0.0f);
+	const bool bIsState = (N.NotifyState != nullptr);
 
 	ImGui::TextUnformatted("Notify Details");
 	ImGui::Separator();
@@ -1734,8 +1763,11 @@ bool FAnimationTimelinePanel::RenderNotifyDetails(UAnimSequence* Seq, int32 Sele
 		const float MaxStart = bIsState
 			? std::max<float>(Seq->GetPlayLength() - N.Duration, 0.0f)
 			: Seq->GetPlayLength();
-		if (ImGui::DragFloat("##trig", &N.TriggerTime, 0.01f, 0.0f, MaxStart, "%.3f"))
+		float TriggerTime = N.TriggerTime;
+		ImGui::InputFloat("##trig", &TriggerTime, 0.0f, 0.0f, "%.3f");
+		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
+			N.TriggerTime = std::clamp(TriggerTime, 0.0f, MaxStart);
 			bChanged = true;
 		}
 	}
@@ -1744,8 +1776,11 @@ bool FAnimationTimelinePanel::RenderNotifyDetails(UAnimSequence* Seq, int32 Sele
 		ImGui::TextUnformatted("Duration (sec)");
 		ImGui::SetNextItemWidth(-FLT_MIN);
 		const float MaxDur = std::max<float>(Seq->GetPlayLength() - N.TriggerTime, 0.01f);
-		if (ImGui::DragFloat("##dur", &N.Duration, 0.01f, 0.01f, MaxDur, "%.3f"))
+		float Duration = N.Duration;
+		ImGui::InputFloat("##dur", &Duration, 0.0f, 0.0f, "%.3f");
+		if (ImGui::IsItemDeactivatedAfterEdit())
 		{
+			N.Duration = std::clamp(Duration, 0.0f, MaxDur);
 			bChanged = true;
 		}
 	}

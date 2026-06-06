@@ -1,4 +1,4 @@
-// Generated from Content/Material/VFX/M_UltimateSlash_SubUV.mat
+// Generated from Content/Material/Material_Emitter0_6_Emitter0.mat
 // Domain: ParticleSprite
 
 #include "Common/ConstantBuffers.hlsli"
@@ -29,6 +29,8 @@ struct FMaterialResult
     float2 UVOffset;
 };
 
+Texture2D Tex_Diffuse : register(t0);
+
 struct FMaterialEvalResult
 {
     FMaterialResult Material;
@@ -39,12 +41,13 @@ struct FMaterialEvalResult
 
 FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
-    float3 n_15 = float3(1.000000f, 0.000000f, 0.000000f);
-    float n_17 = 1.000000f;
+    float4 n_3 = Tex_Diffuse.Sample(LinearWrapSampler, Input.UV0);
+    float4 n_12 = Input.ParticleColor;
+    float3 n_19 = ((n_3).rgb * (n_12).rgb);
     FMaterialResult Result;
-    Result.Color = n_15;
+    Result.Color = n_19;
     Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = n_17;
+    Result.Opacity = (n_12).x;
     Result.UVOffset = float2(0, 0);
     FMaterialEvalResult Eval;
     Eval.Material = Result;

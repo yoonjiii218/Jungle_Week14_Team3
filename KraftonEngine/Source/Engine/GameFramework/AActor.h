@@ -115,6 +115,8 @@ public:
 	UWorld* GetWorld() const;
 	UWorld* GetWorldEvenIfPendingKill() const;
 	ULevel* GetLevel() const;
+	float GetCustomTimeDilation() const { return CustomTimeDilation; }
+	void SetCustomTimeDilation(float InTimeDilation);
 
 	UFUNCTION(Pure, Category="Actor|Visibility")
 	bool IsVisible() const { return bVisible; }
@@ -184,4 +186,5 @@ protected:
 	bool bQueuedForPartitionUpdate = false;
 	bool bActorHasBegunPlay = false;
 	bool bActorDestroyRouted = false;
+	float CustomTimeDilation = 1.0f;
 };
