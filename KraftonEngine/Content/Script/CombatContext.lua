@@ -117,6 +117,12 @@ function CombatContext.RegisterBoss(obj, bb, BB)
     bossBBConfig = BB
 end
 
+-- 보스 런타임 Blackboard 조회 (BossAnimation 이 공격 신호를 읽기 위해 사용)
+-- AI(BossAttacks)가 bb 에 쓴 AnimAttack 신호를 AnimInstance 가 폴링한다.
+function CombatContext.GetBossBlackboard()
+    return bossBB
+end
+
 -- ════════════════════════════════════════════
 -- 퍼펙트 회피 / 슬로모 (★ 플레이어팀이 호출 ★)
 --   퍼펙트 회피 판정은 플레이어가 함 (회피 무적 중 피격 = 퍼펙트).

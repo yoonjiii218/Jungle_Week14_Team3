@@ -48,14 +48,32 @@ local function PlayMontage(name)
     -- TODO (2단계): Reflection.Call(animInstance, "PlayMontage", asset)
 end
 
+-- 패턴 → 애니메이션 신호 매핑.
+-- AnimInstance(BossAnimation.lua)가 bb.AnimAttack 를 폴링해 상태머신을 구동한다.
+--   kind  = "light" | "heavy" | "dash"
+--   hits  = 콤보 단수 (light 1~4 / heavy 1~5)
+local PATTERN_ANIM = {
+    P1 = { kind = "heavy", start = 1, hits = 1 },
+    P2 = { kind = "heavy", start = 2, hits = 3 },
+    P3 = { kind = "light", start = 3, hits = 4 },   
+}
+
 -- ────────────────────────────────────────────
 -- 헬퍼: 패턴 시작 공통 처리
 -- ────────────────────────────────────────────
 local function BeginPattern(name)
     local bb = ctx_ref.bb
     bb.ActionLock  = true
-    bb.IsTracking  = true   -- 공격 시작 시 추적 켬 (P3는 중간에 끔)
+    bb.IsTracking  = true
     bb.LastPattern = name
+
+    -- 애니메이션 트리거 신호 (AnimInstance 가 다음 프레임에 소비)
+    local anim = PATTERN_ANIM[name]
+    if anim then
+        bb.AnimAttack     = anim.kind
+        bb.AnimAttackStart = anim.start
+        bb.AnimAttackHits = anim.hits
+    end
 
     -- 이동 정지 (공격 중 미끄러짐 방지)
     if ctx_ref.movComp then

@@ -77,6 +77,9 @@ end
 --   "fan"  (P2 횡베기)              → CheckFan
 --   그 외                           → CheckRect (안전 fallback)
 function BossHitbox.Check(zone, target)
+    -- 방어: Init 누락/hot-reload 로 ctx_ref 가 nil 이어도 코루틴이 죽지 않게 한다.
+    -- (정상 상황이면 BossHitbox.Init 에서 주입됨)
+    if ctx_ref == nil then return false end
     if zone == nil then return false end
     if zone.kind == "fan" then
         return BossHitbox.CheckFan(zone, target)

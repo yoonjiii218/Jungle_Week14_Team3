@@ -9,9 +9,56 @@ local BossFeedback = {}
 
 local ctx_ref = nil   -- BossCharacter.lua 에서 Init 으로 주입
 
+local KATANA_MESH_PATH  = "Content/Mesh/Katana/source/red cyber katana_StaticMesh.uasset"
+local KATANA_SOCKET_NAME = "pinky_01_r_socket"
+
+-- ────────────────────────────────────────────
+-- ── 칼 손맞춤 보정값 ── 손에 안 맞으면 여기 숫자만 바꿔서 조정 ──
+-- 보스 본 스케일이 플레이어의 약 1/10이라 10배가 플레이어 1배와 같은 크기.
+local KATANA_LOCATION = Vector(0.0, 0.0, 0.0)     -- 위치 (X 앞뒤 / Y 좌우 / Z 상하)
+local KATANA_ROTATION = Vector(0.0, 0.0, 0.0)     -- 기울기 (Pitch / Roll / Yaw)
+local KATANA_SCALE    = Vector(1.0, 1.0, 1.0)  -- 크기
+
+local function AttachKatanaToBoss()
+    local owner = ctx_ref.obj
+    if owner == nil then return end
+
+    if ctx_ref.KatanaComponent ~= nil and ctx_ref.KatanaComponent:IsValid() then
+        return
+    end
+
+    local meshComp = owner:GetSkeletalMeshComponent()
+    if meshComp == nil then
+        print("[BossFeedback] SkeletalMeshComponent not found")
+        return
+    end
+
+    local katana = owner:AddStaticMeshComponent()
+    if katana == nil then
+        print("[BossFeedback] Failed to create katana component")
+        return
+    end
+
+    katana:SetMeshPath(KATANA_MESH_PATH)
+    katana:AttachToComponentWithSocket(meshComp, KATANA_SOCKET_NAME)
+    katana.RelativeLocation = KATANA_LOCATION
+    katana:SetRotation(KATANA_ROTATION)
+    katana:SetRelativeScale(KATANA_SCALE)
+
+    ctx_ref.KatanaComponent = katana
+end
+
 -- ────────────────────────────────────────────
 function BossFeedback.Init(ctx)
     ctx_ref = ctx
+    -- 칼 부착 실패가 BeginPlay 전체를 막지 않도록 격리한다.
+    -- (보스 스켈레톤에 소켓 pinky_01_r_socket 이 없으면 AttachToComponentWithSocket 이
+    --  에러를 던져 BeginPlay 가 중단되고, 뒤따르는 Hitbox.Init / RegisterBoss 가 통째로
+    --  건너뛰어진다 → Hitbox.ctx_ref 가 nil 이라 공격 판정 코루틴이 죽는다.)
+    local ok, err = pcall(AttachKatanaToBoss)
+    if not ok then
+        print("[BossFeedback] AttachKatanaToBoss 실패 - 칼 없이 계속: " .. tostring(err))
+    end
 end
 
 -- 보스 → 타겟 방향 단위벡터 + yaw(도) 반환
