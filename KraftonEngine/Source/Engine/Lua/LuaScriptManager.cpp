@@ -2546,10 +2546,12 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		sol::base_classes,
 		sol::bases<UActorComponent, UObject>(),
 		"HitStop", &UActionComponent::HitStop,
+		"LocalHitStop", &UActionComponent::LocalHitStop,
 		"HitSquash", &UActionComponent::HitSquash,
 		"Knockback", &UActionComponent::Knockback,
 		"Slomo", &UActionComponent::Slomo,
 		"StopHitStop", &UActionComponent::StopHitStop,
+		"StopLocalHitStop", &UActionComponent::StopLocalHitStop,
 		"StopHitSquash", &UActionComponent::StopHitSquash,
 		"StopKnockback", &UActionComponent::StopKnockback,
 		"StopSlomo", &UActionComponent::StopSlomo,
@@ -2849,6 +2851,10 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		"GetActionComponent", [](AActor& Actor)
 	{
 		return Actor.GetComponentByClass<UActionComponent>();
+	},
+		"AddActionComponent", [](AActor& Actor) -> UActionComponent*
+	{
+		return Actor.AddComponent<UActionComponent>();
 	},
 
 		"GetSkeletalMeshComponent", [](AActor& Actor)

@@ -44,9 +44,16 @@ function BeginPlay()
         Component = this,
         Config = PlayerConfig.Create(),
         State = "Locomotion",
+        HP = PlayerConfig.Default.Combat.MaxHP,
+        MaxHP = PlayerConfig.Default.Combat.MaxHP,
         UltimateGauge = 0,
         MaxUltimateGauge = PlayerConfig.Default.Combat.MaxUltimateGauge,
         CurrentThreat = nil,
+        IsDead = false,
+        InvincibleUntil = 0.0,
+        DodgeInvincibleUntil = 0.0,
+        PerfectDodgeConsumedUntil = 0.0,
+        RecentHitIds = {},
         IsUltimateRunning = false,
         IsInUltimateMode = false,
         PendingActionEvents = {}
@@ -67,7 +74,8 @@ function EndPlay()
     print("[EndPlay] " .. obj.UUID)
 end
 
-function OnOverlap(OtherActor)
+function OnOverlap(OtherActor, OverlappedComponent, OtherComp)
+    CombatContext.TryResolvePlayerOverlapHit(GetPlayerCtx(nil), OtherActor, OverlappedComponent, OtherComp)
 end
 
 function Tick(dt)
