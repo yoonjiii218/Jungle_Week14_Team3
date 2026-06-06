@@ -17,23 +17,41 @@ function BossAttacks.Init(ctx)
     Hitbox        = require("Boss/BossHitbox")
 end
 
--- 공통 판정 + 로그 (1단계: print 만, 데미지 없음)
--- 퍼펙트 회피 판정은 플레이어가 함 (회피 무적 중 피격 = 퍼펙트).
--- 보스는 "맞았다"만 판단하고, 무적 여부/무효 처리는 플레이어 책임.
-local function ResolveHit(tag, zone)
+-- 공통 판정 + CombatContext Hit Resolution.
+-- Hitbox는 "닿았는가"만 판단하고, 실제 HP 감소/무적/퍼펙트 회피/슬로모는 CombatContext가 처리한다.
+local function ResolveHit(tag, zone, damage, hitStopDuration)
     -- 죽은 보스의 공격은 판정 무효
     if ctx_ref.bb.IsDead then
         if ctx_ref.BB.DEBUG then print("[" .. tag .. "] 판정 무효 (보스 사망)") end
         return false
     end
 
-    if Hitbox.Check(zone, ctx_ref.playerRef) then
-        if ctx_ref.BB.DEBUG then print("[" .. tag .. "] ★ HIT! 플레이어 맞음") end
-        return true
-    else
+    if not Hitbox.Check(zone, ctx_ref.playerRef) then
         if ctx_ref.BB.DEBUG then print("[" .. tag .. "] 빗나감 (플레이어 회피)") end
         return false
     end
+
+    local result = CombatContext.ApplyHit({
+        SourceActor = ctx_ref.obj,
+        SourceTeam = "Enemy",
+        TargetActor = ctx_ref.playerRef,
+        TargetTeam = "Player",
+        AttackId = tag,
+        AttackInstanceId = tag .. "_" .. tostring(World.GetGameTime()),
+        Damage = damage or 10,
+        CanPerfectDodge = true,
+        HitStopDuration = hitStopDuration or 0.04,
+    })
+
+    if ctx_ref.BB.DEBUG then
+        if result.Applied == true then
+            print("[" .. tag .. "] ★ HIT! 플레이어 데미지=" .. tostring(result.Damage))
+        else
+            print("[" .. tag .. "] HIT resolved as " .. tostring(result.Reason))
+        end
+    end
+
+    return result.Applied == true
 end
 
 -- ────────────────────────────────────────────
@@ -111,7 +129,7 @@ local function Pattern1_BasicSlash()
 
     -- 0.5초: 데미지 판정 (플레이어 위치 ∈ 부채꼴?) + 장판 제거
     Wait(BB.P1.HIT - BB.P1.WINDUP)
-    ResolveHit("P1", zone)
+    ResolveHit("P1", zone, BB.P1.DAMAGE, BB.P1.HITSTOP)
     Feedback.HideZone(zone)
     if BB.DEBUG then print("[P1] " .. BB.P1.HIT .. "s  판정 완료 + 장판 제거") end
 
@@ -145,7 +163,7 @@ local function Pattern2_DoubleSlash()
 
     -- 0.4초: 1타 판정 + 제거
     Wait(LEAD)
-    ResolveHit("P2-1", zone1)
+    ResolveHit("P2-1", zone1, BB.P2.DAMAGE1, BB.P2.HITSTOP)
     Feedback.HideZone(zone1)
     if BB.DEBUG then print("[P2] " .. BB.P2.HIT1 .. "s  1타 판정") end
 
@@ -161,7 +179,7 @@ local function Pattern2_DoubleSlash()
 
     -- 0.9초: 2타 판정 + 제거
     Wait(LEAD)
-    ResolveHit("P2-2", zone2)
+    ResolveHit("P2-2", zone2, BB.P2.DAMAGE2, BB.P2.HITSTOP)
     Feedback.HideZone(zone2)
     if BB.DEBUG then print("[P2] " .. BB.P2.HIT2 .. "s  2타 판정") end
 
@@ -209,7 +227,7 @@ local function Pattern3_HeavySmash()
 
     -- 1.4초: 데미지 판정 (플레이어 위치 ∈ 직사각형?) + 장판 제거
     Wait(BB.P3.HIT - BB.P3.FLASH)
-    ResolveHit("P3", zone)
+    ResolveHit("P3", zone, BB.P3.DAMAGE, BB.P3.HITSTOP)
     Feedback.HideZone(zone)
     if BB.DEBUG then print("[P3] " .. BB.P3.HIT .. "s  판정 완료 + 카메라 흔들림") end
 

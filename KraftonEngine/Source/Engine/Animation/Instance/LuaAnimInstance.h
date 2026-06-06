@@ -51,7 +51,7 @@ public:
 
 	bool InvokeLuaFunction(const FString& FunctionName);
 	bool InvokeLuaFunction(const FString& FunctionName, AActor* OtherActor, UPrimitiveComponent* HitComponent,
-		UPrimitiveComponent* OtherComp, const FHitResult& HitResult);
+		UPrimitiveComponent* OtherComp, const FHitResult& HitResult, float HitStopDuration = 0.0f);
 
 	void PostEditProperty(const char* PropertyName) override;
 	void Serialize(FArchive& Ar) override;

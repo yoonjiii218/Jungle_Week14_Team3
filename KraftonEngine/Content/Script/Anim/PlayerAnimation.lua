@@ -80,6 +80,7 @@ end
 
 local function BeginAttack(self, index)
     self.AttackIndex = index
+    self.AttackInstanceId = "PlayerAttack" .. tostring(index) .. "_" .. tostring(World.GetGameTime())
     self.ComboWindow = false
     self.ComboQueued = false
     self.AttackEnd = false
@@ -112,6 +113,7 @@ end
 local function BeginDashChargeAttack(self)
     ResetAttack(self, false)
     self.DashChargeAttackEnd = false
+    self.DashChargeAttackInstanceId = "PlayerDashChargeAttack_" .. tostring(World.GetGameTime())
     PlayerAction.BeginDashChargeAttack(PrepareActionCtx(self))
 end
 
@@ -462,17 +464,61 @@ function on_attack_end(self)
     end
 end
 
-function on_attack_hit(self, targetActor, hitboxComponent, targetComponent, hitResult)
-    PushPlayerEvent(self, {
-        Type = "AttackHit",
-        AttackIndex = self.AttackIndex,
+local function GetCombatConfig(self)
+    local playerCtx = GetPlayerCtx(self)
+    if playerCtx ~= nil and playerCtx.Config ~= nil and playerCtx.Config.Combat ~= nil then
+        return playerCtx.Config.Combat
+    end
+
+    return PlayerConfig.Default.Combat
+end
+
+local function BuildPlayerHitInfo(self, targetActor, hitboxComponent, targetComponent, hitResult, hitStopDuration)
+    local playerCtx = GetPlayerCtx(self)
+    local combatConfig = GetCombatConfig(self)
+    local attackIndex = self.AttackIndex or 0
+    local attackId = "PlayerAttack" .. tostring(attackIndex)
+    local attackInstanceId = self.AttackInstanceId or (attackId .. "_" .. tostring(World.GetGameTime()))
+    local damage = combatConfig.AttackDamages and combatConfig.AttackDamages[attackIndex] or 10
+    local gaugeDelta = combatConfig.AttackHitGaugeDelta or 0
+
+    if self.DashChargeAttackActive == true then
+        attackId = "PlayerDashChargeAttack"
+        attackInstanceId = self.DashChargeAttackInstanceId or (attackId .. "_" .. tostring(World.GetGameTime()))
+        damage = combatConfig.DashChargeAttackDamage or damage
+        gaugeDelta = combatConfig.DashChargeAttackGaugeDelta or gaugeDelta
+    elseif IsInUltimateMode(self) == true then
+        attackId = "PlayerUltimate"
+        attackInstanceId = "PlayerUltimate_" .. tostring(World.GetGameTime())
+        damage = combatConfig.UltimateDamage or damage
+        gaugeDelta = 0
+    end
+
+    return {
+        SourceActor = playerCtx and playerCtx.Owner or obj,
+        SourceTeam = "Player",
         TargetActor = targetActor,
+        TargetTeam = "Enemy",
+        AttackId = attackId,
+        AttackInstanceId = attackInstanceId,
+        AttackIndex = attackIndex,
+        Damage = damage,
+        GaugeDelta = gaugeDelta,
+        HitStopDuration = hitStopDuration,
         HitboxComponent = hitboxComponent,
         TargetComponent = targetComponent,
         HitResult = hitResult,
-    })
+    }
+end
 
-    print("on attack hit " .. targetActor:GetName())
+function on_attack_hit(self, targetActor, hitboxComponent, targetComponent, hitResult, hitStopDuration)
+    local result = CombatContext.ApplyHit(BuildPlayerHitInfo(self, targetActor, hitboxComponent, targetComponent, hitResult, hitStopDuration))
+
+    if result.Applied == true then
+        print("on attack hit " .. targetActor:GetName() .. " damage=" .. tostring(result.Damage))
+    else
+        print("on attack hit ignored " .. targetActor:GetName() .. " reason=" .. tostring(result.Reason))
+    end
 end
 
 function on_trail_activate(self)

@@ -463,6 +463,17 @@ function PlayerFeedback.HandlePlayerResult(ctx, result)
             if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
                 CameraManager.StartWaveShake(0.5)
             end
+        elseif event.Type == "PlayerHit" then
+            if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
+                CameraManager.StartWaveShake(0.35)
+            end
+        elseif event.Type == "AttackHit" then
+            -- AttackHitWindow 자체 hitstop은 C++ NotifyState가 처리한다.
+            -- 여기서는 이후 피격 VFX/UI/사운드를 붙일 수 있도록 이벤트만 한 곳에서 받는다.
+        elseif event.Type == "PlayerDead" then
+            if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
+                CameraManager.StartWaveShake(0.8)
+            end
         elseif event.Type == "UltimateStart" then
             StartCoroutine(function()
                 PlayerFeedback.BeginUltimate(ctx)
