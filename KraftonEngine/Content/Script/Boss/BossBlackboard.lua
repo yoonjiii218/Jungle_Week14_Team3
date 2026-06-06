@@ -35,29 +35,30 @@ BB.PERFECT = {
     SLOMO_SCALE    = 0.1,   -- 타임스케일 (0.1 = 10% 속도)
 }
 
--- ── 패턴 1: 단발 (heavy1, 애니 0.967s) — 옆으로 피하기
+-- ── 패턴 1: 단발 (HeavyCombo1) — 옆으로 피하기
+-- 타이밍은 애니 에셋의 FlashWarning / HitboxOpen 노티파이로 제어
 BB.P1 = {
-    WINDUP = 0.40,   -- 장판 번쩍(경고)
-    HIT    = 0.75,   -- 판정 — 경고~판정 0.35초 확보 (반응 가능)
-    TOTAL  = 1.35,   -- 애니 + 후딜(반격 타임)
+    DAMAGE   = 10,
+    HITSTOP  = 0.04,
+    RECOVERY = 0.60,   -- 피격 판정 후 후딜 (반격 타임)
 }
 
--- ── 패턴 2: 부채꼴 2연타 (heavy2~3, 애니 2.017s) — 뒤/타이밍 회피
--- HeavyCombo2: 0.000 ~ 1.050s / HeavyCombo3: 1.050 ~ 2.017s
+-- ── 패턴 2: 부채꼴 2연타 (HeavyCombo2 → HeavyCombo3) — 뒤/타이밍 회피
+-- 각 클립에 FlashWarning + HitboxOpen 노티파이 1쌍씩
 BB.P2 = {
-    HIT1        = 0.75,   -- 1타 판정 (HeavyCombo2 재생 중)
-    SECOND_WIND = 1.05,   -- 2타 장판 스폰 (HeavyCombo3 시작 시점에 맞춤, 기존 1.15)
-    HIT2        = 1.75,   -- 2타 판정 (HeavyCombo3 기준 0.70s 지점, 기존 1.80)
-    TOTAL       = 3.5,   -- 애니 끝(2.017) + 후딜 0.48초
-    FLASH_LEAD  = 0.35,   -- 번쩍~판정 0.35초
+    DAMAGE1  = 8,
+    DAMAGE2  = 12,
+    HITSTOP  = 0.04,
+    RECOVERY = 1.75,   -- 2타 판정 후 후딜
 }
 
--- ── 패턴 3: 차오름 강타 (light3~4, 애니 2.017s) — 차오름 보고 회피
+-- ── 패턴 3: 차오름 강타 (LightCombo3 → LightCombo4) — 차오름 보고 회피
+-- 노티파이: TrackEnd(회전 멈춤) → FlashWarning(섬광) → HitboxOpen(판정)
 BB.P3 = {
-    TRACK_END = 0.85,   -- 보스 회전 멈춤 (옆 공간 확보)
-    FLASH     = 1.20,   -- 섬광 — 판정 0.35초 전 (1.40→1.20)
-    HIT       = 1.55,   -- 판정 (차오름 1.55초 예고라 이미 여유)
-    TOTAL     = 2.80,
+    DAMAGE        = 25,
+    HITSTOP       = 0.08,
+    RECOVERY      = 1.25,    -- 피격 판정 후 후딜
+    FILL_DURATION = 1.55,    -- 장판 차오름 시각 연출 기준 시간 (VFX 튜닝용)
 }
 
 -- ── 장판(텔레그래프) 연출 수치 ──────────────

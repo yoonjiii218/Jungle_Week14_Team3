@@ -29,7 +29,7 @@ local SPRINT_PATH = ANIM_BASE .. "SamuraiAttack_Sprint.uasset"
 local LIGHT_COMBO_PATHS = {
     ANIM_BASE .. "SamuraiAttack_LightCombo1.uasset",
     ANIM_BASE .. "SamuraiAttack_LightCombo2.uasset",
-    ANIM_BASE .. "SamuraiAttack_LightCombo3.uasset",
+    ANIM_BASE .. "SamuraiAttack_DashStart.uasset",
     ANIM_BASE .. "SamuraiAttack_LightCombo4.uasset",
 }
 
@@ -374,20 +374,30 @@ function on_notify(self, name)
     elseif name == "DashEnd" then
         self.DashEnd = true
 
+    elseif name == "HitboxOpen" then
+        local bb = GetBB(self)
+        if bb then bb.HitboxOpen = true end
+
+    elseif name == "HitboxClose" then
+        local bb = GetBB(self)
+        if bb then bb.HitboxClose = true end
+
+    elseif name == "ZoneHide" then
+        local bb = GetBB(self)
+        if bb then bb.ZoneHide = true end
+
+    elseif name == "FlashWarning" then
+        local bb = GetBB(self)
+        if bb then bb.FlashWarning = true end
+
+    elseif name == "TrackEnd" then
+        local bb = GetBB(self)
+        if bb then bb.TrackEnd = true end
+
     elseif name == "TrailActivate" or name == "TrailOn" then
         -- TODO: BossFeedback 연동
-        -- BossFeedback.SetTrailActive(true)
 
     elseif name == "TrailDeactivate" or name == "TrailOff" then
         -- TODO: BossFeedback 연동
-        -- BossFeedback.SetTrailActive(false)
-
-    elseif name == "HitboxOpen" then
-        -- TODO: BossHitbox.Enable() 호출
-        -- Hitbox.Enable()
-
-    elseif name == "HitboxClose" then
-        -- TODO: BossHitbox.Disable() 호출
-        -- Hitbox.Disable()
     end
 end
