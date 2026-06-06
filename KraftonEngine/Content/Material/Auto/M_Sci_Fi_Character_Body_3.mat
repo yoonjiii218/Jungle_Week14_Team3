@@ -4,14 +4,37 @@
     "BlendState" : "Opaque",
     "Domain" : "Surface",
     "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
-    "GraphHash" : "8BE06A12E452C182",
+    "GraphHash" : "6483D1A4C1461054",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
-
+      "ToonRimColor" : {
+        "Type" : "Color",
+        "Value" : [1.000000, 0.000000, 0.000000, 1.000000]
+      },
+      "ToonRimStrength" : {
+        "Type" : "Float",
+        "Value" : [0.250000, 0.000000, 0.000000, 0.000000]
+      },
+      "ToonShadowStrength" : {
+        "Type" : "Float",
+        "Value" : [0.380000, 0.000000, 0.000000, 0.000000]
+      },
+      "ToonShadowTint" : {
+        "Type" : "Color",
+        "Value" : [0.750000, 0.450000, 0.450000, 1.000000]
+      },
+      "ToonSoftness" : {
+        "Type" : "Float",
+        "Value" : [0.025000, 0.000000, 0.000000, 0.000000]
+      },
+      "ToonThreshold" : {
+        "Type" : "Float",
+        "Value" : [0.500000, 0.000000, 0.000000, 0.000000]
+      }
     },
     "ReceiveLighting" : false,
     "RenderPass" : "Opaque",
-    "ShadingModel" : "DefaultLit",
+    "ShadingModel" : "Toon",
     "Textures" : {
       "DiffuseTexture" : {
         "Path" : "Content/Texture/T_Sci_Fi_Character_08_Body_Albedo_03.PNG",
@@ -21,30 +44,50 @@
   },
   "DepthStencilState" : "Default",
   "Domain" : "Surface",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/EB596CECF086C719_Surface_DefaultLit.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/EB596CECF086C719_Surface_Toon.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 2,
-        "LinkId" : 40,
+        "LinkId" : 49,
         "ToPinId" : 6
       }, {
         "FromPinId" : 4,
-        "LinkId" : 41,
+        "LinkId" : 50,
         "ToPinId" : 7
       }, {
-        "FromPinId" : 27,
-        "LinkId" : 46,
-        "ToPinId" : 32
-      }, {
         "FromPinId" : 8,
-        "LinkId" : 48,
-        "ToPinId" : 26
-      }, {
-        "FromPinId" : 50,
         "LinkId" : 51,
-        "ToPinId" : 37
+        "ToPinId" : 35
+      }, {
+        "FromPinId" : 15,
+        "LinkId" : 53,
+        "ToPinId" : 43
+      }, {
+        "FromPinId" : 17,
+        "LinkId" : 54,
+        "ToPinId" : 44
+      }, {
+        "FromPinId" : 19,
+        "LinkId" : 55,
+        "ToPinId" : 45
+      }, {
+        "FromPinId" : 21,
+        "LinkId" : 56,
+        "ToPinId" : 46
+      }, {
+        "FromPinId" : 23,
+        "LinkId" : 57,
+        "ToPinId" : 47
+      }, {
+        "FromPinId" : 25,
+        "LinkId" : 58,
+        "ToPinId" : 48
+      }, {
+        "FromPinId" : 60,
+        "LinkId" : 61,
+        "ToPinId" : 40
       }],
-    "NextId" : 52,
+    "NextId" : 62,
     "Nodes" : [{
         "DisplayName" : "Texture Object",
         "Mask" : "RGBA",
@@ -57,8 +100,8 @@
             "PinId" : 2,
             "Type" : "Texture2D"
           }],
-        "PosX" : -720.000000,
-        "PosY" : -80.000000,
+        "PosX" : -760.000000,
+        "PosY" : -120.000000,
         "TexturePath" : "Content/Texture/T_Sci_Fi_Character_08_Body_Albedo_03.PNG",
         "TextureSlot" : "Diffuse",
         "Type" : "TextureObject",
@@ -75,8 +118,8 @@
             "PinId" : 4,
             "Type" : "Float2"
           }],
-        "PosX" : -720.000000,
-        "PosY" : 120.000000,
+        "PosX" : -760.000000,
+        "PosY" : 90.000000,
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "TexCoord",
@@ -135,92 +178,212 @@
             "PinId" : 13,
             "Type" : "Float4"
           }],
-        "PosX" : -480.000000,
-        "PosY" : 0.000000,
+        "PosX" : -520.000000,
+        "PosY" : -40.000000,
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "TextureSample",
         "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
       }, {
-        "DisplayName" : "Component Mask",
-        "Mask" : "RGB",
-        "NodeId" : 25,
-        "ParameterName" : "",
+        "DisplayName" : "Scalar Parameter",
+        "Mask" : "RGBA",
+        "NodeId" : 14,
+        "ParameterName" : "ToonThreshold",
         "Pins" : [{
             "DisplayName" : "Value",
-            "Kind" : "Input",
-            "OwningNodeId" : 25,
-            "PinId" : 26,
-            "Type" : "Float4"
-          }, {
-            "DisplayName" : "Result",
             "Kind" : "Output",
-            "OwningNodeId" : 25,
-            "PinId" : 27,
-            "Type" : "Float3"
+            "OwningNodeId" : 14,
+            "PinId" : 15,
+            "Type" : "Float"
           }],
-        "PosX" : 0.000000,
-        "PosY" : 0.000000,
+        "PosX" : -520.000000,
+        "PosY" : 220.000000,
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
-        "Type" : "ComponentMask",
-        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+        "Type" : "ScalarParameter",
+        "Value" : [0.500000, 0.000000, 0.000000, 0.000000]
+      }, {
+        "DisplayName" : "Scalar Parameter",
+        "Mask" : "RGBA",
+        "NodeId" : 16,
+        "ParameterName" : "ToonSoftness",
+        "Pins" : [{
+            "DisplayName" : "Value",
+            "Kind" : "Output",
+            "OwningNodeId" : 16,
+            "PinId" : 17,
+            "Type" : "Float"
+          }],
+        "PosX" : -520.000000,
+        "PosY" : 330.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "ScalarParameter",
+        "Value" : [0.025000, 0.000000, 0.000000, 0.000000]
+      }, {
+        "DisplayName" : "Scalar Parameter",
+        "Mask" : "RGBA",
+        "NodeId" : 18,
+        "ParameterName" : "ToonShadowStrength",
+        "Pins" : [{
+            "DisplayName" : "Value",
+            "Kind" : "Output",
+            "OwningNodeId" : 18,
+            "PinId" : 19,
+            "Type" : "Float"
+          }],
+        "PosX" : -520.000000,
+        "PosY" : 440.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "ScalarParameter",
+        "Value" : [0.380000, 0.000000, 0.000000, 0.000000]
+      }, {
+        "DisplayName" : "Color Parameter",
+        "Mask" : "RGBA",
+        "NodeId" : 20,
+        "ParameterName" : "ToonShadowTint",
+        "Pins" : [{
+            "DisplayName" : "Color",
+            "Kind" : "Output",
+            "OwningNodeId" : 20,
+            "PinId" : 21,
+            "Type" : "Color"
+          }],
+        "PosX" : -520.000000,
+        "PosY" : 550.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "ColorParameter",
+        "Value" : [0.750000, 0.450000, 0.450000, 1.000000]
+      }, {
+        "DisplayName" : "Color Parameter",
+        "Mask" : "RGBA",
+        "NodeId" : 22,
+        "ParameterName" : "ToonRimColor",
+        "Pins" : [{
+            "DisplayName" : "Color",
+            "Kind" : "Output",
+            "OwningNodeId" : 22,
+            "PinId" : 23,
+            "Type" : "Color"
+          }],
+        "PosX" : -520.000000,
+        "PosY" : 680.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "ColorParameter",
+        "Value" : [1.000000, 0.000000, 0.000000, 1.000000]
+      }, {
+        "DisplayName" : "Scalar Parameter",
+        "Mask" : "RGBA",
+        "NodeId" : 24,
+        "ParameterName" : "ToonRimStrength",
+        "Pins" : [{
+            "DisplayName" : "Value",
+            "Kind" : "Output",
+            "OwningNodeId" : 24,
+            "PinId" : 25,
+            "Type" : "Float"
+          }],
+        "PosX" : -520.000000,
+        "PosY" : 810.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "ScalarParameter",
+        "Value" : [0.250000, 0.000000, 0.000000, 0.000000]
       }, {
         "DisplayName" : "Material Output",
         "Mask" : "RGBA",
-        "NodeId" : 31,
+        "NodeId" : 26,
         "ParameterName" : "",
         "Pins" : [{
             "DisplayName" : "BaseColor",
             "Kind" : "Input",
-            "OwningNodeId" : 31,
-            "PinId" : 32,
+            "OwningNodeId" : 26,
+            "PinId" : 35,
             "Type" : "Float3"
           }, {
             "DisplayName" : "Normal",
             "Kind" : "Input",
-            "OwningNodeId" : 31,
-            "PinId" : 33,
+            "OwningNodeId" : 26,
+            "PinId" : 36,
             "Type" : "Float3"
           }, {
             "DisplayName" : "Roughness",
             "Kind" : "Input",
-            "OwningNodeId" : 31,
-            "PinId" : 34,
+            "OwningNodeId" : 26,
+            "PinId" : 37,
             "Type" : "Float"
           }, {
             "DisplayName" : "Metallic",
             "Kind" : "Input",
-            "OwningNodeId" : 31,
-            "PinId" : 35,
+            "OwningNodeId" : 26,
+            "PinId" : 38,
             "Type" : "Float"
           }, {
             "DisplayName" : "Emissive",
             "Kind" : "Input",
-            "OwningNodeId" : 31,
-            "PinId" : 36,
+            "OwningNodeId" : 26,
+            "PinId" : 39,
             "Type" : "Float3"
           }, {
             "DisplayName" : "Opacity",
             "Kind" : "Input",
-            "OwningNodeId" : 31,
-            "PinId" : 37,
+            "OwningNodeId" : 26,
+            "PinId" : 40,
             "Type" : "Float"
           }, {
             "DisplayName" : "OpacityMask",
             "Kind" : "Input",
-            "OwningNodeId" : 31,
-            "PinId" : 38,
+            "OwningNodeId" : 26,
+            "PinId" : 41,
             "Type" : "Float"
           }, {
             "DisplayName" : "RefractionOffset",
             "Kind" : "Input",
-            "OwningNodeId" : 31,
-            "PinId" : 39,
+            "OwningNodeId" : 26,
+            "PinId" : 42,
             "Type" : "Float2"
+          }, {
+            "DisplayName" : "ToonThreshold",
+            "Kind" : "Input",
+            "OwningNodeId" : 26,
+            "PinId" : 43,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "ToonSoftness",
+            "Kind" : "Input",
+            "OwningNodeId" : 26,
+            "PinId" : 44,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "ToonShadowStrength",
+            "Kind" : "Input",
+            "OwningNodeId" : 26,
+            "PinId" : 45,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "ToonShadowTint",
+            "Kind" : "Input",
+            "OwningNodeId" : 26,
+            "PinId" : 46,
+            "Type" : "Float3"
+          }, {
+            "DisplayName" : "ToonRimColor",
+            "Kind" : "Input",
+            "OwningNodeId" : 26,
+            "PinId" : 47,
+            "Type" : "Float3"
+          }, {
+            "DisplayName" : "ToonRimStrength",
+            "Kind" : "Input",
+            "OwningNodeId" : 26,
+            "PinId" : 48,
+            "Type" : "Float"
           }],
-        "PosX" : 260.000000,
-        "PosY" : 80.000000,
+        "PosX" : -160.000000,
+        "PosY" : 140.000000,
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "Output",
@@ -228,17 +391,17 @@
       }, {
         "DisplayName" : "ConstantFloat",
         "Mask" : "RGBA",
-        "NodeId" : 49,
+        "NodeId" : 59,
         "ParameterName" : "",
         "Pins" : [{
             "DisplayName" : "Value",
             "Kind" : "Output",
-            "OwningNodeId" : 49,
-            "PinId" : 50,
+            "OwningNodeId" : 59,
+            "PinId" : 60,
             "Type" : "Float"
           }],
-        "PosX" : 59.000000,
-        "PosY" : 265.000000,
+        "PosX" : -322.000000,
+        "PosY" : 200.000000,
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "ConstantFloat",
@@ -258,8 +421,8 @@
   "RasterizerState" : "SolidBackCull",
   "ReceiveLighting" : false,
   "RenderPass" : "Opaque",
-  "ShaderPath" : "Shaders/Generated/Materials/EB596CECF086C719_Surface_DefaultLit.hlsl",
-  "ShadingModel" : "DefaultLit",
+  "ShaderPath" : "Shaders/Generated/Materials/EB596CECF086C719_Surface_Toon.hlsl",
+  "ShadingModel" : "Toon",
   "Textures" : {
     "DiffuseTexture" : "D:/ГОТОВЫЕ МОДЕЛИ ДЛЯ  UE4/Sci_Fi_Character_08/Textures/Body/T_Sci_Fi_Character_08_Body_Albedo_03.tga",
     "NormalTexture" : "D:/ГОТОВЫЕ МОДЕЛИ ДЛЯ  UE4/Sci_Fi_Character_08/Textures/Body/T_Sci_Fi_Character_08_Body_Normals.tga"
