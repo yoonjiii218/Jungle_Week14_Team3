@@ -128,8 +128,8 @@ PlayerConfig.Default = {
                 "Content/Animation/Samurai_Player/SamuraiAttack5.uasset",
             },
 
-            DashPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1_Start.uasset",
-            DashChargingPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1_Start.uasset",
+            DashPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1_Start2.uasset",
+            DashChargingPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1_Start2.uasset",
             DashChargeAttackPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1.uasset",
             UltimateAttackPath = "Content/Animation/Samurai_Player/SamuraiAttackUltimate.uasset",
 
