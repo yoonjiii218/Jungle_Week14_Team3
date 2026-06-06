@@ -1,4 +1,4 @@
-// Generated from Content/Material/VFX/M_Lightning.mat
+// Generated from Content/Material/VFX/M_SwordTrail_Color.mat
 // Domain: ParticleSprite
 
 #include "Common/ConstantBuffers.hlsli"
@@ -31,6 +31,12 @@ struct FMaterialResult
 
 Texture2D Tex_Diffuse : register(t0);
 
+cbuffer PerMaterial : register(b3)
+{
+    float Param_Intensity;
+    float3 _Pad0;
+};
+
 struct FMaterialEvalResult
 {
     FMaterialResult Material;
@@ -44,10 +50,14 @@ FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
     float4 n_3 = Tex_Diffuse.Sample(LinearWrapSampler, Input.UV0);
     float4 n_12 = Input.ParticleColor;
     float3 n_19 = ((n_3).rgb * (n_12).rgb);
+    float3 n_23 = (n_19 * float3((n_12).a, (n_12).a, (n_12).a));
+    float n_27 = Param_Intensity;
+    float3 n_29 = (n_23 * float3(n_27, n_27, n_27));
+    float n_33 = ((n_3).a * (n_12).a);
     FMaterialResult Result;
-    Result.Color = n_19;
-    Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = (n_3).x;
+    Result.Color = float3(0, 0, 0);
+    Result.Emissive = n_29;
+    Result.Opacity = n_33;
     Result.UVOffset = float2(0, 0);
     FMaterialEvalResult Eval;
     Eval.Material = Result;

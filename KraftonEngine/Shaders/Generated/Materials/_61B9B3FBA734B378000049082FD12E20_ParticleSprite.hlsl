@@ -53,6 +53,9 @@ FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
     float n_37 = Param_Opacity;
     float2 n_3 = Input.UV0;
     float4 n_5 = Tex_Custom0.Sample(LinearWrapSampler, n_3);
+    float n_86 = (n_37 * (n_5).a);
+    float4 n_74 = Input.ParticleColor;
+    float n_90 = (n_86 * (n_74).a);
     float2 n_14 = (n_5).rg;
     float n_17 = 2.000000f;
     float2 n_19 = (n_14 * float2(n_17, n_17));
@@ -60,14 +63,16 @@ FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
     float2 n_25 = (n_19 - float2(n_23, n_23));
     float n_29 = Param_RefractionStrength;
     float2 n_31 = (n_25 * float2(n_29, n_29));
+    float2 n_68 = (n_31 * float2((n_74).a, (n_74).a));
+    float2 n_82 = (n_68 * float2((n_5).a, (n_5).a));
     FMaterialResult Result;
     Result.Color = n_35;
     Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = n_37;
+    Result.Opacity = n_90;
     Result.UVOffset = float2(0, 0);
     FMaterialEvalResult Eval;
     Eval.Material = Result;
-    Eval.RefractionOffset = n_31;
+    Eval.RefractionOffset = n_82;
     Eval.RefractionEnabled = 1.0f;
     Eval._Pad = 0.0f;
     return Eval;
@@ -162,7 +167,8 @@ float4 PS(PS_Input_MaterialParticle input) : SV_TARGET
     FMaterialEvalResult Eval = EvaluateMaterialWithRefraction(MaterialInput);
     FMaterialResult Result = Eval.Material;
     float4 FinalColor = float4(Result.Color + Result.Emissive, Result.Opacity);
-    clip(FinalColor.a - 0.01f);
+    float ClipThreshold = Eval.RefractionEnabled >= 0.5f ? 0.0001f : 0.01f;
+    clip(FinalColor.a - ClipThreshold);
 
     float4 ForegroundColor = ApplyFogTranslucent(FinalColor, input.worldPos, CameraWorldPos);
     if (Eval.RefractionEnabled < 0.5f)

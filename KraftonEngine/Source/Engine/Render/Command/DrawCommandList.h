@@ -77,5 +77,6 @@ private:
 		ID3D11DeviceContext* Ctx, FStateCache& Cache);
 
 	TArray<FDrawCommand> Commands;
+	uint64 NextSubmissionOrder = 0;
 	uint32 PassOffsets[(uint32)ERenderPass::MAX + 1] = {};
 };

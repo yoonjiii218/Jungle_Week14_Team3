@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "Opaque",
     "Domain" : "Surface",
-    "GeneratorVersion" : "GeneratedMaterialPass_v7_ParticleBeamTrailRefraction",
+    "GeneratorVersion" : "GeneratedMaterialPass_v8_RefractionAlphaMask",
     "GraphHash" : "6852DD75FFED3F41",
     "GraphShaderMode" : "Generated",
     "Parameters" : {

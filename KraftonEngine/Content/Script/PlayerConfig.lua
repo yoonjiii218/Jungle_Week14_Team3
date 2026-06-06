@@ -139,7 +139,7 @@ PlayerConfig.Default = {
             AttackBlendOut = 0.15,
             AttackPlayRate = 1.5,
             AttackPlayRates = {
-                3,
+                2,
                 3,
                 3,
                 3,

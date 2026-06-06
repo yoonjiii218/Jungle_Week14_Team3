@@ -76,7 +76,8 @@ float4 PS(MaterialSurfaceVSOutput input) : SV_TARGET
 
     const float3 N = ApplyGeneratedSurfaceNormal(input, Result);
     float4 FinalColor = float4(ComputeGeneratedSurfaceLighting(input.worldPos, input.position, N, Result), Result.Opacity);
-    clip(FinalColor.a - 0.01f);
+    float ClipThreshold = Eval.RefractionEnabled >= 0.5f ? 0.0001f : 0.01f;
+    clip(FinalColor.a - ClipThreshold);
 
     // Without RefractionOffset, keep the existing hardware alpha blending path.
     if (Eval.RefractionEnabled < 0.5f)

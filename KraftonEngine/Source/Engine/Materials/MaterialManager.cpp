@@ -153,7 +153,7 @@ namespace
 		}
 	}
 
-    constexpr const char* MaterialGraphGeneratorVersion = "GeneratedMaterialPass_v7_ParticleBeamTrailRefraction";
+    constexpr const char* MaterialGraphGeneratorVersion = "GeneratedMaterialPass_v8_RefractionAlphaMask";
 }
 
 void FMaterialManager::ScanMaterialAssets()
