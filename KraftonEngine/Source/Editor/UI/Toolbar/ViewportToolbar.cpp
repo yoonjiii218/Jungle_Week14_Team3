@@ -81,6 +81,34 @@ static bool DrawToolbarIconButton(const char* Id, EToolbarIcon Icon, const char*
 	const ImVec2 IconSize = GetToolbarIconRenderSize(Icon, FallbackSize, MaxIconSize);
 	return ImGui::ImageButton(Id, reinterpret_cast<ImTextureID>(IconSRV), IconSize);
 }
+
+static float ClampToolbarFloat(float Value, float MinValue, float MaxValue)
+{
+	if (Value < MinValue) return MinValue;
+	if (Value > MaxValue) return MaxValue;
+	return Value;
+}
+
+static void DrawSliderInputFloat(const char* Label, float& Value, float MinValue, float MaxValue, const char* Format)
+{
+	ImGui::PushID(Label);
+
+	ImGui::SetNextItemWidth(96.0f);
+	ImGui::SliderFloat("##Slider", &Value, MinValue, MaxValue, Format);
+	Value = ClampToolbarFloat(Value, MinValue, MaxValue);
+
+	ImGui::SameLine(0.0f, 4.0f);
+	ImGui::SetNextItemWidth(58.0f);
+	if (ImGui::InputFloat("##Input", &Value, 0.0f, 0.0f, Format))
+	{
+		Value = ClampToolbarFloat(Value, MinValue, MaxValue);
+	}
+
+	ImGui::SameLine(0.0f, 4.0f);
+	ImGui::TextUnformatted(Label);
+
+	ImGui::PopID();
+}
 #pragma endregion
 
 #pragma region LeftRight Section Helper
@@ -613,16 +641,12 @@ void FViewportToolbar::RenderShowFlags(const FToolbarRenderState& State)
 		if (RenderOptions.ShowFlags.bBloom)
 		{
 			ImGui::Indent();
-			ImGui::SetNextItemWidth(140.0f);
-			ImGui::SliderFloat("Bloom Threshold", &RenderOptions.BloomThreshold, 0.0f, 10.0f, "%.2f");
-			ImGui::SetNextItemWidth(140.0f);
-			ImGui::SliderFloat("Bloom Intensity", &RenderOptions.BloomIntensity, 0.0f, 3.0f, "%.2f");
-			ImGui::SetNextItemWidth(140.0f);
-			ImGui::SliderFloat("Bloom Radius", &RenderOptions.BloomRadius, 0.0f, 8.0f, "%.2f");
+			DrawSliderInputFloat("Bloom Threshold", RenderOptions.BloomThreshold, 0.0f, 10.0f, "%.2f");
+			DrawSliderInputFloat("Bloom Intensity", RenderOptions.BloomIntensity, 0.0f, 3.0f, "%.2f");
+			DrawSliderInputFloat("Bloom Radius", RenderOptions.BloomRadius, 0.0f, 8.0f, "%.2f");
 			ImGui::Unindent();
 		}
-		ImGui::SetNextItemWidth(140.0f);
-		ImGui::SliderFloat("Exposure", &RenderOptions.Exposure, 0.1f, 5.0f, "%.2f");
+		DrawSliderInputFloat("Exposure", RenderOptions.Exposure, 0.1f, 5.0f, "%.2f");
 		ImGui::EndDisabled();
 		if (!RenderOptions.ShowFlags.bGammaCorrection)
 		{

@@ -4,12 +4,12 @@
     "BlendState" : "Additive",
     "Domain" : "ParticleSprite",
     "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
-    "GraphHash" : "6E0C2CE3855C8387",
+    "GraphHash" : "D6E98DB2467C0C00",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
       "Intensity" : {
         "Type" : "Float",
-        "Value" : [200.000000, 0.000000, 0.000000, 0.000000]
+        "Value" : [50.000000, 0.000000, 0.000000, 0.000000]
       }
     },
     "ReceiveLighting" : false,
@@ -283,7 +283,7 @@
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "ScalarParameter",
-        "Value" : [200.000000, 0.000000, 0.000000, 0.000000]
+        "Value" : [50.000000, 0.000000, 0.000000, 0.000000]
       }, {
         "DisplayName" : "Multiply",
         "Mask" : "RGBA",
