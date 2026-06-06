@@ -62,7 +62,7 @@ namespace ELightCullingSRVSlot
 namespace ESystemTexSlot
 {
 	constexpr uint32 SceneDepth = 16;          // t16: CopyResource된 Depth (R24_UNORM)
-	constexpr uint32 SceneColor = 17;          // t17: CopyResource된 SceneColor (R8G8B8A8_UNORM)
+	constexpr uint32 SceneColor = 17;          // t17: CopyResource된 HDR SceneColor (R16G16B16A16_FLOAT)
 	constexpr uint32 GBufferNormal = 18;       // t18: GBuffer World Normal (R16G16B16A16_FLOAT)
 	constexpr uint32 Stencil     = 19;         // t19: CopyResource된 Stencil (X24_G8_UINT)
 	constexpr uint32 CullingHeatmap = 20;      // t20: Tile Culling Heatmap (R8G8B8A8_UNORM)
@@ -73,6 +73,7 @@ namespace ESystemTexSlot
 	constexpr uint32 PointShadowDatas   = 25;  // t25: StructuredBuffer<FPointShadowDataGPU>
 	constexpr uint32 DOFCoC            = 26;  // t26: DOF CoC texture
 	constexpr uint32 DOFBlur           = 27;  // t27: DOF blur texture
+	constexpr uint32 Bloom             = 28;  // t28: Half-resolution HDR bloom texture
 
 	// 하위 호환용 별칭
 	constexpr uint32 ShadowMap = ShadowMapCSM;
@@ -269,7 +270,16 @@ struct FFXAAConstants
 struct FGammaCorrectionConstants
 {
 	float Gamma;
-	float _pad[3];
+	float BloomIntensity;
+	float Exposure;
+	float BloomRadius;
+};
+
+struct FBloomExtractConstants
+{
+	float BloomThreshold;
+	float BloomRadius;
+	float _pad[2];
 };
 
 struct FDOFConstants

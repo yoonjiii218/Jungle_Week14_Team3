@@ -61,6 +61,10 @@ public:
 	ID3D11RenderTargetView* GetDOFBlurRTV() const { return DOFBlurRTV; }
 	ID3D11ShaderResourceView* GetDOFBlurSRV() const { return DOFBlurSRV; }
 
+	ID3D11Texture2D* GetBloomTexture() const { return BloomTexture; }
+	ID3D11RenderTargetView* GetBloomRTV() const { return BloomRTV; }
+	ID3D11ShaderResourceView* GetBloomSRV() const { return BloomSRV; }
+
 	const D3D11_VIEWPORT& GetViewportRect() const { return ViewportRect; }
 
 private:
@@ -109,6 +113,11 @@ private:
 	ID3D11Texture2D* DOFBlurTexture = nullptr;
 	ID3D11RenderTargetView* DOFBlurRTV = nullptr;
 	ID3D11ShaderResourceView* DOFBlurSRV = nullptr;
+
+	// Half-resolution HDR bloom buffer
+	ID3D11Texture2D* BloomTexture = nullptr;
+	ID3D11RenderTargetView* BloomRTV = nullptr;
+	ID3D11ShaderResourceView* BloomSRV = nullptr;
 
 	D3D11_VIEWPORT ViewportRect = {};
 

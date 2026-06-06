@@ -135,6 +135,7 @@ void FShaderManager::Initialize(ID3D11Device* InDevice)
 	GetOrCreate(EShaderPath::Billboard, StartupError);
 	GetOrCreate(EShaderPath::HeightFog, StartupError);
 	GetOrCreate(EShaderPath::GammaCorrection, StartupError);
+	GetOrCreate(EShaderPath::BloomExtract, StartupError);
 	GetOrCreate(EShaderPath::DOFSetup, StartupError);
 	GetOrCreate(EShaderPath::DOFGather, StartupError);
 	GetOrCreate(EShaderPath::DOFRecombine, StartupError);

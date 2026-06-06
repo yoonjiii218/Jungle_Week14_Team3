@@ -18,7 +18,7 @@ FGammaCorrectionPass::FGammaCorrectionPass()
 bool FGammaCorrectionPass::BeginPass(const FPassContext& Ctx)
 {
 	const FFrameContext& Frame = Ctx.Frame;
-	if (!Frame.SceneColorCopyTexture || !Frame.ViewportRenderTexture || !Frame.SceneColorCopySRV)
+	if (!Frame.SceneColorCopyTexture || !Frame.ViewportRenderTexture || !Frame.SceneColorCopySRV || !Frame.BloomSRV)
 	{
 		return false;
 	}
@@ -31,6 +31,8 @@ bool FGammaCorrectionPass::BeginPass(const FPassContext& Ctx)
 
 	ID3D11ShaderResourceView* SceneColorSRV = Frame.SceneColorCopySRV;
 	DC->PSSetShaderResources(ESystemTexSlot::SceneColor, 1, &SceneColorSRV);
+	ID3D11ShaderResourceView* BloomSRV = Frame.BloomSRV;
+	DC->PSSetShaderResources(ESystemTexSlot::Bloom, 1, &BloomSRV);
 
 	Cache.bForceAll = true;
 	return true;
@@ -38,6 +40,7 @@ bool FGammaCorrectionPass::BeginPass(const FPassContext& Ctx)
 
 void FGammaCorrectionPass::EndPass(const FPassContext& Ctx)
 {
-	ID3D11ShaderResourceView* NullSRV = nullptr;
-	Ctx.Device.GetDeviceContext()->PSSetShaderResources(ESystemTexSlot::SceneColor, 1, &NullSRV);
+	ID3D11ShaderResourceView* NullSRVs[2] = { nullptr, nullptr };
+	Ctx.Device.GetDeviceContext()->PSSetShaderResources(ESystemTexSlot::SceneColor, 1, &NullSRVs[0]);
+	Ctx.Device.GetDeviceContext()->PSSetShaderResources(ESystemTexSlot::Bloom, 1, &NullSRVs[1]);
 }
