@@ -1,4 +1,4 @@
-// Generated from Content/Material/VFX/M_SwordTrail_Color.mat
+// Generated from Content/Material/Material_Emitter0_7.mat
 // Domain: ParticleSprite
 // ShadingModel: DefaultLit
 
@@ -30,14 +30,6 @@ struct FMaterialResult
     float2 UVOffset;
 };
 
-Texture2D Tex_Diffuse : register(t0);
-
-cbuffer PerMaterial : register(b3)
-{
-    float Param_Intensity;
-    float3 _Pad0;
-};
-
 struct FMaterialEvalResult
 {
     FMaterialResult Material;
@@ -48,19 +40,11 @@ struct FMaterialEvalResult
 
 FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
-    float4 n_76 = Tex_Diffuse.Sample(LinearWrapSampler, Input.UV0);
-    float4 n_3 = Tex_Diffuse.Sample(LinearWrapSampler, Input.UV0);
-    float3 n_67 = ((n_3).rgb * float3((n_3).a, (n_3).a, (n_3).a));
-    float4 n_12 = Input.ParticleColor;
-    float3 n_19 = (n_67 * (n_12).rgb);
-    float3 n_23 = (n_19 * float3((n_12).a, (n_12).a, (n_12).a));
-    float3 n_86 = (float3((n_76).r, (n_76).r, (n_76).r) * n_23);
-    float n_27 = Param_Intensity;
-    float3 n_29 = (n_86 * float3(n_27, n_27, n_27));
+    float4 n_1 = Input.ParticleColor;
     FMaterialResult Result;
-    Result.Color = float3(0, 0, 0);
-    Result.Emissive = n_29;
-    Result.Opacity = 1.0f;
+    Result.Color = (n_1).xyz;
+    Result.Emissive = float3(0, 0, 0);
+    Result.Opacity = (n_1).x;
     Result.UVOffset = float2(0, 0);
     FMaterialEvalResult Eval;
     Eval.Material = Result;

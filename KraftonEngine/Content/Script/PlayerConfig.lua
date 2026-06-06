@@ -24,9 +24,13 @@ PlayerConfig.Default = {
             3,
             3,
             3,
+            5,
             3,
+            7,
         },
         AttackStepForwardDurations = {
+            0.12,
+            0.12,
             0.12,
             0.12,
             0.12,
@@ -38,17 +42,61 @@ PlayerConfig.Default = {
         AttackTurnSpeed = 12.0,
     },
 
+    -- Attack-time soft lock-on.
+    -- Attack: only yaw assist. Dash/DashChargeAttack: lock the initial dash
+    -- direction to the target and keep moving straight through the target.
+    Targeting = {
+        Enabled = true,
+        TargetTags = {
+            "HitTarget",
+            "Enemy",
+            "Boss",
+        },
+        StickyTime = 0.45,
+        StickyScoreBonus = 0.15,
+
+        Attack = {
+            Enabled = true,
+            Range = 20.0,
+            ConeDeg = 360.0,
+            TurnDuration = 0.08,
+            TurnSpeed = 18.0,
+            LockDirection = false,
+        },
+
+        Dash = {
+            -- 이건 끄고 사용자 의도를 중시하는게 나을듯
+            Enabled = false,
+            Range = 8.5,
+            ConeDeg = 120.0,
+            TurnDuration = 0.06,
+            TurnSpeed = 36.0,
+            LockDirection = true,
+        },
+
+        DashChargeAttack = {
+            Enabled = true,
+            Range = 50.0,
+            ConeDeg = 360.0,
+            TurnDuration = 0.08,
+            TurnSpeed = 36.0,
+            LockDirection = true,
+        },
+    },
+
     Combat = {
         MaxHP = 100,
         MaxUltimateGauge = 100,
 
-        -- Player -> Enemy damage. AttackIndex 1~5 uses AttackDamages.
+        -- Player -> Enemy damage. AttackIndex 1~7 uses AttackDamages.
         AttackDamages = {
             8,
             10,
             12,
             14,
             18,
+            20,
+            24,
         },
         DashChargeAttackDamage = 30,
         UltimateDamage = 100,
@@ -121,15 +169,17 @@ PlayerConfig.Default = {
             JumpPath = "Content/Animation/Samurai_Player/SamuraiJump.uasset",
 
             AttackPaths = {
-                "Content/Animation/Samurai_Player/SamuraiAttack1.uasset",
-                "Content/Animation/Samurai_Player/SamuraiAttack2.uasset",
+                "Content/Animation/Samurai_Player_Advanced/Combo1.uasset",
+                "Content/Animation/Samurai_Player_Advanced/Combo2.uasset",
+                "Content/Animation/Samurai_Player_Advanced/Combo3.uasset",
+                "Content/Animation/Samurai_Player_Advanced/Combo4.uasset",
+                "Content/Animation/Samurai_Player_Advanced/Combo5.uasset",
                 "Content/Animation/Samurai_Player/SamuraiAttack3.uasset",
-                "Content/Animation/Samurai_Player/SamuraiAttack4.uasset",
-                "Content/Animation/Samurai_Player/SamuraiAttack5.uasset",
+                "Content/Animation/Samurai_Player_Advanced/Combo7.uasset",
             },
 
-            DashPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1_Start.uasset",
-            DashChargingPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1_Start.uasset",
+            DashPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1_Start2.uasset",
+            DashChargingPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1_Start2.uasset",
             DashChargeAttackPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1.uasset",
             UltimateAttackPath = "Content/Animation/Samurai_Player/SamuraiAttackUltimate.uasset",
 
@@ -143,11 +193,13 @@ PlayerConfig.Default = {
             AttackBlendOut = 0.15,
             AttackPlayRate = 1.5,
             AttackPlayRates = {
+                3,
+                2.5,
+                3,
                 2,
-                3,
-                3,
-                3,
-                3,
+                2,
+                2,
+                2,
             },
 
             DashBlendIn = 0.05,

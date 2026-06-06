@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "AlphaBlend",
     "Domain" : "ParticleSprite",
-    "GeneratorVersion" : "GeneratedMaterialPass_v8_RefractionAlphaMask",
+    "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
     "GraphHash" : "7739FE883FE13236",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
@@ -14,6 +14,7 @@
     },
     "ReceiveLighting" : false,
     "RenderPass" : "AlphaBlend",
+    "ShadingModel" : "DefaultLit",
     "Textures" : {
       "DiffuseTexture" : {
         "Path" : "Content/Texture/SwordTrail_Color_Mask_Core_RGBA.png",
@@ -23,7 +24,7 @@
   },
   "DepthStencilState" : "DepthReadOnly",
   "Domain" : "ParticleSprite",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/E872AC6A91D64D0F9CE4D94E7F4281C2_ParticleSprite.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/E872AC6A91D64D0F9CE4D94E7F4281C2_ParticleSprite_DefaultLit.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 2,
@@ -385,6 +386,7 @@
   "RasterizerState" : "SolidNoCull",
   "ReceiveLighting" : false,
   "RenderPass" : "AlphaBlend",
-  "ShaderPath" : "Shaders/Generated/Materials/E872AC6A91D64D0F9CE4D94E7F4281C2_ParticleSprite.hlsl",
+  "ShaderPath" : "Shaders/Generated/Materials/E872AC6A91D64D0F9CE4D94E7F4281C2_ParticleSprite_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Version" : 2
 }

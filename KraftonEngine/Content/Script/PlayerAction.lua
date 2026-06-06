@@ -3,6 +3,7 @@
 local PlayerAction = {}
 
 local PlayerConfig = require("PlayerConfig")
+local PlayerTargeting = require("PlayerTargeting")
 
 local function GetConfig(ctx)
     if ctx ~= nil and ctx.Config ~= nil then
@@ -150,6 +151,14 @@ function PlayerAction.Init(ctx, owner)
     ctx.StepForwardAppliedDistance = 0.0
     ctx.StepForwardDirection = nil
 
+    ctx.TargetAssistMode = nil
+    ctx.TargetAssistTarget = nil
+    ctx.TargetAssistDirection = nil
+    ctx.TargetAssistDistance = nil
+    ctx.TargetAssistLockedDirection = nil
+    ctx.TargetAssistEndTime = 0.0
+    ctx.TargetAssistKeepUntil = 0.0
+
     ResetDashInput(ctx)
 
     ctx.DashActive = false
@@ -235,16 +244,22 @@ local function GetAttackStepForwardDuration(actionConfig, attackIndex)
     return actionConfig.AttackStepForwardDuration or PlayerConfig.Default.Action.AttackStepForwardDuration
 end
 
-local function BeginStepForward(ctx, distance, duration)
+local function BeginStepForward(ctx, distance, duration, direction)
     local owner = GetOwner(ctx)
     if owner == nil then
         return
     end
 
-    local forward = PlayerAction.GetOwnerForward2D(ctx)
+    local forward = direction or PlayerAction.GetOwnerForward2D(ctx)
     if forward == nil then
         return
     end
+
+    forward.Z = 0.0
+    if forward:Length() <= 0.001 then
+        return
+    end
+    forward = forward:Normalized()
 
     if distance == nil or distance == 0.0 then
         return
@@ -277,7 +292,8 @@ function PlayerAction.StepDashChargeAttackForward(ctx)
     BeginStepForward(
         ctx,
         actionConfig.DashChargeAttackStepForwardDistance or PlayerConfig.Default.Action.DashChargeAttackStepForwardDistance,
-        actionConfig.DashChargeAttackStepForwardDuration or PlayerConfig.Default.Action.DashChargeAttackStepForwardDuration
+        actionConfig.DashChargeAttackStepForwardDuration or PlayerConfig.Default.Action.DashChargeAttackStepForwardDuration,
+        PlayerTargeting.GetAssistDirection(ctx)
     )
 end
 
@@ -411,7 +427,7 @@ function PlayerAction.FaceOwnerToDirection(ctx, dir)
     Reflection.Call(owner, "SetActorRotation", Vector(0.0, 0.0, targetYaw))
 end
 
-function PlayerAction.SmoothFaceOwnerToDirection(ctx, dir, dt)
+function PlayerAction.SmoothFaceOwnerToDirection(ctx, dir, dt, turnSpeed)
     local owner = GetOwner(ctx)
     if owner == nil or dir == nil or dt == nil then
         return
@@ -426,13 +442,35 @@ function PlayerAction.SmoothFaceOwnerToDirection(ctx, dir, dt)
     local targetYaw = math.atan2(dir.Y, dir.X) * 180.0 / math.pi
     local deltaYaw = (targetYaw - currentRot.Z + 180.0) % 360.0 - 180.0
     local actionConfig = GetActionConfig(ctx)
-    local alpha = dt * (actionConfig.AttackTurnSpeed or PlayerConfig.Default.Action.AttackTurnSpeed)
+    local alpha = dt * (turnSpeed or actionConfig.AttackTurnSpeed or PlayerConfig.Default.Action.AttackTurnSpeed)
     if alpha > 1.0 then
         alpha = 1.0
     end
     local nextYaw = currentRot.Z + deltaYaw * alpha
 
     Reflection.Call(owner, "SetActorRotation", Vector(currentRot.X, currentRot.Y, nextYaw))
+end
+
+function PlayerAction.BeginAttackAssist(ctx, attackIndex)
+    PlayerTargeting.BeginAssist(ctx, "Attack")
+end
+
+function PlayerAction.UpdateAttackAssist(ctx, dt)
+    if PlayerTargeting.IsAssistTurnActive(ctx) ~= true then
+        return false
+    end
+
+    local dir = PlayerTargeting.GetAssistDirection(ctx)
+    if dir == nil then
+        return false
+    end
+
+    PlayerAction.SmoothFaceOwnerToDirection(ctx, dir, dt, PlayerTargeting.GetTurnSpeed(ctx))
+    return true
+end
+
+function PlayerAction.EndAttackAssist(ctx)
+    PlayerTargeting.ClearAssist(ctx, false)
 end
 
 function PlayerAction.ApplyMoveInput(ctx)
@@ -528,6 +566,11 @@ function PlayerAction.BeginDash(ctx)
     SetMovementInputEnabled(ctx, false)
 
     local dashDir = PlayerAction.ResolveDashDirection(ctx)
+    local _, assistedDir = PlayerTargeting.BeginAssist(ctx, "Dash", dashDir)
+    if assistedDir ~= nil then
+        dashDir = assistedDir
+    end
+
     PlayerAction.FaceOwnerToDirection(ctx, dashDir)
     ctx.DashMoveDirection = dashDir
 
@@ -559,6 +602,7 @@ function PlayerAction.EndDash(ctx)
 
     ctx.DashMoveDirection = nil
     ctx.DashSlashMoveDirection = nil
+    PlayerTargeting.ClearAssist(ctx, false)
 
     SetMovementInputEnabled(ctx, true)
     PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashEnd" })
@@ -622,6 +666,13 @@ end
 function PlayerAction.BeginDashChargeAttack(ctx)
     SetMovementInputEnabled(ctx, false)
     StopMovementImmediately(ctx)
+
+    local aimDir = PlayerAction.GetOwnerForward2D(ctx) or PlayerAction.ResolveDashDirection(ctx)
+    local _, assistedDir = PlayerTargeting.BeginAssist(ctx, "DashChargeAttack", aimDir)
+    if assistedDir ~= nil then
+        PlayerAction.FaceOwnerToDirection(ctx, assistedDir)
+    end
+
     PlayerAction.StepDashChargeAttackForward(ctx)
 
     ctx.DashChargeAttackActive = true
@@ -635,6 +686,7 @@ function PlayerAction.EndDashChargeAttack(ctx)
     ctx.DashChargeAttackActive = false
     ctx.DashChargeAttackElapsed = 0.0
     ctx.DashChargeAttackEnd = false
+    PlayerTargeting.ClearAssist(ctx, false)
 
     SetMovementInputEnabled(ctx, true)
     PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargeAttackEnd" })
@@ -671,6 +723,7 @@ function PlayerAction.CancelDashActions(ctx, unlockMovement)
     ctx.DashChargeAttackActive = false
     ctx.DashChargeAttackElapsed = 0.0
     ctx.DashChargeAttackEnd = false
+    PlayerTargeting.ClearAssist(ctx, true)
 
     if ctx.DashPrevOrientRotationToMovement ~= nil then
         SetOrientRotationToMovement(ctx, ctx.DashPrevOrientRotationToMovement)
@@ -694,6 +747,12 @@ end
 
 function PlayerAction.UpdateDashChargeAttack(ctx, dt)
     ctx.DashChargeAttackElapsed = (ctx.DashChargeAttackElapsed or 0.0) + (dt or 0.0)
+
+    local dir = PlayerTargeting.GetAssistDirection(ctx)
+    if dir ~= nil and PlayerTargeting.IsAssistTurnActive(ctx) == true then
+        PlayerAction.SmoothFaceOwnerToDirection(ctx, dir, dt, PlayerTargeting.GetTurnSpeed(ctx))
+    end
+
     StopMovementImmediately(ctx)
 end
 

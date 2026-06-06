@@ -4,12 +4,12 @@
     "BlendState" : "Additive",
     "Domain" : "ParticleSprite",
     "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
-    "GraphHash" : "EA0B6C6B6F8722AC",
+    "GraphHash" : "3E90541F17A8AE24",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
       "Intensity" : {
         "Type" : "Float",
-        "Value" : [50.000000, 0.000000, 0.000000, 0.000000]
+        "Value" : [10.000000, 0.000000, 0.000000, 0.000000]
       }
     },
     "ReceiveLighting" : false,
@@ -17,7 +17,7 @@
     "ShadingModel" : "DefaultLit",
     "Textures" : {
       "DiffuseTexture" : {
-        "Path" : "Content/Texture/SwordTrail_Color_PinkGold_RGBA.png",
+        "Path" : "Content/Texture/SlashFX_SoftTofu/T_slash_02.png",
         "Slot" : "Diffuse"
       }
     }
@@ -43,10 +43,6 @@
         "LinkId" : 47,
         "ToPinId" : 25
       }, {
-        "FromPinId" : 26,
-        "LinkId" : 48,
-        "ToPinId" : 30
-      }, {
         "FromPinId" : 28,
         "LinkId" : 49,
         "ToPinId" : 31
@@ -66,8 +62,24 @@
         "FromPinId" : 70,
         "LinkId" : 73,
         "ToPinId" : 20
+      }, {
+        "FromPinId" : 75,
+        "LinkId" : 85,
+        "ToPinId" : 77
+      }, {
+        "FromPinId" : 26,
+        "LinkId" : 90,
+        "ToPinId" : 88
+      }, {
+        "FromPinId" : 89,
+        "LinkId" : 91,
+        "ToPinId" : 30
+      }, {
+        "FromPinId" : 80,
+        "LinkId" : 92,
+        "ToPinId" : 87
       }],
-    "NextId" : 74,
+    "NextId" : 93,
     "Nodes" : [{
         "DisplayName" : "Texture Object",
         "Mask" : "RGBA",
@@ -271,7 +283,7 @@
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "ScalarParameter",
-        "Value" : [50.000000, 0.000000, 0.000000, 0.000000]
+        "Value" : [10.000000, 0.000000, 0.000000, 0.000000]
       }, {
         "DisplayName" : "Multiply",
         "Mask" : "RGBA",
@@ -370,6 +382,114 @@
           }],
         "PosX" : -514.000000,
         "PosY" : -14.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "Multiply",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
+        "DisplayName" : "Texture Object",
+        "Mask" : "RGBA",
+        "NodeId" : 74,
+        "ParameterName" : "Diffuse",
+        "Pins" : [{
+            "DisplayName" : "Texture",
+            "Kind" : "Output",
+            "OwningNodeId" : 74,
+            "PinId" : 75,
+            "Type" : "Texture2D"
+          }],
+        "PosX" : -901.000000,
+        "PosY" : -370.000000,
+        "TexturePath" : "Content/Texture/SlashFX_SoftTofu/T_slash_02.png",
+        "TextureSlot" : "Diffuse",
+        "Type" : "TextureObject",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
+        "DisplayName" : "Texture Sample",
+        "Mask" : "RGBA",
+        "NodeId" : 76,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "Texture",
+            "Kind" : "Input",
+            "OwningNodeId" : 76,
+            "PinId" : 77,
+            "Type" : "Texture2D"
+          }, {
+            "DisplayName" : "UV",
+            "Kind" : "Input",
+            "OwningNodeId" : 76,
+            "PinId" : 78,
+            "Type" : "Float2"
+          }, {
+            "DisplayName" : "RGB",
+            "Kind" : "Output",
+            "OwningNodeId" : 76,
+            "PinId" : 79,
+            "Type" : "Float3"
+          }, {
+            "DisplayName" : "R",
+            "Kind" : "Output",
+            "OwningNodeId" : 76,
+            "PinId" : 80,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "G",
+            "Kind" : "Output",
+            "OwningNodeId" : 76,
+            "PinId" : 81,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "B",
+            "Kind" : "Output",
+            "OwningNodeId" : 76,
+            "PinId" : 82,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "A",
+            "Kind" : "Output",
+            "OwningNodeId" : 76,
+            "PinId" : 83,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "RGBA",
+            "Kind" : "Output",
+            "OwningNodeId" : 76,
+            "PinId" : 84,
+            "Type" : "Float4"
+          }],
+        "PosX" : -685.000000,
+        "PosY" : -370.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "TextureSample",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
+        "DisplayName" : "Multiply",
+        "Mask" : "RGBA",
+        "NodeId" : 86,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "A",
+            "Kind" : "Input",
+            "OwningNodeId" : 86,
+            "PinId" : 87,
+            "Type" : "Float4"
+          }, {
+            "DisplayName" : "B",
+            "Kind" : "Input",
+            "OwningNodeId" : 86,
+            "PinId" : 88,
+            "Type" : "Float4"
+          }, {
+            "DisplayName" : "Result",
+            "Kind" : "Output",
+            "OwningNodeId" : 86,
+            "PinId" : 89,
+            "Type" : "Float4"
+          }],
+        "PosX" : 27.000000,
+        "PosY" : -194.000000,
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "Multiply",

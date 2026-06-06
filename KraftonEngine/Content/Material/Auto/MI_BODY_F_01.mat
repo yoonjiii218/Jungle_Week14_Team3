@@ -4,7 +4,7 @@
     "BlendState" : "Opaque",
     "Domain" : "Surface",
     "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
-    "GraphHash" : "6E1DC716DAEECEBF",
+    "GraphHash" : "2ED345B156FD1AEF",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
       "ToonRimColor" : {
@@ -21,7 +21,7 @@
       },
       "ToonShadowTint" : {
         "Type" : "Color",
-        "Value" : [0.450000, 0.500000, 0.750000, 1.000000]
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
       },
       "ToonSoftness" : {
         "Type" : "Float",
@@ -250,12 +250,12 @@
             "PinId" : 21,
             "Type" : "Color"
           }],
-        "PosX" : -520.000000,
+        "PosX" : -512.000000,
         "PosY" : 550.000000,
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "ColorParameter",
-        "Value" : [0.450000, 0.500000, 0.750000, 1.000000]
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
       }, {
         "DisplayName" : "Color Parameter",
         "Mask" : "RGBA",
