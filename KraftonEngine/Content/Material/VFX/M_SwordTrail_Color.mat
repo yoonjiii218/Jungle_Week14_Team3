@@ -1,15 +1,15 @@
 {
-  "BlendState" : "AlphaBlend",
+  "BlendState" : "Additive",
   "Compiled" : {
-    "BlendState" : "AlphaBlend",
+    "BlendState" : "Additive",
     "Domain" : "ParticleSprite",
     "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
-    "GraphHash" : "82FEF8203D2071F9",
+    "GraphHash" : "EA0B6C6B6F8722AC",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
       "Intensity" : {
         "Type" : "Float",
-        "Value" : [1.400000, 0.000000, 0.000000, 0.000000]
+        "Value" : [50.000000, 0.000000, 0.000000, 0.000000]
       }
     },
     "ReceiveLighting" : false,
@@ -31,10 +31,6 @@
         "LinkId" : 43,
         "ToPinId" : 4
       }, {
-        "FromPinId" : 6,
-        "LinkId" : 44,
-        "ToPinId" : 20
-      }, {
         "FromPinId" : 13,
         "LinkId" : 45,
         "ToPinId" : 21
@@ -55,23 +51,23 @@
         "LinkId" : 49,
         "ToPinId" : 31
       }, {
-        "FromPinId" : 10,
-        "LinkId" : 50,
-        "ToPinId" : 34
-      }, {
-        "FromPinId" : 17,
-        "LinkId" : 51,
-        "ToPinId" : 35
-      }, {
         "FromPinId" : 32,
         "LinkId" : 52,
         "ToPinId" : 63
       }, {
-        "FromPinId" : 36,
-        "LinkId" : 53,
-        "ToPinId" : 64
+        "FromPinId" : 6,
+        "LinkId" : 71,
+        "ToPinId" : 68
+      }, {
+        "FromPinId" : 10,
+        "LinkId" : 72,
+        "ToPinId" : 69
+      }, {
+        "FromPinId" : 70,
+        "LinkId" : 73,
+        "ToPinId" : 20
       }],
-    "NextId" : 67,
+    "NextId" : 74,
     "Nodes" : [{
         "DisplayName" : "Texture Object",
         "Mask" : "RGBA",
@@ -275,7 +271,7 @@
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "ScalarParameter",
-        "Value" : [1.400000, 0.000000, 0.000000, 0.000000]
+        "Value" : [50.000000, 0.000000, 0.000000, 0.000000]
       }, {
         "DisplayName" : "Multiply",
         "Mask" : "RGBA",
@@ -302,36 +298,6 @@
           }],
         "PosX" : 120.000000,
         "PosY" : 20.000000,
-        "TexturePath" : "",
-        "TextureSlot" : "Diffuse",
-        "Type" : "Multiply",
-        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
-      }, {
-        "DisplayName" : "Multiply",
-        "Mask" : "RGBA",
-        "NodeId" : 33,
-        "ParameterName" : "",
-        "Pins" : [{
-            "DisplayName" : "A",
-            "Kind" : "Input",
-            "OwningNodeId" : 33,
-            "PinId" : 34,
-            "Type" : "Float4"
-          }, {
-            "DisplayName" : "B",
-            "Kind" : "Input",
-            "OwningNodeId" : 33,
-            "PinId" : 35,
-            "Type" : "Float4"
-          }, {
-            "DisplayName" : "Result",
-            "Kind" : "Output",
-            "OwningNodeId" : 33,
-            "PinId" : 36,
-            "Type" : "Float4"
-          }],
-        "PosX" : -120.000000,
-        "PosY" : 330.000000,
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "Multiply",
@@ -377,6 +343,36 @@
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "Output",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
+        "DisplayName" : "Multiply",
+        "Mask" : "RGBA",
+        "NodeId" : 67,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "A",
+            "Kind" : "Input",
+            "OwningNodeId" : 67,
+            "PinId" : 68,
+            "Type" : "Float4"
+          }, {
+            "DisplayName" : "B",
+            "Kind" : "Input",
+            "OwningNodeId" : 67,
+            "PinId" : 69,
+            "Type" : "Float4"
+          }, {
+            "DisplayName" : "Result",
+            "Kind" : "Output",
+            "OwningNodeId" : 67,
+            "PinId" : 70,
+            "Type" : "Float4"
+          }],
+        "PosX" : -514.000000,
+        "PosY" : -14.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "Multiply",
         "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
       }]
   },

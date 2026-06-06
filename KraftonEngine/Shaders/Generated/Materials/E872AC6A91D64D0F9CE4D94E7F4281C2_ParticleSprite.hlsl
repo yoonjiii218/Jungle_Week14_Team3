@@ -53,11 +53,10 @@ FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
     float3 n_23 = (n_19 * float3((n_12).a, (n_12).a, (n_12).a));
     float n_27 = Param_Intensity;
     float3 n_29 = (n_23 * float3(n_27, n_27, n_27));
-    float n_33 = ((n_3).a * (n_12).a);
     FMaterialResult Result;
     Result.Color = float3(0, 0, 0);
     Result.Emissive = n_29;
-    Result.Opacity = n_33;
+    Result.Opacity = 1.0f;
     Result.UVOffset = float2(0, 0);
     FMaterialEvalResult Eval;
     Eval.Material = Result;
