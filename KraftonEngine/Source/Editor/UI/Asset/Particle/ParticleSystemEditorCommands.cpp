@@ -253,7 +253,13 @@ void FParticleSystemEditorWidget::SyncEmitterUIState()
         return;
     }
 
-    if (SelectedEmitterIndex < 0 || SelectedEmitterIndex >= EmitterCount)
+    if (SelectedEmitterIndex < 0)
+    {
+        SelectedModuleIndex = -1;
+        return;
+    }
+
+    if (SelectedEmitterIndex >= EmitterCount)
     {
         SelectEmitter(0, -1);
     }

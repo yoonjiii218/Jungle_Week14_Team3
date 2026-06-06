@@ -1523,6 +1523,13 @@ void FParticleSystemEditorWidget::RenderEmittersPanel(float Width, float Height)
                     if (ImGui::BeginPopupContextWindow("##EmitterTypeDataCtx",
                             ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
                     {
+                        if (ImGui::MenuItem("Particle System Details", nullptr, SelectedEmitterIndex < 0))
+                        {
+                            SelectEmitter(-1, -1);
+                            bShowDetailsPanel = true;
+                        }
+                        ImGui::Separator();
+
                         ImGui::TextColored(PSE::DimTextV, "Emitter Type");
                         ImGui::Separator();
 
