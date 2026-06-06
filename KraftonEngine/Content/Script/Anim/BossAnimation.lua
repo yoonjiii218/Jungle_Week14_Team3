@@ -58,6 +58,9 @@ local DASH_BLEND_IN    = 0.08
 -- 기본 재생 속도
 local PLAY_RATE = 1.0
 
+-- 준비 모션(Idle1) fallback 최대 시간 — AttackEnd notify 누락 시 강제 전환
+local ATTACK_PREP_DURATION = 2.0
+
 -- 콤보 단별 애니메이션 길이 (초) — 실측값.
 -- "AttackEnd" notify 가 없을 때 이 길이만큼 재생 후 다음 단/복귀시키는 fallback.
 -- (notify 가 심어지면 notify 가 우선; 아래서 PLAY_RATE 로 나눠 실제 재생시간 보정)
@@ -96,22 +99,20 @@ local function ConsumeAnimSignal(self, bb)
 
     local kind = bb.AnimAttack
     local start = bb.AnimAttackStart or 1
-    local hits = bb.AnimAttackHits or 1
+    local hits  = bb.AnimAttackHits  or 1
 
-    bb.AnimAttack     = nil
+    bb.AnimAttack      = nil
     bb.AnimAttackStart = nil
-    bb.AnimAttackHits = nil
+    bb.AnimAttackHits  = nil
 
-    if kind == "light" then
-        self.MaxLightComboHits  = hits
-        self.LightAttackStartStage = start
-        self.LightAttackPressed = true
-    elseif kind == "heavy" then
-        self.MaxHeavyComboHits  = hits
-        self.HeavyAttackStartStage = start
-        self.HeavyAttackPressed = true
-    elseif kind == "dash" then
+    if kind == "dash" then
         self.DashSlashPressed = true
+    else
+        -- 콤보 직접 진입 대신 AttackPrep(Idle1) 경유
+        self.PendingAttackKind  = kind
+        self.PendingAttackStart = start
+        self.PendingAttackHits  = hits
+        self.AttackPrepPressed  = true
     end
 end
 
@@ -125,6 +126,12 @@ local function ResetAttack(self)
     self.DashEnd            = false
     self.DashStartDone      = false
     self.AttackTimer        = 0.0
+    self.AttackPrepPressed  = false
+    self.AttackPrepActive   = false
+    self.AttackPrepTimer    = 0.0
+    self.PendingAttackKind  = nil
+    self.PendingAttackStart = nil
+    self.PendingAttackHits  = nil
 end
 
 -- ──────────────────────────────────────────────────────────────────
@@ -150,7 +157,7 @@ function init(self)
 
     -- ── 이동 블렌드스페이스 (Idle → Walk → Sprint) ─────────────────
     local loco = Anim.create_blend_space_1d(0.0)
-    Anim.blend_space_1d_add_sample(loco, IDLE1_PATH,  0.0,          1.0, true)
+    Anim.blend_space_1d_add_sample(loco, IDLE2_PATH,  0.0,          1.0, true)
     Anim.blend_space_1d_add_sample(loco, WALK_PATH,   WALK_SPEED,   1.0, true)
     Anim.blend_space_1d_add_sample(loco, SPRINT_PATH, SPRINT_SPEED, 1.0, true)
     self.LocoBlendSpace = loco
@@ -171,39 +178,74 @@ function init(self)
             Anim.create_sequence_player(HEAVY_COMBO_PATHS[i], PLAY_RATE, false))
     end
 
-    -- ── 라이트 콤보 진입 분기 (start 단수로 바로 진입) ──
-    for i = 1, 4 do
-        Anim.sm_add_transition(top, "Locomotion", "LightCombo" .. i,
-            function()
-            if self.LightAttackPressed and self.LightAttackStartStage == i then
-                self.LightAttackPressed = false
-                BeginLightCombo(self, i) -- 해당 단수로 시작
+    -- ── 공격 준비 모션 (Idle1): ZoneShow 노티파이로 장판 스폰 타이밍 고정 ──
+    Anim.sm_add_state(top, "AttackPrep",
+        Anim.create_sequence_player(IDLE1_PATH, PLAY_RATE, false))
+
+    -- Locomotion → AttackPrep
+    Anim.sm_add_transition(top, "Locomotion", "AttackPrep",
+        function()
+            if self.AttackPrepPressed then
+                self.AttackPrepPressed = false
+                self.AttackPrepActive  = true
+                self.AttackPrepTimer   = 0.0
+                self.AttackEnd         = false
                 return true
             end
             return false
         end, ATTACK_BLEND_IN)
+
+    -- AttackPrep → LightCombo_i
+    for i = 1, 4 do
+        Anim.sm_add_transition(top, "AttackPrep", "LightCombo" .. i,
+            function()
+                if self.AttackEnd
+                    and self.PendingAttackKind  == "light"
+                    and self.PendingAttackStart == i then
+                    self.MaxLightComboHits  = self.PendingAttackHits
+                    self.PendingAttackKind  = nil
+                    self.AttackPrepActive   = false
+                    BeginLightCombo(self, i)
+                    return true
+                end
+                return false
+            end, ATTACK_BLEND_IN)
     end
 
-    -- ── 헤비 콤보 진입 분기 (start 단수로 바로 진입) ──
-   for i = 1, 5 do
-        Anim.sm_add_transition(top, "Locomotion", "HeavyCombo" .. i,
+    -- AttackPrep → HeavyCombo_i
+    for i = 1, 5 do
+        Anim.sm_add_transition(top, "AttackPrep", "HeavyCombo" .. i,
             function()
-            if self.HeavyAttackPressed and self.HeavyAttackStartStage == i then
-                self.HeavyAttackPressed = false
-                BeginHeavyCombo(self, i) -- 해당 단수로 시작
+                if self.AttackEnd
+                    and self.PendingAttackKind  == "heavy"
+                    and self.PendingAttackStart == i then
+                    self.MaxHeavyComboHits  = self.PendingAttackHits
+                    self.PendingAttackKind  = nil
+                    self.AttackPrepActive   = false
+                    BeginHeavyCombo(self, i)
+                    return true
+                end
+                return false
+            end, ATTACK_BLEND_IN)
+    end
+
+    -- AttackPrep → Locomotion: 이상 상태 안전 복귀
+    Anim.sm_add_transition(top, "AttackPrep", "Locomotion",
+        function()
+            if self.AttackEnd then
+                self.AttackPrepActive  = false
+                self.PendingAttackKind = nil
+                ResetAttack(self)
                 return true
             end
             return false
-        end, ATTACK_BLEND_IN)
-    end
+        end, ATTACK_BLEND_OUT)
 
     -- 대시
     Anim.sm_add_state(top, "DashStart",
         Anim.create_sequence_player(DASH_START_PATH, PLAY_RATE, false))
     Anim.sm_add_state(top, "DashSlash",
         Anim.create_sequence_player(DASH_SLASH_PATH, PLAY_RATE, false))
-
-    -- (라이트 콤보 진입은 위 start 단수 분기에서 처리 — 무조건 1단 진입은 제거)
 
     -- 라이트 콤보 체인: LightCombo_i → LightCombo_{i+1} or Locomotion
     for i = 1, 3 do
@@ -240,8 +282,6 @@ function init(self)
             end
             return false
         end, ATTACK_BLEND_OUT)
-
-    -- (헤비 콤보 진입은 위 start 단수 분기에서 처리 — 무조건 1단 진입은 제거)
 
     -- 헤비 콤보 체인: HeavyCombo_i → HeavyCombo_{i+1} or Locomotion
     for i = 1, 4 do
@@ -332,6 +372,18 @@ function update(self, dt)
     local bb = GetBB(self)
     ConsumeAnimSignal(self, bb)
 
+    -- AttackPrep fallback: AttackEnd notify 누락 시 ATTACK_PREP_DURATION 후 강제 전환
+    if self.AttackPrepActive then
+        self.AttackPrepTimer = (self.AttackPrepTimer or 0.0) + dt
+        if not self.AttackEnd then
+            if self.AttackPrepTimer >= ATTACK_PREP_DURATION then
+                self.AttackEnd = true
+            elseif bb ~= nil and not bb.ActionLock then
+                self.AttackEnd = true
+            end
+        end
+    end
+
     -- 콤보 진행 중이면 fallback 으로 단 종료/복귀를 보장한다.
     -- (애니 에셋에 "AttackEnd" notify 가 심어져 있으면 notify 가 먼저 와서 우선)
     local comboActive = self.LightComboIndex > 0 or self.HeavyComboIndex > 0
@@ -382,13 +434,17 @@ function on_notify(self, name)
         local bb = GetBB(self)
         if bb then bb.HitboxClose = true end
 
+    elseif name == "ZoneShow" then
+        local bb = GetBB(self)
+        if bb then bb.ZoneShow = true end
+
+    elseif name == "ZoneFlash" then
+        local bb = GetBB(self)
+        if bb then bb.ZoneFlash = true end
+
     elseif name == "ZoneHide" then
         local bb = GetBB(self)
         if bb then bb.ZoneHide = true end
-
-    elseif name == "FlashWarning" then
-        local bb = GetBB(self)
-        if bb then bb.FlashWarning = true end
 
     elseif name == "TrackEnd" then
         local bb = GetBB(self)

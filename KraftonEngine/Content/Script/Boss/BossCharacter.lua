@@ -28,11 +28,12 @@ local function InitBB()
     bb.IsDead = false                -- 사망 여부 (한 번만 처리)
 
     -- 노티파이 수신 플래그 (BossAnimation.on_notify → BossAttacks 코루틴)
-    bb.HitboxOpen   = false
-    bb.HitboxClose  = false
-    bb.ZoneHide     = false
-    bb.FlashWarning = false
-    bb.TrackEnd     = false
+    bb.ZoneShow    = false
+    bb.ZoneFlash   = false
+    bb.ZoneHide    = false
+    bb.HitboxOpen  = false
+    bb.HitboxClose = false
+    bb.TrackEnd    = false
     bb.ActiveZone   = nil
 end
 

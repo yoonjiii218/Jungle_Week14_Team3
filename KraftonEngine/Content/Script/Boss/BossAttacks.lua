@@ -146,31 +146,30 @@ end
 
 -- ════════════════════════════════════════════
 -- 패턴 1: 종베기 (HeavyCombo1)
--- 좁은 직사각형 장판 → 옆으로 피해야 회피 / 피한 뒤 측면 반격 유도
--- 타이밍: HeavyCombo1 에셋의 FlashWarning → HitboxOpen 노티파이로 제어
+-- 노티파이 순서: ZoneShow(준비모션) → ZoneFlash → ZoneHide → HitboxOpen → HitboxClose
 -- ════════════════════════════════════════════
 local function Pattern1_BasicSlash()
     local BB = ctx_ref.BB
     local bb = ctx_ref.bb
 
     BeginPattern("P1")
-    PlayMontage("BossVerticalSlash")
 
+    WaitForNotify("ZoneShow", 3.0)
     local zone = Feedback.ShowP1Zone(ctx_ref.playerRef)
     bb.ActiveZone = zone
-    if BB.DEBUG then print("[P1] 장판 스폰, FlashWarning 대기") end
+    if BB.DEBUG then print("[P1] ZoneShow → 장판 스폰") end
 
-    WaitForNotify("FlashWarning", 3.0)
+    WaitForNotify("ZoneFlash", 3.0)
     Feedback.FlashZone(zone)
-    if BB.DEBUG then print("[P1] FlashWarning 수신 → 번쩍임") end
+    if BB.DEBUG then print("[P1] ZoneFlash → 번쩍임") end
 
     WaitForNotify("ZoneHide", 3.0)
     Feedback.HideZone(zone)
     bb.ActiveZone = nil
-    if BB.DEBUG then print("[P1] ZoneHide 수신 → 장판 제거") end
+    if BB.DEBUG then print("[P1] ZoneHide → 장판 제거") end
 
     WaitForNotify("HitboxOpen", 3.0)
-    if BB.DEBUG then print("[P1] HitboxOpen 수신 → 판정 창 시작") end
+    if BB.DEBUG then print("[P1] HitboxOpen → 판정 창 시작") end
     local hit = false
     while not bb.HitboxClose do
         WaitFrame()
@@ -179,11 +178,9 @@ local function Pattern1_BasicSlash()
         end
     end
     bb.HitboxClose = false
-    if BB.DEBUG then print("[P1] HitboxClose 수신 → 판정 창 종료") end
+    if BB.DEBUG then print("[P1] HitboxClose → 판정 창 종료") end
 
     Wait(BB.P1.RECOVERY)
-    if BB.DEBUG then print("[P1] 후딜 종료") end
-
     EndPattern("P1", BB.PATTERN_COOLDOWN.AFTER_P1, nil)
 end
 
@@ -197,19 +194,19 @@ local function Pattern2_DoubleSlash()
     local bb = ctx_ref.bb
 
     BeginPattern("P2")
-    PlayMontage("BossDoubleSlash")
 
-    -- 1타: HeavyCombo2 클립의 FlashWarning → HitboxOpen
+    -- 1타: ZoneShow(준비모션) → ZoneFlash → ZoneHide → HitboxOpen → HitboxClose
+    WaitForNotify("ZoneShow", 3.0)
     local zone1 = Feedback.ShowFanZone(ctx_ref.playerRef)
     bb.ActiveZone = zone1
-    if BB.DEBUG then print("[P2] 1타 장판 스폰, FlashWarning 대기") end
+    if BB.DEBUG then print("[P2] ZoneShow → 1타 장판 스폰") end
 
-    WaitForNotify("FlashWarning", 3.0)
+    WaitForNotify("ZoneFlash", 3.0)
     Feedback.FlashZone(zone1)
 
     WaitForNotify("ZoneHide", 3.0)
     Feedback.HideZone(zone1)
-    if BB.DEBUG then print("[P2] 1타 ZoneHide 수신 → 장판 제거") end
+    if BB.DEBUG then print("[P2] 1타 ZoneHide → 장판 제거") end
 
     WaitForNotify("HitboxOpen", 3.0)
     local hit1 = false
@@ -222,19 +219,18 @@ local function Pattern2_DoubleSlash()
     bb.HitboxClose = false
     if BB.DEBUG then print("[P2] 1타 판정 완료") end
 
-    -- 2타: HeavyCombo3 클립의 FlashWarning → ZoneHide → HitboxOpen → HitboxClose
-    -- (클립 전환 직후 장판 스폰 — HeavyCombo3 진입 시 보스가 여전히 추적 중이므로 방향 갱신됨)
+    -- 2타: HeavyCombo3 진입 직후 스폰 (방향 갱신됨)
     local zone2 = Feedback.ShowFanZone(ctx_ref.playerRef)
     bb.ActiveZone = zone2
-    if BB.DEBUG then print("[P2] 2타 장판 스폰, FlashWarning 대기") end
+    if BB.DEBUG then print("[P2] 2타 장판 스폰") end
 
-    WaitForNotify("FlashWarning", 3.0)
+    WaitForNotify("ZoneFlash", 3.0)
     Feedback.FlashZone(zone2)
 
     WaitForNotify("ZoneHide", 3.0)
     Feedback.HideZone(zone2)
     bb.ActiveZone = nil
-    if BB.DEBUG then print("[P2] 2타 ZoneHide 수신 → 장판 제거") end
+    if BB.DEBUG then print("[P2] 2타 ZoneHide → 장판 제거") end
 
     WaitForNotify("HitboxOpen", 3.0)
     local hit2 = false
@@ -261,44 +257,37 @@ local function Pattern3_HeavySmash()
     local bb = ctx_ref.bb
 
     BeginPattern("P3")
-    PlayMontage("BossHeavySmash")
 
-    -- 직사각형 장판 스폰 + 차오름 시작
+    -- ZoneShow(준비모션)에서 장판 스폰 + 차오름 시작
+    WaitForNotify("ZoneShow", 3.0)
     local zone = Feedback.ShowRectZone(ctx_ref.playerRef)
     Feedback.FillZone(zone, 0.0)
     bb.ActiveZone = zone
-    if BB.DEBUG then print("[P3] 장판 스폰, 차오름 시작") end
+    if BB.DEBUG then print("[P3] ZoneShow → 장판 스폰, 차오름 시작") end
 
-    -- 차오름 코루틴: bb.ActiveZone이 유지되는 동안 장판을 점점 채움
-    -- HitboxOpen 후 메인 코루틴에서 bb.ActiveZone = nil 로 종료
     StartCoroutine(function()
         local t = 0.0
         while bb.ActiveZone == zone do
-            t = t + WaitFrame()   -- scaledDt 반환 (Slomo 보정됨)
+            t = t + WaitFrame()
             Feedback.FillZone(zone, math.min(t / BB.P3.FILL_DURATION, 0.99))
         end
     end)
 
-    -- 보스 회전 멈춤 (LightCombo3 클립의 TrackEnd 노티파이)
-    -- → 플레이어가 옆으로 피해 반격할 공간 보장
     WaitForNotify("TrackEnd", 3.0)
     bb.IsTracking = false
-    if BB.DEBUG then print("[P3] TrackEnd 수신 → 보스 회전 멈춤") end
+    if BB.DEBUG then print("[P3] TrackEnd → 보스 회전 멈춤") end
 
-    -- 섬광 (회피 신호, LightCombo3 or LightCombo4 의 FlashWarning 노티파이)
-    WaitForNotify("FlashWarning", 3.0)
+    WaitForNotify("ZoneFlash", 3.0)
     Feedback.FlashZone(zone)
-    if BB.DEBUG then print("[P3] FlashWarning 수신 → 섬광") end
+    if BB.DEBUG then print("[P3] ZoneFlash → 번쩍임") end
 
-    -- 장판 제거 (판정 전에 사라짐 — ZoneHide 노티파이)
     WaitForNotify("ZoneHide", 3.0)
     Feedback.HideZone(zone)
-    bb.ActiveZone = nil   -- 차오름 코루틴 종료 트리거
-    if BB.DEBUG then print("[P3] ZoneHide 수신 → 장판 제거") end
+    bb.ActiveZone = nil
+    if BB.DEBUG then print("[P3] ZoneHide → 장판 제거") end
 
-    -- 판정 창 (HitboxOpen ~ HitboxClose)
     WaitForNotify("HitboxOpen", 3.0)
-    if BB.DEBUG then print("[P3] HitboxOpen 수신 → 판정 창 시작") end
+    if BB.DEBUG then print("[P3] HitboxOpen → 판정 창 시작") end
     local hit = false
     while not bb.HitboxClose do
         WaitFrame()
@@ -307,12 +296,9 @@ local function Pattern3_HeavySmash()
         end
     end
     bb.HitboxClose = false
-    if BB.DEBUG then print("[P3] HitboxClose 수신 → 판정 창 종료") end
+    if BB.DEBUG then print("[P3] HitboxClose → 판정 창 종료") end
 
-    -- 긴 후딜: 이 구간이 플레이어 발도 대시/폭딜 타임
     Wait(BB.P3.RECOVERY)
-    if BB.DEBUG then print("[P3] 후딜 종료") end
-
     EndPattern("P3", BB.PATTERN_COOLDOWN.AFTER_P3, BB.HEAVY_ATTACK_COOLDOWN)
 end
 
