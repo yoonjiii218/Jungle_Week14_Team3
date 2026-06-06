@@ -2,10 +2,12 @@
 -- 순수 Lua 기하 판정 — 플레이어 위치가 장판(zone) 영역 안에 있는지 검사
 -- 물리/콜라이더/레이캐스트 없음. 좌표 계산만.
 --
--- zone 메타 (BossFeedback 이 채움): { kind, origin, yaw, ... }
---   kind = "rect" (직사각형, P3) / "fan" (부채꼴, P1)
---   origin = 장판 기준 보스 위치
+-- zone 메타 (BossFeedback 이 채움): { kind, origin, yaw, length, width, ... }
+--   kind   = "rect" (직사각형, P1·P3) / "fan" (부채꼴, P2)
+--   origin = 장판 기준 보스 위치  (rect·fan 공통)
 --   yaw    = 장판 방향(도)
+--   length = 판정 길이 (없으면 BB.FEEDBACK.ZONE_LENGTH fallback)
+--   width  = 판정 폭   (없으면 BB.FEEDBACK.ZONE_WIDTH  fallback)
 
 local BossHitbox = {}
 
@@ -17,12 +19,17 @@ function BossHitbox.Init(ctx)
 end
 
 -- 직사각형 판정: 보스→플레이어를 장판 방향(yaw) 기준 로컬좌표로 분해
---   전방거리 0 ~ LENGTH  &&  |좌우거리| <= WIDTH/2  → HIT
+--   전방거리 0 ~ length  &&  |좌우거리| <= width/2  → HIT
+--   zone.length / zone.width 를 우선 사용 (P1·P3 크기가 다르므로).
+--   없으면 BB.FEEDBACK.ZONE_LENGTH / ZONE_WIDTH 를 fallback.
 function BossHitbox.CheckRect(zone, target)
     if zone == nil or zone.origin == nil then return false end
     if not (target and target:IsValid()) then return false end
 
-    local F = ctx_ref.BB.FEEDBACK
+    local F      = ctx_ref.BB.FEEDBACK
+    local length = zone.length or F.ZONE_LENGTH
+    local width  = zone.width  or F.ZONE_WIDTH
+
     local origin = zone.origin
     local pp = target.Location
 
@@ -38,11 +45,11 @@ function BossHitbox.CheckRect(zone, target)
     local sideDist    = dx * rx + dy * ry   -- 좌우 투영
 
     return forwardDist >= 0.0
-       and forwardDist <= F.ZONE_LENGTH
-       and math.abs(sideDist) <= F.ZONE_WIDTH * 0.5
+       and forwardDist <= length
+       and math.abs(sideDist) <= width * 0.5
 end
 
--- 부채꼴 판정: 거리 <= RADIUS  &&  각도차 <= ANGLE/2  → HIT
+-- 부채꼴 판정 (P2 횡베기): 거리 <= FAN_RADIUS  &&  각도차 <= FAN_ANGLE/2  → HIT
 function BossHitbox.CheckFan(zone, target)
     if zone == nil or zone.origin == nil then return false end
     if not (target and target:IsValid()) then return false end
@@ -64,38 +71,15 @@ function BossHitbox.CheckFan(zone, target)
     return math.abs(diff) <= F.FAN_ANGLE * 0.5
 end
 
--- 중심 기준 박스 판정 (P2 가로 베기): center 기준 로컬좌표
---   |로컬X| <= LENGTH/2  &&  |로컬Y| <= WIDTH/2  → HIT
-function BossHitbox.CheckBox(zone, target)
-    if zone == nil or zone.center == nil then return false end
-    if not (target and target:IsValid()) then return false end
-
-    local F = ctx_ref.BB.FEEDBACK
-    local c  = zone.center
-    local pp = target.Location
-
-    local dx = pp.X - c.X
-    local dy = pp.Y - c.Y
-
-    local rad = zone.yaw * math.pi / 180.0
-    local fx, fy = math.cos(rad), math.sin(rad)
-    local rx, ry = -fy, fx
-
-    local localX = dx * fx + dy * fy   -- 길이축(가로)
-    local localY = dx * rx + dy * ry   -- 두께축(전후)
-
-    return math.abs(localX) <= F.P2_LENGTH * 0.5
-       and math.abs(localY) <= F.P2_WIDTH * 0.5
-end
 
 -- 통합: zone.kind 보고 자동 분기
+--   "rect" (P1 종베기, P3 내려찍기) → CheckRect (zone.length/width 우선)
+--   "fan"  (P2 횡베기)              → CheckFan
+--   그 외                           → CheckRect (안전 fallback)
 function BossHitbox.Check(zone, target)
     if zone == nil then return false end
     if zone.kind == "fan" then
         return BossHitbox.CheckFan(zone, target)
-    end
-    if zone.kind == "box" then
-        return BossHitbox.CheckBox(zone, target)
     end
     return BossHitbox.CheckRect(zone, target)
 end

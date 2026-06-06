@@ -62,7 +62,9 @@ BB.P3 = {
 
 -- ── 장판(텔레그래프) 연출 수치 ──────────────
 BB.FEEDBACK = {
-    DECAL_MATERIAL = "Content/Material/VFX/M_GroundCrack.mat",
+    -- 순수 흰색 데칼 머티리얼 — SetColorRGBA(=DecalColor)가 그대로 최종색이 됨.
+    -- ZONE_COLOR_* 값이 텍스처 패턴 없이 깔끔한 단색 장판으로 표시된다.
+    DECAL_MATERIAL = "Content/Material/VFX/M_WhiteZone.mat",
 
     -- P3 직사각형 장판 크기 (데칼 볼륨 OBB)
     ZONE_LENGTH   = 8.0,    -- 보스 앞으로 뻗는 길이
@@ -74,16 +76,15 @@ BB.FEEDBACK = {
     ZONE_COLOR_IDLE  = { 1.0, 0.0, 0.0, 0.4 },   -- 평소 흐릿한 빨강
     ZONE_COLOR_FLASH = { 1.0, 0.0, 0.0, 0.9 },   -- 번쩍임 (진해짐)
 
-    -- P1 부채꼴 장판 (가는 데칼 조각을 방사형으로 펼쳐서 근사)
-    FAN_ANGLE    = 80.0,   -- 총 중심각 (도)
-    FAN_SEGMENTS = 7,      -- 조각 개수 (많을수록 매끈, 무거움)
-    FAN_RADIUS   = 6.0,    -- 부채꼴 반지름 (조각 길이)
-    FAN_SEG_WIDTH = 1.6,   -- 조각 폭 (인접 조각과 겹치게 넉넉히 → 빈틈 방지)
+    -- P1 종베기 장판 (좁은 직사각형 → 옆으로 피해야 회피 성공)
+    P1_LENGTH = 5.0,   -- 보스 앞으로 뻗는 길이 (P3 8.0보다 짧게)
+    P1_WIDTH  = 1.5,   -- 폭 (좁을수록 옆 회피 유도)
 
-    -- P2 가로 베기 예고선 (보스 앞에 좌우로 긴 직사각형)
-    P2_DIST   = 4.0,   -- 보스 앞쪽으로 직사각형 중심까지 거리
-    P2_LENGTH = 9.0,   -- 가로 길이 (좌우로 김 = 베는 궤적)
-    P2_WIDTH  = 2.0,   -- 전후 두께
+    -- P2 횡베기 부채꼴 장판 (가는 조각 N개를 방사형으로 펼침)
+    FAN_ANGLE     = 80.0,   -- 총 중심각 (도) — 좌우로 넓게 휩쓸리는 느낌
+    FAN_SEGMENTS  = 7,      -- 조각 개수 (많을수록 매끈, 무거움)
+    FAN_RADIUS    = 6.0,    -- 부채꼴 반지름 (조각 길이)
+    FAN_SEG_WIDTH = 1.6,    -- 조각 폭 (인접 조각과 겹치게 넉넉히 → 빈틈 방지)
 
     -- 자동 페이드 방지용 큰 값 (HideZone 에서 직접 제거)
     NO_FADE_DELAY = 9999.0,

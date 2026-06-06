@@ -2,8 +2,8 @@
 -- 장판(텔레그래프) / 이펙트 / 연출 담당
 -- BossAttacks 코루틴이 호출한다.
 --
--- zone 구조: { decals = { 데칼1, 데칼2, ... }, locked = bool }
---   직사각형(P3) = 데칼 1개, 부채꼴(P1) = 데칼 N개
+-- zone 구조: { decals, kind, origin/center, yaw, length, width }
+--   rect (P1·P3) = 데칼 1개  /  box (P2) = 데칼 1개
 
 local BossFeedback = {}
 
@@ -70,17 +70,52 @@ function BossFeedback.ShowRectZone(target)
         print("[BossFeedback] ShowRectZone - 데칼 스폰 실패 (머티리얼 경로 확인)")
     end
 
-    -- 판정용 영역 메타 (히트박스가 그대로 참조 → 보이는 대로 맞음)
+    -- 판정용 영역 메타 — length/width 내장 (CheckRect 가 zone 값 우선 사용)
     return {
         decals = decals,
         kind   = "rect",
         origin = Vector(bossPos.X, bossPos.Y, bossPos.Z),
         yaw    = yaw,
+        length = F.ZONE_LENGTH,
+        width  = F.ZONE_WIDTH,
     }
 end
 
 -- ════════════════════════════════════════════
--- P1: 부채꼴 장판 (가는 조각 N개를 방사형으로 펼침)
+-- P1: 종베기 장판 (좁은 직사각형 — 옆으로 피해야 회피 성공)
+--   P3 ShowRectZone 과 같은 구조지만 P1_LENGTH / P1_WIDTH 로 좁고 짧게.
+-- ════════════════════════════════════════════
+function BossFeedback.ShowP1Zone(target)
+    local F = ctx_ref.BB.FEEDBACK
+    local bossPos = ctx_ref.obj.Location
+    local dir, yaw = ResolveDirection(bossPos, target)
+
+    local decal = SpawnPiece(F,
+        bossPos.X + dir.X * (F.P1_LENGTH * 0.5),
+        bossPos.Y + dir.Y * (F.P1_LENGTH * 0.5),
+        bossPos.Z + F.ZONE_Z_OFFSET,
+        yaw, F.P1_LENGTH, F.P1_WIDTH)
+
+    local decals = {}
+    if decal then
+        table.insert(decals, decal)
+    elseif ctx_ref.BB.DEBUG then
+        print("[BossFeedback] ShowP1Zone - 데칼 스폰 실패 (머티리얼 경로 확인)")
+    end
+
+    return {
+        decals = decals,
+        kind   = "rect",
+        origin = Vector(bossPos.X, bossPos.Y, bossPos.Z),
+        yaw    = yaw,
+        length = F.P1_LENGTH,
+        width  = F.P1_WIDTH,
+    }
+end
+
+-- ════════════════════════════════════════════
+-- P2: 횡베기 부채꼴 장판 (가는 조각 N개를 방사형으로 펼침)
+--   좌우로 넓게 휩쓸리는 느낌 → 뒤로 빠지거나 타이밍 회피
 -- ════════════════════════════════════════════
 function BossFeedback.ShowFanZone(target)
     local F = ctx_ref.BB.FEEDBACK
@@ -114,47 +149,11 @@ function BossFeedback.ShowFanZone(target)
         print("[BossFeedback] ShowFanZone - 데칼 스폰 실패 (머티리얼 경로 확인)")
     end
 
-    -- 판정용 영역 메타 (부채꼴: 중심 방향 = baseYaw)
     return {
         decals = decals,
         kind   = "fan",
         origin = Vector(bossPos.X, bossPos.Y, bossPos.Z),
         yaw    = baseYaw,
-    }
-end
-
--- ════════════════════════════════════════════
--- P2: 가로 베기 예고선 (보스 앞에 좌우로 긴 직사각형)
---   방향 = 보스→플레이어에 수직(90°) → 가로로 베는 궤적
--- ════════════════════════════════════════════
-function BossFeedback.ShowSlashLine(target)
-    local F = ctx_ref.BB.FEEDBACK
-    local bossPos = ctx_ref.obj.Location
-    local dir, baseYaw = ResolveDirection(bossPos, target)
-
-    -- 직사각형 중심 = 보스 앞쪽 P2_DIST 거리
-    local cx = bossPos.X + dir.X * F.P2_DIST
-    local cy = bossPos.Y + dir.Y * F.P2_DIST
-    local cz = bossPos.Z + F.ZONE_Z_OFFSET
-
-    -- 가로 방향: 보스→플레이어에 수직 (데칼 길이축이 좌우를 향함)
-    local lineYaw = baseYaw + 90.0
-
-    local decal = SpawnPiece(F, cx, cy, cz, lineYaw, F.P2_LENGTH, F.P2_WIDTH)
-
-    local decals = {}
-    if decal then
-        table.insert(decals, decal)
-    elseif ctx_ref.BB.DEBUG then
-        print("[BossFeedback] ShowSlashLine - 데칼 스폰 실패 (머티리얼 경로 확인)")
-    end
-
-    -- 판정용 메타 (중심 기준 박스)
-    return {
-        decals = decals,
-        kind   = "box",
-        center = Vector(cx, cy, cz),
-        yaw    = lineYaw,
     }
 end
 
@@ -170,8 +169,10 @@ function BossFeedback.FillZone(zone, ratio)
     local d = zone.decals[1]
     if d == nil then return end
 
-    local F = ctx_ref.BB.FEEDBACK
-    local len = math.max(0.01, F.ZONE_LENGTH * ratio)   -- 0 방지
+    local F      = ctx_ref.BB.FEEDBACK
+    local full   = zone.length or F.ZONE_LENGTH
+    local width  = zone.width  or F.ZONE_WIDTH
+    local len = math.max(0.01, full * ratio)   -- 0 방지
 
     -- 방향 단위벡터 (zone.yaw 기준)
     local rad = zone.yaw * math.pi / 180.0
@@ -183,7 +184,7 @@ function BossFeedback.FillZone(zone, ratio)
     local cz = zone.origin.Z + F.ZONE_Z_OFFSET
 
     d:SetLocation(Vector(cx, cy, cz))
-    d:SetRelativeScale(Vector(len, F.ZONE_WIDTH, F.ZONE_HEIGHT))
+    d:SetRelativeScale(Vector(len, width, F.ZONE_HEIGHT))
 end
 
 -- 번쩍임 (모든 조각 색 진해짐)

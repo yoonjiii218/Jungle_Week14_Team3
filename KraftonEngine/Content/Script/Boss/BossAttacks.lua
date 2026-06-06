@@ -91,18 +91,19 @@ local function EndPattern(name, patternCooldown, heavyCooldown)
 end
 
 -- ════════════════════════════════════════════
--- 패턴 1: 기본 베기 (총 1.0초)
--- 거리 3.0 이하, 글로벌 쿨타임 완료
+-- 패턴 1: 종베기 (총 1.0초)
+-- 좁은 직사각형 장판 → 옆으로 피해야 회피 / 피한 뒤 측면 반격 유도
+-- 거리 ATTACK_DISTANCE 이하, 글로벌 쿨타임 완료
 -- ════════════════════════════════════════════
 local function Pattern1_BasicSlash()
     local BB = ctx_ref.BB
 
     BeginPattern("P1")
-    PlayMontage("BossSlash1")
+    PlayMontage("BossVerticalSlash")
 
-    -- 0.0초: 보스 정지. 부채꼴 빨간 장판 스폰
-    local zone = Feedback.ShowFanZone(ctx_ref.playerRef)
-    if BB.DEBUG then print("[P1] 0.0s  부채꼴 장판 스폰") end
+    -- 0.0초: 보스 정지. 종베기 좁은 직사각형 장판 스폰
+    local zone = Feedback.ShowP1Zone(ctx_ref.playerRef)
+    if BB.DEBUG then print("[P1] 0.0s  종베기 장판 스폰") end
 
     -- 0.4초: 장판 번쩍임 (회피 타이밍 가이드)
     Wait(BB.P1.WINDUP)
@@ -123,8 +124,9 @@ local function Pattern1_BasicSlash()
 end
 
 -- ════════════════════════════════════════════
--- 패턴 2: 2연속 베기 (총 1.8초)
--- 거리 3.0 이하, 글로벌 쿨타임 완료
+-- 패턴 2: 횡베기 2연타 (총 1.8초)
+-- 부채꼴 장판 ×2 → 뒤로 빠지거나 타이밍 회피 / 반격 어려움으로 압박감
+-- 거리 ATTACK_DISTANCE 이하, 글로벌 쿨타임 완료
 -- ════════════════════════════════════════════
 local function Pattern2_DoubleSlash()
     local BB = ctx_ref.BB
@@ -134,9 +136,9 @@ local function Pattern2_DoubleSlash()
 
     local LEAD = BB.P2.FLASH_LEAD   -- 판정 직전 번쩍 선행 시간
 
-    -- 0.0초: 1타 가로 예고선 스폰
-    local zone1 = Feedback.ShowSlashLine(ctx_ref.playerRef)
-    if BB.DEBUG then print("[P2] 0.0s  1타 가로 예고선") end
+    -- 0.0초: 1타 부채꼴 장판 스폰
+    local zone1 = Feedback.ShowFanZone(ctx_ref.playerRef)
+    if BB.DEBUG then print("[P2] 0.0s  1타 부채꼴 장판") end
 
     -- 1타 판정 직전: 번쩍 (회피 가이드)
     Wait(BB.P2.HIT1 - LEAD)
@@ -149,10 +151,10 @@ local function Pattern2_DoubleSlash()
     Feedback.HideZone(zone1)
     if BB.DEBUG then print("[P2] " .. BB.P2.HIT1 .. "s  1타 판정") end
 
-    -- 0.5초: 2타 가로 예고선 스폰 (반대 방향 꺾음)
+    -- 0.5초: 2타 부채꼴 장판 스폰 (보스가 계속 추적 중이므로 자동으로 방향 갱신됨)
     Wait(BB.P2.SECOND_WIND - BB.P2.HIT1)
-    local zone2 = Feedback.ShowSlashLine(ctx_ref.playerRef)
-    if BB.DEBUG then print("[P2] " .. BB.P2.SECOND_WIND .. "s  2타 가로 예고선") end
+    local zone2 = Feedback.ShowFanZone(ctx_ref.playerRef)
+    if BB.DEBUG then print("[P2] " .. BB.P2.SECOND_WIND .. "s  2타 부채꼴 장판") end
 
     -- 2타 판정 직전: 번쩍 (회피 가이드)
     Wait((BB.P2.HIT2 - LEAD) - BB.P2.SECOND_WIND)
