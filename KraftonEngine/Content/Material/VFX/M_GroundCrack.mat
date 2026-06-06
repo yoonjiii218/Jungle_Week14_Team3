@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "AlphaBlend",
     "Domain" : "Decal",
-    "GeneratorVersion" : "GeneratedMaterialPass_v7_ParticleBeamTrailRefraction",
+    "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
     "GraphHash" : "EC0DAFD05D94D1DE",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
@@ -11,6 +11,7 @@
     },
     "ReceiveLighting" : false,
     "RenderPass" : "Decal",
+    "ShadingModel" : "DefaultLit",
     "Textures" : {
       "DiffuseTexture" : {
         "Path" : "Content/Texture/GroundCrack.png",
@@ -20,7 +21,7 @@
   },
   "DepthStencilState" : "DepthReadOnly",
   "Domain" : "Decal",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/D6BE3E03588C78660001DB0FEF725228_Decal.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/D6BE3E03588C78660001DB0FEF725228_Decal_DefaultLit.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 2,
@@ -272,6 +273,7 @@
   "RasterizerState" : "SolidNoCull",
   "ReceiveLighting" : false,
   "RenderPass" : "Decal",
-  "ShaderPath" : "Shaders/Generated/Materials/D6BE3E03588C78660001DB0FEF725228_Decal.hlsl",
+  "ShaderPath" : "Shaders/Generated/Materials/D6BE3E03588C78660001DB0FEF725228_Decal_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Version" : 2
 }

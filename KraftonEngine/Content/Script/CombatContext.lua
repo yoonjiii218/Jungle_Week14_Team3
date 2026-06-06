@@ -155,7 +155,9 @@ local function ApplyLocalHitStop(actor, duration)
     end
 end
 
-local function ApplySlomo(actor, duration, scale)
+-- Perfect dodge slomo is gameplay time control, not just visual feedback.
+-- Keep it in CombatContext so boss coroutine/cooldown scaling is always synchronized.
+local function ApplyCombatSlomo(actor, duration, scale)
     duration = duration or 0.0
     if duration <= 0.0 then
         return
@@ -328,9 +330,11 @@ function CombatContext.OnPlayerPerfectDodge(ctx, hit)
         Threat = hit.SourceActor,
         AttackId = hit.AttackId,
         GaugeDelta = combatConfig.PerfectDodgeGaugeDelta or hit.GaugeDelta or 0,
+        SlomoDuration = duration,
+        SlomoScale = scale,
     })
 
-    ApplySlomo(ctx.Owner, duration, scale)
+    ApplyCombatSlomo(ctx.Owner, duration, scale)
 
     print(string.format("[Player] Perfect Dodge! source=%s attack=%s",
         SafeActorName(hit.SourceActor), tostring(hit.AttackId)))

@@ -1,0 +1,69 @@
+--- a/KraftonEngine/Content/Script/CombatContext.lua
++++ b/KraftonEngine/Content/Script/CombatContext.lua
+@@ -155,7 +155,9 @@
+     end
+ end
+ 
+-local function ApplySlomo(actor, duration, scale)
++-- Perfect dodge slomo is gameplay time control, not just visual feedback.
++-- Keep it in CombatContext so boss coroutine/cooldown scaling is always synchronized.
++local function ApplyCombatSlomo(actor, duration, scale)
+     duration = duration or 0.0
+     if duration <= 0.0 then
+         return
+@@ -322,9 +324,11 @@
+         Threat = hit.SourceActor,
+         AttackId = hit.AttackId,
+         GaugeDelta = combatConfig.PerfectDodgeGaugeDelta or hit.GaugeDelta or 0,
++        SlomoDuration = duration,
++        SlomoScale = scale,
+     })
+ 
+-    ApplySlomo(ctx.Owner, duration, scale)
++    ApplyCombatSlomo(ctx.Owner, duration, scale)
+ 
+     print(string.format("[Player] Perfect Dodge! source=%s attack=%s",
+         SafeActorName(hit.SourceActor), tostring(hit.AttackId)))
+--- a/KraftonEngine/Content/Script/PlayerFeedback.lua
++++ b/KraftonEngine/Content/Script/PlayerFeedback.lua
+@@ -52,6 +52,16 @@
+     return obj
+ end
+ 
++local function PlayPerfectDodgeFeedback(ctx, event)
++    local feedbackConfig = GetFeedbackConfig(ctx)
++    local perfectDodgeConfig = feedbackConfig.PerfectDodge or DEFAULT_FEEDBACK_CONFIG.PerfectDodge or {}
++    local shakeScale = perfectDodgeConfig.CameraShakeScale or 0.5
++
++    if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil and shakeScale > 0.0 then
++        CameraManager.StartWaveShake(shakeScale)
++    end
++end
++
+ local function BuildGroundDecalAABBScale3(a, b, c, padding, minSize, projectionDepth)
+     padding = padding or 5.0
+     minSize = minSize or 8.0
+@@ -460,9 +470,7 @@
+ 
+     for _, event in ipairs(result.Events) do
+         if event.Type == "PerfectDodge" then
+-            if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
+-                CameraManager.StartWaveShake(0.5)
+-            end
++            PlayPerfectDodgeFeedback(ctx, event)
+         elseif event.Type == "PlayerHit" then
+             if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
+                 CameraManager.StartWaveShake(0.35)
+--- a/KraftonEngine/Content/Script/PlayerConfig.lua
++++ b/KraftonEngine/Content/Script/PlayerConfig.lua
+@@ -78,6 +78,10 @@
+         KatanaSocketName = "WeaponR",
+         TrailParticlePath = "Content/Data/SwordTrail2.uasset",
+ 
++        PerfectDodge = {
++            CameraShakeScale = 0.5,
++        },
++
+         UltimateCamera = {
+             BackDistance = 7.0,
+             Height = 10,

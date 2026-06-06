@@ -78,6 +78,7 @@ struct FDrawCommand
 	// ===== Sort =====
 	uint64 SortKey   = 0;                            // 정렬 키 (Pass → Shader → MeshBuffer → SRV)
 	float  SortDepth = 0.0f;                         // 카메라까지 거리 (AlphaBlend 깊이 정렬 전용)
+	uint64 SubmissionOrder = 0;                      // 같은 depth의 translucent command 순서 보존용
 
 	// ===== Profiling =====
 	bool bIsSkeletal = false;

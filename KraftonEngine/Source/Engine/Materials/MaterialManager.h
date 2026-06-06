@@ -18,6 +18,7 @@ namespace MatKeys
 	static constexpr const char* Version = "Version";
 	static constexpr const char* MaterialGuid = "MaterialGuid";
 	static constexpr const char* Domain = "Domain";
+	static constexpr const char* ShadingModel = "ShadingModel";
 	static constexpr const char* RenderPass = "RenderPass";
 	static constexpr const char* BlendState = "BlendState";
 	static constexpr const char* DepthStencilState = "DepthStencilState";

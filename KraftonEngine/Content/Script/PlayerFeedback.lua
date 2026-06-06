@@ -52,6 +52,18 @@ local function GetOwner(ctx)
     return obj
 end
 
+local function PlayPerfectDodgeFeedback(ctx, event)
+    local feedbackConfig = GetFeedbackConfig(ctx)
+    local perfectDodgeConfig = feedbackConfig.PerfectDodge or DEFAULT_FEEDBACK_CONFIG.PerfectDodge or {}
+    local shakeScale = perfectDodgeConfig.CameraShakeScale or 0.5
+
+    if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil and shakeScale > 0.0 then
+        CameraManager.StartWaveShake(shakeScale)
+    end
+
+    print("Perfect Dodge")
+end
+
 local function BuildGroundDecalAABBScale3(a, b, c, padding, minSize, projectionDepth)
     padding = padding or 5.0
     minSize = minSize or 8.0
@@ -460,9 +472,7 @@ function PlayerFeedback.HandlePlayerResult(ctx, result)
 
     for _, event in ipairs(result.Events) do
         if event.Type == "PerfectDodge" then
-            if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
-                CameraManager.StartWaveShake(0.5)
-            end
+            PlayPerfectDodgeFeedback(ctx, event)
         elseif event.Type == "PlayerHit" then
             if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
                 CameraManager.StartWaveShake(0.35)

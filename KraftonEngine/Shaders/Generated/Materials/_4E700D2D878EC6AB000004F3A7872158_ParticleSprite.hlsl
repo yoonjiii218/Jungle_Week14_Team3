@@ -68,6 +68,8 @@ struct PS_Input_MaterialParticle
     float  subImageIndex  : TEXCOORD1;
     float4 dynamicParam   : TEXCOORD2;
     float3 worldPos       : TEXCOORD3;
+    float2 texcoord2      : TEXCOORD4;
+    float2 texcoord3      : TEXCOORD5;
 };
 
 PS_Input_MaterialParticle VS(VS_Input_ParticleQuad quad, VS_Input_ParticleInstance inst)
@@ -91,6 +93,38 @@ PS_Input_MaterialParticle VS(VS_Input_ParticleQuad quad, VS_Input_ParticleInstan
     output.subImageIndex  = inst.subImageIndex;
     output.dynamicParam   = inst.dynamicParam;
     output.worldPos       = worldPos;
+    output.texcoord2      = float2(0, 0);
+    output.texcoord3      = float2(0, 0);
+    return output;
+}
+
+struct VS_Input_GeneratedParticleBeamTrail
+{
+    float3 position       : POSITION;
+    float  relativeTime   : RELATIVE_TIME;
+    float3 oldPosition    : OLD_POSITION;
+    float  particleId     : PARTICLE_ID;
+    float2 size           : SIZE;
+    float  rotation       : ROTATION;
+    float  subImageIndex  : SUBIMAGE_INDEX;
+    float4 color          : COLOR;
+    float2 texcoord       : TEXCOORD0;
+    float2 texcoord2      : TEXCOORD1;
+};
+
+PS_Input_MaterialParticle VS_BeamTrail(VS_Input_GeneratedParticleBeamTrail input)
+{
+    float4 worldPos = float4(input.position, 1.0f);
+
+    PS_Input_MaterialParticle output;
+    output.position       = mul(worldPos, mul(View, Projection));
+    output.texcoord       = input.texcoord;
+    output.color          = input.color;
+    output.subImageIndex  = input.subImageIndex;
+    output.dynamicParam   = float4(input.relativeTime, input.particleId, input.size.x + input.size.y, input.rotation);
+    output.worldPos       = worldPos.xyz;
+    output.texcoord2      = input.texcoord2;
+    output.texcoord3      = input.oldPosition.xy;
     return output;
 }
 
@@ -98,8 +132,8 @@ float4 PS(PS_Input_MaterialParticle input) : SV_TARGET
 {
     FMaterialPixelInput MaterialInput;
     MaterialInput.UV0           = input.texcoord;
-    MaterialInput.UV1           = float2(0, 0);
-    MaterialInput.UV2           = float2(0, 0);
+    MaterialInput.UV1           = input.texcoord2;
+    MaterialInput.UV2           = input.texcoord3;
     MaterialInput.ParticleColor = input.color;
     MaterialInput.VertexColor   = input.color;
     MaterialInput.Time          = Time;
@@ -109,7 +143,8 @@ float4 PS(PS_Input_MaterialParticle input) : SV_TARGET
     FMaterialEvalResult Eval = EvaluateMaterialWithRefraction(MaterialInput);
     FMaterialResult Result = Eval.Material;
     float4 FinalColor = float4(Result.Color + Result.Emissive, Result.Opacity);
-    clip(FinalColor.a - 0.01f);
+    float ClipThreshold = Eval.RefractionEnabled >= 0.5f ? 0.0001f : 0.01f;
+    clip(FinalColor.a - ClipThreshold);
 
     float4 ForegroundColor = ApplyFogTranslucent(FinalColor, input.worldPos, CameraWorldPos);
     if (Eval.RefractionEnabled < 0.5f)

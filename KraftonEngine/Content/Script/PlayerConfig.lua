@@ -78,6 +78,10 @@ PlayerConfig.Default = {
         KatanaSocketName = "WeaponR",
         TrailParticlePath = "Content/Data/SwordTrail2.uasset",
 
+        PerfectDodge = {
+            CameraShakeScale = 0.5,
+        },
+
         UltimateCamera = {
             BackDistance = 7.0,
             Height = 10,
@@ -139,7 +143,7 @@ PlayerConfig.Default = {
             AttackBlendOut = 0.15,
             AttackPlayRate = 1.5,
             AttackPlayRates = {
-                3,
+                2,
                 3,
                 3,
                 3,

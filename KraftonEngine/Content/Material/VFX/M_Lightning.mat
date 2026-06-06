@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "AlphaBlend",
     "Domain" : "ParticleSprite",
-    "GeneratorVersion" : "GeneratedMaterialPass_v7_ParticleBeamTrailRefraction",
+    "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
     "GraphHash" : "AD08981BF940348E",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
@@ -11,6 +11,7 @@
     },
     "ReceiveLighting" : false,
     "RenderPass" : "AlphaBlend",
+    "ShadingModel" : "DefaultLit",
     "Textures" : {
       "DiffuseTexture" : {
         "Path" : "Content/Texture/T_Lightning.png",
@@ -20,7 +21,7 @@
   },
   "DepthStencilState" : "DepthReadOnly",
   "Domain" : "ParticleSprite",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/_4EBAB227C225B08A00000D21F84CE768_ParticleSprite.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/_4EBAB227C225B08A00000D21F84CE768_ParticleSprite_DefaultLit.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 2,
@@ -250,6 +251,7 @@
   "RasterizerState" : "SolidNoCull",
   "ReceiveLighting" : false,
   "RenderPass" : "AlphaBlend",
-  "ShaderPath" : "Shaders/Generated/Materials/_4EBAB227C225B08A00000D21F84CE768_ParticleSprite.hlsl",
+  "ShaderPath" : "Shaders/Generated/Materials/_4EBAB227C225B08A00000D21F84CE768_ParticleSprite_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Version" : 2
 }
