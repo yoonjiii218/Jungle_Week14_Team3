@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "Opaque",
     "Domain" : "Surface",
-    "GeneratorVersion" : "GeneratedMaterialPass_v7_ParticleBeamTrailRefraction",
+    "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
     "GraphHash" : "2FA0910879D7B94E",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
@@ -11,6 +11,7 @@
     },
     "ReceiveLighting" : false,
     "RenderPass" : "Opaque",
+    "ShadingModel" : "DefaultLit",
     "Textures" : {
       "DiffuseTexture" : {
         "Path" : "Content/Texture/T_CYBER_SF_CLOTHES_BaseColor_02.PNG",
@@ -20,7 +21,7 @@
   },
   "DepthStencilState" : "Default",
   "Domain" : "Surface",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/_18DA1DAD28B72C0A_Surface.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/_18DA1DAD28B72C0A_Surface_DefaultLit.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 2,
@@ -320,6 +321,7 @@
   "RasterizerState" : "SolidBackCull",
   "ReceiveLighting" : false,
   "RenderPass" : "Opaque",
-  "ShaderPath" : "Shaders/Generated/Materials/_18DA1DAD28B72C0A_Surface.hlsl",
+  "ShaderPath" : "Shaders/Generated/Materials/_18DA1DAD28B72C0A_Surface_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Version" : 2
 }

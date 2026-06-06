@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "AlphaBlend",
     "Domain" : "Surface",
-    "GeneratorVersion" : "GeneratedMaterialPass_v7_ParticleBeamTrailRefraction",
+    "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
     "GraphHash" : "0D694D9C7C1EA2B8",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
@@ -18,6 +18,7 @@
     },
     "ReceiveLighting" : false,
     "RenderPass" : "AlphaBlend",
+    "ShadingModel" : "DefaultLit",
     "Textures" : {
       "Custom0Texture" : {
         "Path" : "Content/Texture/RefractionMap_Test_RGBA.png",
@@ -27,7 +28,7 @@
   },
   "DepthStencilState" : "DepthReadOnly",
   "Domain" : "Surface",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/_61B9B3FBA734B378000049082FD12E20_Surface.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/_61B9B3FBA734B378000049082FD12E20_Surface_DefaultLit.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 2,
@@ -447,6 +448,7 @@
   "RasterizerState" : "SolidNoCull",
   "ReceiveLighting" : false,
   "RenderPass" : "AlphaBlend",
-  "ShaderPath" : "Shaders/Generated/Materials/_61B9B3FBA734B378000049082FD12E20_Surface.hlsl",
+  "ShaderPath" : "Shaders/Generated/Materials/_61B9B3FBA734B378000049082FD12E20_Surface_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Version" : 2
 }

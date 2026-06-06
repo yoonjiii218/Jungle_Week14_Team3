@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "AlphaBlend",
     "Domain" : "Surface",
-    "GeneratorVersion" : "GeneratedMaterialPass_v7_ParticleBeamTrailRefraction",
+    "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
     "GraphHash" : "34628ABD81C4781B",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
@@ -11,6 +11,7 @@
     },
     "ReceiveLighting" : false,
     "RenderPass" : "AlphaBlend",
+    "ShadingModel" : "DefaultLit",
     "Textures" : {
       "DiffuseTexture" : {
         "Path" : "Content/Texture/T_LASHES_05.PNG",
@@ -20,7 +21,7 @@
   },
   "DepthStencilState" : "DepthReadOnly",
   "Domain" : "Surface",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/_0B3ED3ACAC713DFE_Surface.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/_0B3ED3ACAC713DFE_Surface_DefaultLit.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 2,
@@ -324,7 +325,8 @@
   "RasterizerState" : "SolidNoCull",
   "ReceiveLighting" : false,
   "RenderPass" : "AlphaBlend",
-  "ShaderPath" : "Shaders/Generated/Materials/_0B3ED3ACAC713DFE_Surface.hlsl",
+  "ShaderPath" : "Shaders/Generated/Materials/_0B3ED3ACAC713DFE_Surface_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Textures" : {
     "DiffuseTexture" : "//Sirbotchek/share/! Template/T_LASHES_05.png"
   },

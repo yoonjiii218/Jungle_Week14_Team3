@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "Opaque",
     "Domain" : "Surface",
-    "GeneratorVersion" : "GeneratedMaterialPass_v7_ParticleBeamTrailRefraction",
+    "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
     "GraphHash" : "C35625F1CB4532AF",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
@@ -11,6 +11,7 @@
     },
     "ReceiveLighting" : false,
     "RenderPass" : "Opaque",
+    "ShadingModel" : "DefaultLit",
     "Textures" : {
       "DiffuseTexture" : {
         "Path" : "Content/Texture/T_Sci_Fi_Character_08_Details_Albedo_03.PNG",
@@ -20,7 +21,7 @@
   },
   "DepthStencilState" : "Default",
   "Domain" : "Surface",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/_8E35C8721A71C211_Surface.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/_8E35C8721A71C211_Surface_DefaultLit.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 2,
@@ -257,7 +258,8 @@
   "RasterizerState" : "SolidBackCull",
   "ReceiveLighting" : false,
   "RenderPass" : "Opaque",
-  "ShaderPath" : "Shaders/Generated/Materials/_8E35C8721A71C211_Surface.hlsl",
+  "ShaderPath" : "Shaders/Generated/Materials/_8E35C8721A71C211_Surface_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Textures" : {
     "DiffuseTexture" : "D:/ГОТОВЫЕ МОДЕЛИ ДЛЯ  UE4/Sci_Fi_Character_08/Textures/Details/T_Sci_Fi_Character_08_Details_Albedo_03.tga",
     "NormalTexture" : "D:/ГОТОВЫЕ МОДЕЛИ ДЛЯ  UE4/Sci_Fi_Character_08/Textures/Details/T_Sci_Fi_Character_08_Details_Normals.tga"

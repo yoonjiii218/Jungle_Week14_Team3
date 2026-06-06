@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "Opaque",
     "Domain" : "Surface",
-    "GeneratorVersion" : "GeneratedMaterialPass_v7_ParticleBeamTrailRefraction",
+    "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
     "GraphHash" : "40371D7264205751",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
@@ -11,6 +11,7 @@
     },
     "ReceiveLighting" : false,
     "RenderPass" : "Opaque",
+    "ShadingModel" : "DefaultLit",
     "Textures" : {
       "DiffuseTexture" : {
         "Path" : "Content/Texture/T_BODY_F_BaseColor.PNG",
@@ -20,7 +21,7 @@
   },
   "DepthStencilState" : "Default",
   "Domain" : "Surface",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/D04BB5473FF61BD9_Surface.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/D04BB5473FF61BD9_Surface_DefaultLit.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 2,
@@ -320,6 +321,7 @@
   "RasterizerState" : "SolidBackCull",
   "ReceiveLighting" : false,
   "RenderPass" : "Opaque",
-  "ShaderPath" : "Shaders/Generated/Materials/D04BB5473FF61BD9_Surface.hlsl",
+  "ShaderPath" : "Shaders/Generated/Materials/D04BB5473FF61BD9_Surface_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Version" : 2
 }

@@ -21,6 +21,12 @@ enum class EMaterialGraphShaderMode : uint8
 	Generated
 };
 
+enum class EMaterialShadingModel : uint8
+{
+	DefaultLit,
+	Toon
+};
+
 enum class EMaterialGraphPinKind : uint8
 {
 	Input,
@@ -158,23 +164,29 @@ struct FMaterialGraph
 	FMaterialGraphNode*       FindFirstNodeOfType(EMaterialGraphNodeType Type);
 	const FMaterialGraphNode* FindFirstNodeOfType(EMaterialGraphNodeType Type) const;
 
-	void InitializeDefault(EMaterialDomain Domain);
-	void RebuildOutputPinsForDomain(EMaterialDomain Domain);
-	bool EnsureOutputPinsForDomain(EMaterialDomain Domain);
+	void InitializeDefault(EMaterialDomain Domain, EMaterialShadingModel ShadingModel = EMaterialShadingModel::DefaultLit);
+	void RebuildOutputPinsForDomain(EMaterialDomain Domain, EMaterialShadingModel ShadingModel = EMaterialShadingModel::DefaultLit);
+	bool EnsureOutputPinsForDomain(EMaterialDomain Domain, EMaterialShadingModel ShadingModel = EMaterialShadingModel::DefaultLit);
 
 	// 텍스처 기반 파티클 프리셋 — 한 번에 TextureObject/Sample/Multiply/Mask/Output 세팅.
 	// 호출 시 기존 노드/링크 모두 클리어.
 	void ApplyTexturedParticlePreset(EMaterialDomain Domain);
+
+	// Surface Toon ShadingModel 기본 프리셋 — 텍스처 BaseColor + Toon 파라미터 노드까지 세팅.
+	// 호출 시 기존 노드/링크 모두 클리어.
+	void ApplyToonSurfacePreset();
 };
 
 const char* ToString(EMaterialDomain Domain);
 const char* ToString(EMaterialGraphShaderMode Mode);
+const char* ToString(EMaterialShadingModel Model);
 const char* ToString(EMaterialGraphPinType Type);
 const char* ToString(EMaterialGraphNodeType Type);
 const char* ToString(EMaterialTextureSlot Slot);
 
 EMaterialDomain        MaterialDomainFromString(const FString& Str, EMaterialDomain Default = EMaterialDomain::Surface);
 EMaterialGraphShaderMode MaterialGraphShaderModeFromString(const FString& Str, EMaterialGraphShaderMode Default = EMaterialGraphShaderMode::Generated);
+EMaterialShadingModel  MaterialShadingModelFromString(const FString& Str, EMaterialShadingModel Default = EMaterialShadingModel::DefaultLit);
 EMaterialGraphPinType  MaterialPinTypeFromString(const FString& Str, EMaterialGraphPinType Default = EMaterialGraphPinType::Float);
 EMaterialGraphNodeType MaterialNodeTypeFromString(const FString& Str, EMaterialGraphNodeType Default = EMaterialGraphNodeType::Output);
 EMaterialTextureSlot   MaterialTextureSlotFromString(const FString& Str, EMaterialTextureSlot Default = EMaterialTextureSlot::Diffuse);
