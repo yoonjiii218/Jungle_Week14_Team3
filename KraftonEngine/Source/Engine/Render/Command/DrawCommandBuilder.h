@@ -91,6 +91,7 @@ private:
 	FConstantBuffer SceneDepthCB;
 	FConstantBuffer FXAACB;
 	FConstantBuffer GammaCorrectionCB;
+	FConstantBuffer BloomExtractCB;
 	FConstantBuffer CameraFadeCB;
 	FConstantBuffer CameraVignetteCB;
 	FConstantBuffer CameraLetterboxCB;

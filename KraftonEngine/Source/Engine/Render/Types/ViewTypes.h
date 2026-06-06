@@ -56,6 +56,7 @@ struct FShowFlags
 	bool bOctree = false;
 	bool bFog = true;
 	bool bFXAA = false;
+	bool bBloom = true;
 	bool bGammaCorrection = true;
 	bool bViewLightCulling = false;
 	bool bVisualize25DCulling = false;
@@ -102,6 +103,10 @@ struct FViewportRenderOptions
 
 	// Gamma Correction 전용 설정
 	float Gamma = 2.4f;
+	float Exposure = 1.0f;
+	float BloomThreshold = 1.0f;
+	float BloomIntensity = 0.35f;
+	float BloomRadius = 2.0f;
 
 	// Light Culling 뷰모드 전용 설정
 	ELightCullingMode LightCullingMode = ELightCullingMode::Cluster;

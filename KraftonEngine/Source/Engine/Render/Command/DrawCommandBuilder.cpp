@@ -42,6 +42,7 @@ void FDrawCommandBuilder::Create(ID3D11Device* InDevice, ID3D11DeviceContext* In
 	SceneDepthCB.Create(InDevice, sizeof(FSceneDepthPConstants), "SceneDepthCB");
 	FXAACB.Create(InDevice, sizeof(FFXAAConstants), "FXAACB");
 	GammaCorrectionCB.Create(InDevice, sizeof(FGammaCorrectionConstants), "GammaCorrectionCB");
+	BloomExtractCB.Create(InDevice, sizeof(FBloomExtractConstants), "BloomExtractCB");
 	DOFCB.Create(InDevice, sizeof(FDOFConstants), "DOFCB");
 
 	CameraFadeCB.Create(InDevice, sizeof(FCameraFadeConstants), "CameraFadeCB");
@@ -71,6 +72,7 @@ void FDrawCommandBuilder::Release()
 	SceneDepthCB.Release();
 	FXAACB.Release();
 	GammaCorrectionCB.Release();
+	BloomExtractCB.Release();
 	DOFCB.Release();
 
 	CameraFadeCB.Release();
@@ -851,6 +853,24 @@ void FDrawCommandBuilder::BuildPostProcessCommands(const FFrameContext& Frame, c
 		}
 	}
 
+	if (Frame.RenderOptions.ShowFlags.bBloom && Frame.RenderOptions.ShowFlags.bGammaCorrection)
+	{
+		FShader* BloomShader = FShaderManager::Get().GetOrCreate(EShaderPath::BloomExtract);
+		if (BloomShader)
+		{
+			FBloomExtractConstants BloomData = {};
+			BloomData.BloomThreshold = Frame.RenderOptions.BloomThreshold;
+			BloomData.BloomRadius = Frame.RenderOptions.BloomRadius;
+			BloomExtractCB.Update(Ctx, &BloomData, sizeof(FBloomExtractConstants));
+
+			FDrawCommand& Cmd = DrawCommandList.AddCommand();
+			Cmd.InitFullscreenTriangle(BloomShader, ERenderPass::BloomExtract,
+				PassRenderStateTable->ToDrawCommandState(ERenderPass::BloomExtract, ViewMode));
+			Cmd.Bindings.PerShaderCB[0] = &BloomExtractCB;
+			Cmd.BuildSortKey(0);
+		}
+	}
+
 	if (Frame.RenderOptions.ShowFlags.bGammaCorrection)
 	{
 		FShader* GammaShader = FShaderManager::Get().GetOrCreate(EShaderPath::GammaCorrection);
@@ -858,6 +878,9 @@ void FDrawCommandBuilder::BuildPostProcessCommands(const FFrameContext& Frame, c
 		{
 			FGammaCorrectionConstants GammaData = {};
 			GammaData.Gamma = Frame.RenderOptions.Gamma;
+			GammaData.BloomIntensity = Frame.RenderOptions.ShowFlags.bBloom ? Frame.RenderOptions.BloomIntensity : 0.0f;
+			GammaData.Exposure = Frame.RenderOptions.Exposure;
+			GammaData.BloomRadius = Frame.RenderOptions.BloomRadius;
 			GammaCorrectionCB.Update(Ctx, &GammaData, sizeof(FGammaCorrectionConstants));
 
 			FDrawCommand& Cmd = DrawCommandList.AddCommand();

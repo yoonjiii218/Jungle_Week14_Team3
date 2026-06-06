@@ -53,4 +53,6 @@ void FFrameContext::SetViewportInfo(const FViewport* VP)
 	DOFCoCSRV               = VP->GetDOFCoCSRV();
 	DOFBlurRTV              = VP->GetDOFBlurRTV();
 	DOFBlurSRV              = VP->GetDOFBlurSRV();
+	BloomRTV                = VP->GetBloomRTV();
+	BloomSRV                = VP->GetBloomSRV();
 }

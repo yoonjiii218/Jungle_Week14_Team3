@@ -73,6 +73,7 @@ namespace ESystemTexSlot
 	constexpr uint32 PointShadowDatas   = 25;  // t25: StructuredBuffer<FPointShadowDataGPU>
 	constexpr uint32 DOFCoC            = 26;  // t26: DOF CoC texture
 	constexpr uint32 DOFBlur           = 27;  // t27: DOF blur texture
+	constexpr uint32 Bloom             = 28;  // t28: Half-resolution HDR bloom texture
 
 	// 하위 호환용 별칭
 	constexpr uint32 ShadowMap = ShadowMapCSM;
@@ -269,7 +270,16 @@ struct FFXAAConstants
 struct FGammaCorrectionConstants
 {
 	float Gamma;
-	float _pad[3];
+	float BloomIntensity;
+	float Exposure;
+	float BloomRadius;
+};
+
+struct FBloomExtractConstants
+{
+	float BloomThreshold;
+	float BloomRadius;
+	float _pad[2];
 };
 
 struct FDOFConstants

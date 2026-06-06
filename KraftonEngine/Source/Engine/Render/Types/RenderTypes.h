@@ -53,7 +53,8 @@ enum class ERenderPass : uint32
 	GizmoInner,		// 기즈모 내부 (깊이 무시)
 	OverlayFont,	// 스크린 공간 텍스트 (깊이 무시)
 	UI,				// RmlUi 기반 게임 UI
-	GammaCorrection,// 최종 선형 SceneColor를 디스플레이용 감마 공간으로 변환
+	BloomExtract,	// HDR SceneColor 밝은 영역 추출 + 반해상도 가로 블러
+	GammaCorrection,// Bloom 합성 + 톤매핑 + 디스플레이 감마 변환
 	MAX
 };
 
@@ -80,6 +81,7 @@ inline const char* GetRenderPassName(ERenderPass Pass)
 		"RenderPass::GizmoInner",
 		"RenderPass::OverlayFont",
 		"RenderPass::UI",
+		"RenderPass::BloomExtract",
 		"RenderPass::GammaCorrection",
 	};
 	static_assert(ARRAYSIZE(Names) == (uint32)ERenderPass::MAX, "Names must match ERenderPass entries");
@@ -110,6 +112,7 @@ namespace RenderStateStrings
 		{ "GizmoInner",    (int)ERenderPass::GizmoInner },
 		{ "OverlayFont",   (int)ERenderPass::OverlayFont },
 		{ "UI",            (int)ERenderPass::UI },
+		{ "BloomExtract",   (int)ERenderPass::BloomExtract },
 		{ "GammaCorrection",(int)ERenderPass::GammaCorrection },
 	};
 

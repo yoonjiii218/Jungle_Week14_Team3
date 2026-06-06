@@ -14,5 +14,6 @@ Texture2D<float4> CullingHeatmapTexture : register(t20); // Tile Culling Heatmap
 Texture2D<float>  SpotLightAtlasTexture : register(t22); // Spotlight atlas (D32_FLOAT)
 Texture2D<float>  DOFCoCTexture        : register(t26);  // DOF CoC texture
 Texture2D<float4> DOFBlurTexture       : register(t27);  // DOF blur texture
+Texture2D<float4> BloomTexture         : register(t28);  // Half-resolution HDR bloom texture
 
 #endif // SYSTEM_RESOURCES_HLSL

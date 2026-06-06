@@ -154,6 +154,7 @@ namespace EShaderPath
 	inline constexpr const char* HeightFog = "Shaders/PostProcess/HeightFog.hlsl";
 	inline constexpr const char* LightCulling = "Shaders/PostProcess/LightCulling.hlsl";
 	inline constexpr const char* GammaCorrection = "Shaders/PostProcess/GammaCorrection.hlsl";
+	inline constexpr const char* BloomExtract = "Shaders/PostProcess/BloomExtract.hlsl";
 	inline constexpr const char* DOFSetup = "Shaders/PostProcess/DOFSetup.hlsl";
 	inline constexpr const char* DOFGather = "Shaders/PostProcess/DOFGather.hlsl";
 	inline constexpr const char* DOFRecombine = "Shaders/PostProcess/DOFRecombine.hlsl";

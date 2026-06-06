@@ -88,6 +88,11 @@ void FViewport::BeginRender(ID3D11DeviceContext* Ctx, const float ClearColor[4])
 		const float BlurClear[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 		Ctx->ClearRenderTargetView(DOFBlurRTV, BlurClear);
 	}
+	if (BloomRTV)
+	{
+		const float BloomClear[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+		Ctx->ClearRenderTargetView(BloomRTV, BloomClear);
+	}
 	Ctx->ClearDepthStencilView(DSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 0.0f, 0);
 	Ctx->OMSetRenderTargets(1, &RTV, DSV);
 	Ctx->RSSetViewports(1, &VPRect);
@@ -103,7 +108,7 @@ bool FViewport::CreateResources()
 	TexDesc.Height = Height;
 	TexDesc.MipLevels = 1;
 	TexDesc.ArraySize = 1;
-	TexDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	TexDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 	TexDesc.SampleDesc.Count = 1;
 	TexDesc.Usage = D3D11_USAGE_DEFAULT;
 	TexDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
@@ -189,7 +194,7 @@ bool FViewport::CreateResources()
 	StencilCopySRV->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(strlen("ViewportStencilCopySRV")), "ViewportStencilCopySRV");
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC SceneColorCopySRVDesc = {};
-	SceneColorCopySRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	SceneColorCopySRVDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 	SceneColorCopySRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	SceneColorCopySRVDesc.Texture2D.MipLevels = 1;
 	SceneColorCopySRVDesc.Texture2D.MostDetailedMip = 0;
@@ -271,6 +276,22 @@ bool FViewport::CreateResources()
 	hr = Device->CreateShaderResourceView(DOFBlurTexture, nullptr, &DOFBlurSRV);
 	if (FAILED(hr)) { ReleaseResources(); return false; }
 
+	// Half-resolution HDR bloom RT
+	D3D11_TEXTURE2D_DESC BloomDesc = TexDesc;
+	BloomDesc.Width = (Width + 1) / 2;
+	BloomDesc.Height = (Height + 1) / 2;
+	hr = Device->CreateTexture2D(&BloomDesc, nullptr, &BloomTexture);
+	if (FAILED(hr)) { ReleaseResources(); return false; }
+	BloomTexture->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(strlen("ViewportBloomTexture")), "ViewportBloomTexture");
+
+	hr = Device->CreateRenderTargetView(BloomTexture, nullptr, &BloomRTV);
+	if (FAILED(hr)) { ReleaseResources(); return false; }
+	BloomRTV->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(strlen("ViewportBloomRTV")), "ViewportBloomRTV");
+
+	hr = Device->CreateShaderResourceView(BloomTexture, nullptr, &BloomSRV);
+	if (FAILED(hr)) { ReleaseResources(); return false; }
+	BloomSRV->SetPrivateData(WKPDID_D3DDebugObjectName, static_cast<UINT>(strlen("ViewportBloomSRV")), "ViewportBloomSRV");
+
 	// ── 뷰포트 렉트 ──
 	ViewportRect.TopLeftX = 0.0f;
 	ViewportRect.TopLeftY = 0.0f;
@@ -284,6 +305,9 @@ bool FViewport::CreateResources()
 
 void FViewport::ReleaseResources()
 {
+	if (BloomSRV) { BloomSRV->Release(); BloomSRV = nullptr; }
+	if (BloomRTV) { BloomRTV->Release(); BloomRTV = nullptr; }
+	if (BloomTexture) { BloomTexture->Release(); BloomTexture = nullptr; }
 	if (DOFBlurSRV) { DOFBlurSRV->Release(); DOFBlurSRV = nullptr; }
 	if (DOFBlurRTV) { DOFBlurRTV->Release(); DOFBlurRTV = nullptr; }
 	if (DOFBlurTexture) { DOFBlurTexture->Release(); DOFBlurTexture = nullptr; }
