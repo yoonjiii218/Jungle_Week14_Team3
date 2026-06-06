@@ -104,15 +104,18 @@ function BossFeedback.ShowRectZone(target)
     local bossPos = ctx_ref.obj.Location
     local dir, yaw = ResolveDirection(bossPos, target)
 
+    local spawnZ = bossPos.Z + F.ZONE_Z_OFFSET
     local decal = SpawnPiece(F,
         bossPos.X + dir.X * (F.ZONE_LENGTH * 0.5),
         bossPos.Y + dir.Y * (F.ZONE_LENGTH * 0.5),
-        bossPos.Z + F.ZONE_Z_OFFSET,
+        spawnZ,
         yaw, F.ZONE_LENGTH, F.ZONE_WIDTH)
 
     local decals = {}
+    local decalZ = spawnZ
     if decal then
         table.insert(decals, decal)
+        decalZ = decal.Location.Z
     elseif ctx_ref.BB.DEBUG then
         print("[BossFeedback] ShowRectZone - 데칼 스폰 실패 (머티리얼 경로 확인)")
     end
@@ -125,6 +128,7 @@ function BossFeedback.ShowRectZone(target)
         yaw    = yaw,
         length = F.ZONE_LENGTH,
         width  = F.ZONE_WIDTH,
+        decalZ = decalZ,
     }
 end
 
@@ -228,7 +232,13 @@ function BossFeedback.FillZone(zone, ratio)
     -- 중심 = origin(보스쪽 끝)에서 dir 방향으로 len/2
     local cx = zone.origin.X + dx * (len * 0.5)
     local cy = zone.origin.Y + dy * (len * 0.5)
-    local cz = zone.origin.Z + F.ZONE_Z_OFFSET
+    local cz = zone.decalZ
+    if cz == nil then
+        cz = d.Location.Z
+    end
+    if cz == nil then
+        cz = zone.origin.Z + F.ZONE_Z_OFFSET
+    end
 
     d:SetLocation(Vector(cx, cy, cz))
     d:SetRelativeScale(Vector(len, width, F.ZONE_HEIGHT))

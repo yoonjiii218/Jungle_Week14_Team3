@@ -3246,6 +3246,26 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		AActor* Actor = W->SpawnActorByClass(ActorClass);
 		if (!Actor) return nullptr;
 
+		FVector DecalLocation = Location;
+		{
+			FHitResult GroundHit;
+			const FVector Start = Location + FVector(0.0f, 0.0f, 50.0f);
+			const FVector Dir(0.0f, 0.0f, -1.0f);
+			constexpr float MaxGroundSnapDistance = 200.0f;
+			constexpr float SurfaceOffset = 0.03f;
+
+			if (W->PhysicsRaycastByObjectTypes(
+				Start,
+				Dir,
+				MaxGroundSnapDistance,
+				GroundHit,
+				ObjectTypeBit(ECollisionChannel::WorldStatic),
+				Actor))
+			{
+				DecalLocation.Z = GroundHit.WorldHitLocation.Z + SurfaceOffset;
+			}
+		}
+
 		UDecalComponent* Decal = Actor->AddComponent<UDecalComponent>();
 		if (!Decal)
 		{
@@ -3254,7 +3274,7 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		}
 
 		Actor->SetRootComponent(Decal);
-		Decal->SetWorldLocation(Location);
+		Decal->SetWorldLocation(DecalLocation);
 		Decal->SetRelativeScale(Scale);
 		Decal->SetMaterialPath(MaterialPath);
 		Decal->SetFadeOut(FadeOutDelay.value_or(0.35f), FadeOutDuration.value_or(0.45f));
