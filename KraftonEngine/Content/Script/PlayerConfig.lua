@@ -38,6 +38,48 @@ PlayerConfig.Default = {
         AttackTurnSpeed = 12.0,
     },
 
+    -- Attack-time soft lock-on.
+    -- Attack: only yaw assist. Dash/DashChargeAttack: lock the initial dash
+    -- direction to the target and keep moving straight through the target.
+    Targeting = {
+        Enabled = true,
+        TargetTags = {
+            "HitTarget",
+            "Enemy",
+            "Boss",
+        },
+        StickyTime = 0.45,
+        StickyScoreBonus = 0.15,
+
+        Attack = {
+            Enabled = true,
+            Range = 20.0,
+            ConeDeg = 360.0,
+            TurnDuration = 0.08,
+            TurnSpeed = 18.0,
+            LockDirection = false,
+        },
+
+        Dash = {
+            -- 이건 끄고 사용자 의도를 중시하는게 나을듯
+            Enabled = false,
+            Range = 8.5,
+            ConeDeg = 120.0,
+            TurnDuration = 0.06,
+            TurnSpeed = 36.0,
+            LockDirection = true,
+        },
+
+        DashChargeAttack = {
+            Enabled = true,
+            Range = 50.0,
+            ConeDeg = 360.0,
+            TurnDuration = 0.08,
+            TurnSpeed = 36.0,
+            LockDirection = true,
+        },
+    },
+
     Combat = {
         MaxHP = 100,
         MaxUltimateGauge = 100,

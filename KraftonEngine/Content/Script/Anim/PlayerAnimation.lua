@@ -73,6 +73,8 @@ local function ResetAttack(self, unlockMovement)
         PlayerAction.SetMovementInputEnabled(self, true)
     end
 
+    PlayerAction.EndAttackAssist(self)
+
     if attackIndex ~= nil and attackIndex > 0 then
         PushPlayerEvent(self, { Type = "AttackEnd", AttackIndex = attackIndex })
     end
@@ -85,6 +87,7 @@ local function BeginAttack(self, index)
     self.ComboQueued = false
     self.AttackEnd = false
     PlayerAction.StopMovementImmediately(self)
+    PlayerAction.BeginAttackAssist(self, index)
     PlayerAction.StepAttackForward(self, index)
     PushPlayerEvent(self, { Type = "AttackStart", AttackIndex = index })
 end
@@ -440,9 +443,11 @@ function update(self, dt)
     elseif self.AttackIndex == 0 then
         PlayerAction.ApplyMoveInput(self)
     else
-        local dir = PlayerAction.GetMoveInputWorldDirection(self)
-        if dir ~= nil then
-            PlayerAction.SmoothFaceOwnerToDirection(self, dir, dt)
+        if PlayerAction.UpdateAttackAssist(self, dt) ~= true then
+            local dir = PlayerAction.GetMoveInputWorldDirection(self)
+            if dir ~= nil then
+                PlayerAction.SmoothFaceOwnerToDirection(self, dir, dt)
+            end
         end
     end
 end
