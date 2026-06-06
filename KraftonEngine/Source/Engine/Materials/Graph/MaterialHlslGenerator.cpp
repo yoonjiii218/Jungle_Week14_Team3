@@ -1235,6 +1235,7 @@ float4 PS(PS_Input_MaterialMeshParticle input) : SV_TARGET
 	{
 		std::stringstream SS;
 		SS << (ShadingModel == EMaterialShadingModel::Toon ? "#define MATERIAL_SHADING_MODEL_TOON 1\n" : "#define MATERIAL_SHADING_MODEL_TOON 0\n");
+		SS << (ShadingModel == EMaterialShadingModel::UnLit ? "#define MATERIAL_SHADING_MODEL_UNLIT 1\n" : "#define MATERIAL_SHADING_MODEL_UNLIT 0\n");
 		SS << R"(
 MaterialSurfaceVSOutput VS_StaticMesh(VS_Input_PNCTT input)
 {
@@ -1294,6 +1295,25 @@ MaterialSurfacePSOutput ShadeGeneratedSurfaceToon(MaterialSurfaceVSOutput input,
 )";
 		}
 
+		if (ShadingModel == EMaterialShadingModel::UnLit)
+		{
+			SS << R"(
+MaterialSurfacePSOutput ShadeGeneratedSurfaceUnLit(MaterialSurfaceVSOutput input, FMaterialResult Result)
+{
+    clip(min(Result.Opacity, Result.OpacityMask) - GENERATED_SURFACE_ALPHA_CLIP);
+
+    const float3 N = ApplyGeneratedSurfaceNormal(input, Result);
+
+    MaterialSurfacePSOutput Output;
+    Output.Color = float4(Result.BaseColor + Result.Emissive, Result.Opacity);
+    Output.Normal = float4(N, 1.0f);
+    Output.Culling = float4(0, 0, 0, 0);
+    return Output;
+}
+
+)";
+		}
+
 		if (bTranslucentPass)
 		{
 			SS << R"(
@@ -1306,6 +1326,8 @@ float4 PS(MaterialSurfaceVSOutput input) : SV_TARGET
     const float3 N = ApplyGeneratedSurfaceNormal(input, Result);
 #if MATERIAL_SHADING_MODEL_TOON
     float4 FinalColor = float4(ComputeGeneratedSurfaceToonColor(input, Result, Eval, N), Result.Opacity);
+#elif MATERIAL_SHADING_MODEL_UNLIT
+    float4 FinalColor = float4(Result.BaseColor + Result.Emissive, Result.Opacity);
 #else
     float4 FinalColor = float4(ComputeGeneratedSurfaceLighting(input.worldPos, input.position, N, Result), Result.Opacity);
 #endif
@@ -1344,6 +1366,9 @@ MaterialSurfacePSOutput PS(MaterialSurfaceVSOutput input)
     FMaterialEvalResult Eval = EvaluateMaterialWithRefraction(MaterialInput);
     FMaterialResult Result = Eval.Material;
     return ShadeGeneratedSurfaceToon(input, Result, Eval);
+#elif MATERIAL_SHADING_MODEL_UNLIT
+    FMaterialResult Result = EvaluateMaterial(MaterialInput);
+    return ShadeGeneratedSurfaceUnLit(input, Result);
 #else
     FMaterialResult Result = EvaluateMaterial(MaterialInput);
     return ShadeGeneratedSurface(input, Result);
@@ -1506,7 +1531,8 @@ bool FMaterialHlslGenerator::Generate(const FMaterialGraph& Graph, const FMateri
 	SS << "// Generated from " << Options.MaterialPath << "\n";
 	SS << "// Domain: " << ToString(Options.Domain) << "\n";
 	SS << "// ShadingModel: " << ToString(Options.ShadingModel) << "\n\n";
-	SS << BuildCommonHeader(Options.Domain, Options.bReceiveLighting, Options.RenderPass == ERenderPass::AlphaBlend);
+	const bool bParticleMeshReceiveLighting = Options.bReceiveLighting && Options.ShadingModel != EMaterialShadingModel::UnLit;
+	SS << BuildCommonHeader(Options.Domain, bParticleMeshReceiveLighting, Options.RenderPass == ERenderPass::AlphaBlend);
 	SS << Context.BuildTextureDeclarations();
 	SS << Context.BuildCBuffer();
 	SS << EvaluateMaterial;
@@ -1517,7 +1543,7 @@ bool FMaterialHlslGenerator::Generate(const FMaterialGraph& Graph, const FMateri
 		SS << BuildParticleSpriteMain();
 		break;
 	case EMaterialDomain::ParticleMesh:
-		SS << BuildParticleMeshMain(Options.bReceiveLighting, Options.RenderPass == ERenderPass::AlphaBlend);
+		SS << BuildParticleMeshMain(bParticleMeshReceiveLighting, Options.RenderPass == ERenderPass::AlphaBlend);
 		break;
 	case EMaterialDomain::PostProcess:
 		SS << BuildPostProcessMain();

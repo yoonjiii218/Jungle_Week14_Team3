@@ -941,6 +941,7 @@ const char* ToString(EMaterialShadingModel Model)
 {
 	switch (Model)
 	{
+	case EMaterialShadingModel::UnLit: return "UnLit";
 	case EMaterialShadingModel::Toon: return "Toon";
 	case EMaterialShadingModel::DefaultLit:
 	default: return "DefaultLit";
@@ -1040,6 +1041,7 @@ EMaterialGraphShaderMode MaterialGraphShaderModeFromString(const FString& Str, E
 EMaterialShadingModel MaterialShadingModelFromString(const FString& Str, EMaterialShadingModel Default)
 {
 	if (Str == "DefaultLit") return EMaterialShadingModel::DefaultLit;
+	if (Str == "UnLit" || Str == "Unlit") return EMaterialShadingModel::UnLit;
 	if (Str == "Toon") return EMaterialShadingModel::Toon;
 	return Default;
 }

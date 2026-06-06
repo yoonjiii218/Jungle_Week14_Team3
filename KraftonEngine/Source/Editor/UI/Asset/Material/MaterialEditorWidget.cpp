@@ -576,6 +576,7 @@ void FMaterialEditorWidget::RenderToolbar(UMaterial* Material)
 		const EMaterialShadingModel Models[] =
 		{
 			EMaterialShadingModel::DefaultLit,
+			EMaterialShadingModel::UnLit,
 			EMaterialShadingModel::Toon
 		};
 		for (EMaterialShadingModel Candidate : Models)
