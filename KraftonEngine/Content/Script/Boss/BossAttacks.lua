@@ -27,8 +27,24 @@ local function ResolveHit(tag, zone, damage, hitStopDuration)
     end
 
     if not Hitbox.Check(zone, ctx_ref.playerRef) then
-        if ctx_ref.BB.DEBUG then print("[" .. tag .. "] 빗나감 (플레이어 회피)") end
-        return false
+        -- 현재 위치는 장판 밖. 하지만 "대시를 시작한 순간" 장판 안이었고 지금도 무적이면,
+        -- 회피로 빠져나간 것이므로 퍼펙트 회피를 인정한다. (대시 시작 시 장판 안 = 위협 노출)
+        local dodging, dodgeLoc = CombatContext.GetPlayerDodgeSnapshot(ctx_ref.playerRef)
+        local startedInZone = dodging and dodgeLoc ~= nil
+            and Hitbox.CheckXY(zone, dodgeLoc.X, dodgeLoc.Y)
+
+        if not startedInZone then
+            -- 진짜 빗나감 (대시 시작도 장판 밖이거나, 무적이 아님)
+            if ctx_ref.BB.DEBUG then
+                print(string.format("[%s] 빗나감 (장판 밖) — 대시무적=%s", tag, tostring(dodging)))
+            end
+            return false
+        end
+
+        -- 대시 시작 시 장판 안 + 무적 → 아래 ApplyHit 으로 흘려보내 퍼펙트 회피 처리시킨다.
+        if ctx_ref.BB.DEBUG then
+            print(string.format("[%s] 회피로 장판 벗어남 — 대시 시작은 장판 안 → 퍼펙트 인정", tag))
+        end
     end
 
     local result = CombatContext.ApplyHit({
@@ -51,7 +67,11 @@ local function ResolveHit(tag, zone, damage, hitStopDuration)
         end
     end
 
-    return result.Applied == true
+    -- 퍼펙트 회피(Applied=false, Reason="PerfectDodge")도 "이 판정창에서 해소됨"으로 간주.
+    -- 이렇게 안 하면 보스 루프의 hit 플래그가 계속 false → 판정창이 닫힐 때까지 ResolveHit
+    -- 을 반복 → 슬로모로 시간이 미세하게 흘러 무적 윈도우가 끝나는 순간(dodging=false)
+    -- 같은 공격의 데미지가 새어 들어간다.
+    return result.Applied == true or result.Reason == "PerfectDodge"
 end
 
 -- ────────────────────────────────────────────

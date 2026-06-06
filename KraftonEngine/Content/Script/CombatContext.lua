@@ -245,6 +245,14 @@ function CombatContext.HandlePlayerResult(ctx, result)
                 or PlayerConfig.Default.Action.DashDuration
             ctx.DodgeInvincibleUntil = math.max(ctx.DodgeInvincibleUntil or 0.0, now + duration)
             ctx.CombatDodgeActive = true
+            -- 대시 시작 순간의 위치를 기록한다. 회피로 장판을 벗어나도 "대시를 시작한 위치가
+            -- 장판 안이었으면" 퍼펙트 회피를 인정하기 위해 보스 ResolveHit 이 이 좌표로 재검사한다.
+            if ctx.Owner ~= nil and ctx.Owner.Location ~= nil then
+                local loc = ctx.Owner.Location
+                ctx.DodgeStartLocation = Vector(loc.X, loc.Y, loc.Z)
+            end
+            print(string.format("[PerfectDodge] 대시무적 ON: now=%.3f ~ until=%.3f (dur=%.3f)",
+                now, ctx.DodgeInvincibleUntil, duration))
         elseif event.Type == "DashEnd" then
             local grace = combatConfig.PerfectDodgeGraceAfterDash or 0.0
             ctx.DodgeInvincibleUntil = math.max(ctx.DodgeInvincibleUntil or 0.0, now + grace)
@@ -314,6 +322,32 @@ local function IsPerfectDodgeActive(ctx, now)
     return (ctx.DodgeInvincibleUntil or 0.0) > now
 end
 
+-- [진단용] 특정 플레이어 액터가 지금 대시 무적(퍼펙트 회피 윈도우) 상태인지 조회.
+-- 반환: dodging(bool), now, until_  — 보스 ResolveHit 에서 "장판 밖 빗나감" 인데
+-- 무적이긴 했는지(=구조적 모순) 를 구분하기 위해 사용.
+function CombatContext.DebugPlayerDodgeState(playerActor)
+    local ctx = CombatContext.GetPlayerByOwner(playerActor)
+    if ctx == nil then
+        return false, 0.0, 0.0
+    end
+    local now    = Now()
+    local until_ = ctx.DodgeInvincibleUntil or 0.0
+    return until_ > now, now, until_
+end
+
+-- [퍼펙트 회피] 플레이어가 지금 무적인지 + 대시를 시작한 위치를 함께 반환.
+-- 보스 ResolveHit 이 "현재는 장판 밖이지만 대시 시작 시 장판 안이었나" 를 판정할 때 사용.
+-- 반환: dodging(bool), dodgeStartLocation(Vector or nil)
+function CombatContext.GetPlayerDodgeSnapshot(playerActor)
+    local ctx = CombatContext.GetPlayerByOwner(playerActor)
+    if ctx == nil then
+        return false, nil
+    end
+    local now     = Now()
+    local dodging = (ctx.DodgeInvincibleUntil or 0.0) > now
+    return dodging, ctx.DodgeStartLocation
+end
+
 function CombatContext.OnPlayerPerfectDodge(ctx, hit)
     if ctx == nil then
         return
@@ -380,6 +414,12 @@ function CombatContext.ApplyHitToPlayer(ctx, hit)
     if MarkHitIfNew(ctx, hit, now, combatConfig.DuplicateHitLifetime or 1.0) == false then
         return { Applied = false, Reason = "DuplicateHit" }
     end
+
+    -- [진단] 여기 도달했다 = Hitbox.Check 통과(장판 안) → 퍼펙트 회피 판정 단계.
+    -- dodging=false 면 "장판 안에 있었지만 무적 타이밍이 안 맞음"(윈도우 미겹침).
+    print(string.format("[PerfectDodge] ApplyHit 도달: now=%.3f until=%.3f dodging=%s attack=%s",
+        now, ctx.DodgeInvincibleUntil or 0.0,
+        tostring(IsPerfectDodgeActive(ctx, now)), tostring(hit.AttackId)))
 
     if hit.CanPerfectDodge ~= false and IsPerfectDodgeActive(ctx, now) then
         -- 같은 회피 윈도우에서 여러 타가 한꺼번에 들어와도 첫 타만 슬로모를 건다.

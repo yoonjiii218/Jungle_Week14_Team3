@@ -15,7 +15,7 @@ PlayerConfig.Default = {
 
     Action = {
         DashDistance = 8.0,
-        DashDuration = 0.2,
+        DashDuration = 0.15,
         DashChargingHoldThreshold = 0.20,
         AttackStepForwardDistance = 1.5,
         AttackStepForwardDuration = 0.12,
@@ -61,7 +61,7 @@ PlayerConfig.Default = {
 
         -- Player defense / perfect dodge.
         HitInvincibleDuration = 0.5,
-        DashPerfectDodgeDuration = 0.22,
+        DashPerfectDodgeDuration = 0.2,
         PerfectDodgeGraceAfterDash = 0.05,
         PerfectDodgeSlomoDuration = 1.5,
         PerfectDodgeSlomoScale = 0.1,
