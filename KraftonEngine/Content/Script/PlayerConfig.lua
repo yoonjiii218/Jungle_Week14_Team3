@@ -24,9 +24,13 @@ PlayerConfig.Default = {
             3,
             3,
             3,
+            5,
             3,
+            7,
         },
         AttackStepForwardDurations = {
+            0.12,
+            0.12,
             0.12,
             0.12,
             0.12,
@@ -84,13 +88,15 @@ PlayerConfig.Default = {
         MaxHP = 100,
         MaxUltimateGauge = 100,
 
-        -- Player -> Enemy damage. AttackIndex 1~5 uses AttackDamages.
+        -- Player -> Enemy damage. AttackIndex 1~7 uses AttackDamages.
         AttackDamages = {
             8,
             10,
             12,
             14,
             18,
+            20,
+            24,
         },
         DashChargeAttackDamage = 30,
         UltimateDamage = 100,
@@ -163,11 +169,13 @@ PlayerConfig.Default = {
             JumpPath = "Content/Animation/Samurai_Player/SamuraiJump.uasset",
 
             AttackPaths = {
-                "Content/Animation/Samurai_Player/SamuraiAttack1.uasset",
-                "Content/Animation/Samurai_Player/SamuraiAttack2.uasset",
+                "Content/Animation/Samurai_Player_Advanced/Combo1.uasset",
+                "Content/Animation/Samurai_Player_Advanced/Combo2.uasset",
+                "Content/Animation/Samurai_Player_Advanced/Combo3.uasset",
+                "Content/Animation/Samurai_Player_Advanced/Combo4.uasset",
+                "Content/Animation/Samurai_Player_Advanced/Combo5.uasset",
                 "Content/Animation/Samurai_Player/SamuraiAttack3.uasset",
-                "Content/Animation/Samurai_Player/SamuraiAttack4.uasset",
-                "Content/Animation/Samurai_Player/SamuraiAttack5.uasset",
+                "Content/Animation/Samurai_Player_Advanced/Combo7.uasset",
             },
 
             DashPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1_Start2.uasset",
@@ -185,11 +193,13 @@ PlayerConfig.Default = {
             AttackBlendOut = 0.15,
             AttackPlayRate = 1.5,
             AttackPlayRates = {
+                3,
+                2.5,
+                3,
                 2,
-                3,
-                3,
-                3,
-                3,
+                2,
+                2,
+                2,
             },
 
             DashBlendIn = 0.05,

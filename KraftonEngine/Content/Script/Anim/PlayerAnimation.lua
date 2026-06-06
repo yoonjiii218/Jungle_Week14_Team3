@@ -174,6 +174,8 @@ function init(self)
     Anim.sm_add_state(top, "Attack3", Anim.create_sequence_player(attackPaths[3] or DEFAULT_SAMURAI_CONFIG.AttackPaths[3], GetAttackPlayRate(samuraiConfig, 3), false))
     Anim.sm_add_state(top, "Attack4", Anim.create_sequence_player(attackPaths[4] or DEFAULT_SAMURAI_CONFIG.AttackPaths[4], GetAttackPlayRate(samuraiConfig, 4), false))
     Anim.sm_add_state(top, "Attack5", Anim.create_sequence_player(attackPaths[5] or DEFAULT_SAMURAI_CONFIG.AttackPaths[5], GetAttackPlayRate(samuraiConfig, 5), false))
+    Anim.sm_add_state(top, "Attack6", Anim.create_sequence_player(attackPaths[6] or DEFAULT_SAMURAI_CONFIG.AttackPaths[6], GetAttackPlayRate(samuraiConfig, 6), false))
+    Anim.sm_add_state(top, "Attack7", Anim.create_sequence_player(attackPaths[7] or DEFAULT_SAMURAI_CONFIG.AttackPaths[7], GetAttackPlayRate(samuraiConfig, 7), false))
 
     Anim.sm_add_state(top, "Dash", Anim.create_sequence_player(samuraiConfig.DashPath or DEFAULT_SAMURAI_CONFIG.DashPath, samuraiConfig.DashPlayRate or DEFAULT_SAMURAI_CONFIG.DashPlayRate, false))
     Anim.sm_add_state(top, "DashCharging", Anim.create_sequence_player(samuraiConfig.DashChargingPath or DEFAULT_SAMURAI_CONFIG.DashChargingPath, samuraiConfig.DashChargingPlayRate or DEFAULT_SAMURAI_CONFIG.DashChargingPlayRate, false))
@@ -401,7 +403,51 @@ function init(self)
         samuraiConfig.AttackBlendOut or DEFAULT_SAMURAI_CONFIG.AttackBlendOut
     )
 
+    Anim.sm_add_transition(top, "Attack5", "Attack6",
+        function()
+            if self.AttackEnd and self.ComboQueued then
+                BeginAttack(self, 6)
+                return true
+            end
+            return false
+        end,
+        samuraiConfig.AttackBlendIn or DEFAULT_SAMURAI_CONFIG.AttackBlendIn
+    )
+
     Anim.sm_add_transition(top, "Attack5", "Locomotion",
+        function()
+            if self.AttackEnd then
+                ResetAttack(self)
+                return true
+            end
+            return false
+        end,
+        samuraiConfig.AttackBlendOut or DEFAULT_SAMURAI_CONFIG.AttackBlendOut
+    )
+
+    Anim.sm_add_transition(top, "Attack6", "Attack7",
+        function()
+            if self.AttackEnd and self.ComboQueued then
+                BeginAttack(self, 7)
+                return true
+            end
+            return false
+        end,
+        samuraiConfig.AttackBlendIn or DEFAULT_SAMURAI_CONFIG.AttackBlendIn
+    )
+
+    Anim.sm_add_transition(top, "Attack6", "Locomotion",
+        function()
+            if self.AttackEnd then
+                ResetAttack(self)
+                return true
+            end
+            return false
+        end,
+        samuraiConfig.AttackBlendOut or DEFAULT_SAMURAI_CONFIG.AttackBlendOut
+    )
+
+    Anim.sm_add_transition(top, "Attack7", "Locomotion",
         function()
             if self.AttackEnd then
                 ResetAttack(self)
