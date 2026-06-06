@@ -24,6 +24,7 @@ enum class EMaterialGraphShaderMode : uint8
 enum class EMaterialShadingModel : uint8
 {
 	DefaultLit,
+	UnLit,
 	Toon
 };
 
