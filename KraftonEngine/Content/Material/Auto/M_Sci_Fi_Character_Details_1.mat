@@ -1,0 +1,20 @@
+{
+  "BlendState" : "",
+  "DepthStencilState" : "",
+  "GraphShaderMode" : "Generated",
+  "Origin" : "FbxImport",
+  "Parameters" : {
+    "HasDiffuseTexture" : 1.000000,
+    "HasNormalMap" : 1.000000,
+    "SectionColor" : [1.000000, 1.000000, 1.000000, 1.000000],
+    "_pad" : null
+  },
+  "PathFileName" : "Content/Material/Auto/M_Sci_Fi_Character_Details_1.mat",
+  "RasterizerState" : "",
+  "RenderPass" : "Opaque",
+  "ShaderPath" : "Shaders/Geometry/UberLit.hlsl",
+  "Textures" : {
+    "DiffuseTexture" : "D:/ГОТОВЫЕ МОДЕЛИ ДЛЯ  UE4/Sci_Fi_Character_08/Textures/Details/T_Sci_Fi_Character_08_Details_Albedo_01.tga",
+    "NormalTexture" : "D:/ГОТОВЫЕ МОДЕЛИ ДЛЯ  UE4/Sci_Fi_Character_08/Textures/Details/T_Sci_Fi_Character_08_Details_Normals.tga"
+  }
+}
