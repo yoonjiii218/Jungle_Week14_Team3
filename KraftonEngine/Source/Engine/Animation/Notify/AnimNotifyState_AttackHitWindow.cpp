@@ -101,14 +101,6 @@ namespace
 		return bAutoAdd ? Actor->AddComponent<UActionComponent>() : nullptr;
 	}
 
-	void ApplyHitStop(AActor* Actor, float Duration, bool bAutoAddActionComponent)
-	{
-		if (UActionComponent* Action = GetOrCreateActionComponent(Actor, bAutoAddActionComponent))
-		{
-			Action->LocalHitStop(Duration);
-		}
-	}
-
 	FVector ResolveKnockbackDirection(AActor* Attacker, AActor* Target, EAttackKnockbackMode Mode)
 	{
 		switch (Mode)
@@ -183,16 +175,13 @@ void UAnimNotifyState_AttackHitWindow::NotifyBegin(USkeletalMeshComponent* MeshC
 
 	FActiveHitWindow& Active = ActiveWindowsByMesh[MeshComp];
 	Active.HitActors.clear();
-	Active.BeginOverlapHandle = HitBox->OnComponentBeginOverlap.AddRaw(
-		this,
-		&UAnimNotifyState_AttackHitWindow::HandleHitBoxBeginOverlap);
 
 	UpdateHitBoxTransform(MeshComp, HitBox);
-	HitBox->SetBoxExtent(FVector(Radius, Radius, Radius));
-	HitBox->SetCollisionObjectType(ECollisionChannel::Trigger);
-	HitBox->SetCollisionResponseToAllChannels(ECollisionResponse::Overlap);
-	HitBox->SetGenerateOverlapEvents(true);
-	HitBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    HitBox->SetBoxExtent(FVector(Radius, Radius, Radius));
+    HitBox->SetCollisionObjectType(ECollisionChannel::Trigger);
+    HitBox->SetCollisionResponseToAllChannels(ECollisionResponse::Overlap);
+    HitBox->SetGenerateOverlapEvents(false);
+    HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void UAnimNotifyState_AttackHitWindow::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* /*Anim*/, float /*FrameDeltaTime*/)
@@ -216,6 +205,38 @@ void UAnimNotifyState_AttackHitWindow::NotifyTick(USkeletalMeshComponent* MeshCo
 	}
 
 	UpdateHitBoxTransform(MeshComp, HitBox);
+	const FBoundingBox HitBounds = HitBox->GetWorldBoundingBox();
+	if (HitBounds.IsValid())
+	{
+		for (AActor* OtherActor : World->GetActors())
+		{
+			if (!IsValid(OtherActor) || OtherActor == Owner)
+			{
+				continue;
+			}
+
+			for (UPrimitiveComponent* OtherComp : OtherActor->GetPrimitiveComponents())
+			{
+				if (!IsValid(OtherComp) || OtherComp == HitBox || !OtherComp->IsQueryCollisionEnabled())
+				{
+					continue;
+				}
+				if (UPrimitiveComponent::GetMinResponse(HitBox, OtherComp) == ECollisionResponse::Ignore)
+				{
+					continue;
+				}
+
+				const FBoundingBox OtherBounds = OtherComp->GetWorldBoundingBox();
+				if (!OtherBounds.IsValid() || !HitBounds.IsIntersected(OtherBounds))
+				{
+					continue;
+				}
+
+				ProcessHit(MeshComp, HitBox, OtherActor, OtherComp);
+			}
+		}
+	}
+
 	if (bDrawDebugHitWindow)
 	{
 		DrawDebugBox(World, HitBox->GetWorldLocation(), HitBox->GetScaledBoxExtent(), FColor(255, 220, 0), DebugDrawDuration);
@@ -256,10 +277,10 @@ UBoxComponent* UAnimNotifyState_AttackHitWindow::GetOrCreateHitBox(USkeletalMesh
 	HitBox->SetBoxExtent(FVector(Radius, Radius, Radius));
 	HitBox->SetSimulatePhysics(false);
 	HitBox->SetEnableGravity(false);
-	HitBox->SetGenerateOverlapEvents(false);
-	HitBox->SetCollisionObjectType(ECollisionChannel::Trigger);
-	HitBox->SetCollisionResponseToAllChannels(ECollisionResponse::Overlap);
-	HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    HitBox->SetGenerateOverlapEvents(false);
+    HitBox->SetCollisionObjectType(ECollisionChannel::Trigger);
+    HitBox->SetCollisionResponseToAllChannels(ECollisionResponse::Overlap);
+    HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	if (Owner->HasActorBegunPlay())
 	{
@@ -297,10 +318,6 @@ void UAnimNotifyState_AttackHitWindow::DisableHitBox(USkeletalMeshComponent* Mes
 	auto It = ActiveWindowsByMesh.find(MeshComp);
 	if (It != ActiveWindowsByMesh.end())
 	{
-		if (IsValid(HitBox) && It->second.BeginOverlapHandle.IsValid())
-		{
-			HitBox->OnComponentBeginOverlap.Remove(It->second.BeginOverlapHandle);
-		}
 		ActiveWindowsByMesh.erase(It);
 	}
 
@@ -311,32 +328,20 @@ void UAnimNotifyState_AttackHitWindow::DisableHitBox(USkeletalMeshComponent* Mes
 	}
 }
 
-void UAnimNotifyState_AttackHitWindow::HandleHitBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent,
-	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 /*OtherBodyIndex*/, bool /*bFromSweep*/,
-	const FHitResult& SweepResult)
+void UAnimNotifyState_AttackHitWindow::ProcessHit(USkeletalMeshComponent* MeshComp, UBoxComponent* HitBox,
+	AActor* OtherActor, UPrimitiveComponent* OtherComp)
 {
-	if (!IsValid(OverlappedComponent) || !IsValid(OtherActor) || !IsValid(OtherComp))
+	if (!IsValid(MeshComp) || !IsValid(HitBox) || !IsValid(OtherActor) || !IsValid(OtherComp))
 	{
 		return;
 	}
 
-	USkeletalMeshComponent* MeshComp = nullptr;
-	FActiveHitWindow* ActiveWindow = nullptr;
-	for (auto& Pair : ActiveWindowsByMesh)
-	{
-		UBoxComponent* HitBox = HitBoxesByMesh[Pair.first].Get();
-		if (HitBox == OverlappedComponent)
-		{
-			MeshComp = Pair.first;
-			ActiveWindow = &Pair.second;
-			break;
-		}
-	}
-
-	if (!IsValid(MeshComp) || !ActiveWindow)
+	auto It = ActiveWindowsByMesh.find(MeshComp);
+	if (It == ActiveWindowsByMesh.end())
 	{
 		return;
 	}
+	FActiveHitWindow* ActiveWindow = &It->second;
 
 	AActor* Owner = MeshComp->GetOwner();
 	if (!IsValid(Owner) || OtherActor == Owner)
@@ -373,20 +378,18 @@ void UAnimNotifyState_AttackHitWindow::HandleHitBoxBeginOverlap(UPrimitiveCompon
 	}
 
 	ActiveWindow->HitActors.insert(OtherActor);
-	ApplyHitStop(Owner, HitStopDuration, bAutoAddActionComponent);
-	ApplyHitStop(OtherActor, HitStopDuration, bAutoAddActionComponent);
 	if (bApplyKnockback)
 	{
 		ApplyKnockback(Owner, OtherActor, KnockbackMode, KnockbackDistance, KnockbackDuration, bAutoAddActionComponent);
 	}
 
-	UBoxComponent* HitBox = Cast<UBoxComponent>(OverlappedComponent);
-	const FHitResult HitResult = MakeAttackHitResult(HitBox, OtherActor, OtherComp, SweepResult);
+	FHitResult EmptySweepResult;
+	const FHitResult HitResult = MakeAttackHitResult(HitBox, OtherActor, OtherComp, EmptySweepResult);
 	if (!HitFunctionName.empty())
 	{
 		if (ULuaAnimInstance* LuaAnim = Cast<ULuaAnimInstance>(MeshComp->GetAnimInstance()))
 		{
-			LuaAnim->InvokeLuaFunction(HitFunctionName, OtherActor, OverlappedComponent, OtherComp, HitResult);
+			LuaAnim->InvokeLuaFunction(HitFunctionName, OtherActor, HitBox, OtherComp, HitResult, HitStopDuration);
 		}
 	}
 
