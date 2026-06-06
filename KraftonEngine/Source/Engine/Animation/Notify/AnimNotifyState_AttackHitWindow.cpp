@@ -101,14 +101,6 @@ namespace
 		return bAutoAdd ? Actor->AddComponent<UActionComponent>() : nullptr;
 	}
 
-	void ApplyHitStop(AActor* Actor, float Duration, bool bAutoAddActionComponent)
-	{
-		if (UActionComponent* Action = GetOrCreateActionComponent(Actor, bAutoAddActionComponent))
-		{
-			Action->LocalHitStop(Duration);
-		}
-	}
-
 	FVector ResolveKnockbackDirection(AActor* Attacker, AActor* Target, EAttackKnockbackMode Mode)
 	{
 		switch (Mode)
@@ -188,11 +180,12 @@ void UAnimNotifyState_AttackHitWindow::NotifyBegin(USkeletalMeshComponent* MeshC
 		&UAnimNotifyState_AttackHitWindow::HandleHitBoxBeginOverlap);
 
 	UpdateHitBoxTransform(MeshComp, HitBox);
-	HitBox->SetBoxExtent(FVector(Radius, Radius, Radius));
-	HitBox->SetCollisionObjectType(ECollisionChannel::Trigger);
-	HitBox->SetCollisionResponseToAllChannels(ECollisionResponse::Overlap);
-	HitBox->SetGenerateOverlapEvents(true);
-	HitBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    HitBox->SetBoxExtent(FVector(Radius, Radius, Radius));
+    HitBox->SetCollisionObjectType(ECollisionChannel::Trigger);
+    HitBox->SetCollisionResponseToAllChannels(ECollisionResponse::Overlap);
+    HitBox->SetCollisionResponseToChannel(ECollisionChannel::Pawn, ECollisionResponse::Ignore);
+    HitBox->SetGenerateOverlapEvents(true);
+    HitBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
 void UAnimNotifyState_AttackHitWindow::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* /*Anim*/, float /*FrameDeltaTime*/)
@@ -254,12 +247,16 @@ UBoxComponent* UAnimNotifyState_AttackHitWindow::GetOrCreateHitBox(USkeletalMesh
 	HitBox->SetHiddenInComponentTree(true);
 	HitBox->SetVisibility(false);
 	HitBox->SetBoxExtent(FVector(Radius, Radius, Radius));
-	HitBox->SetSimulatePhysics(false);
+	// PhysX does not report static-trigger vs static-shape overlaps. Keep this
+	// as a non-gravity trigger, but register it as dynamic so character capsules
+	// that do not simulate physics can still be hit.
+	HitBox->SetSimulatePhysics(true);
 	HitBox->SetEnableGravity(false);
-	HitBox->SetGenerateOverlapEvents(false);
-	HitBox->SetCollisionObjectType(ECollisionChannel::Trigger);
-	HitBox->SetCollisionResponseToAllChannels(ECollisionResponse::Overlap);
-	HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    HitBox->SetGenerateOverlapEvents(false);
+    HitBox->SetCollisionObjectType(ECollisionChannel::Trigger);
+    HitBox->SetCollisionResponseToAllChannels(ECollisionResponse::Overlap);
+    HitBox->SetCollisionResponseToChannel(ECollisionChannel::Pawn, ECollisionResponse::Ignore);
+    HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	if (Owner->HasActorBegunPlay())
 	{
@@ -373,8 +370,6 @@ void UAnimNotifyState_AttackHitWindow::HandleHitBoxBeginOverlap(UPrimitiveCompon
 	}
 
 	ActiveWindow->HitActors.insert(OtherActor);
-	ApplyHitStop(Owner, HitStopDuration, bAutoAddActionComponent);
-	ApplyHitStop(OtherActor, HitStopDuration, bAutoAddActionComponent);
 	if (bApplyKnockback)
 	{
 		ApplyKnockback(Owner, OtherActor, KnockbackMode, KnockbackDistance, KnockbackDuration, bAutoAddActionComponent);
@@ -386,7 +381,7 @@ void UAnimNotifyState_AttackHitWindow::HandleHitBoxBeginOverlap(UPrimitiveCompon
 	{
 		if (ULuaAnimInstance* LuaAnim = Cast<ULuaAnimInstance>(MeshComp->GetAnimInstance()))
 		{
-			LuaAnim->InvokeLuaFunction(HitFunctionName, OtherActor, OverlappedComponent, OtherComp, HitResult);
+			LuaAnim->InvokeLuaFunction(HitFunctionName, OtherActor, OverlappedComponent, OtherComp, HitResult, HitStopDuration);
 		}
 	}
 

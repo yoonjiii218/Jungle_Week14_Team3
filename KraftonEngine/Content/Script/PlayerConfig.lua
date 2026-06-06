@@ -39,7 +39,38 @@ PlayerConfig.Default = {
     },
 
     Combat = {
+        MaxHP = 100,
         MaxUltimateGauge = 100,
+
+        -- Player -> Enemy damage. AttackIndex 1~5 uses AttackDamages.
+        AttackDamages = {
+            8,
+            10,
+            12,
+            14,
+            18,
+        },
+        DashChargeAttackDamage = 30,
+        UltimateDamage = 100,
+
+        -- Gauge/anti-duplicate policy.
+        AttackHitGaugeDelta = 10,
+        DashChargeAttackGaugeDelta = 15,
+        PerfectDodgeGaugeDelta = 20,
+        DuplicateHitLifetime = 1.0,
+
+        -- Player defense / perfect dodge.
+        HitInvincibleDuration = 0.5,
+        DashPerfectDodgeDuration = 0.22,
+        PerfectDodgeGraceAfterDash = 0.05,
+        PerfectDodgeSlomoDuration = 1.5,
+        PerfectDodgeSlomoScale = 0.1,
+
+        -- Lua-triggered hit feedback. Player attack hitstop is still primarily
+        -- driven by AnimNotifyState_AttackHitWindow, but these values are used
+        -- by boss->player hits and non-notify based hit windows.
+        HitStopDuration = 0.05,
+        EnemyHitStopDuration = 0.04,
     },
 
     Feedback = {

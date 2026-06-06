@@ -51,6 +51,11 @@ function BeginPlay()
         obj:AddTag("Boss")
     end
 
+    -- AnimNotifyState_AttackHitWindow 의 기본 타겟 태그가 HitTarget 인 경우도 맞도록 유지.
+    if not obj:HasTag("HitTarget") then
+        obj:AddTag("HitTarget")
+    end
+
     -- 더미 or 실제 플레이어 찾기 (태그 "Player")
     ctx.playerRef = World.FindFirstActorByTag("Player")
 

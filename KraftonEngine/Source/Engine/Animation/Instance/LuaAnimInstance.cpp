@@ -168,7 +168,7 @@ bool ULuaAnimInstance::InvokeLuaFunction(const FString& FunctionName)
 }
 
 bool ULuaAnimInstance::InvokeLuaFunction(const FString& FunctionName, AActor* OtherActor,
-	UPrimitiveComponent* HitComponent, UPrimitiveComponent* OtherComp, const FHitResult& HitResult)
+	UPrimitiveComponent* HitComponent, UPrimitiveComponent* OtherComp, const FHitResult& HitResult, float HitStopDuration)
 {
 	if (FunctionName.empty() || !Env.valid() || !LuaSelf.valid())
 	{
@@ -182,7 +182,7 @@ bool ULuaAnimInstance::InvokeLuaFunction(const FString& FunctionName, AActor* Ot
 	}
 
 	FLuaCallScope Scope(this);
-	auto R = Function(LuaSelf, OtherActor, HitComponent, OtherComp, HitResult);
+	auto R = Function(LuaSelf, OtherActor, HitComponent, OtherComp, HitResult, HitStopDuration);
 	if (!R.valid())
 	{
 		sol::error Err = R;
