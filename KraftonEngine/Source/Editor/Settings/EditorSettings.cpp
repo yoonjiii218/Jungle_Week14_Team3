@@ -269,6 +269,10 @@ void LoadRenderOptions(json::JSON Obj, FViewportRenderOptions& Opts)
 		Opts.HeatMapMax = static_cast<float>(Obj[Key::HeatMapMax].ToFloat());
 	if (Obj.hasKey(Key::Enable25DCulling))
 		Opts.Enable25DCulling = Obj[Key::Enable25DCulling].ToBool();
+
+	// Bloom is composed by the HDR tone-mapping pass.
+	if (!Opts.ShowFlags.bGammaCorrection)
+		Opts.ShowFlags.bBloom = false;
 }
 
 json::JSON SaveGizmoSettings(const FGizmoToolSettings& Gizmo)

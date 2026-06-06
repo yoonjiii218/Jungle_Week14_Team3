@@ -31,7 +31,8 @@ float4 PS(PS_Input_UV input) : SV_TARGET
     uint width;
     uint height;
     SceneColorTexture.GetDimensions(width, height);
-    float2 texelSize = rcp(float2(width, height));
+    // The destination is half-resolution, so one bloom texel spans two SceneColor texels.
+    float2 texelSize = rcp(float2(width, height)) * 2.0f;
     float radius = max(BloomRadius, 0.0f);
 
     float3 bloom = SampleBright(input.uv) * 0.227027f;
