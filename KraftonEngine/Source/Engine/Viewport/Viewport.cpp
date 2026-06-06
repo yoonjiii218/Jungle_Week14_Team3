@@ -267,7 +267,7 @@ bool FViewport::CreateResources()
 	hr = Device->CreateShaderResourceView(DOFCoCTexture, nullptr, &DOFCoCSRV);
 	if (FAILED(hr)) { ReleaseResources(); return false; }
 
-	// ── DOF Blur RT (R8G8B8A8_UNORM) ──
+	// ── DOF Blur RT (HDR scene color format) ──
 	D3D11_TEXTURE2D_DESC DOFBlurDesc = TexDesc;
 	hr = Device->CreateTexture2D(&DOFBlurDesc, nullptr, &DOFBlurTexture);
 	if (FAILED(hr)) { ReleaseResources(); return false; }
