@@ -105,12 +105,10 @@ public:
 private:
 	struct FActiveHitWindow
 	{
-		FDelegateHandle BeginOverlapHandle;
 		TSet<AActor*> HitActors;
 	};
 
-	void HandleHitBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void ProcessHit(USkeletalMeshComponent* MeshComp, UBoxComponent* HitBox, AActor* OtherActor, UPrimitiveComponent* OtherComp);
 
 	UBoxComponent* GetOrCreateHitBox(USkeletalMeshComponent* MeshComp);
 	void UpdateHitBoxTransform(USkeletalMeshComponent* MeshComp, UBoxComponent* HitBox) const;

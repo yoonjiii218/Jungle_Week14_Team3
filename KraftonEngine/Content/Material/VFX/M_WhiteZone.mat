@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "AlphaBlend",
     "Domain" : "Decal",
-    "GeneratorVersion" : "GeneratedMaterialPass_v4_Decal",
+    "GeneratorVersion" : "GeneratedMaterialPass_v7_ParticleBeamTrailRefraction",
     "GraphHash" : "A0C88D39F4AB2835",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
