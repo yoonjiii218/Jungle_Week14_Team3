@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "AlphaBlend",
     "Domain" : "Decal",
-    "GeneratorVersion" : "GeneratedMaterialPass_v8_RefractionAlphaMask",
+    "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
     "GraphHash" : "A0C88D39F4AB2835",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
@@ -11,13 +11,14 @@
     },
     "ReceiveLighting" : false,
     "RenderPass" : "Decal",
+    "ShadingModel" : "DefaultLit",
     "Textures" : {
 
     }
   },
   "DepthStencilState" : "DepthReadOnly",
   "Domain" : "Decal",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/F1E2D3C4B5A60798172635445362718F_Decal.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/F1E2D3C4B5A60798172635445362718F_Decal_DefaultLit.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 23,
@@ -127,6 +128,7 @@
   "RasterizerState" : "SolidNoCull",
   "ReceiveLighting" : false,
   "RenderPass" : "Decal",
-  "ShaderPath" : "Shaders/Generated/Materials/F1E2D3C4B5A60798172635445362718F_Decal.hlsl",
+  "ShaderPath" : "Shaders/Generated/Materials/F1E2D3C4B5A60798172635445362718F_Decal_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Version" : 2
 }

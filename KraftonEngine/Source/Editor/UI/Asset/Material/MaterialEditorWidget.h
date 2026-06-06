@@ -32,7 +32,7 @@ private:
 	void RenderErrorPanel();
 
 	void RenderNodeBody(FMaterialGraphNode& Node);
-	void RenderAddNodeMenu(FMaterialGraph& Graph, EMaterialDomain Domain);
+	void RenderAddNodeMenu(FMaterialGraph& Graph, EMaterialDomain Domain, EMaterialShadingModel ShadingModel);
 
 	void CompileAndSave(UMaterial* Material);
 	void CompileOnly(UMaterial* Material);

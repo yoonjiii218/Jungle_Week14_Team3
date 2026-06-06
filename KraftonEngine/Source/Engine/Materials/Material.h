@@ -82,6 +82,7 @@ private:
 	FString GeneratedShaderPath;
 	EMaterialDomain Domain = EMaterialDomain::Surface;
 	EMaterialGraphShaderMode GraphShaderMode = EMaterialGraphShaderMode::Generated;
+	EMaterialShadingModel ShadingModel = EMaterialShadingModel::DefaultLit;
 	FMaterialGraph Graph;
 	uint32 MaterialInstanceID = 0; // 고유 ID
 	FMaterialTemplate* Template = nullptr; // 공유
@@ -175,6 +176,8 @@ public:
 	void SetDomain(EMaterialDomain InDomain) { Domain = InDomain; }
 	EMaterialGraphShaderMode GetGraphShaderMode() const { return GraphShaderMode; }
 	void SetGraphShaderMode(EMaterialGraphShaderMode InMode) { GraphShaderMode = InMode; }
+	EMaterialShadingModel GetShadingModel() const { return ShadingModel; }
+	void SetShadingModel(EMaterialShadingModel InModel) { ShadingModel = InModel; }
 	const FString& GetGeneratedShaderPath() const { return GeneratedShaderPath; }
 	void SetGeneratedShaderPath(const FString& InPath) { GeneratedShaderPath = InPath; }
 	FMaterialGraph& GetGraph() { return Graph; }

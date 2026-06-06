@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "Opaque",
     "Domain" : "Surface",
-    "GeneratorVersion" : "GeneratedMaterialPass_v8_RefractionAlphaMask",
+    "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
     "GraphHash" : "6852DD75FFED3F41",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
@@ -11,6 +11,7 @@
     },
     "ReceiveLighting" : false,
     "RenderPass" : "Opaque",
+    "ShadingModel" : "DefaultLit",
     "Textures" : {
       "DiffuseTexture" : {
         "Path" : "",
@@ -20,7 +21,7 @@
   },
   "DepthStencilState" : "Default",
   "Domain" : "Surface",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/D626D7F1EDB6163F_Surface.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/D626D7F1EDB6163F_Surface_DefaultLit.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 2,
@@ -352,7 +353,8 @@
   "RasterizerState" : "SolidBackCull",
   "ReceiveLighting" : false,
   "RenderPass" : "Opaque",
-  "ShaderPath" : "Shaders/Generated/Materials/D626D7F1EDB6163F_Surface.hlsl",
+  "ShaderPath" : "Shaders/Generated/Materials/D626D7F1EDB6163F_Surface_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Textures" : {
     "DiffuseTexture" : "Content/Data/Samba Dancing/textures/cloth.png"
   },

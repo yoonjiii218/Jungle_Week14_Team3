@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "AlphaBlend",
     "Domain" : "ParticleSprite",
-    "GeneratorVersion" : "GeneratedMaterialPass_v8_RefractionAlphaMask",
+    "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
     "GraphHash" : "B1CBA9B4FA3369F8",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
@@ -11,6 +11,7 @@
     },
     "ReceiveLighting" : false,
     "RenderPass" : "AlphaBlend",
+    "ShadingModel" : "DefaultLit",
     "Textures" : {
       "DiffuseTexture" : {
         "Path" : "Content/Data/Image/RedBeam.png",
@@ -20,7 +21,7 @@
   },
   "DepthStencilState" : "DepthReadOnly",
   "Domain" : "ParticleSprite",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/_5AADB2A222C48BD3_ParticleSprite.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/_5AADB2A222C48BD3_ParticleSprite_DefaultLit.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 27,
@@ -192,7 +193,8 @@
   "RasterizerState" : "SolidNoCull",
   "ReceiveLighting" : false,
   "RenderPass" : "AlphaBlend",
-  "ShaderPath" : "Shaders/Generated/Materials/_5AADB2A222C48BD3_ParticleSprite.hlsl",
+  "ShaderPath" : "Shaders/Generated/Materials/_5AADB2A222C48BD3_ParticleSprite_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Textures" : {
     "DiffuseTexture" : "Content/Data/Image/RedBeam.png",
     "EmissiveTexture" : "Content/Data/Image/RedBeam.png"
