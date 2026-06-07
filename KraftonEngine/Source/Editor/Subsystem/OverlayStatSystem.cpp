@@ -8,6 +8,12 @@
 #include "Engine/Profiling/Stats/PhysicsStats.h"
 #include "Engine/Profiling/Stats/Stats.h"
 #include "Engine/Profiling/GPUProfiler.h"
+#include "Animation/Instance/LuaAnimInstance.h"
+#include "Component/Primitive/SkeletalMeshComponent.h"
+#include "Component/Script/LuaScriptComponent.h"
+#include "GameFramework/AActor.h"
+#include "GameFramework/World.h"
+#include "Object/Reflection/ObjectFactory.h"
 #include "Slate/SWindow.h"
 #include "ImGui/imgui.h"
 #include <algorithm>
@@ -29,6 +35,42 @@ static int FormatBytes(char* Buffer, int32 BufferSize, const char* Label, uint64
 	if (KB >= 1.0)
 		return snprintf(Buffer, BufferSize, "%s : %.2f KB", Label, KB);
 	return snprintf(Buffer, BufferSize, "%s : %llu B", Label, static_cast<unsigned long long>(Bytes));
+}
+
+static void AppendMultilineText(TArray<FString>& OutLines, const FString& Text)
+{
+	if (Text.empty())
+	{
+		return;
+	}
+
+	size_t Start = 0;
+	while (Start <= Text.size())
+	{
+		size_t End = Text.find('\n', Start);
+		FString Line = (End == FString::npos)
+			? Text.substr(Start)
+			: Text.substr(Start, End - Start);
+
+		if (!Line.empty() && Line.back() == '\r')
+		{
+			Line.pop_back();
+		}
+		OutLines.push_back(Line);
+
+		if (End == FString::npos)
+		{
+			break;
+		}
+		Start = End + 1;
+	}
+}
+
+static bool IsPlayerDebugScript(const FString& ScriptFile)
+{
+	return ScriptFile.find("PlayerCharacter") != FString::npos
+		|| ScriptFile.find("Player/PlayerCharacter") != FString::npos
+		|| ScriptFile.find("Player\\PlayerCharacter") != FString::npos;
 }
 
 void FOverlayStatSystem::AppendLine(TArray<FOverlayStatLine>& OutLines, float Y, const FString& Text) const
@@ -402,6 +444,79 @@ void FOverlayStatSystem::BuildPhysicsLines(TArray<FString>& OutLines) const
 #endif
 }
 
+void FOverlayStatSystem::BuildPlayerDebugLines(const UEditorEngine& Editor, TArray<FString>& OutLines) const
+{
+	OutLines.push_back("--- Player ---");
+
+	UWorld* World = Editor.GetPlayInEditorWorld();
+	if (!World)
+	{
+		World = Editor.GetWorld();
+	}
+	if (!World)
+	{
+		OutLines.push_back("World: none");
+		return;
+	}
+
+	AActor* PlayerActor = nullptr;
+	ULuaScriptComponent* PlayerScript = nullptr;
+	for (AActor* Actor : World->GetActors())
+	{
+		if (!Actor)
+		{
+			continue;
+		}
+
+		ULuaScriptComponent* Script = Actor->GetComponentByClass<ULuaScriptComponent>();
+		if (Script && IsPlayerDebugScript(Script->GetScriptFile()))
+		{
+			PlayerActor = Actor;
+			PlayerScript = Script;
+			break;
+		}
+	}
+
+	if (!PlayerActor || !PlayerScript)
+	{
+		OutLines.push_back("Player LuaScriptComponent not found");
+		OutLines.push_back("Expected script: PlayerCharacter.lua");
+		return;
+	}
+
+	OutLines.push_back("Actor: " + PlayerActor->GetName());
+
+	FString LuaText;
+	if (PlayerScript->GetDebugSnapshotText(LuaText))
+	{
+		AppendMultilineText(OutLines, LuaText);
+	}
+	else
+	{
+		OutLines.push_back("Lua debug snapshot: unavailable");
+	}
+
+	USkeletalMeshComponent* Mesh = PlayerActor->GetComponentByClass<USkeletalMeshComponent>();
+	ULuaAnimInstance* LuaAnim = Mesh ? Cast<ULuaAnimInstance>(Mesh->GetAnimInstance()) : nullptr;
+	if (LuaAnim)
+	{
+		FString AnimText;
+		if (LuaAnim->GetDebugSnapshotText(AnimText))
+		{
+			OutLines.push_back("--- Animation ---");
+			AppendMultilineText(OutLines, AnimText);
+		}
+		else
+		{
+			OutLines.push_back("Anim debug snapshot: unavailable");
+		}
+	}
+	else
+	{
+		OutLines.push_back("AnimInstance: non-lua or missing");
+	}
+}
+
 void FOverlayStatSystem::BuildLines(const UEditorEngine& Editor, TArray<FOverlayStatLine>& OutLines) const
 {
 	OutLines.clear();
@@ -434,6 +549,10 @@ void FOverlayStatSystem::BuildLines(const UEditorEngine& Editor, TArray<FOverlay
 	if (bShowPhysics)
 	{
 		EstimatedLineCount += 7;
+	}
+	if (bShowDebugPlayer)
+	{
+		EstimatedLineCount += 18;
 	}
 	OutLines.reserve(EstimatedLineCount);
 
@@ -491,6 +610,13 @@ void FOverlayStatSystem::BuildLines(const UEditorEngine& Editor, TArray<FOverlay
 	{
 		Lines.clear();
 		BuildPhysicsLines(Lines);
+		AppendGroup(Lines);
+	}
+
+	if (bShowDebugPlayer)
+	{
+		Lines.clear();
+		BuildPlayerDebugLines(Editor, Lines);
 		AppendGroup(Lines);
 	}
 }
@@ -612,5 +738,12 @@ void FOverlayStatSystem::RenderImGui(const UEditorEngine& Editor, const FRect& V
 		Lines.clear();
 		BuildPhysicsLines(Lines);
 		RenderWindow("##StatPhysicsOverlay", "Stat Physics", ImVec4(0.07f, 0.08f, 0.09f, 0.62f), Lines);
+	}
+
+	if (bShowDebugPlayer)
+	{
+		Lines.clear();
+		BuildPlayerDebugLines(Editor, Lines);
+		RenderWindow("##ShowDebugPlayerOverlay", "ShowDebug Player", ImVec4(0.06f, 0.07f, 0.10f, 0.70f), Lines);
 	}
 }

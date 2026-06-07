@@ -1,4 +1,4 @@
-// Generated from Content/Material/VFX/M_Particle_Refraction.mat
+// Generated from Content/Material/Material_Emitter0.mat
 // Domain: ParticleSprite
 // ShadingModel: DefaultLit
 
@@ -30,15 +30,8 @@ struct FMaterialResult
     float2 UVOffset;
 };
 
-Texture2D Tex_Custom0 : register(t6);
-
-cbuffer PerMaterial : register(b3)
-{
-    float Param_Opacity;
-    float3 _Pad0;
-    float Param_RefractionStrength;
-    float3 _Pad1;
-};
+Texture2D Tex_Diffuse : register(t0);
+Texture2D Tex_SubUV : register(t6);
 
 struct FMaterialEvalResult
 {
@@ -50,26 +43,39 @@ struct FMaterialEvalResult
 
 FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
-    float3 n_35 = float3(1.000000f, 1.000000f, 1.000000f);
-    float n_37 = Param_Opacity;
-    float2 n_3 = Input.UV0;
-    float4 n_5 = Tex_Custom0.Sample(LinearWrapSampler, n_3);
-    float2 n_14 = (n_5).rg;
-    float n_17 = 2.000000f;
-    float2 n_19 = (n_14 * float2(n_17, n_17));
-    float n_23 = 1.000000f;
-    float2 n_25 = (n_19 - float2(n_23, n_23));
-    float n_29 = Param_RefractionStrength;
-    float2 n_31 = (n_25 * float2(n_29, n_29));
+    float n_100 = -0.200000f;
+    float n_98 = 1.000000f;
+    float2 n_133 = Input.UV0;
+    float4 n_3 = Tex_Diffuse.Sample(LinearWrapSampler, n_133);
+    float n_93 = lerp(n_100, n_98, (n_3).r);
+    float n_179 = 0.000000f;
+    float n_183 = 1.000000f;
+    float n_172 = clamp(n_93, n_179, n_183);
+    float2 n_39 = ((float2(fmod(floor(saturate(Input.SubImageIndex) * (36 - 0.0001f)), 6), floor(floor(saturate(Input.SubImageIndex) * (36 - 0.0001f)) / 6)) + Input.UV0) * float2(1.0f/6, 1.0f/6));
+    float4 n_43 = Tex_SubUV.Sample(LinearWrapSampler, n_39);
+    float3 n_162 = (float3(n_172, n_172, n_172) + (n_43).rgb);
+    float4 n_12 = Input.ParticleColor;
+    float3 n_111 = (n_162 * (n_12).rgb);
+    float4 n_60 = Input.DynamicParam;
+    float n_71 = 1.000000f;
+    float n_66 = ((n_60).r + n_71);
+    float n_54 = pow((n_43).r, n_66);
+    float n_84 = 0.000000f;
+    float n_81 = 1.000000f;
+    float n_75 = clamp(n_54, n_84, n_81);
+    float n_87 = (n_75 * (n_12).a);
+    float n_124 = 0.000000f;
+    float n_126 = 1.000000f;
+    float n_118 = clamp(n_87, n_124, n_126);
     FMaterialResult Result;
-    Result.Color = n_35;
+    Result.Color = n_111;
     Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = n_37;
+    Result.Opacity = n_118;
     Result.UVOffset = float2(0, 0);
     FMaterialEvalResult Eval;
     Eval.Material = Result;
-    Eval.RefractionOffset = n_31;
-    Eval.RefractionEnabled = 1.0f;
+    Eval.RefractionOffset = float2(0, 0);
+    Eval.RefractionEnabled = 0.0f;
     Eval._Pad = 0.0f;
     return Eval;
 }

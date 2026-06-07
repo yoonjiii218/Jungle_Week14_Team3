@@ -13,12 +13,14 @@ local PlayerContext = {}
 ---@field AttackDown boolean
 ---@field AttackHoldTime number
 ---@field DashPressed boolean
+---@field DashConsumedInput boolean
 ---@field DashReleased boolean
 ---@field DashDown boolean
 ---@field DashHoldTime number
 ---@field DashChargingPressed boolean
 ---@field DashChargingReleased boolean
 ---@field DashChargingConsumedInput boolean
+---@field DashBlockedUntilReleased boolean
 ---@field UltimatePressed boolean
 
 ---@class PlayerActionState
@@ -38,6 +40,11 @@ local PlayerContext = {}
 ---@field DashChargeAttackElapsed number
 ---@field DashChargeAttackEnd boolean
 ---@field DashChargeAttackInstanceId string|nil
+---@field HitReactActive boolean
+---@field HitReactPending boolean
+---@field HitReactDirection string|nil
+---@field HitReactElapsed number
+---@field HitReactEnd boolean
 ---@field IsUltimateRunning boolean
 ---@field IsInUltimateMode boolean
 
@@ -63,6 +70,9 @@ local PlayerContext = {}
 ---@field EventQueue PlayerEvent[]
 ---@field DashPrevOrientRotationToMovement any
 ---@field DashMoveDirection any
+---@field DashPreserveFacing boolean
+---@field HitKnockbackDirection any
+---@field HitKnockbackAppliedDistance number
 ---@field StepForwardActive boolean
 ---@field StepForwardElapsed number
 ---@field StepForwardDuration number
@@ -76,6 +86,7 @@ local PlayerContext = {}
 ---@field TargetAssistLockedDirection any
 ---@field TargetAssistEndTime number
 ---@field TargetAssistKeepUntil number
+---@field DashChargingTurnTarget string
 
 ---@class PlayerContext
 ---@field Kind string
@@ -95,12 +106,14 @@ local function CreateInputState()
         AttackDown = false,
         AttackHoldTime = 0.0,
         DashPressed = false,
+        DashConsumedInput = false,
         DashReleased = false,
         DashDown = false,
         DashHoldTime = 0.0,
         DashChargingPressed = false,
         DashChargingReleased = false,
         DashChargingConsumedInput = false,
+        DashBlockedUntilReleased = false,
         UltimatePressed = false,
     }
 end
@@ -123,6 +136,11 @@ local function CreateActionState()
         DashChargeAttackElapsed = 0.0,
         DashChargeAttackEnd = false,
         DashChargeAttackInstanceId = nil,
+        HitReactActive = false,
+        HitReactPending = false,
+        HitReactDirection = nil,
+        HitReactElapsed = 0.0,
+        HitReactEnd = false,
         IsUltimateRunning = false,
         IsInUltimateMode = false,
     }
@@ -154,6 +172,9 @@ local function CreateRuntimeState()
         EventQueue = {},
         DashPrevOrientRotationToMovement = nil,
         DashMoveDirection = nil,
+        DashPreserveFacing = false,
+        HitKnockbackDirection = nil,
+        HitKnockbackAppliedDistance = 0.0,
         StepForwardActive = false,
         StepForwardElapsed = 0.0,
         StepForwardDuration = 0.0,
@@ -167,6 +188,7 @@ local function CreateRuntimeState()
         TargetAssistLockedDirection = nil,
         TargetAssistEndTime = 0.0,
         TargetAssistKeepUntil = 0.0,
+        DashChargingTurnTarget = "None",
     }
 end
 

@@ -399,6 +399,40 @@ bool ULuaScriptComponent::CallFunction(const FString& FunctionName)
 	return bOk;
 }
 
+bool ULuaScriptComponent::GetDebugSnapshotText(FString& OutText)
+{
+	OutText.clear();
+	if (!Env.valid())
+	{
+		return false;
+	}
+
+	sol::object Target = Env["GetDebugSnapshotText"];
+	if (!Target.valid() || Target.get_type() != sol::type::function)
+	{
+		return false;
+	}
+
+	sol::protected_function Fn = Target;
+	FLuaCallScope Scope(this);
+	sol::protected_function_result Result = Fn();
+	if (!Result.valid())
+	{
+		sol::error Err = Result;
+		UE_LOG("Lua GetDebugSnapshotText error in %s: %s", ScriptFile.c_str(), Err.what());
+		return false;
+	}
+
+	sol::object Value = Result.get<sol::object>();
+	if (!Value.valid() || Value.get_type() != sol::type::string)
+	{
+		return false;
+	}
+
+	OutText = Value.as<std::string>();
+	return !OutText.empty();
+}
+
 void ULuaScriptComponent::DispatchOverlap(AActor* OtherActor)
 {
 	if (LuaOnOverlap)

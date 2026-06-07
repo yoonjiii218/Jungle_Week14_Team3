@@ -993,6 +993,13 @@ namespace
 		}
 		if (Domain == EMaterialDomain::ParticleSprite)
 		{
+			SS << "cbuffer ParticleFrameBuffer : register(b2)\n";
+			SS << "{\n";
+			SS << "    float3 ParticleFrameRight;\n";
+			SS << "    float ParticleFramePad0;\n";
+			SS << "    float3 ParticleFrameUp;\n";
+			SS << "    float ParticleFramePad1;\n";
+			SS << "};\n\n";
 			SS << "Texture2D GeneratedSceneColorTexture : register(t" << ESystemTexSlot::SceneColor << ");\n";
 		}
 		if (Domain == EMaterialDomain::ParticleMesh && bReceiveLighting)
@@ -1059,9 +1066,9 @@ PS_Input_MaterialParticle VS(VS_Input_ParticleQuad quad, VS_Input_ParticleInstan
         quad.cornerUV.x * sinR + quad.cornerUV.y * cosR
     );
 
-    float3 worldPos = inst.position
-                    + FrameCameraRight * rotUV.x * inst.size.x
-                    + FrameCameraUp * rotUV.y * inst.size.y;
+	float3 worldPos = inst.position
+                    + ParticleFrameRight * rotUV.x * inst.size.x
+                    + ParticleFrameUp * rotUV.y * inst.size.y;
 
     PS_Input_MaterialParticle output;
     output.position       = mul(float4(worldPos, 1.0f), mul(View, Projection));

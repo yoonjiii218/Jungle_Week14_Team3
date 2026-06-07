@@ -1,6 +1,7 @@
 #include "AnimNotify_SpawnSubUV.h"
 
 #include <algorithm>
+#include <cstring>
 
 #include "Component/Primitive/SkeletalMeshComponent.h"
 #include "Component/Primitive/SubUVComponent.h"
@@ -71,10 +72,23 @@ void UAnimNotify_SpawnSubUV::Notify(USkeletalMeshComponent* MeshComp, UAnimSeque
 	SubUV->SetWorldLocation(SpawnLocation);
 	SubUV->SetRelativeScale(Scale);
 	SubUV->SetParticle(Resource);
-	SubUV->SetSpriteRoll(SpriteRoll);
+	FVector EffectiveSpriteRotation = SpriteRotation;
+	EffectiveSpriteRotation.Z += SpriteRoll;
+	SubUV->SetSpriteRotation(EffectiveSpriteRotation);
 	SubUV->SetFrameRate(std::max(FrameRate, 0.001f));
 	SubUV->SetLoop(bLoop);
 	SubUV->SetAutoDestroyOwnerOnFinished(bAutoDestroy);
+	SubUV->SetCastShadow(bCastShadow);
 	SubUV->SetVisibility(true);
 	SubUV->Play();
+}
+
+void UAnimNotify_SpawnSubUV::PostEditProperty(const char* PropertyName)
+{
+	UObject::PostEditProperty(PropertyName);
+
+	if (strcmp(PropertyName, "SpriteRotation") == 0 || strcmp(PropertyName, "Sprite Roll") == 0)
+	{
+		SpriteRoll = 0.0f;
+	}
 }

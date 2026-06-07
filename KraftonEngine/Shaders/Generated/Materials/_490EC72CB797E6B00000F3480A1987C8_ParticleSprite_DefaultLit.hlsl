@@ -1,4 +1,4 @@
-// Generated from Content/Material/VFX/M_Particle_Refraction.mat
+// Generated from Content/Material/VFX/NewMaterial.mat
 // Domain: ParticleSprite
 // ShadingModel: DefaultLit
 
@@ -9,6 +9,14 @@
 #define USE_FOG 1
 #include "Common/Fog.hlsli"
 Texture2D GeneratedSceneColorTexture : register(t17);
+
+cbuffer ParticleFrameBuffer : register(b2)
+{
+    float3 ParticleFrameRight;
+    float ParticleFramePad0;
+    float3 ParticleFrameUp;
+    float ParticleFramePad1;
+};
 
 struct FMaterialPixelInput
 {
@@ -30,16 +38,6 @@ struct FMaterialResult
     float2 UVOffset;
 };
 
-Texture2D Tex_Custom0 : register(t6);
-
-cbuffer PerMaterial : register(b3)
-{
-    float Param_Opacity;
-    float3 _Pad0;
-    float Param_RefractionStrength;
-    float3 _Pad1;
-};
-
 struct FMaterialEvalResult
 {
     FMaterialResult Material;
@@ -50,26 +48,16 @@ struct FMaterialEvalResult
 
 FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
-    float3 n_35 = float3(1.000000f, 1.000000f, 1.000000f);
-    float n_37 = Param_Opacity;
-    float2 n_3 = Input.UV0;
-    float4 n_5 = Tex_Custom0.Sample(LinearWrapSampler, n_3);
-    float2 n_14 = (n_5).rg;
-    float n_17 = 2.000000f;
-    float2 n_19 = (n_14 * float2(n_17, n_17));
-    float n_23 = 1.000000f;
-    float2 n_25 = (n_19 - float2(n_23, n_23));
-    float n_29 = Param_RefractionStrength;
-    float2 n_31 = (n_25 * float2(n_29, n_29));
+    float4 n_1 = Input.ParticleColor;
     FMaterialResult Result;
-    Result.Color = n_35;
+    Result.Color = (n_1).xyz;
     Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = n_37;
+    Result.Opacity = (n_1).x;
     Result.UVOffset = float2(0, 0);
     FMaterialEvalResult Eval;
     Eval.Material = Result;
-    Eval.RefractionOffset = n_31;
-    Eval.RefractionEnabled = 1.0f;
+    Eval.RefractionOffset = float2(0, 0);
+    Eval.RefractionEnabled = 0.0f;
     Eval._Pad = 0.0f;
     return Eval;
 }
@@ -103,8 +91,8 @@ PS_Input_MaterialParticle VS(VS_Input_ParticleQuad quad, VS_Input_ParticleInstan
     );
 
     float3 worldPos = inst.position
-                    + FrameCameraRight * rotUV.x * inst.size.x
-                    + FrameCameraUp * rotUV.y * inst.size.y;
+                    + ParticleFrameRight * rotUV.x * inst.size.x
+                    + ParticleFrameUp * rotUV.y * inst.size.y;
 
     PS_Input_MaterialParticle output;
     output.position       = mul(float4(worldPos, 1.0f), mul(View, Projection));

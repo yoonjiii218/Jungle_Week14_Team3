@@ -133,10 +133,6 @@ namespace
 		{
 			return IsPadButtonDown(Snapshot, EGamepadButton::B);
 		}
-		if (ActionName == "Jump")
-		{
-			return Snapshot.KeyDown[VK_SPACE] || IsPadButtonDown(Snapshot, EGamepadButton::A);
-		}
 
 		return false;
 	}
@@ -2642,6 +2638,10 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 	Lua.new_usertype<UPrimitiveComponent>("PrimitiveComponent",
 		sol::base_classes,
 		sol::bases<USceneComponent, UActorComponent, UObject>(),
+		"SetCollisionEnabled", [](UPrimitiveComponent& Component, int32 Enabled)
+		{
+			Component.SetCollisionEnabled(static_cast<ECollisionEnabled>(Enabled));
+		},
 		"SetSimulatePhysics", &UPrimitiveComponent::SetSimulatePhysics,
 		"GetSimulatePhysics", &UPrimitiveComponent::GetSimulatePhysics,
 		"AddForce", &UPrimitiveComponent::AddForce,
@@ -2653,7 +2653,15 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		"SetAngularVelocity", &UPrimitiveComponent::SetAngularVelocity,
 		"GetMass", &UPrimitiveComponent::GetMass,
 		"SetMass", &UPrimitiveComponent::SetMass,
+		"SetEnableGravity", &UPrimitiveComponent::SetEnableGravity,
+		"GetEnableGravity", &UPrimitiveComponent::GetEnableGravity,
 		"GetGenerateOverlapEvents", &UPrimitiveComponent::GetGenerateOverlapEvents);
+
+	Lua.new_usertype<USkeletalMeshComponent>("SkeletalMeshComponent",
+		sol::base_classes,
+		sol::bases<UPrimitiveComponent, USceneComponent, UActorComponent, UObject>(),
+		"StartRagdoll", &USkeletalMeshComponent::StartRagdoll,
+		"EndRagdoll", &USkeletalMeshComponent::EndRagdoll);
 
 	Lua.new_usertype<UDecalComponent>("DecalComponent",
 		sol::base_classes,

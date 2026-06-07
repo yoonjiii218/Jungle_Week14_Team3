@@ -39,6 +39,10 @@ public:
 	UFUNCTION(Callable, Exec, Category="Script")
 	bool CallFunction(const FString& FunctionName);
 
+	// Optional gameplay/debug hook. If the script defines GetDebugSnapshotText(),
+	// call it and return the text that should be displayed by showdebug overlays.
+	bool GetDebugSnapshotText(FString& OutText);
+
 protected:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction& ThisTickFunction) override;
 

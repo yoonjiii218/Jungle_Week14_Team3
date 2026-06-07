@@ -6,6 +6,7 @@ local CombatContext = {}
 
 local PlayerContext = require("Player/PlayerContext")
 local PlayerEvents = require("Player/PlayerEvents")
+local PlayerAction = require("Player/PlayerAction")
 local HitTypes = require("Combat/HitTypes")
 local BossContext = require("Boss/BossContext")
 local BossEvents = require("Boss/BossEvents")
@@ -397,6 +398,10 @@ function CombatContext.ApplyHitToPlayer(playerContext, hitRequest)
         return HitTypes.CreateResult({ Applied = false, Reason = "PlayerDead" })
     end
 
+    if playerContext.Action.IsUltimateRunning == true or playerContext.Action.IsInUltimateMode == true then
+        return HitTypes.CreateResult({ Applied = false, Reason = "UltimateInvincible" })
+    end
+
     local now = Now()
     local combatConfig = playerContext.Config.Combat
 
@@ -433,6 +438,7 @@ function CombatContext.ApplyHitToPlayer(playerContext, hitRequest)
     playerContext.Combat.LastHitTime = now
     playerContext.Combat.InvincibleUntil = now + (hit.InvincibleDuration or combatConfig.HitInvincibleDuration)
     CombatContext.SetCurrentThreat(playerContext, hit.SourceActor)
+    PlayerAction.BeginHitReaction(playerContext, hit)
 
     ApplyLocalHitStop(playerContext.Owner, hit.HitStopDuration or combatConfig.HitStopDuration)
     ApplyLocalHitStop(hit.SourceActor, hit.HitStopDuration or combatConfig.EnemyHitStopDuration)
@@ -443,6 +449,8 @@ function CombatContext.ApplyHitToPlayer(playerContext, hitRequest)
         Damage = damage,
         HP = playerContext.Combat.HP,
         MaxHP = playerContext.Combat.MaxHP,
+        HitDirection = playerContext.Action.HitReactDirection,
+        KnockbackDirection = playerContext.Runtime.HitKnockbackDirection,
     })
 
     print(string.format("[Player] 피격! -%.0f   HP: %.0f / %.0f   attack=%s",
