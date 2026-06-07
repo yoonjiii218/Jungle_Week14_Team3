@@ -42,10 +42,14 @@ struct FDynamicSpriteEmitterReplayDataBase : FDynamicEmitterReplayDataBase
 	int32 CameraPayloadOffset        = 0;
 	int32 SubImages_Horizontal       = 1;
 	int32 SubImages_Vertical         = 1;
+	float SubUVPlayRate              = 1.0f;
 
 	bool    bUseLocalSpace = false;
+	bool    bUseBillboard  = true;
 	bool    bLockAxis      = false;
 	FVector PivotOffset    = FVector::ZeroVector;
+	FVector SpriteRightAxis = FVector::RightVector;
+	FVector SpriteUpAxis    = FVector::UpVector;
 };
 
 struct FDynamicMeshEmitterReplayData : FDynamicSpriteEmitterReplayDataBase

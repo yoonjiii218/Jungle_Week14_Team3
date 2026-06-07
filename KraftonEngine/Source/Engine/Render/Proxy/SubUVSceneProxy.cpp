@@ -5,8 +5,25 @@
 #include "Materials/Material.h"
 #include "Object/Object.h"
 #include "Math/MathUtils.h"
+#include "Math/Quat.h"
 
 #include <cmath>
+
+namespace
+{
+	void RotateBasisAroundAxis(float Degrees, const FVector& Axis, FVector& A, FVector& B)
+	{
+		if (std::abs(Degrees) <= 0.0001f)
+		{
+			return;
+		}
+
+		const FVector SafeAxis = Axis.GetSafeNormal(1.0e-6f, FVector::ForwardVector);
+		const FQuat Rotation = FQuat::FromAxisAngle(SafeAxis, Degrees * FMath::DegToRad);
+		A = Rotation.RotateVector(A).GetSafeNormal(1.0e-6f, A);
+		B = Rotation.RotateVector(B).GetSafeNormal(1.0e-6f, B);
+	}
+}
 
 // ============================================================
 // FSubUVSceneProxy
@@ -28,7 +45,7 @@ void FSubUVSceneProxy::UpdateTransform()
 
 	if (USubUVComponent* Comp = GetSubUVComponent())
 	{
-		CachedSpriteRoll = Comp->GetSpriteRoll();
+		CachedSpriteRotation = Comp->GetSpriteRotation();
 	}
 }
 
@@ -55,7 +72,7 @@ void FSubUVSceneProxy::UpdateMesh()
 	// Particle/FrameIndex 캐싱
 	CachedParticle = Comp->GetParticle();
 	CachedFrameIndex = Comp->GetFrameIndex();
-	CachedSpriteRoll = Comp->GetSpriteRoll();
+	CachedSpriteRotation = Comp->GetSpriteRotation();
 
 	// SectionDraws 단일 항목 — SubUVMaterial로 Particle SRV 바인딩
 	SectionDraws.clear();
@@ -78,7 +95,7 @@ void FSubUVSceneProxy::UpdateMaterial()
 	}
 	CachedFrameIndex = Comp->GetFrameIndex();
 	CachedParticle = Comp->GetParticle();
-	CachedSpriteRoll = Comp->GetSpriteRoll();
+	CachedSpriteRotation = Comp->GetSpriteRotation();
 
 	// SectionDraws 갱신 — SubUVMaterial의 CachedSRV는 Component가 관리
 	SectionDraws.clear();
@@ -100,24 +117,17 @@ void FSubUVSceneProxy::UpdatePerViewport(const FFrameContext& Frame)
 		return;
 	}
 
-	// Billboard matrix. SubUV keeps camera-facing alignment, then applies an
-	// extra roll inside the billboard plane. Component rotation is intentionally
-	// ignored for camera-facing sprites, so this value is the proper way to tilt
-	// slash/streak textures.
+	// Billboard matrix. SubUV keeps camera-facing alignment, then applies
+	// billboard-local X/Y/Z sprite rotation for slash/streak orientation.
 	FVector BillboardForward = Frame.CameraForward * -1.0f;
 	FVector BillboardRight = Frame.CameraRight;
 	FVector BillboardUp = Frame.CameraUp;
 
-	if (std::abs(CachedSpriteRoll) > 0.0001f)
+	if (!CachedSpriteRotation.IsNearlyZero(0.0001f))
 	{
-		const float RollRad = CachedSpriteRoll * FMath::DegToRad;
-		const float C = std::cos(RollRad);
-		const float S = std::sin(RollRad);
-
-		const FVector RotRight = BillboardRight * C + BillboardUp * S;
-		const FVector RotUp = BillboardRight * (-S) + BillboardUp * C;
-		BillboardRight = RotRight;
-		BillboardUp = RotUp;
+		RotateBasisAroundAxis(CachedSpriteRotation.X, BillboardRight, BillboardUp, BillboardForward);
+		RotateBasisAroundAxis(CachedSpriteRotation.Y, BillboardUp, BillboardForward, BillboardRight);
+		RotateBasisAroundAxis(CachedSpriteRotation.Z, BillboardForward, BillboardRight, BillboardUp);
 	}
 
 	FMatrix RotMatrix;

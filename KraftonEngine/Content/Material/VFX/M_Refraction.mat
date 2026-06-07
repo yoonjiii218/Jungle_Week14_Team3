@@ -4,7 +4,7 @@
     "BlendState" : "AlphaBlend",
     "Domain" : "Surface",
     "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
-    "GraphHash" : "0D694D9C7C1EA2B8",
+    "GraphHash" : "C75B967E2DE421D0",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
       "Opacity" : {
@@ -21,7 +21,7 @@
     "ShadingModel" : "DefaultLit",
     "Textures" : {
       "Custom0Texture" : {
-        "Path" : "Content/Texture/RefractionMap_Test_RGBA.png",
+        "Path" : "Content/Texture/SwordTrail_Refraction_AirWarp_Strong_RGBA.png",
         "Slot" : "Custom0"
       }
     }
@@ -94,7 +94,7 @@
           }],
         "PosX" : -920.000000,
         "PosY" : -120.000000,
-        "TexturePath" : "Content/Texture/RefractionMap_Test_RGBA.png",
+        "TexturePath" : "Content/Texture/SwordTrail_Refraction_AirWarp_Strong_RGBA.png",
         "TextureSlot" : "Custom0",
         "Type" : "TextureObject",
         "Value" : [1.000000, 1.000000, 1.000000, 1.000000]

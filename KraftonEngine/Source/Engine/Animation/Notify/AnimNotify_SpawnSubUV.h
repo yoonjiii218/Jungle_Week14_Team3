@@ -29,8 +29,11 @@ public:
 	UPROPERTY(Edit, Save, Category="SpawnSubUV", DisplayName="Scale")
 	FVector Scale = FVector::OneVector;
 
-	UPROPERTY(Edit, Save, Category="SpawnSubUV", DisplayName="Sprite Roll", Min=-360.0f, Max=360.0f, Speed=1.0f)
+	UPROPERTY(Save, Category="SpawnSubUV", DisplayName="Legacy Sprite Roll")
 	float SpriteRoll = 0.0f;
+
+	UPROPERTY(Edit, Save, Category="SpawnSubUV", DisplayName="Sprite Roll", Min=-360.0f, Max=360.0f, Speed=1.0f)
+	FVector SpriteRotation = FVector::ZeroVector;
 
 	UPROPERTY(Edit, Save, Category="SpawnSubUV", DisplayName="Frame Rate", Min=1.0f, Max=120.0f, Speed=1.0f)
 	float FrameRate = 15.0f;
@@ -41,5 +44,9 @@ public:
 	UPROPERTY(Edit, Save, Category="SpawnSubUV", DisplayName="Auto Destroy")
 	bool bAutoDestroy = true;
 
+	UPROPERTY(Edit, Save, Category="SpawnSubUV", DisplayName="Cast Shadow")
+	bool bCastShadow = false;
+
 	void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Anim) override;
+	void PostEditProperty(const char* PropertyName) override;
 };

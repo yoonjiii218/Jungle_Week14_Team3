@@ -2013,6 +2013,8 @@ void FParticleSystemEditorWidget::RenderModuleProperties(UParticleModule* Module
         ImGui::SetNextItemOpen(true, ImGuiCond_Once);
         if (ImGui::CollapsingHeader("Rendering##Req"))
         {
+            bChanged |= ImGui::Checkbox("Use Billboard", &Required->bUseBillboard);
+
             if (ImGui::BeginCombo("Screen Alignment", ScreenAlignmentName(Required->ScreenAlignment)))
             {
                 constexpr EParticleScreenAlignment Alignments[] = {
@@ -2076,6 +2078,7 @@ void FParticleSystemEditorWidget::RenderModuleProperties(UParticleModule* Module
         {
             bChanged |= ImGui::DragInt("Sub Images Horizontal", &Required->SubImages_Horizontal, 1.0f, 1, 1024);
             bChanged |= ImGui::DragInt("Sub Images Vertical", &Required->SubImages_Vertical, 1.0f, 1, 1024);
+            bChanged |= ImGui::DragFloat("SubUV Play Rate", &Required->SubUVPlayRate, 0.05f, 0.0f, 1000.0f);
             if (Required->SubImages_Horizontal < 1)
             {
                 Required->SubImages_Horizontal = 1;
@@ -2084,6 +2087,11 @@ void FParticleSystemEditorWidget::RenderModuleProperties(UParticleModule* Module
             if (Required->SubImages_Vertical < 1)
             {
                 Required->SubImages_Vertical = 1;
+                bChanged = true;
+            }
+            if (Required->SubUVPlayRate < 0.0f)
+            {
+                Required->SubUVPlayRate = 0.0f;
                 bChanged = true;
             }
         }

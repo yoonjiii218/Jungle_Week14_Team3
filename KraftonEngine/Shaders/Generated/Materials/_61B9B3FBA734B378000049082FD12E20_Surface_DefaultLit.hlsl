@@ -66,6 +66,7 @@ FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)
 }
 
 #define MATERIAL_SHADING_MODEL_TOON 0
+#define MATERIAL_SHADING_MODEL_UNLIT 0
 
 MaterialSurfaceVSOutput VS_StaticMesh(VS_Input_PNCTT input)
 {
@@ -93,6 +94,8 @@ float4 PS(MaterialSurfaceVSOutput input) : SV_TARGET
     const float3 N = ApplyGeneratedSurfaceNormal(input, Result);
 #if MATERIAL_SHADING_MODEL_TOON
     float4 FinalColor = float4(ComputeGeneratedSurfaceToonColor(input, Result, Eval, N), Result.Opacity);
+#elif MATERIAL_SHADING_MODEL_UNLIT
+    float4 FinalColor = float4(Result.BaseColor + Result.Emissive, Result.Opacity);
 #else
     float4 FinalColor = float4(ComputeGeneratedSurfaceLighting(input.worldPos, input.position, N, Result), Result.Opacity);
 #endif

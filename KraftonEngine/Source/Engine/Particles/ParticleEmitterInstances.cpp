@@ -2237,7 +2237,17 @@ bool FParticleEmitterInstance::FillReplayData(FDynamicEmitterReplayDataBase& Out
 		OutData.eEmitterType == EDynamicEmitterType::Beam ||
 		OutData.eEmitterType == EDynamicEmitterType::Ribbon)
 	{
-		static_cast<FDynamicSpriteEmitterReplayDataBase&>(OutData).bUseLocalSpace = bLocalSpace;
+		FDynamicSpriteEmitterReplayDataBase& SpriteData =
+			static_cast<FDynamicSpriteEmitterReplayDataBase&>(OutData);
+		const FMatrix SpriteToWorld = bLocalSpace
+			? EmitterToSimulation * SimulationToWorld
+			: EmitterToSimulation;
+
+		SpriteData.bUseLocalSpace = bLocalSpace;
+		SpriteData.SpriteRightAxis = SpriteToWorld.TransformVector(FVector::RightVector)
+			.GetSafeNormal(1.0e-6f, FVector::RightVector);
+		SpriteData.SpriteUpAxis = SpriteToWorld.TransformVector(FVector::UpVector)
+			.GetSafeNormal(1.0e-6f, FVector::UpVector);
 	}
 
 	CopyActiveParticlesToReplay(*this, OutData);
@@ -2291,9 +2301,12 @@ bool FParticleSpriteEmitterInstance::FillReplayData(FDynamicEmitterReplayDataBas
 	SpriteData.CameraPayloadOffset = CameraPayloadOffset;
 	SpriteData.bLockAxis = bAxisLockEnabled;
 	SpriteData.PivotOffset = PivotOffset;
-	SpriteData.bUseLocalSpace = GetCurrentLODLevelChecked()->RequiredModule->bUseLocalSpace;
-	SpriteData.SubImages_Horizontal = GetCurrentLODLevelChecked()->RequiredModule ? GetCurrentLODLevelChecked()->RequiredModule->SubImages_Horizontal : 1;
-	SpriteData.SubImages_Vertical = GetCurrentLODLevelChecked()->RequiredModule ? GetCurrentLODLevelChecked()->RequiredModule->SubImages_Vertical : 1;
+	UParticleModuleRequired* RequiredModule = GetCurrentLODLevelChecked()->RequiredModule;
+	SpriteData.bUseLocalSpace = RequiredModule ? RequiredModule->bUseLocalSpace : false;
+	SpriteData.bUseBillboard = RequiredModule ? RequiredModule->bUseBillboard : true;
+	SpriteData.SubImages_Horizontal = RequiredModule ? RequiredModule->SubImages_Horizontal : 1;
+	SpriteData.SubImages_Vertical = RequiredModule ? RequiredModule->SubImages_Vertical : 1;
+	SpriteData.SubUVPlayRate = RequiredModule ? RequiredModule->SubUVPlayRate : 1.0f;
 
 	return true;
 }
@@ -2704,8 +2717,10 @@ bool FParticleMeshEmitterInstance::FillReplayData(FDynamicEmitterReplayDataBase&
 
 	MeshData.Material = GetCurrentMaterial();
 	MeshData.SubUVInterpMethod = GetCurrentLODLevelChecked()->RequiredModule ? 0 : 0;
-	MeshData.SubImages_Horizontal = GetCurrentLODLevelChecked()->RequiredModule ? GetCurrentLODLevelChecked()->RequiredModule->SubImages_Horizontal : 1;
-	MeshData.SubImages_Vertical = GetCurrentLODLevelChecked()->RequiredModule ? GetCurrentLODLevelChecked()->RequiredModule->SubImages_Vertical : 1;
+	UParticleModuleRequired* RequiredModule = GetCurrentLODLevelChecked()->RequiredModule;
+	MeshData.SubImages_Horizontal = RequiredModule ? RequiredModule->SubImages_Horizontal : 1;
+	MeshData.SubImages_Vertical = RequiredModule ? RequiredModule->SubImages_Vertical : 1;
+	MeshData.SubUVPlayRate = RequiredModule ? RequiredModule->SubUVPlayRate : 1.0f;
 	MeshData.bScaleUV = false;
 	MeshData.MeshRotationOffset = MeshRotationOffset;
 	MeshData.MeshMotionBlurOffset = MeshMotionBlurOffset;

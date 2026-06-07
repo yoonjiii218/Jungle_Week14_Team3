@@ -3,6 +3,7 @@
 #include "Render/Proxy/BillboardSceneProxy.h"
 #include "Render/Resource/Buffer.h"
 #include "Core/Types/ResourceTypes.h"
+#include "Math/Vector.h"
 
 class USubUVComponent;
 
@@ -31,5 +32,5 @@ private:
 	// Owner 접근 없이 UpdatePerViewport에서 사용하기 위한 캐시
 	const FParticleResource* CachedParticle = nullptr;
 	uint32 CachedFrameIndex = 0;
-	float CachedSpriteRoll = 0.0f;
+	FVector CachedSpriteRotation = FVector::ZeroVector;
 };

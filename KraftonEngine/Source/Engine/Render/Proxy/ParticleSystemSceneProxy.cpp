@@ -17,8 +17,8 @@
 
 struct FParticleFrameConstants
 {
-	FVector CameraRight; float _pad0;
-	FVector CameraUp;    float _pad1;
+	FVector ParticleFrameRight; float _pad0;
+	FVector ParticleFrameUp;    float _pad1;
 };
 
 // EParticleBlendMode → Pass / BlendState / DepthStencil 결정
@@ -110,6 +110,9 @@ void FParticleSystemSceneProxy::InvalidateEmitterDataCache()
         BufferPtr->EmitterType         = EDynamicEmitterType::Sprite;
         BufferPtr->BlendMode           = EParticleBlendMode::AlphaBlend;
         BufferPtr->Material            = nullptr;
+        BufferPtr->bUseBillboard       = true;
+        BufferPtr->SpriteRightAxis     = FVector::RightVector;
+        BufferPtr->SpriteUpAxis        = FVector::UpVector;
         BufferPtr->EmitterMeshBuffer   = nullptr;
         BufferPtr->StagingBuffer.clear();
         BufferPtr->StagingIndices.clear();
@@ -297,6 +300,9 @@ void FParticleSystemSceneProxy::FillStagingBuffer(
 	OutBuffer.EmitterType         = Source.eEmitterType;
 	OutBuffer.BlendMode           = Source.BlendMode;
 	OutBuffer.Material            = nullptr;
+	OutBuffer.bUseBillboard       = true;
+	OutBuffer.SpriteRightAxis     = FVector::RightVector;
+	OutBuffer.SpriteUpAxis        = FVector::UpVector;
 	OutBuffer.EmitterMeshBuffer   = nullptr;
 	OutBuffer.MeshSectionMaterials.clear();
 	OutBuffer.MeshSectionFirstIndices.clear();
@@ -312,6 +318,9 @@ void FParticleSystemSceneProxy::FillStagingBuffer(
 		const auto& SpriteSource =
 			static_cast<const FDynamicSpriteEmitterReplayDataBase&>(Source);
 		OutBuffer.Material = SpriteSource.Material;
+		OutBuffer.bUseBillboard = SpriteSource.bUseBillboard;
+		OutBuffer.SpriteRightAxis = SpriteSource.SpriteRightAxis;
+		OutBuffer.SpriteUpAxis = SpriteSource.SpriteUpAxis;
 
 		if (!OutBuffer.Material)
 			UE_LOG("[ParticleProxy] FillStagingBuffer: Material is null (emitter type=%d)", (int)Source.eEmitterType);
@@ -402,8 +411,7 @@ void FParticleSystemSceneProxy::FillStagingBuffer(
 			Inst->Size     = FVector2(P->Size.X * Source.Scale.X, P->Size.Y * Source.Scale.Y);
 			Inst->Color    = P->Color.ToVector4();
 			Inst->Rotation = P->Rotation;
-			// 라이프타임 진행도를 그대로 흘려보냄. 머티리얼 그래프의 ParticleSubUV가 Rows/Cols로 정수 프레임 변환.
-			Inst->SubImageIndex = P->RelativeTime;
+			Inst->SubImageIndex = P->RelativeTime * SpriteSource.SubUVPlayRate;
 			// 모듈이 아직 없으므로 기본값. 0이어야 `pow(x, DP.r + 1)` 같은 패턴에서 자연스러움.
 			Inst->DynamicParam = FVector4(0.0f, 0.0f, 0.0f, 0.0f);
 		}
@@ -452,7 +460,7 @@ void FParticleSystemSceneProxy::FillStagingBuffer(
 				? ParticleTM * MeshSource.SimulationToWorld
 				: ParticleTM;
 			Inst->Color     = P->Color.ToVector4();
-			Inst->SubImageIndex = P->RelativeTime;
+			Inst->SubImageIndex = P->RelativeTime * MeshSource.SubUVPlayRate;
 			Inst->DynamicParam  = FVector4(0.0f, 0.0f, 0.0f, 0.0f);
 		}
 	}
@@ -501,8 +509,8 @@ void FParticleSystemSceneProxy::SubmitSpriteEmitter(
 	}
 
 	FParticleFrameConstants FrameCB;
-	FrameCB.CameraRight = Frame.CameraRight; FrameCB._pad0 = 0.0f;
-	FrameCB.CameraUp    = Frame.CameraUp;    FrameCB._pad1 = 0.0f;
+	FrameCB.ParticleFrameRight = Buffer.bUseBillboard ? Frame.CameraRight : Buffer.SpriteRightAxis; FrameCB._pad0 = 0.0f;
+	FrameCB.ParticleFrameUp    = Buffer.bUseBillboard ? Frame.CameraUp    : Buffer.SpriteUpAxis;    FrameCB._pad1 = 0.0f;
 	Buffer.ParticleFrameCB.Update(Context, &FrameCB, sizeof(FParticleFrameConstants));
 
     FShader* Shader = nullptr;
