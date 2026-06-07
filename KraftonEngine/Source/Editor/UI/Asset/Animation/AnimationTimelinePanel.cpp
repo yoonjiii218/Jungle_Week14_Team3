@@ -965,7 +965,24 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 	const int   EndFrame   = std::max<int>(NumFrames - 1, 0);
 	Seq->EnsureNotifyTrackLayout();
 
-	float TrackAreaH = std::max<float>(TrackViewportH, RulerH + RowH);
+	float ContentAreaH = RulerH + RowH; // Notifies header
+	if (bNotifiesExpanded)
+	{
+		ContentAreaH += NotifyLaneH * static_cast<float>(Seq->GetNotifyTracks().size());
+	}
+	ContentAreaH += RowH; // Morph Curves header
+	if (bMorphCurvesExpanded)
+	{
+		const TArray<FMorphTargetCurve>& Curves = Seq->GetMorphTargetCurves();
+		for (int32 CurveIndex = 0; CurveIndex < static_cast<int32>(Curves.size()); ++CurveIndex)
+		{
+			ContentAreaH += (CurveIndex == InOutSelectedMorphCurveIndex) ? 118.0f : MorphLaneH;
+		}
+	}
+	ContentAreaH += RowH; // Additive Layer Tracks
+	ContentAreaH += RowH; // Attributes
+
+	float TrackAreaH = std::max<float>(TrackViewportH, ContentAreaH);
 	const float CanvasX    = Origin.x + HeaderW;
 	const float CanvasW    = std::max<float>(FullW - HeaderW, 1.0f);
 
