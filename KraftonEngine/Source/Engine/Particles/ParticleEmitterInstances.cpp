@@ -221,6 +221,21 @@ namespace
 			OutData.DataContainer.ParticleIndices,
 			Instance.ParticleIndices,
 			static_cast<size_t>(Instance.MaxActiveParticles) * sizeof(uint16));
+
+		const FVector& ParticleSizeScale = Instance.Component->GetParticleSizeScale();
+		if (std::fabs(ParticleSizeScale.X - 1.0f) > 1.0e-6f ||
+			std::fabs(ParticleSizeScale.Y - 1.0f) > 1.0e-6f ||
+			std::fabs(ParticleSizeScale.Z - 1.0f) > 1.0e-6f)
+		{
+			for (int32 ActiveIndex = 0; ActiveIndex < Instance.ActiveParticles; ++ActiveIndex)
+			{
+				const uint16 ParticleIndex = OutData.DataContainer.ParticleIndices[ActiveIndex];
+				FBaseParticle* Particle = reinterpret_cast<FBaseParticle*>(
+					OutData.DataContainer.ParticleData + OutData.ParticleStride * ParticleIndex);
+				Particle->Size *= ParticleSizeScale;
+				Particle->BaseSize *= ParticleSizeScale;
+			}
+		}
 	}
 }
 

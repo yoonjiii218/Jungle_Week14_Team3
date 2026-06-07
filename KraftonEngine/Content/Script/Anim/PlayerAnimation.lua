@@ -644,6 +644,14 @@ function on_trail_deactivate(self)
     PlayerFeedback.SetKatanaTrailActive(playerContext, false)
 end
 
+function on_spawn_flying_slash(self, args)
+    self.PlayerContext = CombatContext.GetPlayerByOwner(obj)
+    local playerContext = self.PlayerContext
+    if playerContext == nil then return end
+    PlayerContext.Assert(playerContext, "PlayerAnimation.on_spawn_flying_slash")
+    PlayerAction.OnSpawnFlyingSlashNotify(playerContext, args)
+end
+
 function on_notify(self, name)
     self.PlayerContext = CombatContext.GetPlayerByOwner(obj)
     local playerContext = self.PlayerContext

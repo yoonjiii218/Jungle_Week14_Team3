@@ -59,6 +59,7 @@ PlayerConfig.Default = {
             SpawnUpOffset = 1.2,
             Scale = Vector(1.0, 1.0, 1.0),
             Pierce = true,
+            FlattenDirection = true,
             Debug = false,
         },
     },

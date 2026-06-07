@@ -65,6 +65,22 @@ local function GetActorLocation(actor)
     return nil
 end
 
+local function GetActorRotation(actor)
+    if actor == nil then
+        return nil
+    end
+
+    if actor.Rotation ~= nil then
+        return actor.Rotation
+    end
+
+    if Reflection ~= nil and Reflection.Call ~= nil then
+        return Reflection.Call(actor, "GetActorRotation")
+    end
+
+    return nil
+end
+
 local function GetOwnerForward2D(owner)
     if owner == nil then
         return nil
@@ -117,27 +133,55 @@ local function GetOwnerRight2D(owner, fallbackForward)
     return Vector(0.0, 1.0, 0.0)
 end
 
-local function Normalize2D(dir)
-    if dir == nil then
+local function CopyVector(v)
+    if v == nil then
         return nil
     end
-
-    dir.Z = 0.0
-    if dir:Length() <= 0.001 then
-        return nil
-    end
-
-    return dir:Normalized()
+    return Vector(v.X or 0.0, v.Y or 0.0, v.Z or 0.0)
 end
 
-local function ResolveFireDirection(playerContext)
+local function NormalizeDirection(dir, flatten)
+    local result = CopyVector(dir)
+    if result == nil then
+        return nil
+    end
+
+    if flatten ~= false then
+        result.Z = 0.0
+    end
+
+    if result:Length() <= 0.001 then
+        return nil
+    end
+
+    return result:Normalized()
+end
+
+local function Normalize2D(dir)
+    return NormalizeDirection(dir, true)
+end
+
+local function ResolveFireDirection(playerContext, flatten)
     local dir = PlayerTargeting.GetAssistDirection(playerContext)
-    dir = Normalize2D(dir)
+    dir = NormalizeDirection(dir, flatten)
     if dir ~= nil then
         return dir
     end
 
-    return GetOwnerForward2D(playerContext.Owner)
+    return NormalizeDirection(GetOwnerForward2D(playerContext.Owner), flatten)
+end
+
+local function ResolveFallbackFireDirection(playerContext, args, flatten)
+    if args.UseAssistDirection == true then
+        return ResolveFireDirection(playerContext, flatten)
+    end
+
+    local dir = NormalizeDirection(GetOwnerForward2D(playerContext.Owner), flatten)
+    if dir ~= nil then
+        return dir
+    end
+
+    return ResolveFireDirection(playerContext, flatten)
 end
 
 local function ResolveSpawnPosition(playerContext, dir, actionConfig)
@@ -155,6 +199,23 @@ local function ResolveSpawnPosition(playerContext, dir, actionConfig)
         + up * (actionConfig.SpawnUpOffset or 0.0)
 end
 
+local function ResolveTranslatedSpawnPosition(playerContext, translation, dir)
+    local owner = playerContext.Owner
+    local ownerLocation = GetActorLocation(owner)
+    if ownerLocation == nil or translation == nil then
+        return nil
+    end
+
+    local forward = dir or GetOwnerForward2D(owner) or Vector(1.0, 0.0, 0.0)
+    local right = GetOwnerRight2D(owner, forward)
+    local up = Vector(0.0, 0.0, 1.0)
+
+    return ownerLocation
+        + forward * (translation.X or 0.0)
+        + right * (translation.Y or 0.0)
+        + up * (translation.Z or 0.0)
+end
+
 local function RotationFromDirection(dir)
     if dir == nil then
         return Vector(0.0, 0.0, 0.0)
@@ -162,6 +223,15 @@ local function RotationFromDirection(dir)
 
     local yaw = math.atan2(dir.Y, dir.X) * 180.0 / math.pi
     return Vector(0.0, 0.0, yaw)
+end
+
+local function ResolveSpawnRotation(playerContext, rotationOffset, fallbackDir)
+    local ownerRotation = GetActorRotation(playerContext.Owner)
+    if ownerRotation ~= nil then
+        return ownerRotation + (rotationOffset or Vector(0.0, 0.0, 0.0))
+    end
+
+    return (rotationOffset ~= nil) and rotationOffset or RotationFromDirection(fallbackDir)
 end
 
 local function SetVisualTransform(projectile)
@@ -261,6 +331,9 @@ local function SpawnVisualActor(playerContext, spawnPosition, rotation, scale)
     psc:SetLocation(spawnPosition)
     psc:SetRotation(rotation)
     psc:SetRelativeScale(scale)
+    if psc.SetParticleSizeScale ~= nil then
+        psc:SetParticleSizeScale(scale)
+    end
     psc:Activate()
 
     return actor, psc
@@ -421,13 +494,25 @@ function PlayerProjectile.SpawnFlyingSlash(playerContext, args)
 
     local actionConfig = playerContext.Config.Action.FlyingSlash or {}
     local combatConfig = playerContext.Config.Combat or {}
-    local dir = Normalize2D(args.Direction) or ResolveFireDirection(playerContext)
+    local flattenDirection = args.FlattenDirection
+    if flattenDirection == nil then
+        flattenDirection = actionConfig.FlattenDirection ~= false
+    end
+
+    local dir = NormalizeDirection(GetOwnerForward2D(owner), flattenDirection)
+        or NormalizeDirection(args.Direction, flattenDirection)
+        or ResolveFallbackFireDirection(playerContext, args, flattenDirection)
     if dir == nil then
         DebugLog(playerContext, "SpawnFlyingSlash aborted: no direction")
         return nil
     end
 
-    local spawnPosition = args.Position or ResolveSpawnPosition(playerContext, dir, actionConfig)
+    local translationOffset = args.TranslationOffset or args.Translation
+    local rotationOffset = args.RotationOffset or args.Rotation
+
+    local spawnPosition = args.Position
+        or ResolveTranslatedSpawnPosition(playerContext, translationOffset, dir)
+        or ResolveSpawnPosition(playerContext, dir, actionConfig)
     if spawnPosition == nil then
         DebugLog(playerContext, "SpawnFlyingSlash aborted: no spawn position")
         return nil
@@ -440,7 +525,7 @@ function PlayerProjectile.SpawnFlyingSlash(playerContext, args)
     local attackInstanceId = args.AttackInstanceId
         or (attackId .. "_" .. tostring(Now()) .. "_" .. tostring(playerContext.Runtime.FlyingSlashSerial))
     local scale = args.Scale or actionConfig.Scale or Vector(1.0, 1.0, 1.0)
-    local rotation = RotationFromDirection(dir)
+    local rotation = ResolveSpawnRotation(playerContext, rotationOffset, dir)
     local actor, psc = SpawnVisualActor(playerContext, spawnPosition, rotation, scale)
 
     local projectile = {

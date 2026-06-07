@@ -1308,17 +1308,17 @@ function PlayerAction.OnAnimNotify(playerContext, notifyName)
         playerContext.Action.DashEnd = true
     elseif notifyName == "DashChargeAttackEnd" or notifyName == "DashChargingAttackEnd" then
         playerContext.Action.DashChargeAttackEnd = true
-    elseif notifyName == "FlyingSlashFire" then
-        PlayerProjectile.SpawnFlyingSlash(playerContext, {
-            AttackId = "PlayerFlyingSlash",
-        })
-    elseif notifyName == "DashChargeFlyingSlashFire" then
-        PlayerProjectile.SpawnFlyingSlash(playerContext, {
-            AttackId = "PlayerDashChargeFlyingSlash",
-        })
     elseif notifyName == "HitReactEnd" or notifyName == "HitEnd" then
         playerContext.Action.HitReactEnd = true
     end
+end
+
+---@param playerContext PlayerContext
+---@param args table|nil
+---@return nil
+function PlayerAction.OnSpawnFlyingSlashNotify(playerContext, args)
+    PlayerContext.Assert(playerContext, "PlayerAction.OnSpawnFlyingSlashNotify")
+    PlayerProjectile.SpawnFlyingSlash(playerContext, args)
 end
 
 ---@param playerContext PlayerContext
