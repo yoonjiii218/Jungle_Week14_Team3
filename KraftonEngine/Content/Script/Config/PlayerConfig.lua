@@ -142,6 +142,18 @@ PlayerConfig.Default = {
             CameraShakeScale = 0.25,
         },
 
+        HitReact = {
+            CameraShakeScale = 0.35,
+            SquashEnabled = true,
+            SquashScale = Vector(1.06, 1.06, 0.94),
+            SquashInDuration = 0.035,
+            SquashRecoverDuration = 0.09,
+            ShakeEnabled = true,
+            ShakeAmplitude = 3.0,
+            ShakeDuration = 0.08,
+            ShakeFrequency = 70.0,
+        },
+
         UltimateCamera = {
             BackDistance = 7.0,
             Height = 10,

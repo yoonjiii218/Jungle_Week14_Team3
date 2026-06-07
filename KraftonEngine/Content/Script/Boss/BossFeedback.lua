@@ -65,6 +65,19 @@ local function GetOrAddActionComponent(ownerActor)
     return nil
 end
 
+local function ResolveBossMeshComponent(bossContext)
+    local ownerActor = bossContext.Owner
+    if ownerActor == nil or ownerActor:IsValid() ~= true then
+        return nil
+    end
+
+    local meshComp = bossContext.Runtime.SkeletalMeshComp
+    if meshComp == nil and ownerActor.GetSkeletalMeshComponent ~= nil then
+        meshComp = ownerActor:GetSkeletalMeshComponent()
+    end
+    return meshComp
+end
+
 local function PlayHitSquash(bossContext, event)
     local feedbackConfig = bossContext.Config.FEEDBACK
     if feedbackConfig.HIT_SQUASH_ENABLED == false then
@@ -72,15 +85,7 @@ local function PlayHitSquash(bossContext, event)
     end
 
     local ownerActor = bossContext.Owner
-    if ownerActor == nil or ownerActor:IsValid() ~= true then
-        return
-    end
-
-    local meshComp = bossContext.Runtime.SkeletalMeshComp
-    if meshComp == nil and ownerActor.GetSkeletalMeshComponent ~= nil then
-        meshComp = ownerActor:GetSkeletalMeshComponent()
-    end
-
+    local meshComp = ResolveBossMeshComponent(bossContext)
     if meshComp == nil then
         if bossContext.Config.DEBUG then
             print("[BossFeedback] Hit squash skipped: SkeletalMeshComponent not found")
@@ -89,24 +94,17 @@ local function PlayHitSquash(bossContext, event)
     end
 
     local action = GetOrAddActionComponent(ownerActor)
-    if action == nil or action.HitSquashComponent == nil then
+    if action == nil or action.HitSquashComponentByMultiplier == nil then
         if bossContext.Config.DEBUG then
-            print("[BossFeedback] Hit squash skipped: ActionComponent.HitSquashComponent not available")
+            print("[BossFeedback] Hit squash skipped: ActionComponent.HitSquashComponentByMultiplier not available")
         end
         return
     end
 
-    local baseScale = Reflection.Call(meshComp, "GetRelativeScale")
-    local squashScale = Vector(
-        baseScale.X * feedbackConfig.HIT_SQUASH_SCALE.X,
-        baseScale.Y * feedbackConfig.HIT_SQUASH_SCALE.Y,
-        baseScale.Z * feedbackConfig.HIT_SQUASH_SCALE.Z
-    )
-
     local ok, err = pcall(function()
-        action:HitSquashComponent(
+        action:HitSquashComponentByMultiplier(
             meshComp,
-            squashScale,
+            feedbackConfig.HIT_SQUASH_SCALE,
             feedbackConfig.HIT_SQUASH_IN_DURATION,
             feedbackConfig.HIT_SQUASH_RECOVER_DURATION
         )
@@ -114,6 +112,43 @@ local function PlayHitSquash(bossContext, event)
 
     if not ok and bossContext.Config.DEBUG then
         print("[BossFeedback] Hit squash failed: " .. tostring(err))
+    end
+end
+
+local function PlayHitShake(bossContext, event)
+    local feedbackConfig = bossContext.Config.FEEDBACK
+    if feedbackConfig.HIT_SHAKE_ENABLED == false then
+        return
+    end
+
+    local ownerActor = bossContext.Owner
+    local meshComp = ResolveBossMeshComponent(bossContext)
+    if meshComp == nil then
+        if bossContext.Config.DEBUG then
+            print("[BossFeedback] Hit shake skipped: SkeletalMeshComponent not found")
+        end
+        return
+    end
+
+    local action = GetOrAddActionComponent(ownerActor)
+    if action == nil or action.HitShakeComponent == nil then
+        if bossContext.Config.DEBUG then
+            print("[BossFeedback] Hit shake skipped: ActionComponent.HitShakeComponent not available")
+        end
+        return
+    end
+
+    local ok, err = pcall(function()
+        action:HitShakeComponent(
+            meshComp,
+            feedbackConfig.HIT_SHAKE_AMPLITUDE or 3.0,
+            feedbackConfig.HIT_SHAKE_DURATION or 0.08,
+            feedbackConfig.HIT_SHAKE_FREQUENCY or 70.0
+        )
+    end)
+
+    if not ok and bossContext.Config.DEBUG then
+        print("[BossFeedback] Hit shake failed: " .. tostring(err))
     end
 end
 
@@ -280,6 +315,7 @@ function BossFeedback.ProcessEvents(bossContext, events)
     for _, event in ipairs(events) do
         if BossEvents.Is(event, BossEvents.Type.Hit) then
             PlayHitSquash(bossContext, event)
+            PlayHitShake(bossContext, event)
         elseif BossEvents.Is(event, BossEvents.Type.Dead) then
             StartDeathRagdoll(bossContext)
         end

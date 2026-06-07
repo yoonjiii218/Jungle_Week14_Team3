@@ -95,6 +95,12 @@ BB.FEEDBACK = {
     HIT_SQUASH_SCALE = Vector(1.06, 1.06, 0.95),
     HIT_SQUASH_IN_DURATION = 0.035,
     HIT_SQUASH_RECOVER_DURATION = 0.09,
+
+    -- 피격 시 collision capsule 은 그대로 두고 mesh local Y 방향으로만 짧게 흔든다.
+    HIT_SHAKE_ENABLED = true,
+    HIT_SHAKE_AMPLITUDE = 1.0,
+    HIT_SHAKE_DURATION = 0.08,
+    HIT_SHAKE_FREQUENCY = 70.0,
 }
 
 -- ── 디버그 ───────────────────────────────────

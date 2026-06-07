@@ -47,6 +47,77 @@ local function PlayAttackHitFeedback(playerContext, event)
     end
 end
 
+local function GetOrAddActionComponent(ownerActor)
+    if ownerActor == nil or ownerActor:IsValid() ~= true then
+        return nil
+    end
+
+    if ownerActor.GetActionComponent ~= nil then
+        local action = ownerActor:GetActionComponent()
+        if action ~= nil then
+            return action
+        end
+    end
+
+    if ownerActor.AddActionComponent ~= nil then
+        return ownerActor:AddActionComponent()
+    end
+
+    return nil
+end
+
+local function ResolvePlayerMeshComponent(playerContext)
+    local owner = playerContext.Owner
+    if owner == nil or owner.GetSkeletalMeshComponent == nil then
+        return nil
+    end
+
+    return owner:GetSkeletalMeshComponent()
+end
+
+local function PlayHitReactFeedback(playerContext, event)
+    local feedbackConfig = playerContext.Config.Feedback
+    local hitConfig = feedbackConfig.HitReact or {}
+
+    local shakeScale = hitConfig.CameraShakeScale or 0.0
+    if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil and shakeScale > 0.0 then
+        CameraManager.StartWaveShake(shakeScale)
+    end
+
+    local owner = playerContext.Owner
+    local meshComp = ResolvePlayerMeshComponent(playerContext)
+    if meshComp == nil then
+        return
+    end
+
+    local action = GetOrAddActionComponent(owner)
+    if action == nil then
+        return
+    end
+
+    if hitConfig.SquashEnabled ~= false and action.HitSquashComponentByMultiplier ~= nil then
+        pcall(function()
+            action:HitSquashComponentByMultiplier(
+                meshComp,
+                hitConfig.SquashScale or Vector(1.06, 1.06, 0.94),
+                hitConfig.SquashInDuration or 0.035,
+                hitConfig.SquashRecoverDuration or 0.09
+            )
+        end)
+    end
+
+    if hitConfig.ShakeEnabled ~= false and action.HitShakeComponent ~= nil then
+        pcall(function()
+            action:HitShakeComponent(
+                meshComp,
+                hitConfig.ShakeAmplitude or 3.0,
+                hitConfig.ShakeDuration or 0.08,
+                hitConfig.ShakeFrequency or 70.0
+            )
+        end)
+    end
+end
+
 local function BuildGroundDecalAABBScale3(a, b, c, padding, minSize, projectionDepth)
     padding = padding or 5.0
     minSize = minSize or 8.0
@@ -495,9 +566,7 @@ function PlayerFeedback.ProcessEvents(playerContext, events)
         if PlayerEvents.Is(event, PlayerEvents.Type.PerfectDodge) then
             PlayPerfectDodgeFeedback(playerContext, event)
         elseif PlayerEvents.Is(event, PlayerEvents.Type.Hit) then
-            if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
-                CameraManager.StartWaveShake(0.35)
-            end
+            PlayHitReactFeedback(playerContext, event)
         elseif PlayerEvents.Is(event, PlayerEvents.Type.AttackHit) then
             PlayAttackHitFeedback(playerContext, event)
             -- AttackHitWindow 자체 hitstop은 C++ NotifyState가 처리한다.
