@@ -1,8 +1,12 @@
--- 연출 로직 담당 객체라고 볼 수 있음
+-- Player/PlayerFeedback.lua
+-- PlayerFeedback owns presentation: camera, VFX, trails, hitstop/slomo visuals.
+-- It consumes PlayerEvent lists and should not own gameplay state transitions.
 
 local PlayerFeedback = {}
 
-local PlayerConfig = require("PlayerConfig")
+local PlayerConfig = require("Config/PlayerConfig")
+local PlayerContext = require("Player/PlayerContext")
+local PlayerEvents = require("Player/PlayerEvents")
 local DEFAULT_FEEDBACK_CONFIG = PlayerConfig.Default.Feedback
 
 local function GetFeedbackConfig(ctx)
@@ -145,7 +149,14 @@ local function FaceOwnerToDirection(ctx, dir)
     Reflection.Call(owner, "SetActorRotation", Vector(0.0, 0.0, targetYaw))
 end
 
-function PlayerFeedback.AttachKatanaToWeaponSocket(ctx)
+-- =========================================================
+-- Public API
+-- =========================================================
+
+---@param player PlayerContext
+---@return nil
+function PlayerFeedback.AttachKatanaToWeaponSocket(player)
+    local ctx = PlayerContext.Assert(player, "PlayerFeedback.AttachKatanaToWeaponSocket")
     local owner = GetOwner(ctx)
     if owner == nil then
         return
@@ -187,7 +198,10 @@ function PlayerFeedback.AttachKatanaToWeaponSocket(ctx)
     ctx.KatanaComponent = katana
 end
 
-function PlayerFeedback.SetKatanaTrailActive(ctx, active)
+---@param player PlayerContext
+---@return nil
+function PlayerFeedback.SetKatanaTrailActive(player, active)
+    local ctx = PlayerContext.Assert(player, "PlayerFeedback.SetKatanaTrailActive")
     if ctx == nil then
         return
     end
@@ -204,7 +218,10 @@ function PlayerFeedback.SetKatanaTrailActive(ctx, active)
     end
 end
 
-function PlayerFeedback.AttachPSCToWeaponSocket(ctx)
+---@param player PlayerContext
+---@return nil
+function PlayerFeedback.AttachPSCToWeaponSocket(player)
+    local ctx = PlayerContext.Assert(player, "PlayerFeedback.AttachPSCToWeaponSocket")
     local owner = GetOwner(ctx)
     if owner == nil then
         return
@@ -238,12 +255,18 @@ function PlayerFeedback.AttachPSCToWeaponSocket(ctx)
     PlayerFeedback.SetKatanaTrailActive(ctx, false)
 end
 
-function PlayerFeedback.Init(ctx)
+---@param player PlayerContext
+---@return nil
+function PlayerFeedback.Init(player)
+    local ctx = PlayerContext.Assert(player, "PlayerFeedback.Init")
     PlayerFeedback.AttachKatanaToWeaponSocket(ctx)
     PlayerFeedback.AttachPSCToWeaponSocket(ctx)
 end
 
-function PlayerFeedback.Shutdown(ctx)
+---@param player PlayerContext
+---@return nil
+function PlayerFeedback.Shutdown(player)
+    local ctx = PlayerContext.Assert(player, "PlayerFeedback.Shutdown")
     if ctx == nil then
         return
     end
@@ -252,7 +275,10 @@ function PlayerFeedback.Shutdown(ctx)
     ctx.KatanaPSC = nil
 end
 
-function PlayerFeedback.BeginUltimate(ctx)
+---@param player PlayerContext
+---@return nil
+function PlayerFeedback.BeginUltimate(player)
+    local ctx = PlayerContext.Assert(player, "PlayerFeedback.BeginUltimate")
     print("Begin Ultimate")
 
     if ctx == nil then
@@ -460,31 +486,35 @@ function PlayerFeedback.BeginUltimate(ctx)
 
     ctx.IsInUltimateMode = false
     ctx.IsUltimateRunning = false
-    PlayerFeedback.HandlePlayerResult(ctx, { Events = { { Type = "UltimateEnd" } } })
+    PlayerEvents.EmitUltimateEnded(ctx)
 
     print("End Ultimate")
 end
 
-function PlayerFeedback.HandlePlayerResult(ctx, result)
-    if ctx == nil or result == nil or result.Events == nil then
+---@param player PlayerContext
+---@param events PlayerEvent[]
+---@return nil
+function PlayerFeedback.ProcessEvents(player, events)
+    local ctx = PlayerContext.Assert(player, "PlayerFeedback.ProcessEvents")
+    if events == nil then
         return
     end
 
-    for _, event in ipairs(result.Events) do
-        if event.Type == "PerfectDodge" then
+    for _, event in ipairs(events) do
+        if PlayerEvents.Is(event, "PerfectDodge") then
             PlayPerfectDodgeFeedback(ctx, event)
-        elseif event.Type == "PlayerHit" then
+        elseif PlayerEvents.Is(event, "PlayerHit") then
             if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
                 CameraManager.StartWaveShake(0.35)
             end
-        elseif event.Type == "AttackHit" then
+        elseif PlayerEvents.Is(event, "AttackHit") then
             -- AttackHitWindow 자체 hitstop은 C++ NotifyState가 처리한다.
             -- 여기서는 이후 피격 VFX/UI/사운드를 붙일 수 있도록 이벤트만 한 곳에서 받는다.
-        elseif event.Type == "PlayerDead" then
+        elseif PlayerEvents.Is(event, "PlayerDead") then
             if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
                 CameraManager.StartWaveShake(0.8)
             end
-        elseif event.Type == "UltimateStart" then
+        elseif PlayerEvents.Is(event, "UltimateStart") then
             StartCoroutine(function()
                 PlayerFeedback.BeginUltimate(ctx)
             end)

@@ -11,11 +11,15 @@
 
 local BossHitbox = {}
 
+local BossContext = require("Boss/BossContext")
+
 local ctx_ref = nil   -- BossCharacter.lua 에서 Init 으로 주입
 
 -- ────────────────────────────────────────────
-function BossHitbox.Init(ctx)
-    ctx_ref = ctx
+---@param boss BossContext
+---@return nil
+function BossHitbox.Init(boss)
+    ctx_ref = BossContext.Assert(boss, "BossHitbox.Init")
 end
 
 -- ────────────────────────────────────────────
@@ -27,7 +31,13 @@ end
 
 -- 직사각형 판정: (px,py) 를 장판 방향(yaw) 기준 로컬좌표로 분해
 --   전방거리 0 ~ length  &&  |좌우거리| <= width/2  → HIT
-function BossHitbox.CheckRectXY(zone, px, py)
+---@param boss BossContext
+---@param zone table
+---@param px number
+---@param py number
+---@return boolean
+function BossHitbox.CheckRectXY(boss, zone, px, py)
+    ctx_ref = BossContext.Assert(boss, "BossHitbox.CheckRectXY")
     if zone == nil or zone.origin == nil then return false end
     if ctx_ref == nil then return false end
 
@@ -53,7 +63,13 @@ function BossHitbox.CheckRectXY(zone, px, py)
 end
 
 -- 부채꼴 판정 (P2 횡베기): 거리 <= FAN_RADIUS  &&  각도차 <= FAN_ANGLE/2  → HIT
-function BossHitbox.CheckFanXY(zone, px, py)
+---@param boss BossContext
+---@param zone table
+---@param px number
+---@param py number
+---@return boolean
+function BossHitbox.CheckFanXY(boss, zone, px, py)
+    ctx_ref = BossContext.Assert(boss, "BossHitbox.CheckFanXY")
     if zone == nil or zone.origin == nil then return false end
     if ctx_ref == nil then return false end
 
@@ -75,39 +91,60 @@ function BossHitbox.CheckFanXY(zone, px, py)
 end
 
 -- 좌표 통합: zone.kind 보고 자동 분기 (저장된 대시 시작 좌표로 검사할 때 사용)
-function BossHitbox.CheckXY(zone, px, py)
+---@param boss BossContext
+---@param zone table
+---@param px number
+---@param py number
+---@return boolean
+function BossHitbox.CheckXY(boss, zone, px, py)
+    ctx_ref = BossContext.Assert(boss, "BossHitbox.CheckXY")
     if ctx_ref == nil or zone == nil then return false end
     if zone.kind == "fan" then
-        return BossHitbox.CheckFanXY(zone, px, py)
+        return BossHitbox.CheckFanXY(ctx_ref, zone, px, py)
     end
-    return BossHitbox.CheckRectXY(zone, px, py)
+    return BossHitbox.CheckRectXY(ctx_ref, zone, px, py)
 end
 
 -- ────────────────────────────────────────────
 -- 액터(target) 의 현재 위치로 검사 — 기존 호출부 호환 래퍼.
 -- ────────────────────────────────────────────
-function BossHitbox.CheckRect(zone, target)
+---@param boss BossContext
+---@param zone table
+---@param target any
+---@return boolean
+function BossHitbox.CheckRect(boss, zone, target)
+    ctx_ref = BossContext.Assert(boss, "BossHitbox.CheckRect")
     if not (target and target:IsValid()) then return false end
     local pp = target.Location
-    return BossHitbox.CheckRectXY(zone, pp.X, pp.Y)
+    return BossHitbox.CheckRectXY(ctx_ref, zone, pp.X, pp.Y)
 end
 
-function BossHitbox.CheckFan(zone, target)
+---@param boss BossContext
+---@param zone table
+---@param target any
+---@return boolean
+function BossHitbox.CheckFan(boss, zone, target)
+    ctx_ref = BossContext.Assert(boss, "BossHitbox.CheckFan")
     if not (target and target:IsValid()) then return false end
     local pp = target.Location
-    return BossHitbox.CheckFanXY(zone, pp.X, pp.Y)
+    return BossHitbox.CheckFanXY(ctx_ref, zone, pp.X, pp.Y)
 end
 
 -- 통합: zone.kind 보고 자동 분기
 --   "rect" (P1 종베기, P3 내려찍기) → CheckRect (zone.length/width 우선)
 --   "fan"  (P2 횡베기)              → CheckFan
 --   그 외                           → CheckRect (안전 fallback)
-function BossHitbox.Check(zone, target)
+---@param boss BossContext
+---@param zone table
+---@param target any
+---@return boolean
+function BossHitbox.Check(boss, zone, target)
+    ctx_ref = BossContext.Assert(boss, "BossHitbox.Check")
     -- 방어: Init 누락/hot-reload 로 ctx_ref 가 nil 이어도 코루틴이 죽지 않게 한다.
     if ctx_ref == nil then return false end
     if zone == nil then return false end
     if not (target and target:IsValid()) then return false end
-    return BossHitbox.CheckXY(zone, target.Location.X, target.Location.Y)
+    return BossHitbox.CheckXY(ctx_ref, zone, target.Location.X, target.Location.Y)
 end
 
 return BossHitbox

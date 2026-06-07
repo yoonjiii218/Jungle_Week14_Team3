@@ -1,25 +1,89 @@
--- Samurai animation state script.
--- Player input, movement, and dash movement live in Script/PlayerAction.lua.
+-- Anim/PlayerAnimation.lua
+-- Owns animation graph state only. Gameplay state lives in PlayerContext.
+-- Notify callbacks are adapted into PlayerAction / CombatContext calls.
 
-local PlayerAction = require("PlayerAction")
-local CombatContext = require("CombatContext")
-local PlayerConfig = require("PlayerConfig")
-local PlayerFeedback = require("PlayerFeedback")
+local PlayerAction = require("Player/PlayerAction")
+local CombatContext = require("Combat/CombatContext")
+local HitTypes = require("Combat/HitTypes")
+local PlayerConfig = require("Config/PlayerConfig")
+local PlayerContext = require("Player/PlayerContext")
+local PlayerEvents = require("Player/PlayerEvents")
+local PlayerFeedback = require("Player/PlayerFeedback")
 
 local DEFAULT_SAMURAI_CONFIG = PlayerConfig.Default.Animation.Samurai
 
-local function GetPlayerCtx(self)
-    local playerCtx = CombatContext.GetPlayerByOwner(obj)
-    if playerCtx ~= nil then
-        self.PlayerCtx = playerCtx
-        return playerCtx
+local ANIM_ACTION_FIELDS = {
+    "AttackPressed", "DashPressed", "DashChargingPressed", "DashChargingReleased",
+    "DashActive", "DashElapsed", "DashEnd",
+    "DashSlashPressed", "DashSlashActive", "DashSlashElapsed", "DashSlashEnd",
+    "DashChargingActive", "DashChargingElapsed", "DashChargingEnd",
+    "DashChargeAttackActive", "DashChargeAttackElapsed", "DashChargeAttackEnd",
+    "AttackIndex", "AttackInstanceId", "DashChargeAttackInstanceId",
+    "ComboWindow", "ComboQueued", "AttackEnd",
+}
+
+local function EnsurePlayerCtx(self)
+    local player = CombatContext.GetPlayerByOwner(obj)
+    if player == nil then
+        -- AnimInstance init can run before PlayerCharacter.BeginPlay in editor/PIE reload paths.
+        -- Create a typed context instead of passing AnimInstance self into PlayerAction.
+        player = PlayerContext.Create(obj, this)
+        CombatContext.RegisterPlayer(player)
+        PlayerAction.Init(player)
     end
 
-    return self.PlayerCtx
+    self.PlayerCtx = player
+    return player
 end
 
-local function PushPlayerEvent(self, event)
-    PlayerAction.PushEvent(GetPlayerCtx(self), event)
+local function InstallAnimStateProxy(self, player)
+    if self.__PlayerAnimProxyInstalled == true then
+        return
+    end
+
+    for _, key in ipairs(ANIM_ACTION_FIELDS) do
+        rawset(self, key, nil)
+    end
+
+    local previous = getmetatable(self) or {}
+    local previousIndex = previous.__index
+    local previousNewIndex = previous.__newindex
+    local legacyMap = PlayerContext.GetLegacyFieldMap()
+
+    previous.__index = function(t, key)
+        local map = legacyMap[key]
+        if map ~= nil then
+            return player[map[1]][map[2]]
+        end
+        if type(previousIndex) == "function" then
+            return previousIndex(t, key)
+        elseif type(previousIndex) == "table" then
+            return previousIndex[key]
+        end
+        return nil
+    end
+
+    previous.__newindex = function(t, key, value)
+        local map = legacyMap[key]
+        if map ~= nil then
+            player[map[1]][map[2]] = value
+            return
+        end
+        if type(previousNewIndex) == "function" then
+            previousNewIndex(t, key, value)
+            return
+        end
+        rawset(t, key, value)
+    end
+
+    setmetatable(self, previous)
+    self.__PlayerAnimProxyInstalled = true
+end
+
+local function GetPlayerCtx(self)
+    local player = EnsurePlayerCtx(self)
+    InstallAnimStateProxy(self, player)
+    return player
 end
 
 local function GetSamuraiConfig(self)
@@ -48,9 +112,8 @@ local function GetAttackPlayRate(samuraiConfig, attackIndex)
     return samuraiConfig.AttackPlayRate or DEFAULT_SAMURAI_CONFIG.AttackPlayRate
 end
 
-local function PrepareActionCtx(self)
-    self.PlayerCtx = GetPlayerCtx(self)
-    return self
+local function PrepareActionPlayer(self)
+    return GetPlayerCtx(self)
 end
 
 local function IsUltimateRunning(self)
@@ -70,13 +133,13 @@ local function ResetAttack(self, unlockMovement)
     self.AttackEnd = false
 
     if unlockMovement ~= false then
-        PlayerAction.SetMovementInputEnabled(self, true)
+        PlayerAction.SetMovementInputEnabled(GetPlayerCtx(self), true)
     end
 
-    PlayerAction.EndAttackAssist(self)
+    PlayerAction.EndAttackAssist(GetPlayerCtx(self))
 
     if attackIndex ~= nil and attackIndex > 0 then
-        PushPlayerEvent(self, { Type = "AttackEnd", AttackIndex = attackIndex })
+        PlayerEvents.EmitAttackEnded(GetPlayerCtx(self), { AttackIndex = attackIndex })
     end
 end
 
@@ -86,73 +149,50 @@ local function BeginAttack(self, index)
     self.ComboWindow = false
     self.ComboQueued = false
     self.AttackEnd = false
-    PlayerAction.StopMovementImmediately(self)
-    PlayerAction.BeginAttackAssist(self, index)
-    PlayerAction.StepAttackForward(self, index)
-    PushPlayerEvent(self, { Type = "AttackStart", AttackIndex = index })
+    PlayerAction.StopMovementImmediately(GetPlayerCtx(self))
+    PlayerAction.BeginAttackAssist(GetPlayerCtx(self), index)
+    PlayerAction.StepAttackForward(GetPlayerCtx(self), index)
+    PlayerEvents.EmitAttackStarted(GetPlayerCtx(self), { AttackIndex = index })
 end
 
 local function BeginDash(self)
     ResetAttack(self, false)
     self.DashPressed = false
-    PlayerAction.BeginDash(PrepareActionCtx(self))
+    PlayerAction.BeginDash(PrepareActionPlayer(self))
 end
 
 local function EndDash(self)
-    PlayerAction.EndDash(PrepareActionCtx(self))
+    PlayerAction.EndDash(PrepareActionPlayer(self))
 end
 
 local function BeginDashCharging(self)
     ResetAttack(self, false)
     self.DashChargingPressed = false
     self.DashChargingReleased = false
-    PlayerAction.BeginDashCharging(PrepareActionCtx(self))
+    PlayerAction.BeginDashCharging(PrepareActionPlayer(self))
 end
 
 local function EndDashCharging(self, unlockMovement)
-    PlayerAction.EndDashCharging(PrepareActionCtx(self), unlockMovement)
+    PlayerAction.EndDashCharging(PrepareActionPlayer(self), unlockMovement)
 end
 
 local function BeginDashChargeAttack(self)
     ResetAttack(self, false)
     self.DashChargeAttackEnd = false
     self.DashChargeAttackInstanceId = "PlayerDashChargeAttack_" .. tostring(World.GetGameTime())
-    PlayerAction.BeginDashChargeAttack(PrepareActionCtx(self))
+    PlayerAction.BeginDashChargeAttack(PrepareActionPlayer(self))
 end
 
 local function EndDashChargeAttack(self)
-    PlayerAction.EndDashChargeAttack(PrepareActionCtx(self))
+    PlayerAction.EndDashChargeAttack(PrepareActionPlayer(self))
 end
 
 function init(self)
     self.Speed = 0.0
     self.BlendSpeed = 0.0
 
-    self.AttackPressed = false
-    self.DashPressed = false
-    self.DashChargingPressed = false
-    self.DashChargingReleased = false
-
-    self.DashActive = false
-    self.DashElapsed = 0.0
-    self.DashEnd = false
-
-    self.DashChargingActive = false
-    self.DashChargingElapsed = 0.0
-    self.DashChargingEnd = false
-
-    self.DashChargeAttackActive = false
-    self.DashChargeAttackElapsed = 0.0
-    self.DashChargeAttackEnd = false
-
-    -- Compatibility fields for notifies/assets that still use the old DashSlash name.
-    self.DashSlashPressed = false
-    self.DashSlashActive = false
-    self.DashSlashElapsed = 0.0
-    self.DashSlashEnd = false
-
-    PlayerAction.Init(self, obj)
-    self.PlayerCtx = GetPlayerCtx(self)
+    local player = GetPlayerCtx(self)
+    PlayerAction.Init(player)
     ResetAttack(self)
 
     local samuraiConfig = GetSamuraiConfig(self)
@@ -271,7 +311,7 @@ function init(self)
     Anim.sm_add_transition(top, "AnyState", "UltimateAttack",
         function()
             if IsInUltimateMode(self) == true then
-                PlayerAction.CancelDashActions(PrepareActionCtx(self), false)
+                PlayerAction.CancelDashActions(PrepareActionPlayer(self), false)
                 return true
             end
             return false
@@ -465,8 +505,8 @@ function init(self)
 end
 
 function update(self, dt)
-    self.PlayerCtx = GetPlayerCtx(self)
-    PlayerAction.UpdateActionInput(self, dt)
+    local player = GetPlayerCtx(self)
+    PlayerAction.UpdateActionInput(player, dt)
 
     self.Speed = Anim.get_owner_speed()
     local samuraiConfig = GetSamuraiConfig(self)
@@ -478,21 +518,21 @@ function update(self, dt)
         self.ComboQueued = true
     end
 
-    PlayerAction.UpdateStepForward(self, dt)
+    PlayerAction.UpdateStepForward(player, dt)
 
     if self.DashActive then
-        PlayerAction.UpdateDash(self, dt)
+        PlayerAction.UpdateDash(player, dt)
     elseif self.DashChargingActive then
-        PlayerAction.UpdateDashCharging(self, dt)
+        PlayerAction.UpdateDashCharging(player, dt)
     elseif self.DashChargeAttackActive then
-        PlayerAction.UpdateDashChargeAttack(self, dt)
+        PlayerAction.UpdateDashChargeAttack(player, dt)
     elseif self.AttackIndex == 0 then
-        PlayerAction.ApplyMoveInput(self)
+        PlayerAction.ApplyMoveInput(player)
     else
-        if PlayerAction.UpdateAttackAssist(self, dt) ~= true then
-            local dir = PlayerAction.GetMoveInputWorldDirection(self)
+        if PlayerAction.UpdateAttackAssist(player, dt) ~= true then
+            local dir = PlayerAction.GetMoveInputWorldDirection(player)
             if dir ~= nil then
-                PlayerAction.SmoothFaceOwnerToDirection(self, dir, dt)
+                PlayerAction.SmoothFaceOwnerToDirection(player, dir, dt)
             end
         end
     end
@@ -515,60 +555,30 @@ function on_attack_end(self)
     end
 end
 
-local function GetCombatConfig(self)
-    local playerCtx = GetPlayerCtx(self)
-    if playerCtx ~= nil and playerCtx.Config ~= nil and playerCtx.Config.Combat ~= nil then
-        return playerCtx.Config.Combat
-    end
-
-    return PlayerConfig.Default.Combat
-end
-
-local function BuildPlayerHitInfo(self, targetActor, hitboxComponent, targetComponent, hitResult, hitStopDuration)
-    local playerCtx = GetPlayerCtx(self)
-    local combatConfig = GetCombatConfig(self)
-    local attackIndex = self.AttackIndex or 0
-    local attackId = "PlayerAttack" .. tostring(attackIndex)
-    local attackInstanceId = self.AttackInstanceId or (attackId .. "_" .. tostring(World.GetGameTime()))
-    local damage = combatConfig.AttackDamages and combatConfig.AttackDamages[attackIndex] or 10
-    local gaugeDelta = combatConfig.AttackHitGaugeDelta or 0
-
-    if self.DashChargeAttackActive == true then
-        attackId = "PlayerDashChargeAttack"
-        attackInstanceId = self.DashChargeAttackInstanceId or (attackId .. "_" .. tostring(World.GetGameTime()))
-        damage = combatConfig.DashChargeAttackDamage or damage
-        gaugeDelta = combatConfig.DashChargeAttackGaugeDelta or gaugeDelta
-    elseif IsInUltimateMode(self) == true then
-        attackId = "PlayerUltimate"
-        attackInstanceId = "PlayerUltimate_" .. tostring(World.GetGameTime())
-        damage = combatConfig.UltimateDamage or damage
-        gaugeDelta = 0
-    end
-
-    return {
-        SourceActor = playerCtx and playerCtx.Owner or obj,
-        SourceTeam = "Player",
+---@param self table
+---@param targetActor any
+---@param hitboxComponent any
+---@param targetComponent any
+---@param hitResult any
+---@param hitStopDuration number
+---@return nil
+function on_attack_hit(self, targetActor, hitboxComponent, targetComponent, hitResult, hitStopDuration)
+    local player = GetPlayerCtx(self)
+    local hitRequest = HitTypes.CreatePlayerAttackFromState({
+        Player = player,
         TargetActor = targetActor,
-        TargetTeam = "Enemy",
-        AttackId = attackId,
-        AttackInstanceId = attackInstanceId,
-        AttackIndex = attackIndex,
-        Damage = damage,
-        GaugeDelta = gaugeDelta,
-        HitStopDuration = hitStopDuration,
         HitboxComponent = hitboxComponent,
         TargetComponent = targetComponent,
         HitResult = hitResult,
-    }
-end
+        HitStopDuration = hitStopDuration,
+    })
 
-function on_attack_hit(self, targetActor, hitboxComponent, targetComponent, hitResult, hitStopDuration)
-    local result = CombatContext.ApplyHit(BuildPlayerHitInfo(self, targetActor, hitboxComponent, targetComponent, hitResult, hitStopDuration))
+    local hitResultInfo = CombatContext.ApplyHit(hitRequest)
 
-    if result.Applied == true then
-        print("on attack hit " .. targetActor:GetName() .. " damage=" .. tostring(result.Damage))
+    if hitResultInfo.Applied == true then
+        print("on attack hit " .. targetActor:GetName() .. " damage=" .. tostring(hitResultInfo.Damage))
     else
-        print("on attack hit ignored " .. targetActor:GetName() .. " reason=" .. tostring(result.Reason))
+        print("on attack hit ignored " .. targetActor:GetName() .. " reason=" .. tostring(hitResultInfo.Reason))
     end
 end
 
@@ -581,6 +591,8 @@ function on_trail_deactivate(self)
 end
 
 function on_notify(self, name)
+    local player = GetPlayerCtx(self)
+    PlayerAction.OnAnimNotify(player, name)
     print("[LuaAnim] notify: " .. name)
 
     if name == "ComboWindowOpen" then

@@ -2,17 +2,17 @@
 -- This module does not move the player by itself. It only resolves a target and
 -- exposes the 2D direction that PlayerAction should use for yaw/attack dash.
 
+-- Player/PlayerTargeting.lua
+-- Target resolution helper. Public functions take PlayerContext.
+
 local PlayerTargeting = {}
 
-local PlayerConfig = require("PlayerConfig")
+local PlayerConfig = require("Config/PlayerConfig")
+local PlayerContext = require("Player/PlayerContext")
 
-local function GetConfig(ctx)
-    if ctx ~= nil and ctx.Config ~= nil then
-        return ctx.Config
-    end
-
-    if ctx ~= nil and ctx.PlayerCtx ~= nil and ctx.PlayerCtx.Config ~= nil then
-        return ctx.PlayerCtx.Config
+local function GetConfig(player)
+    if player ~= nil and player.Config ~= nil then
+        return player.Config
     end
 
     return nil
@@ -27,13 +27,9 @@ local function GetTargetingConfig(ctx)
     return PlayerConfig.Default.Targeting
 end
 
-local function GetOwner(ctx)
-    if ctx ~= nil and ctx.Owner ~= nil then
-        return ctx.Owner
-    end
-
-    if ctx ~= nil and ctx.PlayerCtx ~= nil and ctx.PlayerCtx.Owner ~= nil then
-        return ctx.PlayerCtx.Owner
+local function GetOwner(player)
+    if player ~= nil and player.Owner ~= nil then
+        return player.Owner
     end
 
     return obj
@@ -194,7 +190,9 @@ local function IsStickyTargetUsable(ctx, owner, aimDir, profile, now)
     return IsCandidateInProfile(owner, target, aimDir, profile, 1.25, 30.0)
 end
 
-function PlayerTargeting.FindTarget(ctx, mode, aimDirection)
+---@param player PlayerContext
+function PlayerTargeting.FindTarget(player, mode, aimDirection)
+    local ctx = PlayerContext.Assert(player, "PlayerTargeting.FindTarget")
     local config = GetTargetingConfig(ctx)
     if config.Enabled == false then
         return nil
@@ -256,7 +254,9 @@ function PlayerTargeting.FindTarget(ctx, mode, aimDirection)
     return best.Actor, best.Direction, best.Distance
 end
 
-function PlayerTargeting.BeginAssist(ctx, mode, aimDirection)
+---@param player PlayerContext
+function PlayerTargeting.BeginAssist(player, mode, aimDirection)
+    local ctx = PlayerContext.Assert(player, "PlayerTargeting.BeginAssist")
     if ctx == nil then
         return nil, nil
     end
@@ -282,7 +282,9 @@ function PlayerTargeting.BeginAssist(ctx, mode, aimDirection)
     return target, dir, distance
 end
 
-function PlayerTargeting.GetAssistDirection(ctx)
+---@param player PlayerContext
+function PlayerTargeting.GetAssistDirection(player)
+    local ctx = PlayerContext.Assert(player, "PlayerTargeting.GetAssistDirection")
     if ctx == nil then
         return nil
     end
@@ -305,13 +307,17 @@ function PlayerTargeting.GetAssistDirection(ctx)
     return ctx.TargetAssistDirection
 end
 
-function PlayerTargeting.GetTurnSpeed(ctx)
+---@param player PlayerContext
+function PlayerTargeting.GetTurnSpeed(player)
+    local ctx = PlayerContext.Assert(player, "PlayerTargeting.GetTurnSpeed")
     local config = GetTargetingConfig(ctx)
     local profile = GetProfile(config, ctx and ctx.TargetAssistMode or "Attack")
     return profile.TurnSpeed or PlayerConfig.Default.Action.AttackTurnSpeed
 end
 
-function PlayerTargeting.IsAssistTurnActive(ctx)
+---@param player PlayerContext
+function PlayerTargeting.IsAssistTurnActive(player)
+    local ctx = PlayerContext.Assert(player, "PlayerTargeting.IsAssistTurnActive")
     if ctx == nil then
         return false
     end
@@ -319,7 +325,9 @@ function PlayerTargeting.IsAssistTurnActive(ctx)
     return (ctx.TargetAssistEndTime or 0.0) > Now()
 end
 
-function PlayerTargeting.ClearAssist(ctx, clearSticky)
+---@param player PlayerContext
+function PlayerTargeting.ClearAssist(player, clearSticky)
+    local ctx = PlayerContext.Assert(player, "PlayerTargeting.ClearAssist")
     if ctx == nil then
         return
     end

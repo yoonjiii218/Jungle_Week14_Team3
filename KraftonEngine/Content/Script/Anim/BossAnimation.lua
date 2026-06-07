@@ -17,7 +17,7 @@
 --   "HitboxOpen"      -- 히트박스 활성화 (BossHitbox 연동)
 --   "HitboxClose"     -- 히트박스 비활성화
 
-local CombatContext = require("CombatContext")
+local CombatContext = require("Combat/CombatContext")
 
 local ANIM_BASE = "Content/Animation/Samurai_Boss/"
 

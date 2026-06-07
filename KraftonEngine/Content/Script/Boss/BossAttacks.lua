@@ -4,15 +4,20 @@
 
 local BossAttacks = {}
 
+local BossContext = require("Boss/BossContext")
+local HitTypes = require("Combat/HitTypes")
+
 local ctx_ref       = nil   -- BossCharacter.lua 에서 Init 으로 주입
 local CombatContext = nil   -- 순환 require 방지: Init 시점에 로드
 local Feedback      = nil   -- 순환 require 방지: Init 시점에 로드
 local Hitbox        = nil   -- 순환 require 방지: Init 시점에 로드
 
 -- ────────────────────────────────────────────
-function BossAttacks.Init(ctx)
-    ctx_ref       = ctx
-    CombatContext = require("CombatContext")
+---@param boss BossContext
+---@return nil
+function BossAttacks.Init(boss)
+    ctx_ref       = BossContext.Assert(boss, "BossAttacks.Init")
+    CombatContext = require("Combat/CombatContext")
     Feedback      = require("Boss/BossFeedback")
     Hitbox        = require("Boss/BossHitbox")
 end
@@ -26,12 +31,12 @@ local function ResolveHit(tag, zone, damage, hitStopDuration)
         return false
     end
 
-    if not Hitbox.Check(zone, ctx_ref.playerRef) then
+    if not Hitbox.Check(ctx_ref, zone, ctx_ref.playerRef) then
         -- 현재 위치는 장판 밖. 하지만 "대시를 시작한 순간" 장판 안이었고 지금도 무적이면,
         -- 회피로 빠져나간 것이므로 퍼펙트 회피를 인정한다. (대시 시작 시 장판 안 = 위협 노출)
         local dodging, dodgeLoc = CombatContext.GetPlayerDodgeSnapshot(ctx_ref.playerRef)
         local startedInZone = dodging and dodgeLoc ~= nil
-            and Hitbox.CheckXY(zone, dodgeLoc.X, dodgeLoc.Y)
+            and Hitbox.CheckXY(ctx_ref, zone, dodgeLoc.X, dodgeLoc.Y)
 
         if not startedInZone then
             -- 진짜 빗나감 (대시 시작도 장판 밖이거나, 무적이 아님)
@@ -47,11 +52,9 @@ local function ResolveHit(tag, zone, damage, hitStopDuration)
         end
     end
 
-    local result = CombatContext.ApplyHit({
+    local hitRequest = HitTypes.CreateBossAttack({
         SourceActor = ctx_ref.obj,
-        SourceTeam = "Enemy",
         TargetActor = ctx_ref.playerRef,
-        TargetTeam = "Player",
         AttackId = tag,
         AttackInstanceId = tag .. "_" .. tostring(World.GetGameTime()),
         Damage = damage or 10,
@@ -59,11 +62,13 @@ local function ResolveHit(tag, zone, damage, hitStopDuration)
         HitStopDuration = hitStopDuration or 0.04,
     })
 
+    local hitOutcome = CombatContext.ApplyHit(hitRequest)
+
     if ctx_ref.BB.DEBUG then
-        if result.Applied == true then
-            print("[" .. tag .. "] ★ HIT! 플레이어 데미지=" .. tostring(result.Damage))
+        if hitOutcome.Applied == true then
+            print("[" .. tag .. "] ★ HIT! 플레이어 데미지=" .. tostring(hitOutcome.Damage))
         else
-            print("[" .. tag .. "] HIT resolved as " .. tostring(result.Reason))
+            print("[" .. tag .. "] HIT resolved as " .. tostring(hitOutcome.Reason))
         end
     end
 
@@ -71,7 +76,7 @@ local function ResolveHit(tag, zone, damage, hitStopDuration)
     -- 이렇게 안 하면 보스 루프의 hit 플래그가 계속 false → 판정창이 닫힐 때까지 ResolveHit
     -- 을 반복 → 슬로모로 시간이 미세하게 흘러 무적 윈도우가 끝나는 순간(dodging=false)
     -- 같은 공격의 데미지가 새어 들어간다.
-    return result.Applied == true or result.Reason == "PerfectDodge"
+    return hitOutcome.Applied == true or hitOutcome.Reason == "PerfectDodge"
 end
 
 -- ────────────────────────────────────────────
@@ -175,16 +180,16 @@ local function Pattern1_BasicSlash()
     BeginPattern("P1")
 
     WaitForNotify("ZoneShow", 3.0)
-    local zone = Feedback.ShowP1Zone(ctx_ref.playerRef)
+    local zone = Feedback.ShowP1Zone(ctx_ref, ctx_ref.playerRef)
     bb.ActiveZone = zone
     if BB.DEBUG then print("[P1] ZoneShow → 장판 스폰") end
 
     WaitForNotify("ZoneFlash", 3.0)
-    Feedback.FlashZone(zone)
+    Feedback.FlashZone(ctx_ref, zone)
     if BB.DEBUG then print("[P1] ZoneFlash → 번쩍임") end
 
     WaitForNotify("ZoneHide", 3.0)
-    Feedback.HideZone(zone)
+    Feedback.HideZone(ctx_ref, zone)
     bb.ActiveZone = nil
     if BB.DEBUG then print("[P1] ZoneHide → 장판 제거") end
 
@@ -217,15 +222,15 @@ local function Pattern2_DoubleSlash()
 
     -- 1타: ZoneShow(준비모션) → ZoneFlash → ZoneHide → HitboxOpen → HitboxClose
     WaitForNotify("ZoneShow", 3.0)
-    local zone1 = Feedback.ShowFanZone(ctx_ref.playerRef)
+    local zone1 = Feedback.ShowFanZone(ctx_ref, ctx_ref.playerRef)
     bb.ActiveZone = zone1
     if BB.DEBUG then print("[P2] ZoneShow → 1타 장판 스폰") end
 
     WaitForNotify("ZoneFlash", 3.0)
-    Feedback.FlashZone(zone1)
+    Feedback.FlashZone(ctx_ref, zone1)
 
     WaitForNotify("ZoneHide", 3.0)
-    Feedback.HideZone(zone1)
+    Feedback.HideZone(ctx_ref, zone1)
     if BB.DEBUG then print("[P2] 1타 ZoneHide → 장판 제거") end
 
     WaitForNotify("HitboxOpen", 3.0)
@@ -240,15 +245,15 @@ local function Pattern2_DoubleSlash()
     if BB.DEBUG then print("[P2] 1타 판정 완료") end
 
     -- 2타: HeavyCombo3 진입 직후 스폰 (방향 갱신됨)
-    local zone2 = Feedback.ShowFanZone(ctx_ref.playerRef)
+    local zone2 = Feedback.ShowFanZone(ctx_ref, ctx_ref.playerRef)
     bb.ActiveZone = zone2
     if BB.DEBUG then print("[P2] 2타 장판 스폰") end
 
     WaitForNotify("ZoneFlash", 3.0)
-    Feedback.FlashZone(zone2)
+    Feedback.FlashZone(ctx_ref, zone2)
 
     WaitForNotify("ZoneHide", 3.0)
-    Feedback.HideZone(zone2)
+    Feedback.HideZone(ctx_ref, zone2)
     bb.ActiveZone = nil
     if BB.DEBUG then print("[P2] 2타 ZoneHide → 장판 제거") end
 
@@ -280,8 +285,8 @@ local function Pattern3_HeavySmash()
 
     -- ZoneShow(준비모션)에서 장판 스폰 + 차오름 시작
     WaitForNotify("ZoneShow", 3.0)
-    local zone = Feedback.ShowRectZone(ctx_ref.playerRef)
-    Feedback.FillZone(zone, 0.0)
+    local zone = Feedback.ShowRectZone(ctx_ref, ctx_ref.playerRef)
+    Feedback.FillZone(ctx_ref, zone, 0.0)
     bb.ActiveZone = zone
     if BB.DEBUG then print("[P3] ZoneShow → 장판 스폰, 차오름 시작") end
 
@@ -289,7 +294,7 @@ local function Pattern3_HeavySmash()
         local t = 0.0
         while bb.ActiveZone == zone do
             t = t + WaitFrame()
-            Feedback.FillZone(zone, math.min(t / BB.P3.FILL_DURATION, 0.99))
+            Feedback.FillZone(ctx_ref, zone, math.min(t / BB.P3.FILL_DURATION, 0.99))
         end
     end)
 
@@ -298,11 +303,11 @@ local function Pattern3_HeavySmash()
     if BB.DEBUG then print("[P3] TrackEnd → 보스 회전 멈춤") end
 
     WaitForNotify("ZoneFlash", 3.0)
-    Feedback.FlashZone(zone)
+    Feedback.FlashZone(ctx_ref, zone)
     if BB.DEBUG then print("[P3] ZoneFlash → 번쩍임") end
 
     WaitForNotify("ZoneHide", 3.0)
-    Feedback.HideZone(zone)
+    Feedback.HideZone(ctx_ref, zone)
     bb.ActiveZone = nil
     if BB.DEBUG then print("[P3] ZoneHide → 장판 제거") end
 
@@ -325,7 +330,11 @@ end
 -- ────────────────────────────────────────────
 -- 외부 인터페이스: BossAction.SelectPattern 에서 호출
 -- ────────────────────────────────────────────
-function BossAttacks.RunPattern(name)
+---@param boss BossContext
+---@param name string
+---@return nil
+function BossAttacks.RunPattern(boss, name)
+    ctx_ref = BossContext.Assert(boss, "BossAttacks.RunPattern")
     if name == "P1" then
         StartCoroutine(Pattern1_BasicSlash)
     elseif name == "P2" then

@@ -7,6 +7,8 @@
 
 local BossFeedback = {}
 
+local BossContext = require("Boss/BossContext")
+
 local ctx_ref = nil   -- BossCharacter.lua 에서 Init 으로 주입
 
 local KATANA_MESH_PATH  = "Content/Mesh/Katana/source/red cyber katana_StaticMesh.uasset"
@@ -49,8 +51,10 @@ local function AttachKatanaToBoss()
 end
 
 -- ────────────────────────────────────────────
-function BossFeedback.Init(ctx)
-    ctx_ref = ctx
+---@param boss BossContext
+---@return nil
+function BossFeedback.Init(boss)
+    ctx_ref = BossContext.Assert(boss, "BossFeedback.Init")
     -- 칼 부착 실패가 BeginPlay 전체를 막지 않도록 격리한다.
     -- (보스 스켈레톤에 소켓 pinky_01_r_socket 이 없으면 AttachToComponentWithSocket 이
     --  에러를 던져 BeginPlay 가 중단되고, 뒤따르는 Hitbox.Init / RegisterBoss 가 통째로
@@ -99,7 +103,11 @@ end
 -- ════════════════════════════════════════════
 -- P3: 직사각형 장판 (보스 앞으로 뻗고, 타겟 방향 정렬)
 -- ════════════════════════════════════════════
-function BossFeedback.ShowRectZone(target)
+---@param boss BossContext
+---@param target any
+---@return table
+function BossFeedback.ShowRectZone(boss, target)
+    ctx_ref = BossContext.Assert(boss, "BossFeedback.ShowRectZone")
     local F = ctx_ref.BB.FEEDBACK
     local bossPos = ctx_ref.obj.Location
     local dir, yaw = ResolveDirection(bossPos, target)
@@ -136,7 +144,11 @@ end
 -- P1: 종베기 장판 (좁은 직사각형 — 옆으로 피해야 회피 성공)
 --   P3 ShowRectZone 과 같은 구조지만 P1_LENGTH / P1_WIDTH 로 좁고 짧게.
 -- ════════════════════════════════════════════
-function BossFeedback.ShowP1Zone(target)
+---@param boss BossContext
+---@param target any
+---@return table
+function BossFeedback.ShowP1Zone(boss, target)
+    ctx_ref = BossContext.Assert(boss, "BossFeedback.ShowP1Zone")
     local F = ctx_ref.BB.FEEDBACK
     local bossPos = ctx_ref.obj.Location
     local dir, yaw = ResolveDirection(bossPos, target)
@@ -168,7 +180,11 @@ end
 -- P2: 횡베기 부채꼴 장판 (가는 조각 N개를 방사형으로 펼침)
 --   좌우로 넓게 휩쓸리는 느낌 → 뒤로 빠지거나 타이밍 회피
 -- ════════════════════════════════════════════
-function BossFeedback.ShowFanZone(target)
+---@param boss BossContext
+---@param target any
+---@return table
+function BossFeedback.ShowFanZone(boss, target)
+    ctx_ref = BossContext.Assert(boss, "BossFeedback.ShowFanZone")
     local F = ctx_ref.BB.FEEDBACK
     local bossPos = ctx_ref.obj.Location
     local _, baseYaw = ResolveDirection(bossPos, target)
@@ -213,7 +229,12 @@ end
 --   ratio 0.0~1.0. 보스쪽 끝(origin) 고정, 플레이어쪽으로 늘어남.
 --   ※ 시각 연출만. 판정(Hitbox)은 가득 찬 full 영역 기준(HIT 시점).
 -- ════════════════════════════════════════════
-function BossFeedback.FillZone(zone, ratio)
+---@param boss BossContext
+---@param zone table
+---@param ratio number
+---@return nil
+function BossFeedback.FillZone(boss, zone, ratio)
+    ctx_ref = BossContext.Assert(boss, "BossFeedback.FillZone")
     if zone == nil or zone.decals == nil or #zone.decals == 0 then return end
     if zone.kind ~= "rect" then return end   -- 직사각형만
 
@@ -245,7 +266,11 @@ function BossFeedback.FillZone(zone, ratio)
 end
 
 -- 번쩍임 (모든 조각 색 진해짐)
-function BossFeedback.FlashZone(zone)
+---@param boss BossContext
+---@param zone table
+---@return nil
+function BossFeedback.FlashZone(boss, zone)
+    ctx_ref = BossContext.Assert(boss, "BossFeedback.FlashZone")
     if zone == nil or zone.decals == nil then return end
     local c = ctx_ref.BB.FEEDBACK.ZONE_COLOR_FLASH
     for _, d in ipairs(zone.decals) do
@@ -254,7 +279,11 @@ function BossFeedback.FlashZone(zone)
 end
 
 -- 제거 (모든 조각 즉시 페이드아웃 → 자동파괴)
-function BossFeedback.HideZone(zone)
+---@param boss BossContext
+---@param zone table
+---@return nil
+function BossFeedback.HideZone(boss, zone)
+    ctx_ref = BossContext.Assert(boss, "BossFeedback.HideZone")
     if zone == nil or zone.decals == nil then return end
     for _, d in ipairs(zone.decals) do
         d:SetFadeOut(0.0, 0.15)

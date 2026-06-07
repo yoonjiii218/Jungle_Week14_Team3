@@ -3,6 +3,8 @@
 
 local BossAction = {}
 
+local BossContext = require("Boss/BossContext")
+
 local ctx_ref   = nil   -- BossCharacter.lua 에서 Init 으로 주입
 local Attacks   = nil   -- 순환 require 방지: Init 시점에 주입
 local lastState = nil   -- 디버그: 상태 전환 시에만 로그 출력
@@ -19,11 +21,14 @@ local function LogState(state, dist)
 end
 
 -- ────────────────────────────────────────────
-function BossAction.Init(ctx)
-    ctx_ref = ctx
+---@param boss BossContext
+---@return nil
+function BossAction.Init(boss)
+    ctx_ref = BossContext.Assert(boss, "BossAction.Init")
     Attacks = require("Boss/BossAttacks")
 end
 
+---@return any
 function BossAction.GetPlayerRef()
     return ctx_ref and ctx_ref.playerRef
 end
@@ -103,27 +108,31 @@ local function SelectPattern()
     if bb.LastPattern == "P3" then
         if BB.DEBUG then print("[BossAction] P3 직후 → 강제 경량 패턴") end
         if roll < 0.5 then
-            Attacks.RunPattern("P2")
+            Attacks.RunPattern(ctx_ref, "P2")
         else
-            Attacks.RunPattern("P1")
+            Attacks.RunPattern(ctx_ref, "P1")
         end
         return
     end
 
     -- 일반 가중치 선택
     if bb.HeavyAttackCooldown <= 0 and roll < BB.PROB_HEAVY then
-        Attacks.RunPattern("P3")
+        Attacks.RunPattern(ctx_ref, "P3")
     elseif roll < BB.PROB_HEAVY + BB.PROB_DOUBLE then
-        Attacks.RunPattern("P2")
+        Attacks.RunPattern(ctx_ref, "P2")
     else
-        Attacks.RunPattern("P1")
+        Attacks.RunPattern(ctx_ref, "P1")
     end
 end
 
 -- ────────────────────────────────────────────
 -- UpdateAI: 매 프레임 BossCharacter.Tick 에서 호출
 -- ────────────────────────────────────────────
-function BossAction.UpdateAI(dt)
+---@param boss BossContext
+---@param dt number
+---@return nil
+function BossAction.UpdateAI(boss, dt)
+    ctx_ref = BossContext.Assert(boss, "BossAction.UpdateAI")
     local bb = ctx_ref.bb
     local BB = ctx_ref.BB
 

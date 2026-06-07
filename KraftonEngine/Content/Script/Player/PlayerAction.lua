@@ -1,17 +1,17 @@
--- Semantic input event 처리 및 결과 보관
+-- Player/PlayerAction.lua
+-- PlayerAction owns player.Action state transitions.
+-- Do not pass AnimInstance self as player.
 
 local PlayerAction = {}
 
-local PlayerConfig = require("PlayerConfig")
-local PlayerTargeting = require("PlayerTargeting")
+local PlayerConfig = require("Config/PlayerConfig")
+local PlayerTargeting = require("Player/PlayerTargeting")
+local PlayerContext = require("Player/PlayerContext")
+local PlayerEvents = require("Player/PlayerEvents")
 
-local function GetConfig(ctx)
-    if ctx ~= nil and ctx.Config ~= nil then
-        return ctx.Config
-    end
-
-    if ctx ~= nil and ctx.PlayerCtx ~= nil and ctx.PlayerCtx.Config ~= nil then
-        return ctx.PlayerCtx.Config
+local function GetConfig(player)
+    if player ~= nil and player.Config ~= nil then
+        return player.Config
     end
 
     return nil
@@ -133,10 +133,17 @@ local function ResetDashInput(ctx)
     ctx.DashChargingReleased = false
 end
 
-function PlayerAction.Init(ctx, owner)
+---@param player PlayerContext
+---@return nil
+-- =========================================================
+-- Public API
+-- =========================================================
+
+function PlayerAction.Init(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.Init")
     RequireSemanticInputApi()
 
-    ctx.Owner = owner or ctx.Owner
+    ctx.Owner = ctx.Owner
     ctx.LastMoveInputDirection = nil
     ctx.DashPrevOrientRotationToMovement = nil
     ctx.DashMoveDirection = nil
@@ -194,31 +201,29 @@ function PlayerAction.Init(ctx, owner)
     end
 end
 
-function PlayerAction.PushEvent(ctx, event)
-    if ctx == nil or event == nil then
+---@param player PlayerContext
+---@param event PlayerEvent
+---@return nil
+function PlayerAction.PushEvent(player, event)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.PushEvent")
+    if event == nil then
         return
     end
 
-    ctx.PendingActionEvents = ctx.PendingActionEvents or {}
-    table.insert(ctx.PendingActionEvents, event)
+    PlayerEvents.Push(ctx, event)
 end
 
-local function DrainEvents(ctx, result)
-    if ctx.PendingActionEvents == nil then
-        return
-    end
-
-    for _, event in ipairs(ctx.PendingActionEvents) do
-        table.insert(result.Events, event)
-    end
-    ctx.PendingActionEvents = {}
-end
-
-function PlayerAction.SetMovementInputEnabled(ctx, enabled)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.SetMovementInputEnabled(player, enabled)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.SetMovementInputEnabled")
     SetMovementInputEnabled(ctx, enabled)
 end
 
-function PlayerAction.StopMovementImmediately(ctx)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.StopMovementImmediately(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.StopMovementImmediately")
     StopMovementImmediately(ctx)
 end
 
@@ -278,7 +283,10 @@ local function BeginStepForward(ctx, distance, duration, direction)
     ctx.StepForwardDirection = forward
 end
 
-function PlayerAction.StepAttackForward(ctx, attackIndex)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.StepAttackForward(player, attackIndex)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.StepAttackForward")
     local actionConfig = GetActionConfig(ctx)
     BeginStepForward(
         ctx,
@@ -287,7 +295,10 @@ function PlayerAction.StepAttackForward(ctx, attackIndex)
     )
 end
 
-function PlayerAction.StepDashChargeAttackForward(ctx)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.StepDashChargeAttackForward(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.StepDashChargeAttackForward")
     local actionConfig = GetActionConfig(ctx)
     BeginStepForward(
         ctx,
@@ -297,7 +308,10 @@ function PlayerAction.StepDashChargeAttackForward(ctx)
     )
 end
 
-function PlayerAction.UpdateStepForward(ctx, dt)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.UpdateStepForward(player, dt)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.UpdateStepForward")
     if ctx == nil or ctx.StepForwardActive ~= true then
         return
     end
@@ -336,7 +350,10 @@ function PlayerAction.UpdateStepForward(ctx, dt)
     end
 end
 
-function PlayerAction.GetMoveInputWorldDirection(ctx)
+---@param player PlayerContext
+---@return any
+function PlayerAction.GetMoveInputWorldDirection(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.GetMoveInputWorldDirection")
     local owner = GetOwner(ctx)
     if owner == nil then
         return nil
@@ -383,7 +400,10 @@ function PlayerAction.GetMoveInputWorldDirection(ctx)
     return dir:Normalized()
 end
 
-function PlayerAction.GetOwnerForward2D(ctx)
+---@param player PlayerContext
+---@return any
+function PlayerAction.GetOwnerForward2D(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.GetOwnerForward2D")
     local owner = GetOwner(ctx)
     if owner == nil then
         return nil
@@ -403,7 +423,10 @@ function PlayerAction.GetOwnerForward2D(ctx)
     return dir:Normalized()
 end
 
-function PlayerAction.ResolveDashDirection(ctx)
+---@param player PlayerContext
+---@return any
+function PlayerAction.ResolveDashDirection(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.ResolveDashDirection")
     local dir = PlayerAction.GetMoveInputWorldDirection(ctx)
 
     if dir ~= nil then
@@ -417,7 +440,10 @@ function PlayerAction.ResolveDashDirection(ctx)
     return PlayerAction.GetOwnerForward2D(ctx)
 end
 
-function PlayerAction.FaceOwnerToDirection(ctx, dir)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.FaceOwnerToDirection(player, dir)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.FaceOwnerToDirection")
     local owner = GetOwner(ctx)
     if owner == nil or dir == nil then
         return
@@ -427,7 +453,10 @@ function PlayerAction.FaceOwnerToDirection(ctx, dir)
     Reflection.Call(owner, "SetActorRotation", Vector(0.0, 0.0, targetYaw))
 end
 
-function PlayerAction.SmoothFaceOwnerToDirection(ctx, dir, dt, turnSpeed)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.SmoothFaceOwnerToDirection(player, dir, dt, turnSpeed)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.SmoothFaceOwnerToDirection")
     local owner = GetOwner(ctx)
     if owner == nil or dir == nil or dt == nil then
         return
@@ -451,11 +480,17 @@ function PlayerAction.SmoothFaceOwnerToDirection(ctx, dir, dt, turnSpeed)
     Reflection.Call(owner, "SetActorRotation", Vector(currentRot.X, currentRot.Y, nextYaw))
 end
 
-function PlayerAction.BeginAttackAssist(ctx, attackIndex)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.BeginAttackAssist(player, attackIndex)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.BeginAttackAssist")
     PlayerTargeting.BeginAssist(ctx, "Attack")
 end
 
-function PlayerAction.UpdateAttackAssist(ctx, dt)
+---@param player PlayerContext
+---@return boolean
+function PlayerAction.UpdateAttackAssist(player, dt)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.UpdateAttackAssist")
     if PlayerTargeting.IsAssistTurnActive(ctx) ~= true then
         return false
     end
@@ -469,11 +504,17 @@ function PlayerAction.UpdateAttackAssist(ctx, dt)
     return true
 end
 
-function PlayerAction.EndAttackAssist(ctx)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.EndAttackAssist(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.EndAttackAssist")
     PlayerTargeting.ClearAssist(ctx, false)
 end
 
-function PlayerAction.ApplyMoveInput(ctx)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.ApplyMoveInput(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.ApplyMoveInput")
     local owner = GetOwner(ctx)
     if owner == nil then
         return
@@ -490,7 +531,10 @@ function PlayerAction.ApplyMoveInput(ctx)
     end
 end
 
-function PlayerAction.UpdateActionInput(ctx, dt)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.UpdateActionInput(player, dt)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.UpdateActionInput")
     if ctx == nil then
         return
     end
@@ -556,7 +600,10 @@ function PlayerAction.UpdateActionInput(ctx, dt)
     end
 end
 
-function PlayerAction.BeginDash(ctx)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.BeginDash(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.BeginDash")
     if ctx.MovementComp ~= nil then
         ctx.DashPrevOrientRotationToMovement =
             Reflection.GetProperty(ctx.MovementComp, "bOrientRotationToMovement")
@@ -583,10 +630,13 @@ function PlayerAction.BeginDash(ctx)
     ctx.DashSlashEnd = false
     ctx.DashSlashMoveDirection = dashDir
 
-    PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashStart", Dir = dashDir })
+    PlayerEvents.EmitDashStarted(ctx, { Dir = dashDir })
 end
 
-function PlayerAction.EndDash(ctx)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.EndDash(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.EndDash")
     ctx.DashActive = false
     ctx.DashElapsed = 0.0
     ctx.DashEnd = false
@@ -605,10 +655,13 @@ function PlayerAction.EndDash(ctx)
     PlayerTargeting.ClearAssist(ctx, false)
 
     SetMovementInputEnabled(ctx, true)
-    PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashEnd" })
+    PlayerEvents.EmitDashEnded(ctx)
 end
 
-function PlayerAction.UpdateDash(ctx, dt)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.UpdateDash(player, dt)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.UpdateDash")
     local owner = GetOwner(ctx)
     if owner == nil or ctx.DashMoveDirection == nil then
         return
@@ -633,7 +686,10 @@ function PlayerAction.UpdateDash(ctx, dt)
     end
 end
 
-function PlayerAction.BeginDashCharging(ctx)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.BeginDashCharging(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.BeginDashCharging")
     SetMovementInputEnabled(ctx, false)
     StopMovementImmediately(ctx)
 
@@ -642,10 +698,13 @@ function PlayerAction.BeginDashCharging(ctx)
     ctx.DashChargingEnd = false
     ctx.DashChargingReleased = false
 
-    PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargingStart" })
+    PlayerEvents.EmitDashChargingStarted(ctx)
 end
 
-function PlayerAction.EndDashCharging(ctx, unlockMovement)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.EndDashCharging(player, unlockMovement)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.EndDashCharging")
     ctx.DashChargingActive = false
     ctx.DashChargingElapsed = 0.0
     ctx.DashChargingEnd = false
@@ -655,15 +714,21 @@ function PlayerAction.EndDashCharging(ctx, unlockMovement)
         SetMovementInputEnabled(ctx, true)
     end
 
-    PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargingEnd" })
+    PlayerEvents.EmitDashChargingEnded(ctx)
 end
 
-function PlayerAction.UpdateDashCharging(ctx, dt)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.UpdateDashCharging(player, dt)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.UpdateDashCharging")
     ctx.DashChargingElapsed = (ctx.DashChargingElapsed or 0.0) + (dt or 0.0)
     StopMovementImmediately(ctx)
 end
 
-function PlayerAction.BeginDashChargeAttack(ctx)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.BeginDashChargeAttack(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.BeginDashChargeAttack")
     SetMovementInputEnabled(ctx, false)
     StopMovementImmediately(ctx)
 
@@ -679,20 +744,26 @@ function PlayerAction.BeginDashChargeAttack(ctx)
     ctx.DashChargeAttackElapsed = 0.0
     ctx.DashChargeAttackEnd = false
 
-    PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargeAttackStart" })
+    PlayerEvents.EmitDashChargeAttackStarted(ctx)
 end
 
-function PlayerAction.EndDashChargeAttack(ctx)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.EndDashChargeAttack(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.EndDashChargeAttack")
     ctx.DashChargeAttackActive = false
     ctx.DashChargeAttackElapsed = 0.0
     ctx.DashChargeAttackEnd = false
     PlayerTargeting.ClearAssist(ctx, false)
 
     SetMovementInputEnabled(ctx, true)
-    PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargeAttackEnd" })
+    PlayerEvents.EmitDashChargeAttackEnded(ctx)
 end
 
-function PlayerAction.CancelDashActions(ctx, unlockMovement)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.CancelDashActions(player, unlockMovement)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.CancelDashActions")
     if ctx == nil then
         return
     end
@@ -735,17 +806,20 @@ function PlayerAction.CancelDashActions(ctx, unlockMovement)
     end
 
     if wasDashActive then
-        PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashEnd" })
+        PlayerEvents.EmitDashEnded(ctx)
     end
     if wasDashChargingActive then
-        PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargingEnd" })
+        PlayerEvents.EmitDashChargingEnded(ctx)
     end
     if wasDashChargeAttackActive then
-        PlayerAction.PushEvent(ctx.PlayerCtx or ctx, { Type = "DashChargeAttackEnd" })
+        PlayerEvents.EmitDashChargeAttackEnded(ctx)
     end
 end
 
-function PlayerAction.UpdateDashChargeAttack(ctx, dt)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.UpdateDashChargeAttack(player, dt)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.UpdateDashChargeAttack")
     ctx.DashChargeAttackElapsed = (ctx.DashChargeAttackElapsed or 0.0) + (dt or 0.0)
 
     local dir = PlayerTargeting.GetAssistDirection(ctx)
@@ -757,35 +831,67 @@ function PlayerAction.UpdateDashChargeAttack(ctx, dt)
 end
 
 -- Compatibility wrappers for scripts that still call DashSlash.
-function PlayerAction.BeginDashSlash(ctx)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.BeginDashSlash(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.BeginDashSlash")
     PlayerAction.BeginDash(ctx)
 end
 
-function PlayerAction.EndDashSlash(ctx)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.EndDashSlash(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.EndDashSlash")
     PlayerAction.EndDash(ctx)
 end
 
-function PlayerAction.UpdateDashSlash(ctx, dt)
+---@param player PlayerContext
+---@return nil
+function PlayerAction.UpdateDashSlash(player, dt)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.UpdateDashSlash")
     PlayerAction.UpdateDash(ctx, dt)
 end
 
-function PlayerAction.IsUltimateRunning(ctx)
+---@param player PlayerContext
+---@param notifyName string
+---@return nil
+function PlayerAction.OnAnimNotify(player, notifyName)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.OnAnimNotify")
+    if notifyName == "ComboWindowOpen" then
+        ctx.ComboWindow = true
+    elseif notifyName == "ComboWindowClose" then
+        ctx.ComboWindow = false
+    elseif notifyName == "AttackEnd" then
+        ctx.AttackEnd = true
+    elseif notifyName == "DashEnd" or notifyName == "DashSlashEnd" then
+        ctx.DashEnd = true
+        ctx.DashSlashEnd = true
+    elseif notifyName == "DashChargeAttackEnd" or notifyName == "DashChargingAttackEnd" then
+        ctx.DashChargeAttackEnd = true
+    end
+end
+
+---@param player PlayerContext
+---@return boolean
+function PlayerAction.IsUltimateRunning(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.IsUltimateRunning")
     return ctx ~= nil and ctx.IsUltimateRunning == true
 end
 
-function PlayerAction.IsInUltimateMode(ctx)
+---@param player PlayerContext
+---@return boolean
+function PlayerAction.IsInUltimateMode(player)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.IsInUltimateMode")
     return ctx ~= nil and ctx.IsInUltimateMode == true
 end
 
-function PlayerAction.Update(ctx, dt)
-    local result = { Events = {} }
-
-    if ctx == nil then
-        return result
-    end
+---@param player PlayerContext
+---@param dt number
+---@return nil
+function PlayerAction.Update(player, dt)
+    local ctx = PlayerContext.Assert(player, "PlayerAction.Update")
 
     PlayerAction.UpdateActionInput(ctx, dt)
-    DrainEvents(ctx, result)
 
     local maxUltimateGauge = ctx.MaxUltimateGauge or PlayerConfig.Default.Combat.MaxUltimateGauge
     local ultimateGauge = ctx.UltimateGauge or 0
@@ -796,10 +902,8 @@ function PlayerAction.Update(ctx, dt)
         and ActionStarted(ctx, "Ultimate")
         and ultimateGauge >= maxUltimateGauge then
         ctx.IsUltimateRunning = true
-        table.insert(result.Events, { Type = "UltimateStart" })
+        PlayerEvents.EmitUltimateStarted(ctx)
     end
-
-    return result
 end
 
 return PlayerAction
