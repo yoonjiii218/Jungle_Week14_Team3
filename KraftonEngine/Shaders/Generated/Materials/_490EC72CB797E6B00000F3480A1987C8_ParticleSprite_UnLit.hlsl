@@ -58,15 +58,15 @@ FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
     float2 n_42 = ((float2(fmod(floor(saturate(Input.SubImageIndex) * (16 - 0.0001f)), 4), floor(floor(saturate(Input.SubImageIndex) * (16 - 0.0001f)) / 4)) + Input.UV0) * float2(1.0f/4, 1.0f/4));
     float4 n_32 = Tex_SlashAtlas.Sample(LinearWrapSampler, n_42);
+    float3 n_45 = ((n_32).rgb * float3((n_32).a, (n_32).a, (n_32).a));
     float4 n_1 = Input.ParticleColor;
-    float3 n_45 = ((n_32).rgb * (n_1).rgb);
+    float3 n_72 = (n_45 * (n_1).rgb);
     float n_59 = Param_EmissiveIntensity;
-    float3 n_61 = (n_45 * float3(n_59, n_59, n_59));
-    float n_51 = ((n_32).a * (n_1).a);
+    float3 n_100 = (n_72 * float3(n_59, n_59, n_59));
     FMaterialResult Result;
     Result.Color = float3(0, 0, 0);
-    Result.Emissive = n_61;
-    Result.Opacity = n_51;
+    Result.Emissive = n_100;
+    Result.Opacity = 1.0f;
     Result.UVOffset = float2(0, 0);
     FMaterialEvalResult Eval;
     Eval.Material = Result;
