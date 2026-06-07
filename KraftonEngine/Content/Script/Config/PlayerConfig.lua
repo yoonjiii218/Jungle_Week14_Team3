@@ -28,9 +28,17 @@ PlayerConfig.Default = {
         -- enters a short sword-wave stance and alternates two diagonal slash motions.
         PostDashAttack = {
             Enabled = true,
-            WindowDuration = 2.5,
+            WindowDuration = 0.75,
             MaxAttacks = 3,
             VariantCount = 2,
+            StepForwardDistances = {
+                0.5,
+                0.5,
+            },
+            StepForwardDurations = {
+                0.12,
+                0.12,
+            },
             SpawnFlyingSlashOnAttackStart = false,
         },
 

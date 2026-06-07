@@ -647,6 +647,28 @@ local function GetPostDashAttackMaxAttacks(playerContext)
     return maxAttacks
 end
 
+local function GetPostDashAttackStepForwardDistance(actionConfig, config, variant)
+    if config.StepForwardDistances ~= nil and variant ~= nil then
+        local distance = config.StepForwardDistances[variant]
+        if distance ~= nil then
+            return distance
+        end
+    end
+
+    return config.StepForwardDistance or GetAttackStepForwardDistance(actionConfig, variant)
+end
+
+local function GetPostDashAttackStepForwardDuration(actionConfig, config, variant)
+    if config.StepForwardDurations ~= nil and variant ~= nil then
+        local duration = config.StepForwardDurations[variant]
+        if duration ~= nil then
+            return duration
+        end
+    end
+
+    return config.StepForwardDuration or GetAttackStepForwardDuration(actionConfig, variant)
+end
+
 local function IsPostDashAttackWindowUsable(playerContext)
     local config = GetPostDashAttackConfig(playerContext)
     local action = playerContext.Action
@@ -746,6 +768,8 @@ end
 function PlayerAction.BeginPostDashAttack(playerContext, variant)
     PlayerContext.Assert(playerContext, "PlayerAction.BeginPostDashAttack")
     local action = playerContext.Action
+    local actionConfig = playerContext.Config.Action
+    local config = GetPostDashAttackConfig(playerContext)
     local variantCount = GetPostDashAttackVariantCount(playerContext)
     if variant == nil or variant < 1 or variant > variantCount then
         variant = PlayerAction.GetNextPostDashAttackVariant(playerContext)
@@ -773,9 +797,12 @@ function PlayerAction.BeginPostDashAttack(playerContext, variant)
 
     PlayerAction.StopMovementImmediately(playerContext)
     PlayerAction.BeginAttackAssist(playerContext, variant)
-    PlayerAction.StepAttackForward(playerContext, variant)
+    BeginStepForward(
+        playerContext,
+        GetPostDashAttackStepForwardDistance(actionConfig, config, variant),
+        GetPostDashAttackStepForwardDuration(actionConfig, config, variant)
+    )
 
-    local config = GetPostDashAttackConfig(playerContext)
     if config.SpawnFlyingSlashOnAttackStart == true then
         PlayerProjectile.SpawnFlyingSlash(playerContext, {
             AttackId = "PlayerPostDashFlyingSlash" .. tostring(variant),
