@@ -10,6 +10,7 @@
 #include "Runtime/Engine.h"
 
 #include <algorithm>
+#include <cmath>
 
 namespace
 {
@@ -75,8 +76,8 @@ void UActionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 	if (HitSquashAction.bActive)
 	{
-		USceneComponent* TargetComponent = GetTargetSceneComponent();
-		if (!TargetComponent)
+		USceneComponent* TargetComponent = HitSquashAction.TargetComponent;
+		if (!IsValid(TargetComponent))
 		{
 			HitSquashAction.bActive = false;
 		}
@@ -106,6 +107,33 @@ void UActionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 			{
 				TargetComponent->SetRelativeScale(HitSquashAction.StartScale);
 				HitSquashAction.bActive = false;
+			}
+		}
+	}
+
+	if (HitShakeAction.bActive)
+	{
+		USceneComponent* TargetComponent = HitShakeAction.TargetComponent;
+		if (!IsValid(TargetComponent))
+		{
+			HitShakeAction.bActive = false;
+		}
+		else
+		{
+			HitShakeAction.ElapsedTime += RawDeltaTime;
+			const float Duration = HitShakeAction.Duration;
+			if (Duration <= 0.0f || HitShakeAction.ElapsedTime >= Duration)
+			{
+				TargetComponent->SetRelativeLocation(HitShakeAction.BaseRelativeLocation);
+				HitShakeAction = FHitShakeAction();
+			}
+			else
+			{
+				const float Alpha = FMath::Clamp(HitShakeAction.ElapsedTime / Duration, 0.0f, 1.0f);
+				const float Damping = 1.0f - Alpha;
+				const float Wave = std::sin(HitShakeAction.ElapsedTime * HitShakeAction.Frequency);
+				const float Offset = HitShakeAction.Amplitude * Wave * Damping;
+				TargetComponent->SetRelativeLocation(HitShakeAction.BaseRelativeLocation + FVector(0.0f, Offset, 0.0f));
 			}
 		}
 	}
@@ -183,13 +211,17 @@ void UActionComponent::LocalHitStop(float Duration)
 
 void UActionComponent::HitSquash(const FVector& SquashedScale, float SquashInDuration, float RecoverDuration)
 {
-	USceneComponent* TargetComponent = GetTargetSceneComponent();
-	if (!TargetComponent)
+	HitSquashComponent(GetTargetSceneComponent(), SquashedScale, SquashInDuration, RecoverDuration);
+}
+
+void UActionComponent::HitSquashComponent(USceneComponent* TargetComponent, const FVector& SquashedScale, float SquashInDuration, float RecoverDuration)
+{
+	if (!IsValid(TargetComponent))
 	{
 		return;
 	}
 
-	const FVector OriginalScale = HitSquashAction.bActive
+	const FVector OriginalScale = (HitSquashAction.bActive && HitSquashAction.TargetComponent == TargetComponent)
 		? HitSquashAction.StartScale
 		: TargetComponent->GetRelativeScale();
 
@@ -199,11 +231,51 @@ void UActionComponent::HitSquash(const FVector& SquashedScale, float SquashInDur
 	HitSquashAction.ElapsedTime = 0.0f;
 	HitSquashAction.StartScale = OriginalScale;
 	HitSquashAction.SquashedScale = SquashedScale;
+	HitSquashAction.TargetComponent = TargetComponent;
 
 	if (HitSquashAction.SquashInDuration <= 0.0f)
 	{
 		TargetComponent->SetRelativeScale(HitSquashAction.SquashedScale);
 	}
+}
+
+void UActionComponent::HitSquashComponentByMultiplier(USceneComponent* TargetComponent, const FVector& ScaleMultiplier, float SquashInDuration, float RecoverDuration)
+{
+	if (!IsValid(TargetComponent))
+	{
+		return;
+	}
+
+	const FVector OriginalScale = (HitSquashAction.bActive && HitSquashAction.TargetComponent == TargetComponent)
+		? HitSquashAction.StartScale
+		: TargetComponent->GetRelativeScale();
+
+	HitSquashComponent(TargetComponent, FVector(
+		OriginalScale.X * ScaleMultiplier.X,
+		OriginalScale.Y * ScaleMultiplier.Y,
+		OriginalScale.Z * ScaleMultiplier.Z),
+		SquashInDuration,
+		RecoverDuration);
+}
+
+void UActionComponent::HitShakeComponent(USceneComponent* TargetComponent, float Amplitude, float Duration, float Frequency)
+{
+	if (!IsValid(TargetComponent) || Duration <= 0.0f || Amplitude == 0.0f)
+	{
+		return;
+	}
+
+	const FVector BaseLocation = (HitShakeAction.bActive && HitShakeAction.TargetComponent == TargetComponent)
+		? HitShakeAction.BaseRelativeLocation
+		: TargetComponent->GetRelativeLocation();
+
+	HitShakeAction.bActive = true;
+	HitShakeAction.Duration = Duration;
+	HitShakeAction.ElapsedTime = 0.0f;
+	HitShakeAction.Amplitude = Amplitude;
+	HitShakeAction.Frequency = Frequency > 0.0f ? Frequency : 45.0f;
+	HitShakeAction.BaseRelativeLocation = BaseLocation;
+	HitShakeAction.TargetComponent = TargetComponent;
 }
 
 void UActionComponent::Knockback(const FVector& Direction, float Distance, float Duration)
@@ -293,12 +365,26 @@ void UActionComponent::StopHitSquash()
 {
 	if (HitSquashAction.bActive)
 	{
-		if (USceneComponent* TargetComponent = GetTargetSceneComponent())
+		USceneComponent* TargetComponent = HitSquashAction.TargetComponent;
+		if (IsValid(TargetComponent))
 		{
 			TargetComponent->SetRelativeScale(HitSquashAction.StartScale);
 		}
 	}
 	HitSquashAction = FHitSquashAction();
+}
+
+void UActionComponent::StopHitShake()
+{
+	if (HitShakeAction.bActive)
+	{
+		USceneComponent* TargetComponent = HitShakeAction.TargetComponent;
+		if (IsValid(TargetComponent))
+		{
+			TargetComponent->SetRelativeLocation(HitShakeAction.BaseRelativeLocation);
+		}
+	}
+	HitShakeAction = FHitShakeAction();
 }
 
 void UActionComponent::StopKnockback()
@@ -316,6 +402,7 @@ void UActionComponent::StopAllActions()
 {
 	StopLocalHitStop();
 	StopHitSquash();
+	StopHitShake();
 	StopKnockback();
 	HitStopAction = FTimedDilationAction();
 	SlomoAction = FTimedDilationAction();

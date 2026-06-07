@@ -4992,7 +4992,7 @@
       "Properties" : {
         "PendingActorLocation" : [0.000000, 0.000000, -4.704811],
         "PendingActorRotation" : [-0.000000, 0.000000, 0.000000],
-        "PendingActorScale" : [201.351990, 179.429749, 1.000000],
+        "PendingActorScale" : [50.000000, 50.000000, 1.000000],
         "PendingActorVisible" : true,
         "PendingTagsString" : "Player",
         "bNeedsTick" : true
@@ -5043,7 +5043,54 @@
           "MaterialSlots" : ["Content/Material/Auto/M_GridCube.mat"],
           "ObjectType" : [0, 0, 0, 0, 0, 0, 0, 0],
           "RelativeTransform.Location" : [0.000000, 0.000000, -4.704811],
-          "RelativeTransform.Scale" : [201.351990, 179.429749, 1.000000],
+          "RelativeTransform.Scale" : [50.000000, 50.000000, 1.000000],
+          "ResponseContainer" : {
+            "Responses[0]" : [2, 0, 0, 0, 0, 0, 0, 0],
+            "Responses[1]" : [2, 0, 0, 0, 0, 0, 0, 0],
+            "Responses[2]" : [2, 0, 0, 0, 0, 0, 0, 0],
+            "Responses[3]" : [2, 0, 0, 0, 0, 0, 0, 0],
+            "Responses[4]" : [2, 0, 0, 0, 0, 0, 0, 0]
+          },
+          "StaticMeshPath" : "Content/Mesh/GridCube/SM_GridCube_StaticMesh.uasset",
+          "bAutoActivate" : true,
+          "bCastShadow" : true,
+          "bCastShadowAsTwoSided" : false,
+          "bEditorOnly" : false,
+          "bEnableGravity" : true,
+          "bGenerateOverlapEvents" : false,
+          "bHiddenInComponentTree" : false,
+          "bIsActive" : true,
+          "bIsVisible" : true,
+          "bSimulatePhysics" : false,
+          "bTickEnable" : true
+        }
+      }
+    }, {
+      "ClassName" : "AStaticMeshActor",
+      "Name" : "AStaticMeshActor_28",
+      "NonSceneComponents" : [],
+      "ObjectId" : 155,
+      "Properties" : {
+        "PendingActorLocation" : [50.000000, 0.000000, 25.000000],
+        "PendingActorRotation" : [-0.000000, 0.000000, 0.000000],
+        "PendingActorScale" : [1.000000, 50.000000, 50.000000],
+        "PendingActorVisible" : true,
+        "PendingTagsString" : "",
+        "bNeedsTick" : true
+      },
+      "RootComponent" : {
+        "Children" : [],
+        "ClassName" : "UStaticMeshComponent",
+        "ObjectId" : 156,
+        "Properties" : {
+          "CachedEditRotator" : [-0.000000, 0.000000, 0.000000],
+          "CenterOfMassOffset" : [0.000000, 0.000000, 0.000000],
+          "CollisionEnabled" : [0, 0, 0, 0, 0, 0, 0, 0],
+          "Mass" : 1.000000,
+          "MaterialSlots" : ["Content/Material/Auto/M_GridCube.mat"],
+          "ObjectType" : [0, 0, 0, 0, 0, 0, 0, 0],
+          "RelativeTransform.Location" : [50.000000, 0.000000, 25.000000],
+          "RelativeTransform.Scale" : [1.000000, 50.000000, 50.000000],
           "ResponseContainer" : {
             "Responses[0]" : [2, 0, 0, 0, 0, 0, 0, 0],
             "Responses[1]" : [2, 0, 0, 0, 0, 0, 0, 0],
@@ -5069,7 +5116,7 @@
       "ClassName" : "ABoxActor",
       "Name" : "CinematicCamera",
       "NonSceneComponents" : [],
-      "ObjectId" : 155,
+      "ObjectId" : 157,
       "Properties" : {
         "PendingActorLocation" : [-17.167963, 16.085407, 12.146918],
         "PendingActorRotation" : [-0.000000, 0.000000, 0.000000],
@@ -5082,7 +5129,7 @@
         "Children" : [{
             "Children" : [],
             "ClassName" : "UCineCameraComponent",
-            "ObjectId" : 157,
+            "ObjectId" : 159,
             "Properties" : {
               "CachedEditRotator" : [-0.000000, 0.000000, 0.000000],
               "CameraState.FOV" : 1.047198,
@@ -5108,7 +5155,7 @@
             }
           }],
         "ClassName" : "UBoxComponent",
-        "ObjectId" : 156,
+        "ObjectId" : 158,
         "Properties" : {
           "BoxExtent" : [1.000000, 1.000000, 1.000000],
           "CachedEditRotator" : [-0.000000, 0.000000, 0.000000],
@@ -5145,14 +5192,14 @@
       "Name" : "BossCharacter",
       "NonSceneComponents" : [{
           "ClassName" : "UCharacterMovementComponent",
-          "ObjectId" : 161,
+          "ObjectId" : 163,
           "Properties" : {
             "BrakingFriction" : 8.000000,
             "FloorProbeDistance" : 0.100000,
             "Gravity" : 9.800000,
             "JumpZVelocity" : 6.000000,
             "MaxAcceleration" : 20.000000,
-            "MaxWalkSpeed" : 10.000000,
+            "MaxWalkSpeed" : 6.000000,
             "RotationYawRate" : 540.000000,
             "bAutoActivate" : true,
             "bAutoRegisterUpdatedComponent" : false,
@@ -5164,7 +5211,7 @@
           }
         }, {
           "ClassName" : "ULuaScriptComponent",
-          "ObjectId" : 162,
+          "ObjectId" : 164,
           "Properties" : {
             "ScriptFile" : "Boss/BossCharacter.lua",
             "bAutoActivate" : true,
@@ -5175,7 +5222,7 @@
           }
         }, {
           "ClassName" : "UActionComponent",
-          "ObjectId" : 163,
+          "ObjectId" : 165,
           "Properties" : {
             "bAutoActivate" : true,
             "bEditorOnly" : false,
@@ -5184,7 +5231,7 @@
             "bTickEnable" : true
           }
         }],
-      "ObjectId" : 158,
+      "ObjectId" : 160,
       "Properties" : {
         "PendingActorLocation" : [5.757998, 15.645119, 8.617209],
         "PendingActorRotation" : [-0.000000, 0.000000, 0.000000],
@@ -5201,7 +5248,7 @@
         "Children" : [{
             "Children" : [],
             "ClassName" : "USkeletalMeshComponent",
-            "ObjectId" : 160,
+            "ObjectId" : 162,
             "Properties" : {
               "AnimInstanceClass" : "ULuaAnimInstance",
               "AnimationData" : {
@@ -5245,7 +5292,7 @@
             }
           }],
         "ClassName" : "UCapsuleComponent",
-        "ObjectId" : 159,
+        "ObjectId" : 161,
         "Properties" : {
           "CachedEditRotator" : [-0.000000, 0.000000, 0.000000],
           "CapsuleHalfHeight" : 9.000000,
@@ -5287,9 +5334,9 @@
   "PerspectiveCamera" : {
     "FOV" : 1.047198,
     "FarClip" : 1000.000000,
-    "Location" : [-32.056393, -14.790020, 27.504166],
+    "Location" : [3.830626, -4.964492, 0.920358],
     "NearClip" : 0.100000,
-    "Rotation" : [0.000000, 30.465118, 385.350983]
+    "Rotation" : [0.000000, 5.565150, 429.300232]
   },
   "Version" : 2,
   "WorldSettings" : {

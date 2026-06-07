@@ -25,6 +25,25 @@ local function Bezier2(a, b, c, t)
     return a * (u * u) + b * (2.0 * u * t) + c * (t * t)
 end
 
+local function SetComponentVisible(component, visible)
+    if component == nil then
+        return
+    end
+
+    if component.IsValid ~= nil and component:IsValid() ~= true then
+        return
+    end
+
+    if component.SetVisibility ~= nil then
+        component:SetVisibility(visible)
+        return
+    end
+
+    pcall(function()
+        Reflection.Call(component, "SetVisibility", visible)
+    end)
+end
+
 local function PlayPerfectDodgeFeedback(playerContext, event)
     local feedbackConfig = playerContext.Config.Feedback
     local perfectDodgeConfig = feedbackConfig.PerfectDodge
@@ -35,6 +54,87 @@ local function PlayPerfectDodgeFeedback(playerContext, event)
     end
 
     print("Perfect Dodge")
+end
+
+local function PlayAttackHitFeedback(playerContext, event)
+    local feedbackConfig = playerContext.Config.Feedback
+    local attackHitConfig = feedbackConfig.AttackHit or {}
+    local shakeScale = attackHitConfig.CameraShakeScale or 0.0
+
+    if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil and shakeScale > 0.0 then
+        CameraManager.StartWaveShake(shakeScale)
+    end
+end
+
+local function GetOrAddActionComponent(ownerActor)
+    if ownerActor == nil or ownerActor:IsValid() ~= true then
+        return nil
+    end
+
+    if ownerActor.GetActionComponent ~= nil then
+        local action = ownerActor:GetActionComponent()
+        if action ~= nil then
+            return action
+        end
+    end
+
+    if ownerActor.AddActionComponent ~= nil then
+        return ownerActor:AddActionComponent()
+    end
+
+    return nil
+end
+
+local function ResolvePlayerMeshComponent(playerContext)
+    local owner = playerContext.Owner
+    if owner == nil or owner.GetSkeletalMeshComponent == nil then
+        return nil
+    end
+
+    return owner:GetSkeletalMeshComponent()
+end
+
+local function PlayHitReactFeedback(playerContext, event)
+    local feedbackConfig = playerContext.Config.Feedback
+    local hitConfig = feedbackConfig.HitReact or {}
+
+    local shakeScale = hitConfig.CameraShakeScale or 0.0
+    if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil and shakeScale > 0.0 then
+        CameraManager.StartWaveShake(shakeScale)
+    end
+
+    local owner = playerContext.Owner
+    local meshComp = ResolvePlayerMeshComponent(playerContext)
+    if meshComp == nil then
+        return
+    end
+
+    local action = GetOrAddActionComponent(owner)
+    if action == nil then
+        return
+    end
+
+    if hitConfig.SquashEnabled ~= false and action.HitSquashComponentByMultiplier ~= nil then
+        pcall(function()
+            action:HitSquashComponentByMultiplier(
+                meshComp,
+                hitConfig.SquashScale or Vector(1.06, 1.06, 0.94),
+                hitConfig.SquashInDuration or 0.035,
+                hitConfig.SquashRecoverDuration or 0.09
+            )
+        end)
+    end
+
+    if hitConfig.ShakeEnabled ~= false and action.HitShakeComponent ~= nil then
+        pcall(function()
+            action:HitShakeComponent(
+                meshComp,
+                hitConfig.ShakeAmplitude or 3.0,
+                hitConfig.ShakeDuration or 0.08,
+                hitConfig.ShakeFrequency or 70.0
+            )
+        end)
+    end
 end
 
 local function BuildGroundDecalAABBScale3(a, b, c, padding, minSize, projectionDepth)
@@ -209,6 +309,35 @@ function PlayerFeedback.SetKatanaTrailActive(playerContext, active)
     else
         PSC:Deactivate()
     end
+end
+
+---@param playerContext PlayerContext
+---@return nil
+function PlayerFeedback.BeginDashVanish(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerFeedback.BeginDashVanish")
+
+    local owner = playerContext.Owner
+    if owner == nil or owner.GetSkeletalMeshComponent == nil then
+        return
+    end
+
+    SetComponentVisible(owner:GetSkeletalMeshComponent(), false)
+    SetComponentVisible(playerContext.Feedback.KatanaComponent, false)
+    SetComponentVisible(playerContext.Feedback.KatanaPSC, false)
+end
+
+---@param playerContext PlayerContext
+---@return nil
+function PlayerFeedback.EndDashVanish(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerFeedback.EndDashVanish")
+
+    local owner = playerContext.Owner
+    if owner ~= nil and owner.GetSkeletalMeshComponent ~= nil then
+        SetComponentVisible(owner:GetSkeletalMeshComponent(), true)
+    end
+
+    SetComponentVisible(playerContext.Feedback.KatanaComponent, true)
+    SetComponentVisible(playerContext.Feedback.KatanaPSC, true)
 end
 
 ---@param playerContext PlayerContext
@@ -485,10 +614,9 @@ function PlayerFeedback.ProcessEvents(playerContext, events)
         if PlayerEvents.Is(event, PlayerEvents.Type.PerfectDodge) then
             PlayPerfectDodgeFeedback(playerContext, event)
         elseif PlayerEvents.Is(event, PlayerEvents.Type.Hit) then
-            if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
-                CameraManager.StartWaveShake(0.35)
-            end
+            PlayHitReactFeedback(playerContext, event)
         elseif PlayerEvents.Is(event, PlayerEvents.Type.AttackHit) then
+            PlayAttackHitFeedback(playerContext, event)
             -- AttackHitWindow 자체 hitstop은 C++ NotifyState가 처리한다.
             -- 여기서는 이후 피격 VFX/UI/사운드를 붙일 수 있도록 이벤트만 한 곳에서 받는다.
         elseif PlayerEvents.Is(event, PlayerEvents.Type.Dead) then

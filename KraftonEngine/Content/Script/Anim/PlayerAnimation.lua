@@ -612,6 +612,22 @@ function on_attack_hit(self, targetActor, hitboxComponent, targetComponent, hitR
     end
 end
 
+function on_dash_vanish_begin(self)
+    self.PlayerContext = CombatContext.GetPlayerByOwner(obj)
+    local playerContext = self.PlayerContext
+    if playerContext == nil then return end
+    PlayerContext.Assert(playerContext, "PlayerAnimation.on_dash_vanish_begin")
+    PlayerFeedback.BeginDashVanish(playerContext)
+end
+
+function on_dash_vanish_end(self)
+    self.PlayerContext = CombatContext.GetPlayerByOwner(obj)
+    local playerContext = self.PlayerContext
+    if playerContext == nil then return end
+    PlayerContext.Assert(playerContext, "PlayerAnimation.on_dash_vanish_end")
+    PlayerFeedback.EndDashVanish(playerContext)
+end
+
 function on_trail_activate(self)
     self.PlayerContext = CombatContext.GetPlayerByOwner(obj)
     local playerContext = self.PlayerContext
@@ -653,6 +669,16 @@ function on_notify(self, name)
 
     if name == "HitReactEnd" or name == "HitEnd" then
         playerContext.Action.HitReactEnd = true
+        return
+    end
+
+    if name == "DashVanishBegin" or name == "DashVanishStart" then
+        on_dash_vanish_begin(self)
+        return
+    end
+
+    if name == "DashVanishEnd" or name == "DashVanishStop" then
+        on_dash_vanish_end(self)
         return
     end
 

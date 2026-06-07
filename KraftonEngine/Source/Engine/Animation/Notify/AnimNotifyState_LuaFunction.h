@@ -37,6 +37,21 @@ public:
 };
 
 UCLASS()
+class UAnimNotifyState_DashVanish : public UAnimNotifyState_LuaFunction
+{
+public:
+	GENERATED_BODY()
+	UAnimNotifyState_DashVanish();
+	~UAnimNotifyState_DashVanish() override = default;
+
+	UPROPERTY(Edit, Save, Category="DashVanish", DisplayName="Hide Preview Mesh")
+	bool bHidePreviewMesh = true;
+
+	void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Anim, float TotalDuration) override;
+	void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Anim) override;
+};
+
+UCLASS()
 class UAnimNotifyState_Trail : public UAnimNotifyState_LuaFunction
 {
 public:

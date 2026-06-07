@@ -16,6 +16,7 @@ local Strict = require("Core/Strict")
 local playersByOwner = {}
 local mobsByOwner = {}
 local activeEnemyAttackWindows = {}
+local COLLISION_NO = 0
 
 local function GetOwnerKey(owner)
     if owner == nil then
@@ -517,6 +518,29 @@ local function HandleBossDeath(bossContext, hit)
     if bossRef and bossRef:IsValid() then
         local mov = bossRef:GetCharacterMovement()
         if mov then mov:StopMovementImmediately() end
+
+        if bossRef.RemoveTag ~= nil then
+            bossRef:RemoveTag("Boss")
+            bossRef:RemoveTag("HitTarget")
+        end
+
+        if bossRef.GetRootPrimitiveComponent ~= nil then
+            local rootPrimitive = bossRef:GetRootPrimitiveComponent()
+            if rootPrimitive ~= nil and rootPrimitive.SetCollisionEnabled ~= nil then
+                rootPrimitive:SetCollisionEnabled(COLLISION_NO)
+            end
+        end
+    end
+
+    for _, playerContext in pairs(playersByOwner) do
+        if playerContext.Runtime ~= nil and playerContext.Runtime.TargetAssistTarget == bossRef then
+            playerContext.Runtime.TargetAssistTarget = nil
+            playerContext.Runtime.TargetAssistDirection = nil
+            playerContext.Runtime.TargetAssistDistance = nil
+            playerContext.Runtime.TargetAssistLockedDirection = nil
+            playerContext.Runtime.TargetAssistEndTime = 0.0
+            playerContext.Runtime.TargetAssistKeepUntil = 0.0
+        end
     end
 
     BossEvents.EmitDead(bossContext, {

@@ -2555,11 +2555,15 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		"HitStop", &UActionComponent::HitStop,
 		"LocalHitStop", &UActionComponent::LocalHitStop,
 		"HitSquash", &UActionComponent::HitSquash,
+		"HitSquashComponent", &UActionComponent::HitSquashComponent,
+		"HitSquashComponentByMultiplier", &UActionComponent::HitSquashComponentByMultiplier,
+		"HitShakeComponent", &UActionComponent::HitShakeComponent,
 		"Knockback", &UActionComponent::Knockback,
 		"Slomo", &UActionComponent::Slomo,
 		"StopHitStop", &UActionComponent::StopHitStop,
 		"StopLocalHitStop", &UActionComponent::StopLocalHitStop,
 		"StopHitSquash", &UActionComponent::StopHitSquash,
+		"StopHitShake", &UActionComponent::StopHitShake,
 		"StopKnockback", &UActionComponent::StopKnockback,
 		"StopSlomo", &UActionComponent::StopSlomo,
 		"StopAllActions", &UActionComponent::StopAllActions);
@@ -2653,6 +2657,8 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		{
 			Component.SetCollisionEnabled(static_cast<ECollisionEnabled>(Enabled));
 		},
+		"SetVisibility", &UPrimitiveComponent::SetVisibility,
+		"IsVisible", &UPrimitiveComponent::IsVisible,
 		"SetSimulatePhysics", &UPrimitiveComponent::SetSimulatePhysics,
 		"GetSimulatePhysics", &UPrimitiveComponent::GetSimulatePhysics,
 		"AddForce", &UPrimitiveComponent::AddForce,

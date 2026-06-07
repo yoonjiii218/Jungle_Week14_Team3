@@ -5,6 +5,7 @@
 local PlayerContext = require("Player/PlayerContext")
 local PlayerEvents = require("Player/PlayerEvents")
 local PlayerAction = require("Player/PlayerAction")
+local PlayerProjectile = require("Player/PlayerProjectile")
 local CombatContext = require("Combat/CombatContext")
 local PlayerFeedback = require("Player/PlayerFeedback")
 
@@ -42,6 +43,7 @@ function BeginPlay()
     end
 
     PlayerAction.Init(playerContext)
+    PlayerProjectile.Init(playerContext)
     CombatContext.RegisterPlayer(playerContext)
     PlayerFeedback.Init(playerContext)
 
@@ -50,6 +52,7 @@ end
 
 function EndPlay()
     if playerContext ~= nil then
+        PlayerProjectile.Shutdown(playerContext)
         CombatContext.UnregisterPlayer(playerContext)
         PlayerFeedback.Shutdown(playerContext)
     end
@@ -80,6 +83,7 @@ function Tick(dt)
 
     PlayerEvents.BeginFrame(currentPlayerContext)
     PlayerAction.Update(currentPlayerContext, dt)
+    PlayerProjectile.Update(currentPlayerContext, dt)
 
     local events = PlayerEvents.Drain(currentPlayerContext)
     CombatContext.ProcessPlayerEvents(currentPlayerContext, events)
@@ -168,7 +172,8 @@ function GetDebugSnapshotText()
         "InputBuffer: attackBuffered=%s attackTimer=%.3f dashBuffered=%s dashTimer=%.3f last=%s\n" ..
         "InputPulse: attackPressed=%s dashPressed=%s dashChargingPressed=%s dashChargingReleased=%s\n" ..
         "InputHold: DashDown=%s DashHoldTime=%.3f\n" ..
-        "Assist: mode=%s target=%s",
+        "Assist: mode=%s target=%s\n" ..
+        "ActiveFlyingSlashes: %d",
         DerivePlayerDebugState(ctx),
         hp, maxHP,
         ultimateGauge, maxUltimateGauge, ultimatePercent,
@@ -182,7 +187,8 @@ function GetDebugSnapshotText()
         BoolText(input.AttackBuffered), NumberOrZero(input.AttackBufferTimer), BoolText(input.DashBuffered), NumberOrZero(input.DashBufferTimer), tostring(input.LastBufferedAction or "None"),
         BoolText(input.AttackPressed), BoolText(input.DashPressed), BoolText(input.DashChargingPressed), BoolText(input.DashChargingReleased),
         BoolText(input.DashDown), NumberOrZero(input.DashHoldTime),
-        tostring(targetAssist), tostring(targetName)
+        tostring(targetAssist), tostring(targetName),
+        #(runtime.FlyingSlashes or {})
     )
 end
 
