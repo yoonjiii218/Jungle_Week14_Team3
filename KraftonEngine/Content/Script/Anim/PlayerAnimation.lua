@@ -427,6 +427,7 @@ function init(self)
     )
 
     Anim.sm_set_initial_state(top, "Locomotion")
+    self.TopStateMachine = top
 
     local root = Anim.create_slot("DefaultSlot", top)
     Anim.set_root_node(root)
@@ -590,4 +591,21 @@ function on_notify(self, name)
         playerContext.Action.DashChargeAttackEnd = true
         return
     end
+end
+
+function get_debug_snapshot_text(self)
+    local animState = "None"
+    if self ~= nil and self.TopStateMachine ~= nil and Anim.sm_get_current_state ~= nil then
+        animState = Anim.sm_get_current_state(self.TopStateMachine) or "None"
+    end
+
+    local speed = 0.0
+    local blendSpeed = 0.0
+    if self ~= nil then
+        speed = self.Speed or 0.0
+        blendSpeed = self.BlendSpeed or 0.0
+    end
+
+    return string.format("AnimState: %s\nAnimSpeed: %.2f / blend %.2f",
+        tostring(animState), speed, blendSpeed)
 end
