@@ -118,6 +118,7 @@ local function DerivePlayerDebugState(ctx)
     if action.DashChargeAttackActive then return "DashChargeAttack" end
     if action.DashChargingActive then return "DashCharging" end
     if action.DashActive then return "Dash" end
+    if action.PostDashAttackActive then return "PostDashAttack" .. tostring(action.PostDashAttackVariant or action.AttackIndex or 0) end
     if (action.AttackIndex or 0) > 0 then return "Attack" .. tostring(action.AttackIndex) end
     return "Locomotion"
 end
@@ -164,6 +165,7 @@ function GetDebugSnapshotText()
         "UltimateGauge: %.0f / %.0f (%d%%)\n" ..
         "Ultimate: [%s] %d%%\n" ..
         "Attack: index=%d comboWindow=%s queued=%s end=%s\n" ..
+        "PostDashAttack: window=%s timer=%.3f uses=%d next=%d active=%s variant=%d\n" ..
         "Dash: active=%s elapsed=%.3f / %.3f end=%s\n" ..
         "DashCharge: charging=%s elapsed=%.3f released=%s consumedInput=%s turnTarget=%s\n" ..
         "DashChargeAttack: active=%s elapsed=%.3f end=%s\n" ..
@@ -179,6 +181,7 @@ function GetDebugSnapshotText()
         ultimateGauge, maxUltimateGauge, ultimatePercent,
         MakeGaugeBar(ultimateRatio), ultimatePercent,
         math.floor(NumberOrZero(action.AttackIndex)), BoolText(action.ComboWindow), BoolText(action.ComboQueued), BoolText(action.AttackEnd),
+        BoolText(action.PostDashAttackWindowActive), NumberOrZero(action.PostDashAttackWindowTimer), math.floor(NumberOrZero(action.PostDashAttackUseCount)), math.floor(NumberOrZero(action.PostDashAttackNextVariant)), BoolText(action.PostDashAttackActive), math.floor(NumberOrZero(action.PostDashAttackVariant)),
         BoolText(action.DashActive), NumberOrZero(action.DashElapsed), NumberOrZero(actionConfig.DashDuration), BoolText(action.DashEnd),
         BoolText(action.DashChargingActive), NumberOrZero(action.DashChargingElapsed), BoolText(input.DashChargingReleased), BoolText(input.DashChargingConsumedInput), tostring(runtime.DashChargingTurnTarget or "None"),
         BoolText(action.DashChargeAttackActive), NumberOrZero(action.DashChargeAttackElapsed), BoolText(action.DashChargeAttackEnd),

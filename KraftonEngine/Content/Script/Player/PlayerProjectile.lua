@@ -431,7 +431,7 @@ local function ApplyBossHit(playerContext, projectile, bossActor)
     local result = GetCombatContext().ApplyHit(hit)
     local applied = result ~= nil and result.Applied == true
     if applied == true then
-        TrySpawnHitFlash(playerContext, projectile, bossActor)
+        -- TrySpawnHitFlash(playerContext, projectile, bossActor)
     end
 
     DebugLog(playerContext, "hit boss applied=" .. tostring(applied) .. " reason=" .. tostring(result and result.Reason or "None"))

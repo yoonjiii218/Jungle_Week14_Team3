@@ -14,6 +14,21 @@ local function GetAttackPlayRate(samuraiConfig, attackIndex)
     return samuraiConfig.AttackPlayRates[attackIndex] or samuraiConfig.AttackPlayRate
 end
 
+local function GetPostDashAttackPath(samuraiConfig, attackPaths, variant)
+    local postDashAttackPaths = samuraiConfig.PostDashAttackPaths or {}
+    return postDashAttackPaths[variant] or attackPaths[variant] or attackPaths[1]
+end
+
+local function GetPostDashAttackPlayRate(samuraiConfig, variant)
+    if samuraiConfig.PostDashAttackPlayRates ~= nil and samuraiConfig.PostDashAttackPlayRates[variant] ~= nil then
+        return samuraiConfig.PostDashAttackPlayRates[variant]
+    end
+    if samuraiConfig.PostDashAttackPlayRate ~= nil then
+        return samuraiConfig.PostDashAttackPlayRate
+    end
+    return GetAttackPlayRate(samuraiConfig, variant)
+end
+
 local function ResetAttack(self, unlockMovement)
     local playerContext = self.PlayerContext
     PlayerContext.Assert(playerContext, "PlayerAnimation.ResetAttack")
@@ -21,6 +36,8 @@ local function ResetAttack(self, unlockMovement)
     local attackIndex = actionState.AttackIndex
 
     actionState.AttackIndex = 0
+    actionState.PostDashAttackActive = false
+    actionState.PostDashAttackVariant = 0
     actionState.ComboWindow = false
     actionState.ComboQueued = false
     actionState.AttackEnd = false
@@ -41,6 +58,8 @@ local function BeginAttack(self, index)
     PlayerContext.Assert(playerContext, "PlayerAnimation.BeginAttack")
     local actionState = playerContext.Action
     actionState.AttackIndex = index
+    actionState.PostDashAttackActive = false
+    actionState.PostDashAttackVariant = 0
     actionState.AttackInstanceId = "PlayerAttack" .. tostring(index) .. "_" .. tostring(World.GetGameTime())
     actionState.ComboWindow = false
     actionState.ComboQueued = false
@@ -51,6 +70,12 @@ local function BeginAttack(self, index)
     PlayerEvents.EmitAttackStarted(playerContext, { AttackIndex = index })
 end
 
+local function BeginPostDashAttack(self, variant)
+    local playerContext = self.PlayerContext
+    PlayerContext.Assert(playerContext, "PlayerAnimation.BeginPostDashAttack")
+    PlayerAction.BeginPostDashAttack(playerContext, variant)
+end
+
 local function BeginDash(self)
     ResetAttack(self, false)
     local playerContext = self.PlayerContext
@@ -59,10 +84,10 @@ local function BeginDash(self)
     PlayerAction.BeginDash(playerContext)
 end
 
-local function EndDash(self)
+local function EndDash(self, activatePostDashAttackWindow)
     local playerContext = self.PlayerContext
     PlayerContext.Assert(playerContext, "PlayerAnimation.EndDash")
-    PlayerAction.EndDash(playerContext)
+    PlayerAction.EndDash(playerContext, activatePostDashAttackWindow)
 end
 
 local function BeginDashCharging(self)
@@ -142,6 +167,8 @@ function init(self)
 
     Anim.sm_add_state(top, "Attack1", Anim.create_sequence_player(attackPaths[1], GetAttackPlayRate(samuraiConfig, 1), false))
     Anim.sm_add_state(top, "Attack2", Anim.create_sequence_player(attackPaths[2], GetAttackPlayRate(samuraiConfig, 2), false))
+    Anim.sm_add_state(top, "PostDashAttack1", Anim.create_sequence_player(GetPostDashAttackPath(samuraiConfig, attackPaths, 1), GetPostDashAttackPlayRate(samuraiConfig, 1), false))
+    Anim.sm_add_state(top, "PostDashAttack2", Anim.create_sequence_player(GetPostDashAttackPath(samuraiConfig, attackPaths, 2), GetPostDashAttackPlayRate(samuraiConfig, 2), false))
     Anim.sm_add_state(top, "Attack3", Anim.create_sequence_player(attackPaths[3], GetAttackPlayRate(samuraiConfig, 3), false))
     Anim.sm_add_state(top, "Attack4", Anim.create_sequence_player(attackPaths[4], GetAttackPlayRate(samuraiConfig, 4), false))
     Anim.sm_add_state(top, "Attack5", Anim.create_sequence_player(attackPaths[5], GetAttackPlayRate(samuraiConfig, 5), false))
@@ -255,7 +282,7 @@ function init(self)
                 and not Anim.is_owner_falling()
                 and not self.PlayerContext.Action.IsUltimateRunning then
                 PlayerAction.ConsumeDashChargingInput(self.PlayerContext)
-                EndDash(self)
+                EndDash(self, false)
                 BeginDashCharging(self)
                 return true
             end
@@ -330,10 +357,93 @@ function init(self)
         samuraiConfig.JumpBlendOut
     )
 
+    Anim.sm_add_transition(top, "Locomotion", "PostDashAttack1",
+        function()
+            if self.PlayerContext == nil then return false end
+            if self.PlayerContext.Input.AttackPressed
+                and PlayerAction.ShouldStartPostDashAttackVariant(self.PlayerContext, 1)
+                and self.PlayerContext.Action.HitReactActive ~= true
+                and self.PlayerContext.Action.IsUltimateRunning ~= true
+                and self.PlayerContext.Action.IsInUltimateMode ~= true then
+                BeginPostDashAttack(self, 1)
+                return true
+            end
+            return false
+        end,
+        samuraiConfig.PostDashAttackBlendIn or samuraiConfig.AttackBlendIn
+    )
+
+    Anim.sm_add_transition(top, "Locomotion", "PostDashAttack2",
+        function()
+            if self.PlayerContext == nil then return false end
+            if self.PlayerContext.Input.AttackPressed
+                and PlayerAction.ShouldStartPostDashAttackVariant(self.PlayerContext, 2)
+                and self.PlayerContext.Action.HitReactActive ~= true
+                and self.PlayerContext.Action.IsUltimateRunning ~= true
+                and self.PlayerContext.Action.IsInUltimateMode ~= true then
+                BeginPostDashAttack(self, 2)
+                return true
+            end
+            return false
+        end,
+        samuraiConfig.PostDashAttackBlendIn or samuraiConfig.AttackBlendIn
+    )
+
+    Anim.sm_add_transition(top, "PostDashAttack1", "PostDashAttack2",
+        function()
+            if self.PlayerContext == nil then return false end
+            if PlayerAction.ShouldChainPostDashAttack(self.PlayerContext)
+                and PlayerAction.ShouldStartPostDashAttackVariant(self.PlayerContext, 2) then
+                BeginPostDashAttack(self, 2)
+                return true
+            end
+            return false
+        end,
+        samuraiConfig.PostDashAttackBlendIn or samuraiConfig.AttackBlendIn
+    )
+
+    Anim.sm_add_transition(top, "PostDashAttack2", "PostDashAttack1",
+        function()
+            if self.PlayerContext == nil then return false end
+            if PlayerAction.ShouldChainPostDashAttack(self.PlayerContext)
+                and PlayerAction.ShouldStartPostDashAttackVariant(self.PlayerContext, 1) then
+                BeginPostDashAttack(self, 1)
+                return true
+            end
+            return false
+        end,
+        samuraiConfig.PostDashAttackBlendIn or samuraiConfig.AttackBlendIn
+    )
+
+    Anim.sm_add_transition(top, "PostDashAttack1", "Locomotion",
+        function()
+            if self.PlayerContext == nil then return false end
+            if self.PlayerContext.Action.AttackEnd then
+                ResetAttack(self)
+                return true
+            end
+            return false
+        end,
+        samuraiConfig.PostDashAttackBlendOut or samuraiConfig.AttackBlendOut
+    )
+
+    Anim.sm_add_transition(top, "PostDashAttack2", "Locomotion",
+        function()
+            if self.PlayerContext == nil then return false end
+            if self.PlayerContext.Action.AttackEnd then
+                ResetAttack(self)
+                return true
+            end
+            return false
+        end,
+        samuraiConfig.PostDashAttackBlendOut or samuraiConfig.AttackBlendOut
+    )
+
     Anim.sm_add_transition(top, "Locomotion", "Attack1",
         function()
             if self.PlayerContext == nil then return false end
             if self.PlayerContext.Input.AttackPressed
+                and PlayerAction.CanStartPostDashAttack(self.PlayerContext) ~= true
                 and self.PlayerContext.Action.HitReactActive ~= true
                 and self.PlayerContext.Action.IsUltimateRunning ~= true
                 and self.PlayerContext.Action.IsInUltimateMode ~= true then
