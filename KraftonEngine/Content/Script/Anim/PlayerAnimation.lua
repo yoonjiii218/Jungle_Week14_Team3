@@ -219,7 +219,6 @@ function init(self)
                 and not self.PlayerContext.Action.DashChargingActive
                 and not self.PlayerContext.Action.DashChargeAttackActive
                 and not self.PlayerContext.Action.HitReactActive
-                and (self.PlayerContext.Action.AttackIndex or 0) == 0
                 and not Anim.is_owner_falling()
                 and not self.PlayerContext.Action.IsUltimateRunning then
                 BeginDash(self)
@@ -233,7 +232,9 @@ function init(self)
     Anim.sm_add_transition(top, "Dash", "Locomotion",
         function()
             if self.PlayerContext == nil then return false end
-            if self.PlayerContext.Action.DashEnd and not self.PlayerContext.Input.DashChargingPressed then
+            if self.PlayerContext.Action.DashEnd
+                and not self.PlayerContext.Input.DashChargingPressed
+                and PlayerAction.ShouldChainDashToCharging(self.PlayerContext) ~= true then
                 EndDash(self)
                 return true
             end
@@ -245,7 +246,7 @@ function init(self)
     Anim.sm_add_transition(top, "Dash", "DashCharging",
         function()
             if self.PlayerContext == nil then return false end
-            if self.PlayerContext.Input.DashChargingPressed
+            if (self.PlayerContext.Input.DashChargingPressed or PlayerAction.ShouldChainDashToCharging(self.PlayerContext) == true)
                 and self.PlayerContext.Action.DashActive
                 and not self.PlayerContext.Action.DashChargingActive
                 and not self.PlayerContext.Action.DashChargeAttackActive
@@ -253,7 +254,7 @@ function init(self)
                 and not self.PlayerContext.Action.HitReactActive
                 and not Anim.is_owner_falling()
                 and not self.PlayerContext.Action.IsUltimateRunning then
-                self.PlayerContext.Input.DashChargingPressed = false
+                PlayerAction.ConsumeDashChargingInput(self.PlayerContext)
                 EndDash(self)
                 BeginDashCharging(self)
                 return true
@@ -524,10 +525,6 @@ function update(self, dt)
     self.BlendSpeed = self.BlendSpeed + (self.Speed - self.BlendSpeed) * blendAlpha
     Anim.blend_space_1d_set_input(self.LocomotionBlendSpace, self.BlendSpeed)
 
-    if playerContext.Input.AttackPressed and playerContext.Action.AttackIndex > 0 and playerContext.Action.ComboWindow then
-        playerContext.Action.ComboQueued = true
-    end
-
     if playerContext.Action.HitReactActive then
         PlayerAction.UpdateHitReaction(playerContext, dt)
         return
@@ -559,6 +556,7 @@ function on_combo_window_open(self)
     if playerContext == nil then return end
     PlayerContext.Assert(playerContext, "PlayerAnimation.on_combo_window_open")
     playerContext.Action.ComboWindow = true
+    PlayerAction.ConsumeBufferedAttackForCombo(playerContext)
 end
 
 function on_combo_window_close(self)
