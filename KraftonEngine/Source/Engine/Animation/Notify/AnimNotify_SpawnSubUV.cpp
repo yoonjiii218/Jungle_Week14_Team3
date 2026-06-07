@@ -60,6 +60,7 @@ void UAnimNotify_SpawnSubUV::Notify(USkeletalMeshComponent* MeshComp, UAnimSeque
 	{
 		return;
 	}
+	SubUVActor->bTickInEditor = true;
 
 	USubUVComponent* SubUV = SubUVActor->AddComponent<USubUVComponent>();
 	if (!SubUV)

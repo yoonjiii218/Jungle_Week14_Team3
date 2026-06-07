@@ -4,7 +4,6 @@
 #include "Component/Primitive/ParticleSystemComponent.h"
 #include "Component/Primitive/SkeletalMeshComponent.h"
 #include "Core/Logging/Log.h"
-#include "Engine/Runtime/Engine.h"
 #include "GameFramework/AActor.h"
 #include "GameFramework/World.h"
 #include "Math/MathUtils.h"
@@ -128,9 +127,7 @@ void UAnimNotify_PlayParticle::Notify(USkeletalMeshComponent* MeshComp, UAnimSeq
 		return;
 	}
 
-	if (!GEngine) return;
-
-	UWorld* World = GEngine->GetWorld();
+	UWorld* World = MeshComp->GetWorld();
 	if (!World) return;
 
 	UClass* ActorClass = UClass::FindByName("AActor");
@@ -138,6 +135,7 @@ void UAnimNotify_PlayParticle::Notify(USkeletalMeshComponent* MeshComp, UAnimSeq
 
 	AActor* ParticleActor = World->SpawnActorByClass(ActorClass);
 	if (!ParticleActor) return;
+	ParticleActor->bTickInEditor = true;
 
 	UParticleSystemComponent* PSC = ParticleActor->AddComponent<UParticleSystemComponent>();
 	if (!PSC)
