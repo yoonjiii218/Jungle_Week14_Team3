@@ -65,5 +65,6 @@ public:
 	UPROPERTY(Edit, Save, Category="PlayParticle", DisplayName="Auto Destroy After", Min=0.0f, Max=10.0f, Speed=0.1f)
 	float AutoDestroyAfter = 1.0f;
 
+	void PostEditProperty(const char* PropertyName) override;
 	void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Anim) override;
 };

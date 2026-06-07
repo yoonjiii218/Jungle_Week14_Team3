@@ -11,12 +11,44 @@
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemManager.h"
 
+#include <cstring>
+
 namespace
 {
 	// 이미 LoadAudio 호출 완료한 path 캐시. AudioManager 의 내부 Audios map 에 직접 접근 못 하므로
 	// notify 측에서 한 번만 load 보장 (LoadAudio 매번 호출 시 release+reload 비용 회피).
 	// 프로세스 lifetime 동안 누적, 캐시 무효화 필요 시 process restart.
 	static TSet<FString> GLoadedPlaySoundPaths;
+
+	enum class ENotifyParticleTransformMode
+	{
+		World,
+		FollowSocket,
+		SocketRotation,
+		CharacterRotation,
+	};
+
+	static ENotifyParticleTransformMode ResolveNotifyParticleTransformMode(
+		bool bFollowSocket,
+		bool bUseSocketRotation,
+		bool bUseCharacterRotation
+	)
+	{
+		// Preserve the old runtime priority for assets saved with multiple flags enabled.
+		if (bFollowSocket)
+		{
+			return ENotifyParticleTransformMode::FollowSocket;
+		}
+		if (bUseSocketRotation)
+		{
+			return ENotifyParticleTransformMode::SocketRotation;
+		}
+		if (bUseCharacterRotation)
+		{
+			return ENotifyParticleTransformMode::CharacterRotation;
+		}
+		return ENotifyParticleTransformMode::World;
+	}
 
 	static FMatrix GetNotifySocketWorldMatrix(const USkeletalMeshComponent* MeshComp, const FString& SocketName)
 	{
@@ -82,7 +114,7 @@ namespace
 			+ BasisRotation.GetForwardVector() * LocationOffset.X
 			+ BasisRotation.GetRightVector() * LocationOffset.Y
 			+ BasisRotation.GetUpVector() * LocationOffset.Z;
-		const FQuat SpawnRotation = FRotator(RotationOffset).ToQuaternion() * BasisRotation.ToQuaternion();
+		const FQuat SpawnRotation = BasisRotation.ToQuaternion() * FRotator(RotationOffset).ToQuaternion();
 
 		PSC->SetRelativeLocation(SpawnLocation);
 		PSC->SetRelativeRotation(SpawnRotation);
@@ -111,6 +143,31 @@ void UAnimNotify_PlaySound::Notify(USkeletalMeshComponent* /*MeshComp*/, UAnimSe
 	}
 
 	FAudioManager::Get().PlayAudio(Key, Volume);
+}
+
+void UAnimNotify_PlayParticle::PostEditProperty(const char* PropertyName)
+{
+	UObject::PostEditProperty(PropertyName);
+	if (!PropertyName)
+	{
+		return;
+	}
+
+	if ((std::strcmp(PropertyName, "bFollowSocket") == 0 || std::strcmp(PropertyName, "Follow Socket") == 0) && bFollowSocket)
+	{
+		bUseSocketRotation = false;
+		bUseCharacterRotation = false;
+	}
+	else if ((std::strcmp(PropertyName, "bUseSocketRotation") == 0 || std::strcmp(PropertyName, "Use Socket Rotation") == 0) && bUseSocketRotation)
+	{
+		bFollowSocket = false;
+		bUseCharacterRotation = false;
+	}
+	else if ((std::strcmp(PropertyName, "bUseCharacterRotation") == 0 || std::strcmp(PropertyName, "Use Character Rotation") == 0) && bUseCharacterRotation)
+	{
+		bFollowSocket = false;
+		bUseSocketRotation = false;
+	}
 }
 
 void UAnimNotify_PlayParticle::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* /*Anim*/)
@@ -146,7 +203,13 @@ void UAnimNotify_PlayParticle::Notify(USkeletalMeshComponent* MeshComp, UAnimSeq
 
 	ParticleActor->SetRootComponent(PSC);
 
-	if (bFollowSocket)
+	const ENotifyParticleTransformMode TransformMode = ResolveNotifyParticleTransformMode(
+		bFollowSocket,
+		bUseSocketRotation,
+		bUseCharacterRotation
+	);
+
+	if (TransformMode == ENotifyParticleTransformMode::FollowSocket)
 	{
 		PSC->AttachToComponentWithSocket(MeshComp, SocketName);
 		PSC->SetRelativeLocation(LocationOffset);
@@ -156,7 +219,7 @@ void UAnimNotify_PlayParticle::Notify(USkeletalMeshComponent* MeshComp, UAnimSeq
 	else
 	{
 		const FMatrix SocketWorldMatrix = GetNotifySocketWorldMatrix(MeshComp, SocketName);
-		if (bUseSocketRotation)
+		if (TransformMode == ENotifyParticleTransformMode::SocketRotation)
 		{
 			SetNotifySpawnTransform(
 				PSC,
@@ -167,7 +230,7 @@ void UAnimNotify_PlayParticle::Notify(USkeletalMeshComponent* MeshComp, UAnimSeq
 				Scale
 			);
 		}
-		else if (bUseCharacterRotation)
+		else if (TransformMode == ENotifyParticleTransformMode::CharacterRotation)
 		{
 			SetNotifySpawnTransform(
 				PSC,
