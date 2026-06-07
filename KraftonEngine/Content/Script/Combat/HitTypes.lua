@@ -100,9 +100,9 @@ end
 ---@return HitRequest
 function HitTypes.CreatePlayerAttackFromState(args)
     Strict.AssertTable(args, "args", "HitTypes.CreatePlayerAttackFromState")
-    local player = PlayerContext.Assert(args.Player, "HitTypes.CreatePlayerAttackFromState")
-    local action = player.Action
-    local combatConfig = player.Config.Combat
+    local playerContext = PlayerContext.Assert(args.PlayerContext, "HitTypes.CreatePlayerAttackFromState")
+    local action = playerContext.Action
+    local combatConfig = playerContext.Config.Combat
 
     local attackIndex = action.AttackIndex
     local attackId = "PlayerAttack" .. tostring(attackIndex)
@@ -123,7 +123,7 @@ function HitTypes.CreatePlayerAttackFromState(args)
     end
 
     return HitTypes.CreatePlayerAttack({
-        SourceActor = player.Owner,
+        SourceActor = playerContext.Owner,
         TargetActor = args.TargetActor,
         AttackId = attackId,
         AttackInstanceId = attackInstanceId,
@@ -165,6 +165,5 @@ function HitTypes.CreateResult(args)
     return args
 end
 
-HitTypes.Result = HitTypes.CreateResult
 
 return HitTypes

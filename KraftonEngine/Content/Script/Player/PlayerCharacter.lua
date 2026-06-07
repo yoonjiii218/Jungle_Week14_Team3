@@ -1,5 +1,5 @@
 -- PlayerCharacter.lua
--- ULuaScriptComponent entry point for the player actor.
+-- ULuaScriptComponent entry point for the playerContext actor.
 -- Owns the PlayerContext instance and orchestrates action -> combat -> feedback event flow.
 
 local PlayerContext = require("Player/PlayerContext")
@@ -9,60 +9,60 @@ local CombatContext = require("Combat/CombatContext")
 local PlayerFeedback = require("Player/PlayerFeedback")
 
 local PlayerCharacter = {}
-local player = nil
+local playerContext = nil
 
-local function GetPlayer()
-    if player ~= nil then
-        return player
+local function GetPlayerContext()
+    if playerContext ~= nil then
+        return playerContext
     end
 
     if obj ~= nil then
-        player = CombatContext.GetPlayerByOwner(obj)
+        playerContext = CombatContext.GetPlayerByOwner(obj)
     end
 
-    return player
+    return playerContext
 end
 
 ---@param active boolean
 ---@return nil
 function PlayerCharacter.SetKatanaTrailActive(active)
-    local currentPlayer = GetPlayer()
-    if currentPlayer ~= nil then
-        PlayerFeedback.SetKatanaTrailActive(currentPlayer, active)
+    local currentPlayerContext = GetPlayerContext()
+    if currentPlayerContext ~= nil then
+        PlayerFeedback.SetKatanaTrailActive(currentPlayerContext, active)
     end
 end
 
 function BeginPlay()
-    player = CombatContext.GetPlayerByOwner(obj)
-    if player == nil then
-        player = PlayerContext.Create(obj, this)
+    playerContext = CombatContext.GetPlayerByOwner(obj)
+    if playerContext == nil then
+        playerContext = PlayerContext.Create(obj, this)
     else
-        player.Owner = obj
-        player.Component = this
+        playerContext.Owner = obj
+        playerContext.Component = this
     end
 
-    PlayerAction.Init(player)
-    CombatContext.RegisterPlayer(player)
-    PlayerFeedback.Init(player)
+    PlayerAction.Init(playerContext)
+    CombatContext.RegisterPlayer(playerContext)
+    PlayerFeedback.Init(playerContext)
 
     print("[BeginPlay] " .. obj.UUID)
 end
 
 function EndPlay()
-    if player ~= nil then
-        CombatContext.UnregisterPlayer(player)
-        PlayerFeedback.Shutdown(player)
+    if playerContext ~= nil then
+        CombatContext.UnregisterPlayer(playerContext)
+        PlayerFeedback.Shutdown(playerContext)
     end
-    player = nil
+    playerContext = nil
 
     print("[EndPlay] " .. obj.UUID)
 end
 
 function OnOverlap(OtherActor, OverlappedComponent, OtherComp)
-    local currentPlayer = GetPlayer()
-    if currentPlayer ~= nil then
+    local currentPlayerContext = GetPlayerContext()
+    if currentPlayerContext ~= nil then
         CombatContext.TryResolvePlayerOverlapHit({
-            Player = currentPlayer,
+            PlayerContext = currentPlayerContext,
             OtherActor = OtherActor,
             OverlappedComponent = OverlappedComponent,
             OtherComponent = OtherComp,
@@ -73,17 +73,17 @@ end
 function Tick(dt)
     UpdateCoroutines(dt)
 
-    local currentPlayer = GetPlayer()
-    if currentPlayer == nil then
+    local currentPlayerContext = GetPlayerContext()
+    if currentPlayerContext == nil then
         return
     end
 
-    PlayerEvents.BeginFrame(currentPlayer)
-    PlayerAction.Update(currentPlayer, dt)
+    PlayerEvents.BeginFrame(currentPlayerContext)
+    PlayerAction.Update(currentPlayerContext, dt)
 
-    local events = PlayerEvents.Drain(currentPlayer)
-    CombatContext.ProcessPlayerEvents(currentPlayer, events)
-    PlayerFeedback.ProcessEvents(currentPlayer, events)
+    local events = PlayerEvents.Drain(currentPlayerContext)
+    CombatContext.ProcessPlayerEvents(currentPlayerContext, events)
+    PlayerFeedback.ProcessEvents(currentPlayerContext, events)
 end
 
 return PlayerCharacter

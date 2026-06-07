@@ -6,22 +6,6 @@ local PlayerFeedback = {}
 
 local PlayerContext = require("Player/PlayerContext")
 local PlayerEvents = require("Player/PlayerEvents")
-local function GetFeedbackConfig(player)
-    return player.Config.Feedback
-end
-
-local function GetUltimateCameraConfig(player)
-    return GetFeedbackConfig(player).UltimateCamera
-end
-
-local function GetUltimateVfxConfig(player)
-    return GetFeedbackConfig(player).UltimateVfx
-end
-
-local function GetUltimateMoveConfig(player)
-    return GetFeedbackConfig(player).UltimateMove
-end
-
 local function Clamp(v, minValue, maxValue)
     if v < minValue then return minValue end
     if v > maxValue then return maxValue end
@@ -38,12 +22,8 @@ local function Bezier2(a, b, c, t)
     return a * (u * u) + b * (2.0 * u * t) + c * (t * t)
 end
 
-local function GetOwner(player)
-    return player.Owner
-end
-
-local function PlayPerfectDodgeFeedback(ctx, event)
-    local feedbackConfig = GetFeedbackConfig(ctx)
+local function PlayPerfectDodgeFeedback(playerContext, event)
+    local feedbackConfig = playerContext.Config.Feedback
     local perfectDodgeConfig = feedbackConfig.PerfectDodge
     local shakeScale = perfectDodgeConfig.CameraShakeScale
 
@@ -125,8 +105,8 @@ local function GetSafeOwnerBasis(owner)
     return forward, right
 end
 
-local function FaceOwnerToDirection(ctx, dir)
-    local owner = GetOwner(ctx)
+local function FaceOwnerToDirection(playerContext, dir)
+    local owner = playerContext.Owner
     if owner == nil or dir == nil then
         return
     end
@@ -139,22 +119,22 @@ end
 -- Public API
 -- =========================================================
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerFeedback.AttachKatanaToWeaponSocket(player)
-    local ctx = PlayerContext.Assert(player, "PlayerFeedback.AttachKatanaToWeaponSocket")
-    local owner = GetOwner(ctx)
+function PlayerFeedback.AttachKatanaToWeaponSocket(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerFeedback.AttachKatanaToWeaponSocket")
+    local owner = playerContext.Owner
     if owner == nil then
         return
     end
 
-    if ctx.Feedback.KatanaComponent ~= nil and ctx.Feedback.KatanaComponent:IsValid() then
-        if ctx.Feedback.KatanaComponent:GetOwner() == owner then
+    if playerContext.Feedback.KatanaComponent ~= nil and playerContext.Feedback.KatanaComponent:IsValid() then
+        if playerContext.Feedback.KatanaComponent:GetOwner() == owner then
             print("Katana already exists")
             return
         end
 
-        ctx.Feedback.KatanaComponent = nil
+        playerContext.Feedback.KatanaComponent = nil
     end
 
     if owner.GetSkeletalMeshComponent == nil or owner.AddStaticMeshComponent == nil then
@@ -174,21 +154,21 @@ function PlayerFeedback.AttachKatanaToWeaponSocket(player)
         return
     end
 
-    local feedbackConfig = GetFeedbackConfig(ctx)
+    local feedbackConfig = playerContext.Config.Feedback
     katana:SetMeshPath(feedbackConfig.KatanaMeshPath)
     katana:AttachToComponentWithSocket(meshComp, feedbackConfig.KatanaSocketName)
     katana.RelativeLocation = Vector(0.0, 0.0, 0.0)
     katana:SetRotation(Vector(0.0, 0.0, 0.0))
     katana:SetRelativeScale(Vector(1.0, 1.0, 1.0))
 
-    ctx.Feedback.KatanaComponent = katana
+    playerContext.Feedback.KatanaComponent = katana
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerFeedback.SetKatanaTrailActive(player, active)
-    local ctx = PlayerContext.Assert(player, "PlayerFeedback.SetKatanaTrailActive")
-    local PSC = ctx.Feedback.KatanaPSC
+function PlayerFeedback.SetKatanaTrailActive(playerContext, active)
+    PlayerContext.Assert(playerContext, "PlayerFeedback.SetKatanaTrailActive")
+    local PSC = playerContext.Feedback.KatanaPSC
     if PSC == nil or not PSC:IsValid() then
         return
     end
@@ -200,16 +180,16 @@ function PlayerFeedback.SetKatanaTrailActive(player, active)
     end
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerFeedback.AttachPSCToWeaponSocket(player)
-    local ctx = PlayerContext.Assert(player, "PlayerFeedback.AttachPSCToWeaponSocket")
-    local owner = GetOwner(ctx)
+function PlayerFeedback.AttachPSCToWeaponSocket(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerFeedback.AttachPSCToWeaponSocket")
+    local owner = playerContext.Owner
     if owner == nil then
         return
     end
 
-    if ctx.Feedback.KatanaPSC ~= nil and ctx.Feedback.KatanaPSC:IsValid() then
+    if playerContext.Feedback.KatanaPSC ~= nil and playerContext.Feedback.KatanaPSC:IsValid() then
         return
     end
 
@@ -225,7 +205,7 @@ function PlayerFeedback.AttachPSCToWeaponSocket(player)
         return
     end
 
-    local feedbackConfig = GetFeedbackConfig(ctx)
+    local feedbackConfig = playerContext.Config.Feedback
     PSC:SetTemplatePath(feedbackConfig.TrailParticlePath)
     PSC:SetAnimTrailSourceComponent(meshComp)
     PSC:AttachToComponentWithSocket(meshComp, feedbackConfig.KatanaSocketName)
@@ -233,52 +213,52 @@ function PlayerFeedback.AttachPSCToWeaponSocket(player)
     PSC:SetRotation(Vector(0.0, 0.0, 0.0))
     PSC:SetRelativeScale(Vector(1.0, 1.0, 1.0))
 
-    ctx.Feedback.KatanaPSC = PSC
-    PlayerFeedback.SetKatanaTrailActive(ctx, false)
+    playerContext.Feedback.KatanaPSC = PSC
+    PlayerFeedback.SetKatanaTrailActive(playerContext, false)
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerFeedback.Init(player)
-    local ctx = PlayerContext.Assert(player, "PlayerFeedback.Init")
-    PlayerFeedback.AttachKatanaToWeaponSocket(ctx)
-    PlayerFeedback.AttachPSCToWeaponSocket(ctx)
+function PlayerFeedback.Init(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerFeedback.Init")
+    PlayerFeedback.AttachKatanaToWeaponSocket(playerContext)
+    PlayerFeedback.AttachPSCToWeaponSocket(playerContext)
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerFeedback.Shutdown(player)
-    local ctx = PlayerContext.Assert(player, "PlayerFeedback.Shutdown")
-    ctx.Feedback.KatanaComponent = nil
-    ctx.Feedback.KatanaPSC = nil
+function PlayerFeedback.Shutdown(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerFeedback.Shutdown")
+    playerContext.Feedback.KatanaComponent = nil
+    playerContext.Feedback.KatanaPSC = nil
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerFeedback.BeginUltimate(player)
-    local ctx = PlayerContext.Assert(player, "PlayerFeedback.BeginUltimate")
+function PlayerFeedback.BeginUltimate(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerFeedback.BeginUltimate")
     print("Begin Ultimate")
 
-    ctx.Action.IsUltimateRunning = true
-    ctx.Action.IsInUltimateMode = false
+    playerContext.Action.IsUltimateRunning = true
+    playerContext.Action.IsInUltimateMode = false
 
-    local owner = GetOwner(ctx)
+    local owner = playerContext.Owner
     if owner == nil then
-        ctx.Action.IsUltimateRunning = false
+        playerContext.Action.IsUltimateRunning = false
         return
     end
 
     local movementComp = owner:GetCharacterMovement()
     if movementComp == nil then
         print("Movement not found")
-        ctx.Action.IsUltimateRunning = false
+        playerContext.Action.IsUltimateRunning = false
         return
     end
 
     local ultimateCamera = World.FindFirstActorByTag("UltimateCamera")
     if ultimateCamera == nil then
         print("UltimateCamera not found")
-        ctx.Action.IsUltimateRunning = false
+        playerContext.Action.IsUltimateRunning = false
         return
     end
 
@@ -287,7 +267,7 @@ function PlayerFeedback.BeginUltimate(player)
 
     if actorLocation == nil or actorForward == nil or actorRight == nil then
         print("Invalid owner transform")
-        ctx.Action.IsUltimateRunning = false
+        playerContext.Action.IsUltimateRunning = false
         return
     end
 
@@ -300,9 +280,9 @@ function PlayerFeedback.BeginUltimate(player)
     end
 
     local up = Vector(0.0, 0.0, 1.0)
-    local cameraConfig = GetUltimateCameraConfig(ctx)
-    local moveConfig = GetUltimateMoveConfig(ctx)
-    local vfxConfig = GetUltimateVfxConfig(ctx)
+    local cameraConfig = playerContext.Config.Feedback.UltimateCamera
+    local moveConfig = playerContext.Config.Feedback.UltimateMove
+    local vfxConfig = playerContext.Config.Feedback.UltimateVfx
     local cameraLocation =
         actorLocation
         - actorForward * (cameraConfig.BackDistance)
@@ -368,7 +348,7 @@ function PlayerFeedback.BeginUltimate(player)
     local spawnedAirSlashE = false
     local spawnedSlashFlash = false
 
-    ctx.Action.IsInUltimateMode = true
+    playerContext.Action.IsInUltimateMode = true
 
     local moveDuration = moveConfig.Duration
     local frameStep = moveConfig.FrameStep
@@ -428,7 +408,7 @@ function PlayerFeedback.BeginUltimate(player)
         moveDir.Z = 0.0
 
         if moveDir:Length() > 0.001 then
-            FaceOwnerToDirection(ctx, moveDir:Normalized())
+            FaceOwnerToDirection(playerContext, moveDir:Normalized())
         end
 
         prevPos = nextPos
@@ -458,21 +438,21 @@ function PlayerFeedback.BeginUltimate(player)
         Reflection.Call(PrimComp, "SetSimulatePhysics", PrevSimulatePhysics)
     end
 
-    ctx.Action.IsInUltimateMode = false
-    ctx.Action.IsUltimateRunning = false
-    PlayerEvents.EmitUltimateEnded(ctx)
+    playerContext.Action.IsInUltimateMode = false
+    playerContext.Action.IsUltimateRunning = false
+    PlayerEvents.EmitUltimateEnded(playerContext)
 
     print("End Ultimate")
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@param events PlayerEvent[]
 ---@return nil
-function PlayerFeedback.ProcessEvents(player, events)
-    local ctx = PlayerContext.Assert(player, "PlayerFeedback.ProcessEvents")
+function PlayerFeedback.ProcessEvents(playerContext, events)
+    PlayerContext.Assert(playerContext, "PlayerFeedback.ProcessEvents")
     for _, event in ipairs(events) do
         if PlayerEvents.Is(event, PlayerEvents.Type.PerfectDodge) then
-            PlayPerfectDodgeFeedback(ctx, event)
+            PlayPerfectDodgeFeedback(playerContext, event)
         elseif PlayerEvents.Is(event, PlayerEvents.Type.Hit) then
             if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
                 CameraManager.StartWaveShake(0.35)
@@ -486,7 +466,7 @@ function PlayerFeedback.ProcessEvents(player, events)
             end
         elseif PlayerEvents.Is(event, PlayerEvents.Type.UltimateStarted) then
             StartCoroutine(function()
-                PlayerFeedback.BeginUltimate(ctx)
+                PlayerFeedback.BeginUltimate(playerContext)
             end)
         end
     end

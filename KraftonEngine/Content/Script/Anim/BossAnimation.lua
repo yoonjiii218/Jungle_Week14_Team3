@@ -85,15 +85,7 @@ local function BeginHeavyCombo(self, index)
     self.AttackTimer     = 0.0   -- fallback 타이머 리셋
 end
 
-local function GetBossContext(self)
-    if self.BossContext == nil then
-        self.BossContext = CombatContext.GetBossContext()
-    end
-    BossContext.Assert(self.BossContext, "BossAnimation.GetBossContext")
-    return self.BossContext
-end
-
--- bb 에 쌓인 공격 신호를 소비해 상태머신 트리거 플래그로 변환
+-- bossContext.Brain에 쌓인 공격 신호를 소비해 상태머신 트리거 플래그로 변환
 local function ConsumeAnimSignal(self, bossContext)
     local brain = bossContext.Brain
     if brain.AnimAttack == nil then return end
@@ -146,6 +138,7 @@ function init(self)
 
     self.Speed      = 0.0
     self.BlendSpeed = 0.0
+    self.BossContext = nil
 
     -- 외부 트리거 플래그
     self.LightAttackPressed = false
@@ -361,6 +354,10 @@ end
 
 -- ──────────────────────────────────────────────────────────────────
 function update(self, dt)
+    if self.BlendSpeed == nil then
+        self.BlendSpeed = 0.0
+    end
+
     self.Speed = Anim.get_owner_speed()
 
     -- 속도를 부드럽게 보간해서 블렌드스페이스 입력으로 전달
@@ -370,7 +367,10 @@ function update(self, dt)
     Anim.blend_space_1d_set_input(self.LocoBlendSpace, self.BlendSpeed)
 
     -- ── AI(BossAttacks) → 애니메이션 신호 처리 ─────────────────
-    local bossContext = GetBossContext(self)
+    self.BossContext = CombatContext.GetBossContext()
+    local bossContext = self.BossContext
+    if bossContext == nil then return end
+    BossContext.Assert(bossContext, "BossAnimation.update")
     ConsumeAnimSignal(self, bossContext)
 
     -- AttackPrep fallback: AttackEnd notify 누락 시 ATTACK_PREP_DURATION 후 강제 전환
@@ -421,6 +421,11 @@ end
 -- 애니메이션 에셋에 심어둔 Notify 이름이 여기로 들어온다.
 -- ──────────────────────────────────────────────────────────────────
 function on_notify(self, name)
+    self.BossContext = CombatContext.GetBossContext()
+    local bossContext = self.BossContext
+    if bossContext == nil then return end
+    BossContext.Assert(bossContext, "BossAnimation.on_notify")
+
     if name == "AttackEnd" then
         self.AttackEnd = true
 
@@ -428,27 +433,21 @@ function on_notify(self, name)
         self.DashEnd = true
 
     elseif name == "HitboxOpen" then
-        local bossContext = GetBossContext(self)
         bossContext.Attack.HitboxOpen = true
 
     elseif name == "HitboxClose" then
-        local bossContext = GetBossContext(self)
         bossContext.Attack.HitboxClose = true
 
     elseif name == "ZoneShow" then
-        local bossContext = GetBossContext(self)
         bossContext.Attack.ZoneShow = true
 
     elseif name == "ZoneFlash" then
-        local bossContext = GetBossContext(self)
         bossContext.Attack.ZoneFlash = true
 
     elseif name == "ZoneHide" then
-        local bossContext = GetBossContext(self)
         bossContext.Attack.ZoneHide = true
 
     elseif name == "TrackEnd" then
-        local bossContext = GetBossContext(self)
         bossContext.Attack.TrackEnd = true
 
     elseif name == "TrailActivate" or name == "TrailOn" then

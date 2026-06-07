@@ -1,6 +1,6 @@
 -- Player/PlayerContext.lua
 -- Defines the PlayerContext data contract used across player Lua modules.
--- New code must use explicit buckets: player.Input / Action / Combat / Feedback / Runtime.
+-- New code must use explicit buckets: playerContext.Input / Action / Combat / Feedback / Runtime.
 
 local Strict = require("Core/Strict")
 local PlayerConfig = require("Config/PlayerConfig")
@@ -181,7 +181,7 @@ function PlayerContext.Create(owner, component)
     Strict.AssertNotNil(owner, "owner", "PlayerContext.Create")
 
     local config = PlayerConfig.Create()
-    local player = {
+    local playerContext = {
         Kind = "PlayerContext",
         Owner = owner,
         Component = component,
@@ -193,25 +193,25 @@ function PlayerContext.Create(owner, component)
         Runtime = CreateRuntimeState(),
     }
 
-    return player
+    return playerContext
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@param caller string
 ---@return PlayerContext
-function PlayerContext.Assert(player, caller)
-    Strict.AssertKind(player, "PlayerContext", "player", caller or "PlayerContext.Assert")
-    Strict.AssertTable(player.Input, "player.Input", caller or "PlayerContext.Assert")
-    Strict.AssertTable(player.Action, "player.Action", caller or "PlayerContext.Assert")
-    Strict.AssertTable(player.Combat, "player.Combat", caller or "PlayerContext.Assert")
-    Strict.AssertTable(player.Runtime, "player.Runtime", caller or "PlayerContext.Assert")
-    Strict.AssertTable(player.Config, "player.Config", caller or "PlayerContext.Assert")
-    Strict.AssertTable(player.Config.Input, "player.Config.Input", caller or "PlayerContext.Assert")
-    Strict.AssertTable(player.Config.Action, "player.Config.Action", caller or "PlayerContext.Assert")
-    Strict.AssertTable(player.Config.Combat, "player.Config.Combat", caller or "PlayerContext.Assert")
-    Strict.AssertTable(player.Config.Feedback, "player.Config.Feedback", caller or "PlayerContext.Assert")
-    Strict.AssertTable(player.Config.Animation, "player.Config.Animation", caller or "PlayerContext.Assert")
-    return player
+function PlayerContext.Assert(playerContext, caller)
+    Strict.AssertKind(playerContext, "PlayerContext", "playerContext", caller or "PlayerContext.Assert")
+    Strict.AssertTable(playerContext.Input, "playerContext.Input", caller or "PlayerContext.Assert")
+    Strict.AssertTable(playerContext.Action, "playerContext.Action", caller or "PlayerContext.Assert")
+    Strict.AssertTable(playerContext.Combat, "playerContext.Combat", caller or "PlayerContext.Assert")
+    Strict.AssertTable(playerContext.Runtime, "playerContext.Runtime", caller or "PlayerContext.Assert")
+    Strict.AssertTable(playerContext.Config, "playerContext.Config", caller or "PlayerContext.Assert")
+    Strict.AssertTable(playerContext.Config.Input, "playerContext.Config.Input", caller or "PlayerContext.Assert")
+    Strict.AssertTable(playerContext.Config.Action, "playerContext.Config.Action", caller or "PlayerContext.Assert")
+    Strict.AssertTable(playerContext.Config.Combat, "playerContext.Config.Combat", caller or "PlayerContext.Assert")
+    Strict.AssertTable(playerContext.Config.Feedback, "playerContext.Config.Feedback", caller or "PlayerContext.Assert")
+    Strict.AssertTable(playerContext.Config.Animation, "playerContext.Config.Animation", caller or "PlayerContext.Assert")
+    return playerContext
 end
 
 return PlayerContext

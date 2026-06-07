@@ -1,20 +1,12 @@
 -- Player/PlayerAction.lua
--- PlayerAction owns player.Action state transitions.
--- Do not pass AnimInstance self as player.
+-- PlayerAction owns playerContext.Action state transitions.
+-- Do not pass AnimInstance self as playerContext.
 
 local PlayerAction = {}
 
 local PlayerTargeting = require("Player/PlayerTargeting")
 local PlayerContext = require("Player/PlayerContext")
 local PlayerEvents = require("Player/PlayerEvents")
-
-local function GetInputConfig(player)
-    return player.Config.Input
-end
-
-local function GetActionConfig(player)
-    return player.Config.Action
-end
 
 local semanticInputValidated = false
 
@@ -43,8 +35,8 @@ local function RequireSemanticInputApi()
     semanticInputValidated = true
 end
 
-local function ResolveActionName(player, actionName)
-    local inputConfig = GetInputConfig(player)
+local function ResolveActionName(playerContext, actionName)
+    local inputConfig = playerContext.Config.Input
     local fieldName = actionName .. "Action"
     local resolved = inputConfig[fieldName]
     if resolved == nil then
@@ -53,8 +45,8 @@ local function ResolveActionName(player, actionName)
     return resolved
 end
 
-local function ResolveAxisName(player, axisName)
-    local inputConfig = GetInputConfig(player)
+local function ResolveAxisName(playerContext, axisName)
+    local inputConfig = playerContext.Config.Input
     local fieldName = axisName .. "Axis"
     local resolved = inputConfig[fieldName]
     if resolved == nil then
@@ -63,145 +55,141 @@ local function ResolveAxisName(player, axisName)
     return resolved
 end
 
-local function ActionDown(ctx, actionName)
+local function ActionDown(playerContext, actionName)
     RequireSemanticInputApi()
-    return Input.IsActionDown(ResolveActionName(ctx, actionName)) == true
+    return Input.IsActionDown(ResolveActionName(playerContext, actionName)) == true
 end
 
-local function ActionStarted(ctx, actionName)
+local function ActionStarted(playerContext, actionName)
     RequireSemanticInputApi()
-    return Input.WasActionStarted(ResolveActionName(ctx, actionName)) == true
+    return Input.WasActionStarted(ResolveActionName(playerContext, actionName)) == true
 end
 
-local function ActionCompleted(ctx, actionName)
+local function ActionCompleted(playerContext, actionName)
     RequireSemanticInputApi()
-    return Input.WasActionCompleted(ResolveActionName(ctx, actionName)) == true
+    return Input.WasActionCompleted(ResolveActionName(playerContext, actionName)) == true
 end
 
-local function Axis2D(ctx, axisName)
+local function Axis2D(playerContext, axisName)
     RequireSemanticInputApi()
-    local axis = Input.GetAxis2D(ResolveAxisName(ctx, axisName))
+    local axis = Input.GetAxis2D(ResolveAxisName(playerContext, axisName))
     if axis == nil then
         error("[PlayerAction] Input.GetAxis2D returned nil")
     end
     return axis
 end
 
-local function GetOwner(player)
-    return player.Owner
-end
-
-local function SetMovementInputEnabled(ctx, enabled)
-    if ctx.Runtime.MovementComp ~= nil then
-        Reflection.Call(ctx.Runtime.MovementComp, "SetMovementInputEnabled", enabled)
+local function SetMovementInputEnabled(playerContext, enabled)
+    if playerContext.Runtime.MovementComp ~= nil then
+        Reflection.Call(playerContext.Runtime.MovementComp, "SetMovementInputEnabled", enabled)
     end
 end
 
-local function StopMovementImmediately(ctx)
-    if ctx.Runtime.MovementComp ~= nil then
-        Reflection.Call(ctx.Runtime.MovementComp, "StopMovementImmediately")
+local function StopMovementImmediately(playerContext)
+    if playerContext.Runtime.MovementComp ~= nil then
+        Reflection.Call(playerContext.Runtime.MovementComp, "StopMovementImmediately")
     end
 end
 
-local function SetOrientRotationToMovement(ctx, enabled)
-    if ctx.Runtime.MovementComp ~= nil then
-        Reflection.SetProperty(ctx.Runtime.MovementComp, "bOrientRotationToMovement", enabled)
+local function SetOrientRotationToMovement(playerContext, enabled)
+    if playerContext.Runtime.MovementComp ~= nil then
+        Reflection.SetProperty(playerContext.Runtime.MovementComp, "bOrientRotationToMovement", enabled)
     end
 end
 
-local function ResetDashInput(ctx)
-    ctx.Input.DashHoldTime = 0.0
-    ctx.Input.DashChargingConsumedInput = false
+local function ResetDashInput(playerContext)
+    playerContext.Input.DashHoldTime = 0.0
+    playerContext.Input.DashChargingConsumedInput = false
 
-    ctx.Input.DashPressed = false
-    ctx.Input.DashChargingPressed = false
-    ctx.Input.DashChargingReleased = false
+    playerContext.Input.DashPressed = false
+    playerContext.Input.DashChargingPressed = false
+    playerContext.Input.DashChargingReleased = false
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
 -- =========================================================
 -- Public API
 -- =========================================================
 
-function PlayerAction.Init(player)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.Init")
+function PlayerAction.Init(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.Init")
     RequireSemanticInputApi()
 
-    ctx.Runtime.LastMoveInputDirection = nil
-    ctx.Runtime.DashPrevOrientRotationToMovement = nil
-    ctx.Runtime.DashMoveDirection = nil
-    ctx.Runtime.EventQueue = {}
-    ctx.Input.AttackDown = false
-    ctx.Input.AttackPressed = false
-    ctx.Input.AttackHoldTime = 0.0
-    ctx.Runtime.StepForwardActive = false
-    ctx.Runtime.StepForwardElapsed = 0.0
-    ctx.Runtime.StepForwardDuration = 0.0
-    ctx.Runtime.StepForwardDistance = 0.0
-    ctx.Runtime.StepForwardAppliedDistance = 0.0
-    ctx.Runtime.StepForwardDirection = nil
+    playerContext.Runtime.LastMoveInputDirection = nil
+    playerContext.Runtime.DashPrevOrientRotationToMovement = nil
+    playerContext.Runtime.DashMoveDirection = nil
+    playerContext.Runtime.EventQueue = {}
+    playerContext.Input.AttackDown = false
+    playerContext.Input.AttackPressed = false
+    playerContext.Input.AttackHoldTime = 0.0
+    playerContext.Runtime.StepForwardActive = false
+    playerContext.Runtime.StepForwardElapsed = 0.0
+    playerContext.Runtime.StepForwardDuration = 0.0
+    playerContext.Runtime.StepForwardDistance = 0.0
+    playerContext.Runtime.StepForwardAppliedDistance = 0.0
+    playerContext.Runtime.StepForwardDirection = nil
 
-    ctx.Runtime.TargetAssistMode = nil
-    ctx.Runtime.TargetAssistTarget = nil
-    ctx.Runtime.TargetAssistDirection = nil
-    ctx.Runtime.TargetAssistDistance = nil
-    ctx.Runtime.TargetAssistLockedDirection = nil
-    ctx.Runtime.TargetAssistEndTime = 0.0
-    ctx.Runtime.TargetAssistKeepUntil = 0.0
+    playerContext.Runtime.TargetAssistMode = nil
+    playerContext.Runtime.TargetAssistTarget = nil
+    playerContext.Runtime.TargetAssistDirection = nil
+    playerContext.Runtime.TargetAssistDistance = nil
+    playerContext.Runtime.TargetAssistLockedDirection = nil
+    playerContext.Runtime.TargetAssistEndTime = 0.0
+    playerContext.Runtime.TargetAssistKeepUntil = 0.0
 
-    ResetDashInput(ctx)
+    ResetDashInput(playerContext)
 
-    ctx.Action.DashActive = false
-    ctx.Action.DashElapsed = 0.0
-    ctx.Action.DashEnd = false
+    playerContext.Action.DashActive = false
+    playerContext.Action.DashElapsed = 0.0
+    playerContext.Action.DashEnd = false
 
-    ctx.Action.DashChargingActive = false
-    ctx.Action.DashChargingElapsed = 0.0
-    ctx.Action.DashChargingEnd = false
+    playerContext.Action.DashChargingActive = false
+    playerContext.Action.DashChargingElapsed = 0.0
+    playerContext.Action.DashChargingEnd = false
 
-    ctx.Action.DashChargeAttackActive = false
-    ctx.Action.DashChargeAttackElapsed = 0.0
-    ctx.Action.DashChargeAttackEnd = false
+    playerContext.Action.DashChargeAttackActive = false
+    playerContext.Action.DashChargeAttackElapsed = 0.0
+    playerContext.Action.DashChargeAttackEnd = false
 
 
-    ctx.Runtime.MovementComp = nil
-    if ctx.Owner ~= nil then
-        Reflection.SetProperty(ctx.Owner, "bUseControllerRotationYaw", false)
+    playerContext.Runtime.MovementComp = nil
+    if playerContext.Owner ~= nil then
+        Reflection.SetProperty(playerContext.Owner, "bUseControllerRotationYaw", false)
 
-        if ctx.Owner.GetCharacterMovement ~= nil then
-            ctx.Runtime.MovementComp = ctx.Owner:GetCharacterMovement()
+        if playerContext.Owner.GetCharacterMovement ~= nil then
+            playerContext.Runtime.MovementComp = playerContext.Owner:GetCharacterMovement()
         end
-        if ctx.Runtime.MovementComp == nil and ctx.Owner.GetFloatingPawnMovement ~= nil then
-            ctx.Runtime.MovementComp = ctx.Owner:GetFloatingPawnMovement()
+        if playerContext.Runtime.MovementComp == nil and playerContext.Owner.GetFloatingPawnMovement ~= nil then
+            playerContext.Runtime.MovementComp = playerContext.Owner:GetFloatingPawnMovement()
         end
     end
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@param event PlayerEvent
 ---@return nil
-function PlayerAction.PushEvent(player, event)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.PushEvent")
+function PlayerAction.PushEvent(playerContext, event)
+    PlayerContext.Assert(playerContext, "PlayerAction.PushEvent")
     if event == nil then
         return
     end
 
-    PlayerEvents.Push(ctx, event)
+    PlayerEvents.Push(playerContext, event)
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.SetMovementInputEnabled(player, enabled)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.SetMovementInputEnabled")
-    SetMovementInputEnabled(ctx, enabled)
+function PlayerAction.SetMovementInputEnabled(playerContext, enabled)
+    PlayerContext.Assert(playerContext, "PlayerAction.SetMovementInputEnabled")
+    SetMovementInputEnabled(playerContext, enabled)
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.StopMovementImmediately(player)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.StopMovementImmediately")
-    StopMovementImmediately(ctx)
+function PlayerAction.StopMovementImmediately(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.StopMovementImmediately")
+    StopMovementImmediately(playerContext)
 end
 
 local function GetAttackStepForwardDistance(actionConfig, attackIndex)
@@ -226,13 +214,13 @@ local function GetAttackStepForwardDuration(actionConfig, attackIndex)
     return actionConfig.AttackStepForwardDuration
 end
 
-local function BeginStepForward(ctx, distance, duration, direction)
-    local owner = GetOwner(ctx)
+local function BeginStepForward(playerContext, distance, duration, direction)
+    local owner = playerContext.Owner
     if owner == nil then
         return
     end
 
-    local forward = direction or PlayerAction.GetOwnerForward2D(ctx)
+    local forward = direction or PlayerAction.GetOwnerForward2D(playerContext)
     if forward == nil then
         return
     end
@@ -252,86 +240,86 @@ local function BeginStepForward(ctx, distance, duration, direction)
         return
     end
 
-    ctx.Runtime.StepForwardActive = true
-    ctx.Runtime.StepForwardElapsed = 0.0
-    ctx.Runtime.StepForwardDuration = duration
-    ctx.Runtime.StepForwardDistance = distance
-    ctx.Runtime.StepForwardAppliedDistance = 0.0
-    ctx.Runtime.StepForwardDirection = forward
+    playerContext.Runtime.StepForwardActive = true
+    playerContext.Runtime.StepForwardElapsed = 0.0
+    playerContext.Runtime.StepForwardDuration = duration
+    playerContext.Runtime.StepForwardDistance = distance
+    playerContext.Runtime.StepForwardAppliedDistance = 0.0
+    playerContext.Runtime.StepForwardDirection = forward
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.StepAttackForward(player, attackIndex)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.StepAttackForward")
-    local actionConfig = GetActionConfig(ctx)
+function PlayerAction.StepAttackForward(playerContext, attackIndex)
+    PlayerContext.Assert(playerContext, "PlayerAction.StepAttackForward")
+    local actionConfig = playerContext.Config.Action
     BeginStepForward(
-        ctx,
+        playerContext,
         GetAttackStepForwardDistance(actionConfig, attackIndex),
         GetAttackStepForwardDuration(actionConfig, attackIndex)
     )
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.StepDashChargeAttackForward(player)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.StepDashChargeAttackForward")
-    local actionConfig = GetActionConfig(ctx)
+function PlayerAction.StepDashChargeAttackForward(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.StepDashChargeAttackForward")
+    local actionConfig = playerContext.Config.Action
     BeginStepForward(
-        ctx,
+        playerContext,
         actionConfig.DashChargeAttackStepForwardDistance,
         actionConfig.DashChargeAttackStepForwardDuration,
-        PlayerTargeting.GetAssistDirection(ctx)
+        PlayerTargeting.GetAssistDirection(playerContext)
     )
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.UpdateStepForward(player, dt)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.UpdateStepForward")
-    if ctx.Runtime.StepForwardActive ~= true then
+function PlayerAction.UpdateStepForward(playerContext, dt)
+    PlayerContext.Assert(playerContext, "PlayerAction.UpdateStepForward")
+    if playerContext.Runtime.StepForwardActive ~= true then
         return
     end
 
-    local owner = GetOwner(ctx)
-    local dir = ctx.Runtime.StepForwardDirection
+    local owner = playerContext.Owner
+    local dir = playerContext.Runtime.StepForwardDirection
     if owner == nil or dir == nil then
-        ctx.Runtime.StepForwardActive = false
+        playerContext.Runtime.StepForwardActive = false
         return
     end
 
-    local duration = ctx.Runtime.StepForwardDuration or 0.0
+    local duration = playerContext.Runtime.StepForwardDuration or 0.0
     if duration <= 0.0 then
-        ctx.Runtime.StepForwardActive = false
+        playerContext.Runtime.StepForwardActive = false
         return
     end
 
-    ctx.Runtime.StepForwardElapsed = (ctx.Runtime.StepForwardElapsed or 0.0) + (dt or 0.0)
+    playerContext.Runtime.StepForwardElapsed = (playerContext.Runtime.StepForwardElapsed or 0.0) + (dt or 0.0)
 
-    local alpha = ctx.Runtime.StepForwardElapsed / duration
+    local alpha = playerContext.Runtime.StepForwardElapsed / duration
     if alpha > 1.0 then
         alpha = 1.0
     end
 
-    local targetDistance = (ctx.Runtime.StepForwardDistance or 0.0) * alpha
-    local deltaDistance = targetDistance - (ctx.Runtime.StepForwardAppliedDistance or 0.0)
+    local targetDistance = (playerContext.Runtime.StepForwardDistance or 0.0) * alpha
+    local deltaDistance = targetDistance - (playerContext.Runtime.StepForwardAppliedDistance or 0.0)
 
     if math.abs(deltaDistance) > 0.001 then
         Reflection.Call(owner, "AddActorWorldOffset", dir * deltaDistance)
-        ctx.Runtime.StepForwardAppliedDistance = targetDistance
+        playerContext.Runtime.StepForwardAppliedDistance = targetDistance
     end
 
     if alpha >= 1.0 then
-        ctx.Runtime.StepForwardActive = false
-        ctx.Runtime.StepForwardDirection = nil
+        playerContext.Runtime.StepForwardActive = false
+        playerContext.Runtime.StepForwardDirection = nil
     end
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return any
-function PlayerAction.GetMoveInputWorldDirection(player)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.GetMoveInputWorldDirection")
-    local owner = GetOwner(ctx)
+function PlayerAction.GetMoveInputWorldDirection(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.GetMoveInputWorldDirection")
+    local owner = playerContext.Owner
     if owner == nil then
         return nil
     end
@@ -339,7 +327,7 @@ function PlayerAction.GetMoveInputWorldDirection(player)
     local moveForward = 0.0
     local moveRight = 0.0
 
-    local moveAxis = Axis2D(ctx, "Move")
+    local moveAxis = Axis2D(playerContext, "Move")
     moveRight = moveAxis.X or 0.0
     moveForward = moveAxis.Y or 0.0
 
@@ -377,11 +365,11 @@ function PlayerAction.GetMoveInputWorldDirection(player)
     return dir:Normalized()
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return any
-function PlayerAction.GetOwnerForward2D(player)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.GetOwnerForward2D")
-    local owner = GetOwner(ctx)
+function PlayerAction.GetOwnerForward2D(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.GetOwnerForward2D")
+    local owner = playerContext.Owner
     if owner == nil then
         return nil
     end
@@ -400,28 +388,28 @@ function PlayerAction.GetOwnerForward2D(player)
     return dir:Normalized()
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return any
-function PlayerAction.ResolveDashDirection(player)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.ResolveDashDirection")
-    local dir = PlayerAction.GetMoveInputWorldDirection(ctx)
+function PlayerAction.ResolveDashDirection(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.ResolveDashDirection")
+    local dir = PlayerAction.GetMoveInputWorldDirection(playerContext)
 
     if dir ~= nil then
         return dir
     end
 
-    if ctx.Runtime.LastMoveInputDirection ~= nil then
-        return ctx.Runtime.LastMoveInputDirection
+    if playerContext.Runtime.LastMoveInputDirection ~= nil then
+        return playerContext.Runtime.LastMoveInputDirection
     end
 
-    return PlayerAction.GetOwnerForward2D(ctx)
+    return PlayerAction.GetOwnerForward2D(playerContext)
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.FaceOwnerToDirection(player, dir)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.FaceOwnerToDirection")
-    local owner = GetOwner(ctx)
+function PlayerAction.FaceOwnerToDirection(playerContext, dir)
+    PlayerContext.Assert(playerContext, "PlayerAction.FaceOwnerToDirection")
+    local owner = playerContext.Owner
     if owner == nil or dir == nil then
         return
     end
@@ -430,24 +418,24 @@ function PlayerAction.FaceOwnerToDirection(player, dir)
     Reflection.Call(owner, "SetActorRotation", Vector(0.0, 0.0, targetYaw))
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.SmoothFaceOwnerToDirection(player, dir, dt, turnSpeed)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.SmoothFaceOwnerToDirection")
-    local owner = GetOwner(ctx)
+function PlayerAction.SmoothFaceOwnerToDirection(playerContext, dir, dt, turnSpeed)
+    PlayerContext.Assert(playerContext, "PlayerAction.SmoothFaceOwnerToDirection")
+    local owner = playerContext.Owner
     if owner == nil or dir == nil or dt == nil then
         return
     end
 
     local currentRot = Reflection.Call(owner, "GetActorRotation")
     if currentRot == nil then
-        PlayerAction.FaceOwnerToDirection(ctx, dir)
+        PlayerAction.FaceOwnerToDirection(playerContext, dir)
         return
     end
 
     local targetYaw = math.atan2(dir.Y, dir.X) * 180.0 / math.pi
     local deltaYaw = (targetYaw - currentRot.Z + 180.0) % 360.0 - 180.0
-    local actionConfig = GetActionConfig(ctx)
+    local actionConfig = playerContext.Config.Action
     local alpha = dt * (turnSpeed or actionConfig.AttackTurnSpeed)
     if alpha > 1.0 then
         alpha = 1.0
@@ -457,377 +445,377 @@ function PlayerAction.SmoothFaceOwnerToDirection(player, dir, dt, turnSpeed)
     Reflection.Call(owner, "SetActorRotation", Vector(currentRot.X, currentRot.Y, nextYaw))
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.BeginAttackAssist(player, attackIndex)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.BeginAttackAssist")
-    PlayerTargeting.BeginAssist(ctx, "Attack")
+function PlayerAction.BeginAttackAssist(playerContext, attackIndex)
+    PlayerContext.Assert(playerContext, "PlayerAction.BeginAttackAssist")
+    PlayerTargeting.BeginAssist(playerContext, "Attack")
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return boolean
-function PlayerAction.UpdateAttackAssist(player, dt)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.UpdateAttackAssist")
-    if PlayerTargeting.IsAssistTurnActive(ctx) ~= true then
+function PlayerAction.UpdateAttackAssist(playerContext, dt)
+    PlayerContext.Assert(playerContext, "PlayerAction.UpdateAttackAssist")
+    if PlayerTargeting.IsAssistTurnActive(playerContext) ~= true then
         return false
     end
 
-    local dir = PlayerTargeting.GetAssistDirection(ctx)
+    local dir = PlayerTargeting.GetAssistDirection(playerContext)
     if dir == nil then
         return false
     end
 
-    PlayerAction.SmoothFaceOwnerToDirection(ctx, dir, dt, PlayerTargeting.GetTurnSpeed(ctx))
+    PlayerAction.SmoothFaceOwnerToDirection(playerContext, dir, dt, PlayerTargeting.GetTurnSpeed(playerContext))
     return true
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.EndAttackAssist(player)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.EndAttackAssist")
-    PlayerTargeting.ClearAssist(ctx, false)
+function PlayerAction.EndAttackAssist(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.EndAttackAssist")
+    PlayerTargeting.ClearAssist(playerContext, false)
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.ApplyMoveInput(player)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.ApplyMoveInput")
-    local owner = GetOwner(ctx)
+function PlayerAction.ApplyMoveInput(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.ApplyMoveInput")
+    local owner = playerContext.Owner
     if owner == nil then
         return
     end
 
-    local dir = PlayerAction.GetMoveInputWorldDirection(ctx)
+    local dir = PlayerAction.GetMoveInputWorldDirection(playerContext)
     if dir ~= nil then
-        ctx.Runtime.LastMoveInputDirection = dir
+        playerContext.Runtime.LastMoveInputDirection = dir
         Reflection.Call(owner, "AddMovementInput", dir, 1.0)
     end
 
-    if ActionStarted(ctx, "Jump") then
+    if ActionStarted(playerContext, "Jump") then
         Reflection.Call(owner, "Jump")
     end
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.UpdateActionInput(player, dt)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.UpdateActionInput")
-    local actionConfig = GetActionConfig(ctx)
-    local attackDown = ActionDown(ctx, "Attack")
+function PlayerAction.UpdateActionInput(playerContext, dt)
+    PlayerContext.Assert(playerContext, "PlayerAction.UpdateActionInput")
+    local actionConfig = playerContext.Config.Action
+    local attackDown = ActionDown(playerContext, "Attack")
 
     if attackDown then
-        ctx.Input.AttackHoldTime = (ctx.Input.AttackHoldTime or 0.0) + (dt or 0.0)
+        playerContext.Input.AttackHoldTime = (playerContext.Input.AttackHoldTime or 0.0) + (dt or 0.0)
     else
-        ctx.Input.AttackHoldTime = 0.0
+        playerContext.Input.AttackHoldTime = 0.0
     end
 
-    if ctx.Input.AttackHoldTime > 0.05 then
-        ctx.Input.AttackPressed = true
+    if playerContext.Input.AttackHoldTime > 0.05 then
+        playerContext.Input.AttackPressed = true
     else
         -- 첫 입력은 적용
-        if ctx.Action.AttackIndex == 0 then
-            ctx.Input.AttackPressed = true
+        if playerContext.Action.AttackIndex == 0 then
+            playerContext.Input.AttackPressed = true
         end
-        ctx.Input.AttackPressed = false
+        playerContext.Input.AttackPressed = false
     end
 
-    ctx.Input.AttackDown = attackDown
+    playerContext.Input.AttackDown = attackDown
 
-    ctx.Input.DashPressed = false
-    ctx.Input.DashChargingPressed = false
-    ctx.Input.DashChargingReleased = false
+    playerContext.Input.DashPressed = false
+    playerContext.Input.DashChargingPressed = false
+    playerContext.Input.DashChargingReleased = false
 
-    local dashDown = ActionDown(ctx, "Dash")
-    local dashPressed = ActionStarted(ctx, "Dash")
-    local dashReleased = ActionCompleted(ctx, "Dash")
+    local dashDown = ActionDown(playerContext, "Dash")
+    local dashPressed = ActionStarted(playerContext, "Dash")
+    local dashReleased = ActionCompleted(playerContext, "Dash")
 
     if dashDown then
-        ctx.Input.DashHoldTime = (ctx.Input.DashHoldTime or 0.0) + (dt or 0.0)
+        playerContext.Input.DashHoldTime = (playerContext.Input.DashHoldTime or 0.0) + (dt or 0.0)
 
         if dashPressed then
-            ctx.Input.DashPressed = true
+            playerContext.Input.DashPressed = true
         end
 
-        if ctx.Input.DashChargingConsumedInput == true then
-            ctx.Input.DashChargingPressed = true
-        elseif ctx.Input.DashHoldTime >= (actionConfig.DashChargingHoldThreshold) then
-            ctx.Input.DashChargingPressed = true
-            ctx.Input.DashChargingConsumedInput = true
+        if playerContext.Input.DashChargingConsumedInput == true then
+            playerContext.Input.DashChargingPressed = true
+        elseif playerContext.Input.DashHoldTime >= (actionConfig.DashChargingHoldThreshold) then
+            playerContext.Input.DashChargingPressed = true
+            playerContext.Input.DashChargingConsumedInput = true
         end
     end
 
     if dashReleased then
-        if ctx.Input.DashChargingConsumedInput == true then
-            ctx.Input.DashChargingReleased = true
+        if playerContext.Input.DashChargingConsumedInput == true then
+            playerContext.Input.DashChargingReleased = true
         end
 
-        ctx.Input.DashHoldTime = 0.0
-        ctx.Input.DashChargingConsumedInput = false
+        playerContext.Input.DashHoldTime = 0.0
+        playerContext.Input.DashChargingConsumedInput = false
     end
 
-    if ActionStarted(ctx, "SecondaryDash") then
-        ctx.Input.DashPressed = true
+    if ActionStarted(playerContext, "SecondaryDash") then
+        playerContext.Input.DashPressed = true
     end
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.BeginDash(player)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.BeginDash")
-    if ctx.Runtime.MovementComp ~= nil then
-        ctx.Runtime.DashPrevOrientRotationToMovement =
-            Reflection.GetProperty(ctx.Runtime.MovementComp, "bOrientRotationToMovement")
-        SetOrientRotationToMovement(ctx, false)
+function PlayerAction.BeginDash(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.BeginDash")
+    if playerContext.Runtime.MovementComp ~= nil then
+        playerContext.Runtime.DashPrevOrientRotationToMovement =
+            Reflection.GetProperty(playerContext.Runtime.MovementComp, "bOrientRotationToMovement")
+        SetOrientRotationToMovement(playerContext, false)
     end
 
-    SetMovementInputEnabled(ctx, false)
+    SetMovementInputEnabled(playerContext, false)
 
-    local dashDir = PlayerAction.ResolveDashDirection(ctx)
-    local _, assistedDir = PlayerTargeting.BeginAssist(ctx, "Dash", dashDir)
+    local dashDir = PlayerAction.ResolveDashDirection(playerContext)
+    local _, assistedDir = PlayerTargeting.BeginAssist(playerContext, "Dash", dashDir)
     if assistedDir ~= nil then
         dashDir = assistedDir
     end
 
-    PlayerAction.FaceOwnerToDirection(ctx, dashDir)
-    ctx.Runtime.DashMoveDirection = dashDir
+    PlayerAction.FaceOwnerToDirection(playerContext, dashDir)
+    playerContext.Runtime.DashMoveDirection = dashDir
 
-    ctx.Action.DashActive = true
-    ctx.Action.DashElapsed = 0.0
-    ctx.Action.DashEnd = false
+    playerContext.Action.DashActive = true
+    playerContext.Action.DashElapsed = 0.0
+    playerContext.Action.DashEnd = false
 
-    PlayerEvents.EmitDashStarted(ctx, { Dir = dashDir })
+    PlayerEvents.EmitDashStarted(playerContext, { Dir = dashDir })
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.EndDash(player)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.EndDash")
-    ctx.Action.DashActive = false
-    ctx.Action.DashElapsed = 0.0
-    ctx.Action.DashEnd = false
+function PlayerAction.EndDash(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.EndDash")
+    playerContext.Action.DashActive = false
+    playerContext.Action.DashElapsed = 0.0
+    playerContext.Action.DashEnd = false
 
-    if ctx.Runtime.DashPrevOrientRotationToMovement ~= nil then
-        SetOrientRotationToMovement(ctx, ctx.Runtime.DashPrevOrientRotationToMovement)
-        ctx.Runtime.DashPrevOrientRotationToMovement = nil
+    if playerContext.Runtime.DashPrevOrientRotationToMovement ~= nil then
+        SetOrientRotationToMovement(playerContext, playerContext.Runtime.DashPrevOrientRotationToMovement)
+        playerContext.Runtime.DashPrevOrientRotationToMovement = nil
     end
 
-    ctx.Runtime.DashMoveDirection = nil
-    PlayerTargeting.ClearAssist(ctx, false)
+    playerContext.Runtime.DashMoveDirection = nil
+    PlayerTargeting.ClearAssist(playerContext, false)
 
-    SetMovementInputEnabled(ctx, true)
-    PlayerEvents.EmitDashEnded(ctx)
+    SetMovementInputEnabled(playerContext, true)
+    PlayerEvents.EmitDashEnded(playerContext)
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.UpdateDash(player, dt)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.UpdateDash")
-    local owner = GetOwner(ctx)
-    if owner == nil or ctx.Runtime.DashMoveDirection == nil then
+function PlayerAction.UpdateDash(playerContext, dt)
+    PlayerContext.Assert(playerContext, "PlayerAction.UpdateDash")
+    local owner = playerContext.Owner
+    if owner == nil or playerContext.Runtime.DashMoveDirection == nil then
         return
     end
 
-    ctx.Action.DashElapsed = ctx.Action.DashElapsed + dt
+    playerContext.Action.DashElapsed = playerContext.Action.DashElapsed + dt
 
-    local dir = ctx.Runtime.DashMoveDirection
+    local dir = playerContext.Runtime.DashMoveDirection
     dir.Z = 0.0
 
     if dir:Length() > 0.001 then
-        local actionConfig = GetActionConfig(ctx)
+        local actionConfig = playerContext.Config.Action
         local moveSpeed = (actionConfig.DashDistance) / (actionConfig.DashDuration)
         Reflection.Call(owner, "AddActorWorldOffset", dir:Normalized() * moveSpeed * dt)
     end
 
-    local actionConfig = GetActionConfig(ctx)
-    if ctx.Action.DashElapsed >= (actionConfig.DashDuration) then
-        ctx.Action.DashEnd = true
+    local actionConfig = playerContext.Config.Action
+    if playerContext.Action.DashElapsed >= (actionConfig.DashDuration) then
+        playerContext.Action.DashEnd = true
     end
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.BeginDashCharging(player)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.BeginDashCharging")
-    SetMovementInputEnabled(ctx, false)
-    StopMovementImmediately(ctx)
+function PlayerAction.BeginDashCharging(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.BeginDashCharging")
+    SetMovementInputEnabled(playerContext, false)
+    StopMovementImmediately(playerContext)
 
-    ctx.Action.DashChargingActive = true
-    ctx.Action.DashChargingElapsed = 0.0
-    ctx.Action.DashChargingEnd = false
-    ctx.Input.DashChargingReleased = false
+    playerContext.Action.DashChargingActive = true
+    playerContext.Action.DashChargingElapsed = 0.0
+    playerContext.Action.DashChargingEnd = false
+    playerContext.Input.DashChargingReleased = false
 
-    PlayerEvents.EmitDashChargingStarted(ctx)
+    PlayerEvents.EmitDashChargingStarted(playerContext)
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.EndDashCharging(player, unlockMovement)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.EndDashCharging")
-    ctx.Action.DashChargingActive = false
-    ctx.Action.DashChargingElapsed = 0.0
-    ctx.Action.DashChargingEnd = false
-    ctx.Input.DashChargingReleased = false
+function PlayerAction.EndDashCharging(playerContext, unlockMovement)
+    PlayerContext.Assert(playerContext, "PlayerAction.EndDashCharging")
+    playerContext.Action.DashChargingActive = false
+    playerContext.Action.DashChargingElapsed = 0.0
+    playerContext.Action.DashChargingEnd = false
+    playerContext.Input.DashChargingReleased = false
 
     if unlockMovement ~= false then
-        SetMovementInputEnabled(ctx, true)
+        SetMovementInputEnabled(playerContext, true)
     end
 
-    PlayerEvents.EmitDashChargingEnded(ctx)
+    PlayerEvents.EmitDashChargingEnded(playerContext)
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.UpdateDashCharging(player, dt)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.UpdateDashCharging")
-    ctx.Action.DashChargingElapsed = (ctx.Action.DashChargingElapsed or 0.0) + (dt or 0.0)
-    StopMovementImmediately(ctx)
+function PlayerAction.UpdateDashCharging(playerContext, dt)
+    PlayerContext.Assert(playerContext, "PlayerAction.UpdateDashCharging")
+    playerContext.Action.DashChargingElapsed = (playerContext.Action.DashChargingElapsed or 0.0) + (dt or 0.0)
+    StopMovementImmediately(playerContext)
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.BeginDashChargeAttack(player)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.BeginDashChargeAttack")
-    SetMovementInputEnabled(ctx, false)
-    StopMovementImmediately(ctx)
+function PlayerAction.BeginDashChargeAttack(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.BeginDashChargeAttack")
+    SetMovementInputEnabled(playerContext, false)
+    StopMovementImmediately(playerContext)
 
-    local aimDir = PlayerAction.GetOwnerForward2D(ctx) or PlayerAction.ResolveDashDirection(ctx)
-    local _, assistedDir = PlayerTargeting.BeginAssist(ctx, "DashChargeAttack", aimDir)
+    local aimDir = PlayerAction.GetOwnerForward2D(playerContext) or PlayerAction.ResolveDashDirection(playerContext)
+    local _, assistedDir = PlayerTargeting.BeginAssist(playerContext, "DashChargeAttack", aimDir)
     if assistedDir ~= nil then
-        PlayerAction.FaceOwnerToDirection(ctx, assistedDir)
+        PlayerAction.FaceOwnerToDirection(playerContext, assistedDir)
     end
 
-    PlayerAction.StepDashChargeAttackForward(ctx)
+    PlayerAction.StepDashChargeAttackForward(playerContext)
 
-    ctx.Action.DashChargeAttackActive = true
-    ctx.Action.DashChargeAttackElapsed = 0.0
-    ctx.Action.DashChargeAttackEnd = false
+    playerContext.Action.DashChargeAttackActive = true
+    playerContext.Action.DashChargeAttackElapsed = 0.0
+    playerContext.Action.DashChargeAttackEnd = false
 
-    PlayerEvents.EmitDashChargeAttackStarted(ctx)
+    PlayerEvents.EmitDashChargeAttackStarted(playerContext)
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.EndDashChargeAttack(player)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.EndDashChargeAttack")
-    ctx.Action.DashChargeAttackActive = false
-    ctx.Action.DashChargeAttackElapsed = 0.0
-    ctx.Action.DashChargeAttackEnd = false
-    PlayerTargeting.ClearAssist(ctx, false)
+function PlayerAction.EndDashChargeAttack(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.EndDashChargeAttack")
+    playerContext.Action.DashChargeAttackActive = false
+    playerContext.Action.DashChargeAttackElapsed = 0.0
+    playerContext.Action.DashChargeAttackEnd = false
+    PlayerTargeting.ClearAssist(playerContext, false)
 
-    SetMovementInputEnabled(ctx, true)
-    PlayerEvents.EmitDashChargeAttackEnded(ctx)
+    SetMovementInputEnabled(playerContext, true)
+    PlayerEvents.EmitDashChargeAttackEnded(playerContext)
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.CancelDashActions(player, unlockMovement)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.CancelDashActions")
-    local wasDashActive = ctx.Action.DashActive == true
-    local wasDashChargingActive = ctx.Action.DashChargingActive == true
-    local wasDashChargeAttackActive = ctx.Action.DashChargeAttackActive == true
+function PlayerAction.CancelDashActions(playerContext, unlockMovement)
+    PlayerContext.Assert(playerContext, "PlayerAction.CancelDashActions")
+    local wasDashActive = playerContext.Action.DashActive == true
+    local wasDashChargingActive = playerContext.Action.DashChargingActive == true
+    local wasDashChargeAttackActive = playerContext.Action.DashChargeAttackActive == true
 
-    ctx.Input.DashPressed = false
-    ctx.Input.DashChargingPressed = false
-    ctx.Input.DashChargingReleased = false
+    playerContext.Input.DashPressed = false
+    playerContext.Input.DashChargingPressed = false
+    playerContext.Input.DashChargingReleased = false
 
-    ctx.Action.DashActive = false
-    ctx.Action.DashElapsed = 0.0
-    ctx.Action.DashEnd = false
-    ctx.Runtime.DashMoveDirection = nil
+    playerContext.Action.DashActive = false
+    playerContext.Action.DashElapsed = 0.0
+    playerContext.Action.DashEnd = false
+    playerContext.Runtime.DashMoveDirection = nil
 
-    ctx.Action.DashChargingActive = false
-    ctx.Action.DashChargingElapsed = 0.0
-    ctx.Action.DashChargingEnd = false
+    playerContext.Action.DashChargingActive = false
+    playerContext.Action.DashChargingElapsed = 0.0
+    playerContext.Action.DashChargingEnd = false
 
-    ctx.Action.DashChargeAttackActive = false
-    ctx.Action.DashChargeAttackElapsed = 0.0
-    ctx.Action.DashChargeAttackEnd = false
-    PlayerTargeting.ClearAssist(ctx, true)
+    playerContext.Action.DashChargeAttackActive = false
+    playerContext.Action.DashChargeAttackElapsed = 0.0
+    playerContext.Action.DashChargeAttackEnd = false
+    PlayerTargeting.ClearAssist(playerContext, true)
 
-    if ctx.Runtime.DashPrevOrientRotationToMovement ~= nil then
-        SetOrientRotationToMovement(ctx, ctx.Runtime.DashPrevOrientRotationToMovement)
-        ctx.Runtime.DashPrevOrientRotationToMovement = nil
+    if playerContext.Runtime.DashPrevOrientRotationToMovement ~= nil then
+        SetOrientRotationToMovement(playerContext, playerContext.Runtime.DashPrevOrientRotationToMovement)
+        playerContext.Runtime.DashPrevOrientRotationToMovement = nil
     end
 
     if unlockMovement ~= false then
-        SetMovementInputEnabled(ctx, true)
+        SetMovementInputEnabled(playerContext, true)
     end
 
     if wasDashActive then
-        PlayerEvents.EmitDashEnded(ctx)
+        PlayerEvents.EmitDashEnded(playerContext)
     end
     if wasDashChargingActive then
-        PlayerEvents.EmitDashChargingEnded(ctx)
+        PlayerEvents.EmitDashChargingEnded(playerContext)
     end
     if wasDashChargeAttackActive then
-        PlayerEvents.EmitDashChargeAttackEnded(ctx)
+        PlayerEvents.EmitDashChargeAttackEnded(playerContext)
     end
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.UpdateDashChargeAttack(player, dt)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.UpdateDashChargeAttack")
-    ctx.Action.DashChargeAttackElapsed = (ctx.Action.DashChargeAttackElapsed or 0.0) + (dt or 0.0)
+function PlayerAction.UpdateDashChargeAttack(playerContext, dt)
+    PlayerContext.Assert(playerContext, "PlayerAction.UpdateDashChargeAttack")
+    playerContext.Action.DashChargeAttackElapsed = (playerContext.Action.DashChargeAttackElapsed or 0.0) + (dt or 0.0)
 
-    local dir = PlayerTargeting.GetAssistDirection(ctx)
-    if dir ~= nil and PlayerTargeting.IsAssistTurnActive(ctx) == true then
-        PlayerAction.SmoothFaceOwnerToDirection(ctx, dir, dt, PlayerTargeting.GetTurnSpeed(ctx))
+    local dir = PlayerTargeting.GetAssistDirection(playerContext)
+    if dir ~= nil and PlayerTargeting.IsAssistTurnActive(playerContext) == true then
+        PlayerAction.SmoothFaceOwnerToDirection(playerContext, dir, dt, PlayerTargeting.GetTurnSpeed(playerContext))
     end
 
-    StopMovementImmediately(ctx)
+    StopMovementImmediately(playerContext)
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@param notifyName string
 ---@return nil
-function PlayerAction.OnAnimNotify(player, notifyName)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.OnAnimNotify")
+function PlayerAction.OnAnimNotify(playerContext, notifyName)
+    PlayerContext.Assert(playerContext, "PlayerAction.OnAnimNotify")
     if notifyName == "ComboWindowOpen" then
-        ctx.Action.ComboWindow = true
+        playerContext.Action.ComboWindow = true
     elseif notifyName == "ComboWindowClose" then
-        ctx.Action.ComboWindow = false
+        playerContext.Action.ComboWindow = false
     elseif notifyName == "AttackEnd" then
-        ctx.Action.AttackEnd = true
+        playerContext.Action.AttackEnd = true
     elseif notifyName == "DashEnd" then
-        ctx.Action.DashEnd = true
+        playerContext.Action.DashEnd = true
     elseif notifyName == "DashChargeAttackEnd" or notifyName == "DashChargingAttackEnd" then
-        ctx.Action.DashChargeAttackEnd = true
+        playerContext.Action.DashChargeAttackEnd = true
     end
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return boolean
-function PlayerAction.IsUltimateRunning(player)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.IsUltimateRunning")
-    return ctx.Action.IsUltimateRunning == true
+function PlayerAction.IsUltimateRunning(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.IsUltimateRunning")
+    return playerContext.Action.IsUltimateRunning == true
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return boolean
-function PlayerAction.IsInUltimateMode(player)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.IsInUltimateMode")
-    return ctx.Action.IsInUltimateMode == true
+function PlayerAction.IsInUltimateMode(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.IsInUltimateMode")
+    return playerContext.Action.IsInUltimateMode == true
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@param dt number
 ---@return nil
-function PlayerAction.Update(player, dt)
-    local ctx = PlayerContext.Assert(player, "PlayerAction.Update")
+function PlayerAction.Update(playerContext, dt)
+    PlayerContext.Assert(playerContext, "PlayerAction.Update")
 
-    PlayerAction.UpdateActionInput(ctx, dt)
+    PlayerAction.UpdateActionInput(playerContext, dt)
 
-    local maxUltimateGauge = ctx.Combat.MaxUltimateGauge
-    local ultimateGauge = ctx.Combat.UltimateGauge or 0
+    local maxUltimateGauge = playerContext.Combat.MaxUltimateGauge
+    local ultimateGauge = playerContext.Combat.UltimateGauge or 0
 
     ultimateGauge = 1000
 
-    if not ctx.Action.IsUltimateRunning
-        and ActionStarted(ctx, "Ultimate")
+    if not playerContext.Action.IsUltimateRunning
+        and ActionStarted(playerContext, "Ultimate")
         and ultimateGauge >= maxUltimateGauge then
-        ctx.Action.IsUltimateRunning = true
-        PlayerEvents.EmitUltimateStarted(ctx)
+        playerContext.Action.IsUltimateRunning = true
+        PlayerEvents.EmitUltimateStarted(playerContext)
     end
 end
 

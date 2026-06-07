@@ -1,5 +1,5 @@
 -- Player/PlayerEvents.lua
--- Typed internal message protocol for player gameplay events.
+-- Typed internal message protocol for playerContext gameplay events.
 -- Prefer Emit* functions over ad-hoc table literals.
 
 local Strict = require("Core/Strict")
@@ -70,131 +70,131 @@ end
 -- Public API
 -- =========================================================
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerEvents.BeginFrame(player)
-    PlayerContext.Assert(player, "PlayerEvents.BeginFrame")
-    player.Runtime.EventQueue = {}
+function PlayerEvents.BeginFrame(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerEvents.BeginFrame")
+    playerContext.Runtime.EventQueue = playerContext.Runtime.EventQueue or {}
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@param event PlayerEvent
 ---@return nil
-function PlayerEvents.Push(player, event)
-    PlayerContext.Assert(player, "PlayerEvents.Push")
+function PlayerEvents.Push(playerContext, event)
+    PlayerContext.Assert(playerContext, "PlayerEvents.Push")
     Strict.AssertTable(event, "event", "PlayerEvents.Push")
     if event.Kind ~= "PlayerEvent" then
         error("[PlayerEvents.Push] event.Kind must be PlayerEvent")
     end
     Strict.AssertString(event.Type, "event.Type", "PlayerEvents.Push")
-    table.insert(player.Runtime.EventQueue, event)
+    table.insert(playerContext.Runtime.EventQueue, event)
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return PlayerEvent[]
-function PlayerEvents.Drain(player)
-    PlayerContext.Assert(player, "PlayerEvents.Drain")
-    local events = player.Runtime.EventQueue
-    player.Runtime.EventQueue = {}
+function PlayerEvents.Drain(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerEvents.Drain")
+    local events = playerContext.Runtime.EventQueue
+    playerContext.Runtime.EventQueue = {}
     return events
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@param args table
 ---@return nil
-function PlayerEvents.EmitDashStarted(player, args)
-    PlayerEvents.Push(player, MakeEvent(PlayerEvents.Type.DashStarted, args))
+function PlayerEvents.EmitDashStarted(playerContext, args)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.DashStarted, args))
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerEvents.EmitDashEnded(player)
-    PlayerEvents.Push(player, MakeEvent(PlayerEvents.Type.DashEnded))
+function PlayerEvents.EmitDashEnded(playerContext)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.DashEnded))
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerEvents.EmitDashChargingStarted(player)
-    PlayerEvents.Push(player, MakeEvent(PlayerEvents.Type.DashChargingStarted))
+function PlayerEvents.EmitDashChargingStarted(playerContext)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.DashChargingStarted))
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerEvents.EmitDashChargingEnded(player)
-    PlayerEvents.Push(player, MakeEvent(PlayerEvents.Type.DashChargingEnded))
+function PlayerEvents.EmitDashChargingEnded(playerContext)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.DashChargingEnded))
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerEvents.EmitDashChargeAttackStarted(player)
-    PlayerEvents.Push(player, MakeEvent(PlayerEvents.Type.DashChargeAttackStarted))
+function PlayerEvents.EmitDashChargeAttackStarted(playerContext)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.DashChargeAttackStarted))
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerEvents.EmitDashChargeAttackEnded(player)
-    PlayerEvents.Push(player, MakeEvent(PlayerEvents.Type.DashChargeAttackEnded))
+function PlayerEvents.EmitDashChargeAttackEnded(playerContext)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.DashChargeAttackEnded))
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@param args table
 ---@return nil
-function PlayerEvents.EmitAttackStarted(player, args)
-    PlayerEvents.Push(player, MakeEvent(PlayerEvents.Type.AttackStarted, args))
+function PlayerEvents.EmitAttackStarted(playerContext, args)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.AttackStarted, args))
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@param args table
 ---@return nil
-function PlayerEvents.EmitAttackHit(player, args)
-    PlayerEvents.Push(player, MakeEvent(PlayerEvents.Type.AttackHit, args))
+function PlayerEvents.EmitAttackHit(playerContext, args)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.AttackHit, args))
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@param args table
 ---@return nil
-function PlayerEvents.EmitAttackEnded(player, args)
-    PlayerEvents.Push(player, MakeEvent(PlayerEvents.Type.AttackEnded, args))
+function PlayerEvents.EmitAttackEnded(playerContext, args)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.AttackEnded, args))
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@param args table
 ---@return nil
-function PlayerEvents.EmitHit(player, args)
-    PlayerEvents.Push(player, MakeEvent(PlayerEvents.Type.Hit, args))
+function PlayerEvents.EmitHit(playerContext, args)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.Hit, args))
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@param args table
 ---@return nil
-function PlayerEvents.EmitPerfectDodge(player, args)
-    PlayerEvents.Push(player, MakeEvent(PlayerEvents.Type.PerfectDodge, args))
+function PlayerEvents.EmitPerfectDodge(playerContext, args)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.PerfectDodge, args))
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerEvents.EmitUltimateStarted(player)
-    PlayerEvents.Push(player, MakeEvent(PlayerEvents.Type.UltimateStarted))
+function PlayerEvents.EmitUltimateStarted(playerContext)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.UltimateStarted))
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@return nil
-function PlayerEvents.EmitUltimateEnded(player)
-    PlayerEvents.Push(player, MakeEvent(PlayerEvents.Type.UltimateEnded))
+function PlayerEvents.EmitUltimateEnded(playerContext)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.UltimateEnded))
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@param args table
 ---@return nil
-function PlayerEvents.EmitDead(player, args)
-    PlayerEvents.Push(player, MakeEvent(PlayerEvents.Type.Dead, args))
+function PlayerEvents.EmitDead(playerContext, args)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.Dead, args))
 end
 
----@param player PlayerContext
+---@param playerContext PlayerContext
 ---@param args table
 ---@return nil
-function PlayerEvents.EmitGaugeChanged(player, args)
-    PlayerEvents.Push(player, MakeEvent(PlayerEvents.Type.GaugeChanged, args))
+function PlayerEvents.EmitGaugeChanged(playerContext, args)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.GaugeChanged, args))
 end
 
 ---@param event PlayerEvent

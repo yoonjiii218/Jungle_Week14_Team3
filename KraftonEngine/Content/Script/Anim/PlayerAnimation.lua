@@ -99,6 +99,8 @@ function init(self)
     self.Speed = 0.0
     self.BlendSpeed = 0.0
 
+    self.PlayerContext = nil
+
     local samuraiConfig = PlayerConfig.Default.Animation.Samurai
     local attackPaths = samuraiConfig.AttackPaths
 
@@ -432,38 +434,40 @@ end
 
 function update(self, dt)
     self.PlayerContext = CombatContext.GetPlayerByOwner(obj)
-    local player = self.PlayerContext
-    if player == nil then
+    local playerContext = self.PlayerContext
+
+    if playerContext == nil then   
         return
     end
-    PlayerContext.Assert(player, "PlayerAnimation.update")
-    PlayerAction.UpdateActionInput(player, dt)
+
+    PlayerContext.Assert(playerContext, "PlayerAnimation.update")
+    PlayerAction.UpdateActionInput(playerContext, dt)
 
     self.Speed = Anim.get_owner_speed()
-    local samuraiConfig = player.Config.Animation.Samurai
+    local samuraiConfig = playerContext.Config.Animation.Samurai
     local blendAlpha = math.min(dt * (samuraiConfig.LocomotionSpeedResponse), 1.0)
     self.BlendSpeed = self.BlendSpeed + (self.Speed - self.BlendSpeed) * blendAlpha
     Anim.blend_space_1d_set_input(self.LocomotionBlendSpace, self.BlendSpeed)
 
-    if self.PlayerContext.Input.AttackPressed and self.PlayerContext.Action.AttackIndex > 0 and self.PlayerContext.Action.ComboWindow then
-        self.PlayerContext.Action.ComboQueued = true
+    if playerContext.Input.AttackPressed and playerContext.Action.AttackIndex > 0 and playerContext.Action.ComboWindow then
+        playerContext.Action.ComboQueued = true
     end
 
-    PlayerAction.UpdateStepForward(player, dt)
+    PlayerAction.UpdateStepForward(playerContext, dt)
 
-    if self.PlayerContext.Action.DashActive then
-        PlayerAction.UpdateDash(player, dt)
-    elseif self.PlayerContext.Action.DashChargingActive then
-        PlayerAction.UpdateDashCharging(player, dt)
-    elseif self.PlayerContext.Action.DashChargeAttackActive then
-        PlayerAction.UpdateDashChargeAttack(player, dt)
-    elseif self.PlayerContext.Action.AttackIndex == 0 then
-        PlayerAction.ApplyMoveInput(player)
+    if playerContext.Action.DashActive then
+        PlayerAction.UpdateDash(playerContext, dt)
+    elseif playerContext.Action.DashChargingActive then
+        PlayerAction.UpdateDashCharging(playerContext, dt)
+    elseif playerContext.Action.DashChargeAttackActive then
+        PlayerAction.UpdateDashChargeAttack(playerContext, dt)
+    elseif playerContext.Action.AttackIndex == 0 then
+        PlayerAction.ApplyMoveInput(playerContext)
     else
-        if PlayerAction.UpdateAttackAssist(player, dt) ~= true then
-            local dir = PlayerAction.GetMoveInputWorldDirection(player)
+        if PlayerAction.UpdateAttackAssist(playerContext, dt) ~= true then
+            local dir = PlayerAction.GetMoveInputWorldDirection(playerContext)
             if dir ~= nil then
-                PlayerAction.SmoothFaceOwnerToDirection(player, dir, dt)
+                PlayerAction.SmoothFaceOwnerToDirection(playerContext, dir, dt)
             end
         end
     end
@@ -471,24 +475,30 @@ end
 
 function on_combo_window_open(self)
     self.PlayerContext = CombatContext.GetPlayerByOwner(obj)
-    PlayerContext.Assert(self.PlayerContext, "PlayerAnimation.on_combo_window_open")
-    self.PlayerContext.Action.ComboWindow = true
+    local playerContext = self.PlayerContext
+    if playerContext == nil then return end
+    PlayerContext.Assert(playerContext, "PlayerAnimation.on_combo_window_open")
+    playerContext.Action.ComboWindow = true
 end
 
 function on_combo_window_close(self)
     self.PlayerContext = CombatContext.GetPlayerByOwner(obj)
-    PlayerContext.Assert(self.PlayerContext, "PlayerAnimation.on_combo_window_close")
-    self.PlayerContext.Action.ComboWindow = false
+    local playerContext = self.PlayerContext
+    if playerContext == nil then return end
+    PlayerContext.Assert(playerContext, "PlayerAnimation.on_combo_window_close")
+    playerContext.Action.ComboWindow = false
 end
 
 function on_attack_end(self)
     self.PlayerContext = CombatContext.GetPlayerByOwner(obj)
-    PlayerContext.Assert(self.PlayerContext, "PlayerAnimation.on_attack_end")
-    self.PlayerContext.Action.ComboWindow = false
-    if self.PlayerContext.Action.DashChargeAttackActive then
-        self.PlayerContext.Action.DashChargeAttackEnd = true
+    local playerContext = self.PlayerContext
+    if playerContext == nil then return end
+    PlayerContext.Assert(playerContext, "PlayerAnimation.on_attack_end")
+    playerContext.Action.ComboWindow = false
+    if playerContext.Action.DashChargeAttackActive then
+        playerContext.Action.DashChargeAttackEnd = true
     else
-        self.PlayerContext.Action.AttackEnd = true
+        playerContext.Action.AttackEnd = true
     end
 end
 
@@ -501,10 +511,11 @@ end
 ---@return nil
 function on_attack_hit(self, targetActor, hitboxComponent, targetComponent, hitResult, hitStopDuration)
     self.PlayerContext = CombatContext.GetPlayerByOwner(obj)
-    local player = self.PlayerContext
-    PlayerContext.Assert(player, "PlayerAnimation.on_attack_hit")
+    local playerContext = self.PlayerContext
+    if playerContext == nil then return end
+    PlayerContext.Assert(playerContext, "PlayerAnimation.on_attack_hit")
     local hitRequest = HitTypes.CreatePlayerAttackFromState({
-        Player = player,
+        PlayerContext = playerContext,
         TargetActor = targetActor,
         HitboxComponent = hitboxComponent,
         TargetComponent = targetComponent,
@@ -523,21 +534,26 @@ end
 
 function on_trail_activate(self)
     self.PlayerContext = CombatContext.GetPlayerByOwner(obj)
-    PlayerContext.Assert(self.PlayerContext, "PlayerAnimation.on_trail_activate")
-    PlayerFeedback.SetKatanaTrailActive(self.PlayerContext, true)
+    local playerContext = self.PlayerContext
+    if playerContext == nil then return end
+    PlayerContext.Assert(playerContext, "PlayerAnimation.on_trail_activate")
+    PlayerFeedback.SetKatanaTrailActive(playerContext, true)
 end
 
 function on_trail_deactivate(self)
     self.PlayerContext = CombatContext.GetPlayerByOwner(obj)
-    PlayerContext.Assert(self.PlayerContext, "PlayerAnimation.on_trail_deactivate")
-    PlayerFeedback.SetKatanaTrailActive(self.PlayerContext, false)
+    local playerContext = self.PlayerContext
+    if playerContext == nil then return end
+    PlayerContext.Assert(playerContext, "PlayerAnimation.on_trail_deactivate")
+    PlayerFeedback.SetKatanaTrailActive(playerContext, false)
 end
 
 function on_notify(self, name)
     self.PlayerContext = CombatContext.GetPlayerByOwner(obj)
-    local player = self.PlayerContext
-    PlayerContext.Assert(player, "PlayerAnimation.on_notify")
-    PlayerAction.OnAnimNotify(player, name)
+    local playerContext = self.PlayerContext
+    if playerContext == nil then return end
+    PlayerContext.Assert(playerContext, "PlayerAnimation.on_notify")
+    PlayerAction.OnAnimNotify(playerContext, name)
     print("[LuaAnim] notify: " .. name)
 
     if name == "ComboWindowOpen" then
@@ -566,12 +582,12 @@ function on_notify(self, name)
     end
 
     if name == "DashEnd" then
-        self.PlayerContext.Action.DashEnd = true
+        playerContext.Action.DashEnd = true
         return
     end
 
     if name == "DashChargeAttackEnd" or name == "DashChargingAttackEnd" then
-        self.PlayerContext.Action.DashChargeAttackEnd = true
+        playerContext.Action.DashChargeAttackEnd = true
         return
     end
 end
