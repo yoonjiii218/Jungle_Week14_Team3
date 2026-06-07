@@ -980,6 +980,9 @@
     <ClCompile Include="Source\Engine\Animation\Notify\AnimNotify_PlaySound.cpp">
       <Filter>Source\Engine\Animation\Notify</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\Animation\Notify\AnimNotify_SpawnFlyingSlash.cpp">
+      <Filter>Source\Engine\Animation\Notify</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Engine\Animation\Notify\AnimNotify_SpawnSubUV.cpp">
       <Filter>Source\Engine\Animation\Notify</Filter>
     </ClCompile>
@@ -2235,6 +2238,9 @@
       <Filter>Source\Engine\Animation\Notify</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Animation\Notify\AnimNotify_PlaySound.h">
+      <Filter>Source\Engine\Animation\Notify</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Animation\Notify\AnimNotify_SpawnFlyingSlash.h">
       <Filter>Source\Engine\Animation\Notify</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Animation\Notify\AnimNotify_SpawnSubUV.h">

@@ -153,6 +153,14 @@ function PlayerAction.Init(playerContext)
     playerContext.Input.AttackPressed = false
     playerContext.Input.AttackHoldTime = 0.0
     ClearAttackBuffer(playerContext)
+
+    playerContext.Action.PostDashAttackWindowActive = false
+    playerContext.Action.PostDashAttackWindowTimer = 0.0
+    playerContext.Action.PostDashAttackUseCount = 0
+    playerContext.Action.PostDashAttackNextVariant = 1
+    playerContext.Action.PostDashAttackActive = false
+    playerContext.Action.PostDashAttackVariant = 0
+
     playerContext.Runtime.StepForwardActive = false
     playerContext.Runtime.StepForwardElapsed = 0.0
     playerContext.Runtime.StepForwardDuration = 0.0
@@ -616,6 +624,183 @@ function PlayerAction.EndAttackAssist(playerContext)
     PlayerTargeting.ClearAssist(playerContext, false)
 end
 
+local function GetPostDashAttackConfig(playerContext)
+    local actionConfig = playerContext.Config.Action or {}
+    return actionConfig.PostDashAttack or {}
+end
+
+local function GetPostDashAttackVariantCount(playerContext)
+    local config = GetPostDashAttackConfig(playerContext)
+    local count = config.VariantCount or 2
+    if count < 1 then
+        count = 1
+    end
+    return count
+end
+
+local function GetPostDashAttackMaxAttacks(playerContext)
+    local config = GetPostDashAttackConfig(playerContext)
+    local maxAttacks = config.MaxAttacks or 5
+    if maxAttacks < 1 then
+        maxAttacks = 1
+    end
+    return maxAttacks
+end
+
+local function IsPostDashAttackWindowUsable(playerContext)
+    local config = GetPostDashAttackConfig(playerContext)
+    local action = playerContext.Action
+    return config.Enabled ~= false
+        and action.PostDashAttackWindowActive == true
+        and (action.PostDashAttackWindowTimer or 0.0) > 0.0
+        and (action.PostDashAttackUseCount or 0) < GetPostDashAttackMaxAttacks(playerContext)
+end
+
+---@param playerContext PlayerContext
+---@return nil
+function PlayerAction.ClearPostDashAttackWindow(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.ClearPostDashAttackWindow")
+    local action = playerContext.Action
+    action.PostDashAttackWindowActive = false
+    action.PostDashAttackWindowTimer = 0.0
+    action.PostDashAttackUseCount = 0
+    action.PostDashAttackNextVariant = 1
+end
+
+---@param playerContext PlayerContext
+---@return nil
+function PlayerAction.ActivatePostDashAttackWindow(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.ActivatePostDashAttackWindow")
+    local config = GetPostDashAttackConfig(playerContext)
+    if config.Enabled == false then
+        PlayerAction.ClearPostDashAttackWindow(playerContext)
+        return
+    end
+
+    local duration = config.WindowDuration or 2.5
+    if duration <= 0.0 then
+        PlayerAction.ClearPostDashAttackWindow(playerContext)
+        return
+    end
+
+    local action = playerContext.Action
+    action.PostDashAttackWindowActive = true
+    action.PostDashAttackWindowTimer = duration
+    action.PostDashAttackUseCount = 0
+    action.PostDashAttackNextVariant = 1
+    action.PostDashAttackActive = false
+    action.PostDashAttackVariant = 0
+end
+
+---@param playerContext PlayerContext
+---@param dt number
+---@return nil
+function PlayerAction.UpdatePostDashAttackWindow(playerContext, dt)
+    PlayerContext.Assert(playerContext, "PlayerAction.UpdatePostDashAttackWindow")
+    local action = playerContext.Action
+    if action.PostDashAttackWindowActive ~= true then
+        return
+    end
+
+    action.PostDashAttackWindowTimer = (action.PostDashAttackWindowTimer or 0.0) - (dt or 0.0)
+    if action.PostDashAttackWindowTimer <= 0.0
+        or (action.PostDashAttackUseCount or 0) >= GetPostDashAttackMaxAttacks(playerContext) then
+        action.PostDashAttackWindowActive = false
+        action.PostDashAttackWindowTimer = 0.0
+    end
+end
+
+---@param playerContext PlayerContext
+---@return boolean
+function PlayerAction.CanStartPostDashAttack(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.CanStartPostDashAttack")
+    return IsPostDashAttackWindowUsable(playerContext)
+end
+
+---@param playerContext PlayerContext
+---@return integer
+function PlayerAction.GetNextPostDashAttackVariant(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.GetNextPostDashAttackVariant")
+    local variant = playerContext.Action.PostDashAttackNextVariant or 1
+    local variantCount = GetPostDashAttackVariantCount(playerContext)
+    if variant < 1 or variant > variantCount then
+        variant = 1
+    end
+    return variant
+end
+
+---@param playerContext PlayerContext
+---@param variant integer
+---@return boolean
+function PlayerAction.ShouldStartPostDashAttackVariant(playerContext, variant)
+    PlayerContext.Assert(playerContext, "PlayerAction.ShouldStartPostDashAttackVariant")
+    if IsPostDashAttackWindowUsable(playerContext) ~= true then
+        return false
+    end
+    return PlayerAction.GetNextPostDashAttackVariant(playerContext) == variant
+end
+
+---@param playerContext PlayerContext
+---@param variant integer
+---@return nil
+function PlayerAction.BeginPostDashAttack(playerContext, variant)
+    PlayerContext.Assert(playerContext, "PlayerAction.BeginPostDashAttack")
+    local action = playerContext.Action
+    local variantCount = GetPostDashAttackVariantCount(playerContext)
+    if variant == nil or variant < 1 or variant > variantCount then
+        variant = PlayerAction.GetNextPostDashAttackVariant(playerContext)
+    end
+
+    action.AttackIndex = variant
+    action.AttackInstanceId = "PlayerPostDashAttack" .. tostring(variant) .. "_" .. tostring(World.GetGameTime())
+    action.ComboWindow = false
+    action.ComboQueued = false
+    action.AttackEnd = false
+    action.PostDashAttackActive = true
+    action.PostDashAttackVariant = variant
+    action.PostDashAttackUseCount = (action.PostDashAttackUseCount or 0) + 1
+
+    local nextVariant = variant + 1
+    if nextVariant > variantCount then
+        nextVariant = 1
+    end
+    action.PostDashAttackNextVariant = nextVariant
+
+    if (action.PostDashAttackUseCount or 0) >= GetPostDashAttackMaxAttacks(playerContext) then
+        action.PostDashAttackWindowActive = false
+        action.PostDashAttackWindowTimer = 0.0
+    end
+
+    PlayerAction.StopMovementImmediately(playerContext)
+    PlayerAction.BeginAttackAssist(playerContext, variant)
+    PlayerAction.StepAttackForward(playerContext, variant)
+
+    local config = GetPostDashAttackConfig(playerContext)
+    if config.SpawnFlyingSlashOnAttackStart == true then
+        PlayerProjectile.SpawnFlyingSlash(playerContext, {
+            AttackId = "PlayerPostDashFlyingSlash" .. tostring(variant),
+            AttackInstanceId = action.AttackInstanceId,
+        })
+    end
+
+    PlayerEvents.EmitAttackStarted(playerContext, {
+        AttackIndex = variant,
+        IsPostDashAttack = true,
+        PostDashAttackVariant = variant,
+    })
+end
+
+---@param playerContext PlayerContext
+---@return boolean
+function PlayerAction.ShouldChainPostDashAttack(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.ShouldChainPostDashAttack")
+    local action = playerContext.Action
+    return action.PostDashAttackActive == true
+        and action.AttackEnd == true
+        and action.ComboQueued == true
+        and IsPostDashAttackWindowUsable(playerContext) == true
+end
+
 ---@param playerContext PlayerContext
 ---@return boolean
 function PlayerAction.IsAttackBusy(playerContext)
@@ -634,6 +819,8 @@ function PlayerAction.CancelAttack(playerContext, unlockMovement)
     playerContext.Action.ComboWindow = false
     playerContext.Action.ComboQueued = false
     playerContext.Action.AttackEnd = false
+    playerContext.Action.PostDashAttackActive = false
+    playerContext.Action.PostDashAttackVariant = 0
     playerContext.Runtime.StepForwardActive = false
     playerContext.Runtime.StepForwardDirection = nil
     PlayerTargeting.ClearAssist(playerContext, false)
@@ -705,6 +892,7 @@ function PlayerAction.BeginHitReaction(playerContext, hit)
 
     PlayerAction.CancelAttack(playerContext, false)
     PlayerAction.CancelDashActions(playerContext, false)
+    PlayerAction.ClearPostDashAttackWindow(playerContext)
     StopMovementImmediately(playerContext)
     SetMovementInputEnabled(playerContext, false)
 
@@ -1008,6 +1196,7 @@ function PlayerAction.UpdateActionInput(playerContext, dt)
     end
 
     UpdateBufferedInputTimers(playerContext, dt)
+    PlayerAction.UpdatePostDashAttackWindow(playerContext, dt)
 
     if dashReleased and wasDashChargingConsumed == true and playerContext.Action.DashChargingActive == true then
         input.DashChargingReleased = true
@@ -1016,6 +1205,7 @@ function PlayerAction.UpdateActionInput(playerContext, dt)
     -- DashCharging / DashChargeAttack intentionally drop attack inputs for game-jam simplicity.
     if IsDashChargeActionActive(playerContext) == true then
         ClearAttackBuffer(playerContext)
+        PlayerAction.ClearPostDashAttackWindow(playerContext)
     end
 
     PlayerAction.ConsumeBufferedAttackForCombo(playerContext)
@@ -1088,7 +1278,7 @@ end
 
 ---@param playerContext PlayerContext
 ---@return nil
-function PlayerAction.EndDash(playerContext)
+function PlayerAction.EndDash(playerContext, activatePostDashAttackWindow)
     PlayerContext.Assert(playerContext, "PlayerAction.EndDash")
     playerContext.Action.DashActive = false
     playerContext.Action.DashElapsed = 0.0
@@ -1104,6 +1294,9 @@ function PlayerAction.EndDash(playerContext)
     PlayerTargeting.ClearAssist(playerContext, false)
 
     SetMovementInputEnabled(playerContext, true)
+    if activatePostDashAttackWindow ~= false then
+        PlayerAction.ActivatePostDashAttackWindow(playerContext)
+    end
     PlayerEvents.EmitDashEnded(playerContext)
 end
 
@@ -1137,6 +1330,7 @@ end
 ---@return nil
 function PlayerAction.BeginDashCharging(playerContext)
     PlayerContext.Assert(playerContext, "PlayerAction.BeginDashCharging")
+    PlayerAction.ClearPostDashAttackWindow(playerContext)
     SetMovementInputEnabled(playerContext, false)
     StopMovementImmediately(playerContext)
 
@@ -1195,6 +1389,7 @@ end
 ---@return nil
 function PlayerAction.BeginDashChargeAttack(playerContext)
     PlayerContext.Assert(playerContext, "PlayerAction.BeginDashChargeAttack")
+    PlayerAction.ClearPostDashAttackWindow(playerContext)
     SetMovementInputEnabled(playerContext, false)
     StopMovementImmediately(playerContext)
 
@@ -1252,6 +1447,7 @@ function PlayerAction.CancelDashActions(playerContext, unlockMovement)
     playerContext.Action.DashChargeAttackActive = false
     playerContext.Action.DashChargeAttackElapsed = 0.0
     playerContext.Action.DashChargeAttackEnd = false
+    PlayerAction.ClearPostDashAttackWindow(playerContext)
     PlayerTargeting.ClearAssist(playerContext, true)
 
     if playerContext.Runtime.DashPrevOrientRotationToMovement ~= nil then
@@ -1308,17 +1504,17 @@ function PlayerAction.OnAnimNotify(playerContext, notifyName)
         playerContext.Action.DashEnd = true
     elseif notifyName == "DashChargeAttackEnd" or notifyName == "DashChargingAttackEnd" then
         playerContext.Action.DashChargeAttackEnd = true
-    elseif notifyName == "FlyingSlashFire" then
-        PlayerProjectile.SpawnFlyingSlash(playerContext, {
-            AttackId = "PlayerFlyingSlash",
-        })
-    elseif notifyName == "DashChargeFlyingSlashFire" then
-        PlayerProjectile.SpawnFlyingSlash(playerContext, {
-            AttackId = "PlayerDashChargeFlyingSlash",
-        })
     elseif notifyName == "HitReactEnd" or notifyName == "HitEnd" then
         playerContext.Action.HitReactEnd = true
     end
+end
+
+---@param playerContext PlayerContext
+---@param args table|nil
+---@return nil
+function PlayerAction.OnSpawnFlyingSlashNotify(playerContext, args)
+    PlayerContext.Assert(playerContext, "PlayerAction.OnSpawnFlyingSlashNotify")
+    PlayerProjectile.SpawnFlyingSlash(playerContext, args)
 end
 
 ---@param playerContext PlayerContext

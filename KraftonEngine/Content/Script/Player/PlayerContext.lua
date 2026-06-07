@@ -35,6 +35,12 @@ local PlayerContext = {}
 ---@field ComboWindow boolean
 ---@field ComboQueued boolean
 ---@field AttackEnd boolean
+---@field PostDashAttackWindowActive boolean
+---@field PostDashAttackWindowTimer number
+---@field PostDashAttackUseCount integer
+---@field PostDashAttackNextVariant integer
+---@field PostDashAttackActive boolean
+---@field PostDashAttackVariant integer
 ---@field DashActive boolean
 ---@field DashElapsed number
 ---@field DashEnd boolean
@@ -139,6 +145,12 @@ local function CreateActionState()
         ComboWindow = false,
         ComboQueued = false,
         AttackEnd = false,
+        PostDashAttackWindowActive = false,
+        PostDashAttackWindowTimer = 0.0,
+        PostDashAttackUseCount = 0,
+        PostDashAttackNextVariant = 1,
+        PostDashAttackActive = false,
+        PostDashAttackVariant = 0,
         DashActive = false,
         DashElapsed = 0.0,
         DashEnd = false,

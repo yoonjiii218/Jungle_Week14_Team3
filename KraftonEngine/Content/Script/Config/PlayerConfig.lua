@@ -23,6 +23,17 @@ PlayerConfig.Default = {
         DashChargingHoldThreshold = 0.4,
         DashChargingTurnSpeed = 12.0,
         DashChargingTargetTurnSpeed = 12.0,
+
+        -- PGR Crimson Weave style follow-up: after a normal dash, basic attack
+        -- enters a short sword-wave stance and alternates two diagonal slash motions.
+        PostDashAttack = {
+            Enabled = true,
+            WindowDuration = 2.5,
+            MaxAttacks = 5,
+            VariantCount = 2,
+            SpawnFlyingSlashOnAttackStart = false,
+        },
+
         AttackStepForwardDistance = 1.5,
         AttackStepForwardDuration = 0.12,
         AttackStepForwardDistances = {
@@ -50,15 +61,16 @@ PlayerConfig.Default = {
         HitKnockbackDuration = 0.16,
 
         FlyingSlash = {
-            Speed = 45.0,
-            Life = 0.5,
-            MaxDistance = 24.0,
-            Radius = 2.5,
+            Speed = 90.0,
+            Life = 1,
+            MaxDistance = 90.0,
+            Radius = 10,
             SpawnForwardOffset = 2.0,
             SpawnRightOffset = 0.0,
             SpawnUpOffset = 1.2,
             Scale = Vector(1.0, 1.0, 1.0),
             Pierce = true,
+            FlattenDirection = true,
             Debug = false,
         },
     },
@@ -78,10 +90,10 @@ PlayerConfig.Default = {
 
         Attack = {
             Enabled = true,
-            Range = 20.0,
+            Range = 50.0,
             ConeDeg = 360.0,
             TurnDuration = 0.08,
-            TurnSpeed = 18.0,
+            TurnSpeed = 54.0,
             LockDirection = false,
         },
 
@@ -152,7 +164,7 @@ PlayerConfig.Default = {
 
         FlyingSlash = {
             ParticlePath = "Content/Data/PS_FlyingSlashMesh.uasset",
-            MaterialPath = "Content/Material/VFX/M_SlashCrescent_PM.mat",
+            MaterialPath = "Content/Material/VFX/M_SwordTrail_Color.mat",
             AutoDestroyDelay = 0.8,
         },
 
@@ -222,6 +234,13 @@ PlayerConfig.Default = {
                 "Content/Animation/Samurai_Player_Advanced/Combo5.uasset",
                 "Content/Animation/Samurai_Player/SamuraiAttack3.uasset",
                 "Content/Animation/Samurai_Player_Advanced/Combo7.uasset",
+            },
+
+            -- Temporary placeholders for the two alternating post-dash diagonal slash
+            -- motions. Replace these two paths once the dedicated animations exist.
+            PostDashAttackPaths = {
+                "Content/Animation/Samurai_Player/SamuraiSlashAttack1.uasset",
+                "Content/Animation/Samurai_Player/SamuraiSlashAttack2.uasset",
             },
 
             DashPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1_Start2.uasset",

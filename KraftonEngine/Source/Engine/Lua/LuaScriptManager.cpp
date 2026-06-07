@@ -2644,7 +2644,6 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 	{
 		Component.AttachToComponentWithSocket(Parent, SocketName);
 	},
-
 		// 부모 기준 상대 위치 — 동일한 메시를 4개 깐 바퀴 같은 케이스에서 앞/뒤 구분 등
 		// 위치 기반 필터링에 쓰인다. 월드 위치는 위 "Location" 프로퍼티 참고.
 		"RelativeLocation", sol::property(
@@ -2752,6 +2751,8 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		"SetMaterialPath", &UParticleSystemComponent::SetMaterialPath,
 		"SetAutoDestroyOwnerAfter", &UParticleSystemComponent::SetAutoDestroyOwnerAfter,
 		"ClearAutoDestroyOwnerAfter", &UParticleSystemComponent::ClearAutoDestroyOwnerAfter,
+		"SetParticleSizeScale", &UParticleSystemComponent::SetParticleSizeScale,
+		"GetParticleSizeScale", &UParticleSystemComponent::GetParticleSizeScale,
 		"SetBeamSourcePoint", &UParticleSystemComponent::SetBeamSourcePoint,
 		"SetBeamTargetPoint", &UParticleSystemComponent::SetBeamTargetPoint,
 		"SetBeamEndPoint", &UParticleSystemComponent::SetBeamEndPoint,

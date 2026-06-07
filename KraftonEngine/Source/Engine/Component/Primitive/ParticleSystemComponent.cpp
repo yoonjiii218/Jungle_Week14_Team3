@@ -191,6 +191,14 @@ void UParticleSystemComponent::ClearAutoDestroyOwnerAfter()
 	AutoDestroyOwnerRemaining = 0.0f;
 }
 
+void UParticleSystemComponent::SetParticleSizeScale(const FVector& InScale)
+{
+	ParticleSizeScale = InScale;
+	BuildDynamicData();
+	MarkProxyDirty(EDirtyFlag::Mesh);
+	MarkWorldBoundsDirty();
+}
+
 bool UParticleSystemComponent::SetBeamSourcePoint(int32 EmitterIndex, int32 BeamIndex, const FVector& Point)
 {
 	if (EmitterIndex < 0 || EmitterIndex >= static_cast<int32>(EmitterInstances.size()))

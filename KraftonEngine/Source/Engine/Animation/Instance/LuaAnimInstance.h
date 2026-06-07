@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Animation/AnimInstance.h"
+#include "Math/Vector.h"
 #include "Object/Ptr/WeakObjectPtr.h"
 
 #include <sol/sol.hpp>
@@ -50,6 +51,8 @@ public:
 	void PostEvaluatePose(FPoseContext& Output) override;
 
 	bool InvokeLuaFunction(const FString& FunctionName);
+	bool DispatchSpawnFlyingSlashNotify(const FString& AttackId, const FVector& TranslationOffset,
+		const FVector& RotationOffset, const FVector& Scale, bool bFlattenDirection);
 	bool GetDebugSnapshotText(FString& OutText);
 	bool InvokeLuaFunction(const FString& FunctionName, AActor* OtherActor, UPrimitiveComponent* HitComponent,
 		UPrimitiveComponent* OtherComp, const FHitResult& HitResult, float HitStopDuration = 0.0f);

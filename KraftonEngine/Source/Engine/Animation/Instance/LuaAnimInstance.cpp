@@ -167,6 +167,39 @@ bool ULuaAnimInstance::InvokeLuaFunction(const FString& FunctionName)
 	return true;
 }
 
+bool ULuaAnimInstance::DispatchSpawnFlyingSlashNotify(const FString& AttackId, const FVector& TranslationOffset,
+	const FVector& RotationOffset, const FVector& Scale, bool bFlattenDirection)
+{
+	if (!Env.valid() || !LuaSelf.valid())
+	{
+		return false;
+	}
+
+	sol::protected_function Function = Env["on_spawn_flying_slash"];
+	if (!Function.valid())
+	{
+		return false;
+	}
+
+	sol::state& Lua = FLuaScriptManager::GetState();
+	sol::table Args = Lua.create_table();
+	Args["AttackId"] = AttackId;
+	Args["TranslationOffset"] = TranslationOffset;
+	Args["RotationOffset"] = RotationOffset;
+	Args["Scale"] = Scale;
+	Args["FlattenDirection"] = bFlattenDirection;
+
+	FLuaCallScope Scope(this);
+	auto R = Function(LuaSelf, Args);
+	if (!R.valid())
+	{
+		sol::error Err = R;
+		UE_LOG("[LuaAnimInstance] on_spawn_flying_slash() error: %s", Err.what());
+		return false;
+	}
+	return true;
+}
+
 bool ULuaAnimInstance::GetDebugSnapshotText(FString& OutText)
 {
 	OutText.clear();
