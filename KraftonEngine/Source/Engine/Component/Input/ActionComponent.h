@@ -22,12 +22,16 @@ public:
 	void HitStop(float Duration, float TimeDilation);
 	void LocalHitStop(float Duration);
 	void HitSquash(const FVector& SquashedScale, float SquashInDuration, float RecoverDuration);
+	void HitSquashComponent(USceneComponent* TargetComponent, const FVector& SquashedScale, float SquashInDuration, float RecoverDuration);
+	void HitSquashComponentByMultiplier(USceneComponent* TargetComponent, const FVector& ScaleMultiplier, float SquashInDuration, float RecoverDuration);
+	void HitShakeComponent(USceneComponent* TargetComponent, float Amplitude, float Duration, float Frequency);
 	void Knockback(const FVector& Direction, float Distance, float Duration);
 	void Slomo(float Duration, float TimeDilation);
 
 	void StopHitStop();
 	void StopLocalHitStop();
 	void StopHitSquash();
+	void StopHitShake();
 	void StopKnockback();
 	void StopSlomo();
 	void StopAllActions();
@@ -54,6 +58,18 @@ private:
 		float ElapsedTime = 0.0f;
 		FVector StartScale = FVector::OneVector;
 		FVector SquashedScale = FVector::OneVector;
+		USceneComponent* TargetComponent = nullptr;
+	};
+
+	struct FHitShakeAction
+	{
+		bool bActive = false;
+		float Duration = 0.0f;
+		float ElapsedTime = 0.0f;
+		float Amplitude = 0.0f;
+		float Frequency = 45.0f;
+		FVector BaseRelativeLocation = FVector::ZeroVector;
+		USceneComponent* TargetComponent = nullptr;
 	};
 
 	struct FLocalHitStopAction
@@ -78,6 +94,7 @@ private:
 	FTimedDilationAction HitStopAction;
 	FTimedDilationAction SlomoAction;
 	FHitSquashAction HitSquashAction;
+	FHitShakeAction HitShakeAction;
 	FLocalHitStopAction LocalHitStopAction;
 	FKnockbackAction KnockbackAction;
 };

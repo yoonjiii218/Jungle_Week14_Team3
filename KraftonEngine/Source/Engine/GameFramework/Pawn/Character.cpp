@@ -1,6 +1,5 @@
 ﻿#include "GameFramework/Pawn/Character.h"
 
-#include "Component/Input/ActionComponent.h"
 #include "Component/Shape/CapsuleComponent.h"
 #include "Component/Input/InputComponent.h"
 #include "Component/Movement/CharacterMovementComponent.h"
@@ -8,17 +7,10 @@
 #include "Input/InputSystem.h"
 #include "Math/Rotator.h"
 #include "Mesh/MeshManager.h"
-#include "Profiling/Time/Timer.h"
 #include "Runtime/Engine.h"
 
 #include <algorithm>
 #include <cmath>
-
-namespace
-{
-	constexpr float TempWorldSlomoDuration = 10.0f;
-	constexpr float TempWorldSlomoDilation = 0.1f;
-}
 
 void ACharacter::InitDefaultComponents(const FString& SkeletalMeshFileName)
 {
@@ -88,12 +80,6 @@ void ACharacter::SetupInputComponent()
 
 	if (!InputComponent) return;
 
-	InputComponent->AddActionMapping("TempWorldSlomo", 'E');
-	InputComponent->BindAction("TempWorldSlomo", EInputEvent::Pressed, [this]()
-	{
-		ActivateTemporaryWorldSlomo();
-	});
-
 	if (!bAutoInputWASD) return;
 
 	// Capsule (RootComponent) 기준 — yaw 회전이 곧 캐릭터 facing. mouse look 이 yaw 만
@@ -129,55 +115,9 @@ void ACharacter::SetupInputComponent()
 	});
 }
 
-void ACharacter::ActivateTemporaryWorldSlomo()
-{
-	UActionComponent* Action = GetComponentByClass<UActionComponent>();
-	if (!Action)
-	{
-		Action = AddComponent<UActionComponent>();
-	}
-
-	if (Action)
-	{
-		Action->Slomo(TempWorldSlomoDuration, TempWorldSlomoDilation);
-	}
-
-	if (!bTemporaryWorldSlomoActive)
-	{
-		TemporaryWorldSlomoPreviousCustomTimeDilation = GetCustomTimeDilation();
-	}
-
-	bTemporaryWorldSlomoActive = true;
-	TemporaryWorldSlomoRemainingTime = TempWorldSlomoDuration;
-	const float Compensation = TempWorldSlomoDilation > 0.0f ? 1.0f / TempWorldSlomoDilation : 1.0f;
-	SetCustomTimeDilation(TemporaryWorldSlomoPreviousCustomTimeDilation * Compensation);
-}
-
-void ACharacter::TickTemporaryWorldSlomo(float DeltaTime)
-{
-	if (!bTemporaryWorldSlomoActive)
-	{
-		return;
-	}
-
-	const FTimer* Timer = GEngine ? GEngine->GetTimer() : nullptr;
-	const float RawDeltaTime = Timer ? Timer->GetRawDeltaTime() : DeltaTime;
-	TemporaryWorldSlomoRemainingTime -= RawDeltaTime;
-	if (TemporaryWorldSlomoRemainingTime > 0.0f)
-	{
-		return;
-	}
-
-	SetCustomTimeDilation(TemporaryWorldSlomoPreviousCustomTimeDilation);
-	bTemporaryWorldSlomoActive = false;
-	TemporaryWorldSlomoRemainingTime = 0.0f;
-	TemporaryWorldSlomoPreviousCustomTimeDilation = 1.0f;
-}
-
 void ACharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	TickTemporaryWorldSlomo(DeltaTime);
 
 	if (bAutoInputMouseLook)
 	{

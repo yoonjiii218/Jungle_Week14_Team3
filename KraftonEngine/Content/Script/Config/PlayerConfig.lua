@@ -48,6 +48,19 @@ PlayerConfig.Default = {
         AttackTurnSpeed = 12.0,
         HitKnockbackDistance = 2.5,
         HitKnockbackDuration = 0.16,
+
+        FlyingSlash = {
+            Speed = 45.0,
+            Life = 0.5,
+            MaxDistance = 24.0,
+            Radius = 2.5,
+            SpawnForwardOffset = 2.0,
+            SpawnRightOffset = 0.0,
+            SpawnUpOffset = 1.2,
+            Scale = Vector(1.0, 1.0, 1.0),
+            Pierce = true,
+            Debug = false,
+        },
     },
 
     -- Attack-time soft lock-on.
@@ -107,6 +120,9 @@ PlayerConfig.Default = {
             24,
         },
         DashChargeAttackDamage = 30,
+        FlyingSlashDamage = 20,
+        FlyingSlashGaugeDelta = 8,
+        FlyingSlashHitStopDuration = 0.03,
         UltimateDamage = 100,
 
         -- Gauge/anti-duplicate policy.
@@ -134,8 +150,30 @@ PlayerConfig.Default = {
         KatanaSocketName = "WeaponR",
         TrailParticlePath = "Content/Data/SwordTrail2.uasset",
 
+        FlyingSlash = {
+            ParticlePath = "Content/Data/PS_FlyingSlashMesh.uasset",
+            MaterialPath = "Content/Material/VFX/M_SlashCrescent_PM.mat",
+            AutoDestroyDelay = 0.8,
+        },
+
         PerfectDodge = {
             CameraShakeScale = 0.5,
+        },
+
+        AttackHit = {
+            CameraShakeScale = 0.25,
+        },
+
+        HitReact = {
+            CameraShakeScale = 0.35,
+            SquashEnabled = true,
+            SquashScale = Vector(1.06, 1.06, 0.94),
+            SquashInDuration = 0.035,
+            SquashRecoverDuration = 0.09,
+            ShakeEnabled = true,
+            ShakeAmplitude = 3.0,
+            ShakeDuration = 0.08,
+            ShakeFrequency = 70.0,
         },
 
         UltimateCamera = {

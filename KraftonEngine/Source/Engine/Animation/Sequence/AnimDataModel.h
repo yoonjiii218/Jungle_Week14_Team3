@@ -41,6 +41,9 @@ public:
     TArray<FAnimNotifyEvent>    Notifies;
     TArray<FAnimNotifyTrack>    NotifyTracks;
 
+    // AnimSequence per-asset pose metadata persisted with the data payload tail.
+    float GroundZOffset = 0.0f;
+
     const TArray<FBoneAnimationTrack>& GetBoneAnimationTracks() const
     {
         return BoneAnimationTracks;

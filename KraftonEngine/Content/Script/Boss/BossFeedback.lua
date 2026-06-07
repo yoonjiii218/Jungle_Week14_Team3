@@ -46,6 +46,112 @@ local function AttachKatanaToBoss(bossContext)
     bossContext.Feedback.KatanaComponent = katana
 end
 
+local function GetOrAddActionComponent(ownerActor)
+    if ownerActor == nil or ownerActor:IsValid() ~= true then
+        return nil
+    end
+
+    if ownerActor.GetActionComponent ~= nil then
+        local action = ownerActor:GetActionComponent()
+        if action ~= nil then
+            return action
+        end
+    end
+
+    if ownerActor.AddActionComponent ~= nil then
+        return ownerActor:AddActionComponent()
+    end
+
+    return nil
+end
+
+local function ResolveBossMeshComponent(bossContext)
+    local ownerActor = bossContext.Owner
+    if ownerActor == nil or ownerActor:IsValid() ~= true then
+        return nil
+    end
+
+    local meshComp = bossContext.Runtime.SkeletalMeshComp
+    if meshComp == nil and ownerActor.GetSkeletalMeshComponent ~= nil then
+        meshComp = ownerActor:GetSkeletalMeshComponent()
+    end
+    return meshComp
+end
+
+local function PlayHitSquash(bossContext, event)
+    local feedbackConfig = bossContext.Config.FEEDBACK
+    if feedbackConfig.HIT_SQUASH_ENABLED == false then
+        return
+    end
+
+    local ownerActor = bossContext.Owner
+    local meshComp = ResolveBossMeshComponent(bossContext)
+    if meshComp == nil then
+        if bossContext.Config.DEBUG then
+            print("[BossFeedback] Hit squash skipped: SkeletalMeshComponent not found")
+        end
+        return
+    end
+
+    local action = GetOrAddActionComponent(ownerActor)
+    if action == nil or action.HitSquashComponentByMultiplier == nil then
+        if bossContext.Config.DEBUG then
+            print("[BossFeedback] Hit squash skipped: ActionComponent.HitSquashComponentByMultiplier not available")
+        end
+        return
+    end
+
+    local ok, err = pcall(function()
+        action:HitSquashComponentByMultiplier(
+            meshComp,
+            feedbackConfig.HIT_SQUASH_SCALE,
+            feedbackConfig.HIT_SQUASH_IN_DURATION,
+            feedbackConfig.HIT_SQUASH_RECOVER_DURATION
+        )
+    end)
+
+    if not ok and bossContext.Config.DEBUG then
+        print("[BossFeedback] Hit squash failed: " .. tostring(err))
+    end
+end
+
+local function PlayHitShake(bossContext, event)
+    local feedbackConfig = bossContext.Config.FEEDBACK
+    if feedbackConfig.HIT_SHAKE_ENABLED == false then
+        return
+    end
+
+    local ownerActor = bossContext.Owner
+    local meshComp = ResolveBossMeshComponent(bossContext)
+    if meshComp == nil then
+        if bossContext.Config.DEBUG then
+            print("[BossFeedback] Hit shake skipped: SkeletalMeshComponent not found")
+        end
+        return
+    end
+
+    local action = GetOrAddActionComponent(ownerActor)
+    if action == nil or action.HitShakeComponent == nil then
+        if bossContext.Config.DEBUG then
+            print("[BossFeedback] Hit shake skipped: ActionComponent.HitShakeComponent not available")
+        end
+        return
+    end
+
+    local ok, err = pcall(function()
+        action:HitShakeComponent(
+            meshComp,
+            feedbackConfig.HIT_SHAKE_AMPLITUDE or 3.0,
+            feedbackConfig.HIT_SHAKE_DURATION or 0.08,
+            feedbackConfig.HIT_SHAKE_FREQUENCY or 70.0
+        )
+    end)
+
+    if not ok and bossContext.Config.DEBUG then
+        print("[BossFeedback] Hit shake failed: " .. tostring(err))
+    end
+end
+
 local function StartDeathRagdoll(bossContext)
     local movementComp = bossContext.Runtime.MovementComp
     if movementComp ~= nil then
@@ -207,7 +313,10 @@ function BossFeedback.ProcessEvents(bossContext, events)
     Strict.AssertTable(events, "events", "BossFeedback.ProcessEvents")
 
     for _, event in ipairs(events) do
-        if BossEvents.Is(event, BossEvents.Type.Dead) then
+        if BossEvents.Is(event, BossEvents.Type.Hit) then
+            PlayHitSquash(bossContext, event)
+            PlayHitShake(bossContext, event)
+        elseif BossEvents.Is(event, BossEvents.Type.Dead) then
             StartDeathRagdoll(bossContext)
         end
     end

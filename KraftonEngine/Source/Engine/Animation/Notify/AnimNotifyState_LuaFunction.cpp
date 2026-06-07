@@ -44,6 +44,44 @@ UAnimNotifyState_ComboWindow::UAnimNotifyState_ComboWindow()
 	EndFunctionName = "on_combo_window_close";
 }
 
+UAnimNotifyState_DashVanish::UAnimNotifyState_DashVanish()
+{
+	BeginFunctionName = "on_dash_vanish_begin";
+	EndFunctionName = "on_dash_vanish_end";
+}
+
+void UAnimNotifyState_DashVanish::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Anim, float TotalDuration)
+{
+	UAnimNotifyState_LuaFunction::NotifyBegin(MeshComp, Anim, TotalDuration);
+
+	if (bHidePreviewMesh && IsValid(MeshComp))
+	{
+		if (UWorld* World = MeshComp->GetWorld())
+		{
+			if (World->GetWorldType() == EWorldType::EditorPreview)
+			{
+				MeshComp->SetVisibility(false);
+			}
+		}
+	}
+}
+
+void UAnimNotifyState_DashVanish::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Anim)
+{
+	UAnimNotifyState_LuaFunction::NotifyEnd(MeshComp, Anim);
+
+	if (bHidePreviewMesh && IsValid(MeshComp))
+	{
+		if (UWorld* World = MeshComp->GetWorld())
+		{
+			if (World->GetWorldType() == EWorldType::EditorPreview)
+			{
+				MeshComp->SetVisibility(true);
+			}
+		}
+	}
+}
+
 UAnimNotifyState_Trail::UAnimNotifyState_Trail()
 {
 	BeginFunctionName = "on_trail_activate";

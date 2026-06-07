@@ -1,0 +1,116 @@
+{
+  "BlendState" : "Opaque",
+  "Compiled" : {
+    "BlendState" : "Opaque",
+    "Domain" : "ParticleMesh",
+    "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
+    "GraphHash" : "2D3E7A55013FC04B",
+    "GraphShaderMode" : "Generated",
+    "Parameters" : {
+
+    },
+    "ReceiveLighting" : false,
+    "RenderPass" : "Opaque",
+    "ShadingModel" : "DefaultLit",
+    "Textures" : {
+
+    }
+  },
+  "DepthStencilState" : "Default",
+  "Domain" : "ParticleMesh",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/_4B5411715268DEEA0000E372CDDCEF14_ParticleMesh_DefaultLit.hlsl",
+  "Graph" : {
+    "Links" : [{
+        "FromPinId" : 26,
+        "LinkId" : 27,
+        "ToPinId" : 18
+      }, {
+        "FromPinId" : 24,
+        "LinkId" : 28,
+        "ToPinId" : 16
+      }],
+    "NextId" : 29,
+    "Nodes" : [{
+        "DisplayName" : "Material Output",
+        "Mask" : "RGBA",
+        "NodeId" : 8,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "Color",
+            "Kind" : "Input",
+            "OwningNodeId" : 8,
+            "PinId" : 16,
+            "Type" : "Float3"
+          }, {
+            "DisplayName" : "Emissive",
+            "Kind" : "Input",
+            "OwningNodeId" : 8,
+            "PinId" : 17,
+            "Type" : "Float3"
+          }, {
+            "DisplayName" : "Opacity",
+            "Kind" : "Input",
+            "OwningNodeId" : 8,
+            "PinId" : 18,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "UVOffset",
+            "Kind" : "Input",
+            "OwningNodeId" : 8,
+            "PinId" : 19,
+            "Type" : "Float2"
+          }],
+        "PosX" : 80.000000,
+        "PosY" : 80.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "Output",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
+        "DisplayName" : "ConstantFloat3",
+        "Mask" : "RGBA",
+        "NodeId" : 23,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "Value",
+            "Kind" : "Output",
+            "OwningNodeId" : 23,
+            "PinId" : 24,
+            "Type" : "Float3"
+          }],
+        "PosX" : -108.000000,
+        "PosY" : 92.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "ConstantFloat3",
+        "Value" : [1.000000, 0.000000, 0.000000, 1.000000]
+      }, {
+        "DisplayName" : "ConstantFloat",
+        "Mask" : "RGBA",
+        "NodeId" : 25,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "Value",
+            "Kind" : "Output",
+            "OwningNodeId" : 25,
+            "PinId" : 26,
+            "Type" : "Float"
+          }],
+        "PosX" : -111.000000,
+        "PosY" : 236.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "ConstantFloat",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }]
+  },
+  "GraphShaderMode" : "Generated",
+  "MaterialGuid" : "4B5411715268DEEA0000E372CDDCEF14",
+  "PathFileName" : "Content/Material/VFX/M_SlashCrescent_PM.mat",
+  "RasterizerState" : "SolidBackCull",
+  "ReceiveLighting" : false,
+  "RenderPass" : "Opaque",
+  "ShaderPath" : "Shaders/Generated/Materials/_4B5411715268DEEA0000E372CDDCEF14_ParticleMesh_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
+  "Version" : 2
+}
