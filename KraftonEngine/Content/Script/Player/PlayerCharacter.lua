@@ -94,15 +94,27 @@ local function NumberOrZero(value)
     return value or 0.0
 end
 
+local function Clamp(value, minValue, maxValue)
+    if value < minValue then return minValue end
+    if value > maxValue then return maxValue end
+    return value
+end
+
+local function MakeGaugeBar(ratio)
+    local barSize = 10
+    local filled = math.floor(Clamp(ratio, 0.0, 1.0) * barSize + 0.5)
+    return string.rep("#", filled) .. string.rep("-", barSize - filled)
+end
+
 local function DerivePlayerDebugState(ctx)
     if ctx == nil or ctx.Action == nil then return "None" end
+    if ctx.Combat ~= nil and ctx.Combat.IsDead == true then return "Dead" end
     local action = ctx.Action
     if action.IsUltimateRunning or action.IsInUltimateMode then return "Ultimate" end
     if action.DashChargeAttackActive then return "DashChargeAttack" end
     if action.DashChargingActive then return "DashCharging" end
     if action.DashActive then return "Dash" end
     if (action.AttackIndex or 0) > 0 then return "Attack" .. tostring(action.AttackIndex) end
-    if ctx.Combat ~= nil and ctx.Combat.IsDead == true then return "Dead" end
     return "Locomotion"
 end
 
@@ -126,6 +138,15 @@ function GetDebugSnapshotText()
     local invincibleUntil = NumberOrZero(combat.InvincibleUntil)
     local perfectWindow = dodgeUntil > now
     local perfectConsumed = consumedUntil >= dodgeUntil and dodgeUntil > 0.0
+    local hp = NumberOrZero(combat.HP)
+    local maxHP = NumberOrZero(combat.MaxHP or combatConfig.MaxHP)
+    local ultimateGauge = NumberOrZero(combat.UltimateGauge)
+    local maxUltimateGauge = NumberOrZero(combat.MaxUltimateGauge or combatConfig.MaxUltimateGauge)
+    local ultimateRatio = 0.0
+    if maxUltimateGauge > 0.0 then
+        ultimateRatio = Clamp(ultimateGauge / maxUltimateGauge, 0.0, 1.0)
+    end
+    local ultimatePercent = math.floor(ultimateRatio * 100.0 + 0.5)
 
     local targetAssist = runtime.TargetAssistMode or "None"
     local targetName = "None"
@@ -135,19 +156,27 @@ function GetDebugSnapshotText()
 
     return string.format(
         "LuaState: %s\n" ..
-        "Dash: %.3f / %.3f  active=%s end=%s\n" ..
-        "DashCharge: %.3f  active=%s released=%s\n" ..
-        "PerfectDodge: window=%s consumed=%s  now=%.3f until=%.3f consumedUntil=%.3f\n" ..
-        "InvincibleUntil: %.3f  HP: %.0f / %.0f  Gauge: %.0f / %.0f\n" ..
+        "HP: %.0f / %.0f\n" ..
+        "UltimateGauge: %.0f / %.0f (%d%%)\n" ..
+        "Ultimate: [%s] %d%%\n" ..
         "Attack: index=%d comboWindow=%s queued=%s end=%s\n" ..
-        "Input: dashDown=%s hold=%.3f dashPressed=%s chargePressed=%s chargeReleased=%s\n" ..
-        "Assist: %s target=%s",
+        "Dash: active=%s elapsed=%.3f / %.3f end=%s\n" ..
+        "DashCharge: charging=%s elapsed=%.3f released=%s consumedInput=%s turnTarget=%s\n" ..
+        "DashChargeAttack: active=%s elapsed=%.3f end=%s\n" ..
+        "PerfectDodge: window=%s consumed=%s  now=%.3f until=%.3f consumedUntil=%.3f\n" ..
+        "InvincibleUntil: %.3f\n" ..
+        "Input: DashDown=%s DashHoldTime=%.3f dashPressed=%s DashChargingPressed=%s DashChargingReleased=%s\n" ..
+        "Assist: mode=%s target=%s",
         DerivePlayerDebugState(ctx),
-        NumberOrZero(action.DashElapsed), NumberOrZero(actionConfig.DashDuration), BoolText(action.DashActive), BoolText(action.DashEnd),
-        NumberOrZero(action.DashChargingElapsed), BoolText(action.DashChargingActive), BoolText(input.DashChargingReleased),
-        BoolText(perfectWindow), BoolText(perfectConsumed), now, dodgeUntil, consumedUntil,
-        invincibleUntil, NumberOrZero(combat.HP), NumberOrZero(combat.MaxHP or combatConfig.MaxHP), NumberOrZero(combat.UltimateGauge), NumberOrZero(combat.MaxUltimateGauge or combatConfig.MaxUltimateGauge),
+        hp, maxHP,
+        ultimateGauge, maxUltimateGauge, ultimatePercent,
+        MakeGaugeBar(ultimateRatio), ultimatePercent,
         math.floor(NumberOrZero(action.AttackIndex)), BoolText(action.ComboWindow), BoolText(action.ComboQueued), BoolText(action.AttackEnd),
+        BoolText(action.DashActive), NumberOrZero(action.DashElapsed), NumberOrZero(actionConfig.DashDuration), BoolText(action.DashEnd),
+        BoolText(action.DashChargingActive), NumberOrZero(action.DashChargingElapsed), BoolText(input.DashChargingReleased), BoolText(input.DashChargingConsumedInput), tostring(runtime.DashChargingTurnTarget or "None"),
+        BoolText(action.DashChargeAttackActive), NumberOrZero(action.DashChargeAttackElapsed), BoolText(action.DashChargeAttackEnd),
+        BoolText(perfectWindow), BoolText(perfectConsumed), now, dodgeUntil, consumedUntil,
+        invincibleUntil,
         BoolText(input.DashDown), NumberOrZero(input.DashHoldTime), BoolText(input.DashPressed), BoolText(input.DashChargingPressed), BoolText(input.DashChargingReleased),
         tostring(targetAssist), tostring(targetName)
     )

@@ -13,6 +13,7 @@ local PlayerContext = {}
 ---@field AttackDown boolean
 ---@field AttackHoldTime number
 ---@field DashPressed boolean
+---@field DashConsumedInput boolean
 ---@field DashReleased boolean
 ---@field DashDown boolean
 ---@field DashHoldTime number
@@ -85,6 +86,7 @@ local PlayerContext = {}
 ---@field TargetAssistLockedDirection any
 ---@field TargetAssistEndTime number
 ---@field TargetAssistKeepUntil number
+---@field DashChargingTurnTarget string
 
 ---@class PlayerContext
 ---@field Kind string
@@ -104,6 +106,7 @@ local function CreateInputState()
         AttackDown = false,
         AttackHoldTime = 0.0,
         DashPressed = false,
+        DashConsumedInput = false,
         DashReleased = false,
         DashDown = false,
         DashHoldTime = 0.0,
@@ -185,6 +188,7 @@ local function CreateRuntimeState()
         TargetAssistLockedDirection = nil,
         TargetAssistEndTime = 0.0,
         TargetAssistKeepUntil = 0.0,
+        DashChargingTurnTarget = "None",
     }
 end
 

@@ -5,7 +5,10 @@
 local BossFeedback = {}
 
 local BossContext = require("Boss/BossContext")
+local BossEvents = require("Boss/BossEvents")
 local Strict = require("Core/Strict")
+
+local COLLISION_QUERY_AND_PHYSICS = 3
 
 local KATANA_MESH_PATH = "Content/Mesh/Katana/source/red cyber katana_StaticMesh.uasset"
 local KATANA_SOCKET_NAME = "pinky_01_r_socket"
@@ -41,6 +44,34 @@ local function AttachKatanaToBoss(bossContext)
     katana:SetRelativeScale(KATANA_SCALE)
 
     bossContext.Feedback.KatanaComponent = katana
+end
+
+local function StartDeathRagdoll(bossContext)
+    local movementComp = bossContext.Runtime.MovementComp
+    if movementComp ~= nil then
+        Reflection.Call(movementComp, "StopMovementImmediately")
+        Reflection.Call(movementComp, "SetMovementInputEnabled", false)
+    end
+
+    local meshComp = bossContext.Runtime.SkeletalMeshComp
+    if meshComp == nil then
+        local ownerActor = bossContext.Owner
+        meshComp = ownerActor.GetSkeletalMeshComponent and ownerActor:GetSkeletalMeshComponent() or nil
+    end
+
+    if meshComp == nil then
+        return
+    end
+
+    local ok, err = pcall(function()
+        meshComp:SetCollisionEnabled(COLLISION_QUERY_AND_PHYSICS)
+        meshComp:SetEnableGravity(true)
+        meshComp:StartRagdoll()
+    end)
+
+    if not ok then
+        print("[BossFeedback] StartDeathRagdoll failed: " .. tostring(err))
+    end
 end
 
 local function ResolveDirection(bossContext, targetActor)
@@ -174,6 +205,12 @@ end
 function BossFeedback.ProcessEvents(bossContext, events)
     BossContext.Assert(bossContext, "BossFeedback.ProcessEvents")
     Strict.AssertTable(events, "events", "BossFeedback.ProcessEvents")
+
+    for _, event in ipairs(events) do
+        if BossEvents.Is(event, BossEvents.Type.Dead) then
+            StartDeathRagdoll(bossContext)
+        end
+    end
 end
 
 ---@param bossContext BossContext
