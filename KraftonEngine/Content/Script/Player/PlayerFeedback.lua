@@ -6,6 +6,9 @@ local PlayerFeedback = {}
 
 local PlayerContext = require("Player/PlayerContext")
 local PlayerEvents = require("Player/PlayerEvents")
+
+local COLLISION_QUERY_AND_PHYSICS = 3
+
 local function Clamp(v, minValue, maxValue)
     if v < minValue then return minValue end
     if v > maxValue then return maxValue end
@@ -113,6 +116,34 @@ local function FaceOwnerToDirection(playerContext, dir)
 
     local targetYaw = math.atan2(dir.Y, dir.X) * 180.0 / math.pi
     Reflection.Call(owner, "SetActorRotation", Vector(0.0, 0.0, targetYaw))
+end
+
+local function StartDeathRagdoll(playerContext)
+    local owner = playerContext.Owner
+    if owner == nil or owner.GetSkeletalMeshComponent == nil then
+        return
+    end
+
+    local movementComp = owner.GetCharacterMovement and owner:GetCharacterMovement() or nil
+    if movementComp ~= nil then
+        Reflection.Call(movementComp, "StopMovementImmediately")
+        Reflection.Call(movementComp, "SetMovementInputEnabled", false)
+    end
+
+    local meshComp = owner:GetSkeletalMeshComponent()
+    if meshComp == nil then
+        return
+    end
+
+    local ok, err = pcall(function()
+        meshComp:SetCollisionEnabled(COLLISION_QUERY_AND_PHYSICS)
+        meshComp:SetEnableGravity(true)
+        meshComp:StartRagdoll()
+    end)
+
+    if not ok then
+        print("[PlayerFeedback] StartDeathRagdoll failed: " .. tostring(err))
+    end
 end
 
 -- =========================================================
@@ -461,6 +492,7 @@ function PlayerFeedback.ProcessEvents(playerContext, events)
             -- AttackHitWindow 자체 hitstop은 C++ NotifyState가 처리한다.
             -- 여기서는 이후 피격 VFX/UI/사운드를 붙일 수 있도록 이벤트만 한 곳에서 받는다.
         elseif PlayerEvents.Is(event, PlayerEvents.Type.Dead) then
+            StartDeathRagdoll(playerContext)
             if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
                 CameraManager.StartWaveShake(0.8)
             end

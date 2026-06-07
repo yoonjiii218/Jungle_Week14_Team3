@@ -37,7 +37,7 @@ end
 ---@return nil
 function BossEvents.BeginFrame(bossContext)
     BossContext.Assert(bossContext, "BossEvents.BeginFrame")
-    bossContext.Runtime.EventQueue = {}
+    bossContext.Runtime.EventQueue = bossContext.Runtime.EventQueue or {}
 end
 
 ---@param bossContext BossContext
