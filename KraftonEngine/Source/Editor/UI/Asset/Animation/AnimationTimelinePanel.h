@@ -36,6 +36,6 @@ namespace FAnimationTimelinePanel
  
 	// 선택된 Notify entry 의 UPROPERTY(Edit) 편집 UI — 좌상단 AssetDetails 패널에서 호출.
 	// Seq 또는 인덱스가 유효하지 않으면 안내 텍스트만 그림 (false 반환). 편집 발생 시 true.
-	bool RenderNotifyDetails(UAnimSequence* Seq, int32 SelectedNotifyIndex);
+	bool RenderNotifyDetails(UAnimSequence* Seq, USkeletalMesh* SkeletalMesh, int32 SelectedNotifyIndex);
 	bool RenderMorphDetails(UAnimSequence* Seq, USkeletalMesh* SkeletalMesh, int32& InOutSelectedMorphCurveIndex, int32& InOutSelectedMorphKeyIndex);
 }

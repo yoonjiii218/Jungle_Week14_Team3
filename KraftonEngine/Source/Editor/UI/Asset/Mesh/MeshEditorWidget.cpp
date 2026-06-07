@@ -1215,7 +1215,7 @@ void FMeshEditorWidget::RenderAnimationLayout(float TotalHeight)
 
 		if (bShowNotifyDetails)
 		{
-			FAnimationTimelinePanel::RenderNotifyDetails(Seq, AnimTabState.SelectedNotifyIndex);
+			FAnimationTimelinePanel::RenderNotifyDetails(Seq, SkeletalMesh, AnimTabState.SelectedNotifyIndex);
 		}
 		else if (bShowMorphDetails)
 		{

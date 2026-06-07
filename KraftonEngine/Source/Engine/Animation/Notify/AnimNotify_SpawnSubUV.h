@@ -20,7 +20,7 @@ public:
 	UPROPERTY(Edit, Save, Category="SpawnSubUV", DisplayName="Resource", AssetType="Particle")
 	FName Resource = FName("SlashTexture");
 
-	UPROPERTY(Edit, Save, Category="SpawnSubUV", DisplayName="Socket Name")
+	UPROPERTY(Edit, Save, Category="SpawnSubUV", DisplayName="Socket Name", AssetType="Socket")
 	FString SocketName;
 
 	UPROPERTY(Edit, Save, Category="SpawnSubUV", DisplayName="Position Offset")
