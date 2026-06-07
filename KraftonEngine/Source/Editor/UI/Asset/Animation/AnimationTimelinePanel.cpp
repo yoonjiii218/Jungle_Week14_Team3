@@ -308,6 +308,51 @@ namespace
 								ImGui::EndCombo();
 							}
 						}
+						else if (AssetTypeIt != Metadata.end() && AssetTypeIt->second == "Socket")
+						{
+							const FString Preview = S->empty() ? "None" : *S;
+							if (ImGui::BeginCombo("##v", Preview.c_str()))
+							{
+								const bool bSelectedNone = S->empty();
+								if (ImGui::Selectable("None", bSelectedNone))
+								{
+									S->clear();
+									bChanged = true;
+								}
+								if (bSelectedNone) ImGui::SetItemDefaultFocus();
+
+								if (Skeleton)
+								{
+									TArray<FString> SocketNames;
+									SocketNames.reserve(Skeleton->GetSockets().size());
+									for (const FSkeletonSocket& Socket : Skeleton->GetSockets())
+									{
+										if (!Socket.Name.IsNone())
+										{
+											SocketNames.push_back(Socket.Name.ToString());
+										}
+									}
+									std::sort(SocketNames.begin(), SocketNames.end());
+
+									for (const FString& SocketName : SocketNames)
+									{
+										const bool bSelected = *S == SocketName;
+										if (ImGui::Selectable(SocketName.c_str(), bSelected))
+										{
+											*S = SocketName;
+											bChanged = true;
+										}
+										if (bSelected) ImGui::SetItemDefaultFocus();
+									}
+								}
+								else
+								{
+									ImGui::TextDisabled("(no skeleton)");
+								}
+
+								ImGui::EndCombo();
+							}
+						}
 						else
 						{
 							char Buf[256];
@@ -431,51 +476,6 @@ namespace
 									}
 									if (bSelected) ImGui::SetItemDefaultFocus();
 								}
-								ImGui::EndCombo();
-							}
-						}
-						else if (AssetTypeIt != Metadata.end() && AssetTypeIt->second == "Socket")
-						{
-							const FString Preview = S->empty() ? "None" : *S;
-							if (ImGui::BeginCombo("##v", Preview.c_str()))
-							{
-								const bool bSelectedNone = S->empty();
-								if (ImGui::Selectable("None", bSelectedNone))
-								{
-									S->clear();
-									bChanged = true;
-								}
-								if (bSelectedNone) ImGui::SetItemDefaultFocus();
-
-								if (Skeleton)
-								{
-									TArray<FString> SocketNames;
-									SocketNames.reserve(Skeleton->GetSockets().size());
-									for (const FSkeletonSocket& Socket : Skeleton->GetSockets())
-									{
-										if (!Socket.Name.IsNone())
-										{
-											SocketNames.push_back(Socket.Name.ToString());
-										}
-									}
-									std::sort(SocketNames.begin(), SocketNames.end());
-
-									for (const FString& SocketName : SocketNames)
-									{
-										const bool bSelected = *S == SocketName;
-										if (ImGui::Selectable(SocketName.c_str(), bSelected))
-										{
-											*S = SocketName;
-											bChanged = true;
-										}
-										if (bSelected) ImGui::SetItemDefaultFocus();
-									}
-								}
-								else
-								{
-									ImGui::TextDisabled("(no skeleton)");
-								}
-
 								ImGui::EndCombo();
 							}
 						}
