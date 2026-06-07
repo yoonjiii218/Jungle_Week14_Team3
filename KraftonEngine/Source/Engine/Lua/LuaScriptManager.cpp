@@ -465,7 +465,18 @@ void FLuaScriptManager::FireWorldReset()
 		Coro.as<sol::table>()["coroutines"] = Lua->create_table();
 	}
 
-	// 2) ObjRegistry — 액터 핸들 캐시. 새 월드의 BeginPlay 가 다시 등록해줄 때까지 nil 로.
+	// 2) CombatContext — bossRef / bossBB / playersByOwner 등 액터 참조 전체를 Clear() 로 비운다.
+	//    DestroyWorldContext 전에 호출되므로 EndPlay 콜백보다 먼저 정리된다.
+	if (sol::object CC = Loaded["Combat/CombatContext"]; CC.valid() && CC.get_type() == sol::type::table)
+	{
+		sol::object ClearFn = CC.as<sol::table>()["Clear"];
+		if (ClearFn.valid() && ClearFn.get_type() == sol::type::function)
+		{
+			ClearFn.as<sol::protected_function>()();
+		}
+	}
+
+	// 3) ObjRegistry — 액터 핸들 캐시. 새 월드의 BeginPlay 가 다시 등록해줄 때까지 nil 로.
 	if (sol::object Reg = Loaded["ObjRegistry"]; Reg.valid() && Reg.get_type() == sol::type::table)
 	{
 		sol::table T = Reg.as<sol::table>();
