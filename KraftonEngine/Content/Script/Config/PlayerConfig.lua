@@ -16,6 +16,10 @@ PlayerConfig.Default = {
     Action = {
         DashDistance = 8.0,
         DashDuration = 0.15,
+        -- Input buffer windows. Tune per animation feel.
+        AttackInputBufferTime = 0.25,
+        DashInputBufferTime = 0.20,
+        ComboInputBufferTime = 0.30,
         DashChargingHoldThreshold = 0.4,
         DashChargingTurnSpeed = 12.0,
         DashChargingTargetTurnSpeed = 12.0,
