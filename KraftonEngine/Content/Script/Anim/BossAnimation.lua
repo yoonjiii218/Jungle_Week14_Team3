@@ -49,7 +49,7 @@ local DASH_SLASH_PATH = ANIM_BASE .. "SamuraiAttack_DashSlash.uasset"
 -- get_owner_speed() 는 cm/s 가 아니라 ~10 스케일의 작은 값을 반환한다.
 -- (PlayerConfig: RunThreshold=8.0, RunSampleSpeed=10.0 와 동일 스케일)
 local WALK_SPEED   = 8.0
-local SPRINT_SPEED = 10.0
+local SPRINT_SPEED = 15.0
 
 -- 블렌드 시간 (초)
 local ATTACK_BLEND_IN  = 0.12   -- 공격 진입 / 콤보 단 사이 전환

@@ -10,7 +10,7 @@ local Strict = require("Core/Strict")
 
 local COLLISION_QUERY_AND_PHYSICS = 3
 
-local KATANA_MESH_PATH = "Content/Mesh/Katana/source/red cyber katana_StaticMesh.uasset"
+local KATANA_MESH_PATH = "Content/Data/scifi-katana_extracted/source/KatanaSwordSketch_StaticMesh.uasset"
 local KATANA_SOCKET_NAME = "pinky_01_r_socket"
 local KATANA_LOCATION = Vector(0.0, 0.0, 0.0)
 local KATANA_ROTATION = Vector(0.0, 0.0, 0.0)

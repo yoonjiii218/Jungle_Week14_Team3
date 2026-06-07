@@ -18,20 +18,16 @@
 local MobContext = require("Mob/MobContext")
 local MobAction = require("Mob/MobAction")
 
-local ANIM_BASE = "Content/Animation/Samurai_Boss/"
+local ANIM_BASE = "Content/Animation/Samurai_Mob/"
 
-local IDLE_PATH   = ANIM_BASE .. "SamuraiAttack_Idle2.uasset"
-local WALK_PATH   = ANIM_BASE .. "SamuraiAttack_Walk.uasset"
-local SPRINT_PATH = ANIM_BASE .. "SamuraiAttack_Sprint.uasset"
+local IDLE_PATH   = ANIM_BASE .. "SamuraiIdle2.uasset"
+local WALK_PATH   = ANIM_BASE .. "SamuraiWalk.uasset"
+local SPRINT_PATH = ANIM_BASE .. "SamurSprint.uasset"
 
--- 준비동작 = 보스와 동일한 Idle1 (ZoneShow / TrackEnd notify 가 심어진 클립)
-local ATTACK_PREP_PATH = ANIM_BASE .. "SamuraiAttack_Idle1.uasset"
+local ATTACK_PREP_PATH = ANIM_BASE .. "SamuraiIdle1.uasset"
 
--- 공격 = 보스 P1 (BossAttacks.PATTERN_ANIM.P1 = HeavyCombo1).
--- 이 클립에 ZoneFlash/ZoneHide/HitboxOpen/HitboxClose notify 가 심어져 있다.
-local ATTACK_PATH = ANIM_BASE .. "SamuraiAttack_HeavyCombo1.uasset"
+local ATTACK_PATH = ANIM_BASE .. "SamuraiAttack_Combo1.uasset"
 
--- 속도 임계값 (BossAnimation 과 동일 스케일)
 local WALK_SPEED   = 8.0
 local SPRINT_SPEED = 10.0
 
