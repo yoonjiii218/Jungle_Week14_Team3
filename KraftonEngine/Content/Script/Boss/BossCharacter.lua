@@ -32,6 +32,18 @@ function BeginPlay()
         Reflection.Call(bossContext.Runtime.MovementComp, "SetMovementInputEnabled", true)
     end
 
+    -- 보스는 넉백을 받지 않는다. 넉백은 플레이어 공격 클립의 AttackHitWindow 노티파이(C++)가
+    -- 대상의 ActionComponent.Knockback 으로 직접 거는데, 면역 플래그를 켜면 그 호출이 무시된다.
+    -- (C++ ApplyKnockback 은 GetComponentByClass 로 같은 ActionComponent 를 찾으므로 여기서 미리 확보해 둔다.)
+    local bossAction = obj.GetActionComponent and obj:GetActionComponent() or nil
+    if bossAction == nil and obj.AddActionComponent ~= nil then
+        bossAction = obj:AddActionComponent()
+    end
+    if bossAction ~= nil and bossAction.SetKnockbackImmune ~= nil then
+        bossAction:SetKnockbackImmune(true)
+        bossContext.Runtime.ActionComp = bossAction
+    end
+
     if BossConfig.DEBUG then
         local found = bossContext.Brain.TargetActor ~= nil and bossContext.Brain.TargetActor:IsValid()
         print("[BossCharacter] BeginPlay - playerRef found: " .. tostring(found)

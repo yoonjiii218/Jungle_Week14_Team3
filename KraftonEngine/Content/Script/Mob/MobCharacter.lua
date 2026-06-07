@@ -10,6 +10,40 @@ local CombatContext = require("Combat/CombatContext")
 
 local mobContext = nil
 
+-- 보스(BossFeedback.AttachKatanaToBoss)와 동일한 칼 장착. 같은 Samurai 스켈레톤이라 소켓 이름도 동일.
+local KATANA_MESH_PATH = "Content/Data/scifi-katana_extracted/source/KatanaSwordSketch_StaticMesh.uasset"
+local KATANA_SOCKET_NAME = "pinky_01_r_socket"
+
+local function AttachKatanaToMob(mobContext)
+    local ownerActor = mobContext.Owner
+    if ownerActor == nil then return end
+
+    if mobContext.Runtime.KatanaComponent ~= nil
+        and mobContext.Runtime.KatanaComponent:IsValid() then
+        return
+    end
+
+    local meshComp = mobContext.Runtime.SkeletalMeshComp
+    if meshComp == nil then
+        print("[MobCharacter] SkeletalMeshComponent not found for katana")
+        return
+    end
+
+    local katana = ownerActor:AddStaticMeshComponent()
+    if katana == nil then
+        print("[MobCharacter] Failed to create katana component")
+        return
+    end
+
+    katana:SetMeshPath(KATANA_MESH_PATH)
+    katana:AttachToComponentWithSocket(meshComp, KATANA_SOCKET_NAME)
+    katana.RelativeLocation = Vector(0.0, 0.0, 0.0)
+    katana:SetRotation(Vector(0.0, 0.0, 0.0))
+    katana:SetRelativeScale(Vector(1.0, 1.0, 1.0))
+
+    mobContext.Runtime.KatanaComponent = katana
+end
+
 function BeginPlay()
     mobContext = MobContext.Create(obj, this, MobConfig)
 
@@ -30,6 +64,13 @@ function BeginPlay()
 
     if mobContext.Runtime.MovementComp then
         Reflection.Call(mobContext.Runtime.MovementComp, "SetMovementInputEnabled", true)
+    end
+
+    local katanaOk, katanaErr = pcall(function()
+        AttachKatanaToMob(mobContext)
+    end)
+    if not katanaOk then
+        print("[MobCharacter] AttachKatanaToMob failed: " .. tostring(katanaErr))
     end
 
     if MobConfig.DEBUG then

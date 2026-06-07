@@ -28,10 +28,14 @@ local MobContext = {}
 ---@field IsDead boolean
 ---@field ActionLock boolean
 ---@field RecentHitIds table
+---@field HitReactSignal string|nil   피격 방향 1회성 신호 (CombatContext → MobAnimation)
+---@field HitReactActive boolean      피격 모션 재생 중 (MobAnimation → MobAction 행동 억제)
+---@field CancelAttack boolean        진행 중인 공격 코루틴 취소 요청
 
 ---@class MobRuntimeState
 ---@field MovementComp any
 ---@field SkeletalMeshComp any
+---@field KatanaComponent any
 
 ---@class MobContext
 ---@field Kind string
@@ -73,6 +77,9 @@ local function CreateCombatState(config)
         IsDead = false,
         ActionLock = false,
         RecentHitIds = {},
+        HitReactSignal = nil,
+        HitReactActive = false,
+        CancelAttack = false,
     }
 end
 

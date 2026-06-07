@@ -2566,7 +2566,9 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		"StopHitShake", &UActionComponent::StopHitShake,
 		"StopKnockback", &UActionComponent::StopKnockback,
 		"StopSlomo", &UActionComponent::StopSlomo,
-		"StopAllActions", &UActionComponent::StopAllActions);
+		"StopAllActions", &UActionComponent::StopAllActions,
+		"SetKnockbackImmune", &UActionComponent::SetKnockbackImmune,
+		"IsKnockbackImmune", &UActionComponent::IsKnockbackImmune);
 
 	Lua.new_usertype<UFloatingPawnMovementComponent>("FloatingPawnMovementComponent",
 		sol::base_classes,

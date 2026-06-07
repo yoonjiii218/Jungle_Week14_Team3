@@ -280,6 +280,11 @@ void UActionComponent::HitShakeComponent(USceneComponent* TargetComponent, float
 
 void UActionComponent::Knockback(const FVector& Direction, float Distance, float Duration)
 {
+	if (bKnockbackImmune)
+	{
+		return;
+	}
+
 	if (Distance == 0.0f || Direction.IsNearlyZero())
 	{
 		return;

@@ -36,6 +36,10 @@ public:
 	void StopSlomo();
 	void StopAllActions();
 
+	// 넉백 면역. true 면 Knockback() 호출이 무시된다. (예: 보스는 넉백을 받지 않음)
+	void SetKnockbackImmune(bool bImmune) { bKnockbackImmune = bImmune; }
+	bool IsKnockbackImmune() const { return bKnockbackImmune; }
+
 private:
 	float GetRawDeltaTime(float FallbackDeltaTime) const;
 	USceneComponent* GetTargetSceneComponent() const;
@@ -97,4 +101,6 @@ private:
 	FHitShakeAction HitShakeAction;
 	FLocalHitStopAction LocalHitStopAction;
 	FKnockbackAction KnockbackAction;
+
+	bool bKnockbackImmune = false;
 };

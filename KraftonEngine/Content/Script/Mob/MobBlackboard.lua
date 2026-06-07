@@ -33,6 +33,28 @@ MB.FEEDBACK = {
     NO_FADE_DELAY    = 9999.0, -- 자동 페이드 방지용 큰 값 (HideZone 에서 직접 제거)
 }
 
+-- ── 방향별 피격 모션 ──────────────────────────
+-- 플레이어가 잡몹을 때린 위치(잡몹 기준 앞/뒤/좌/우)에 따라 다른 피격 애니메이션을 재생한다.
+-- 방향 판정은 CombatContext.ApplyHitToMob 가 하고, 재생은 MobAnimation 상태머신이 한다.
+-- 방향 키는 "공격자가 잡몹 기준 어느 쪽에 있는가" (예: 공격자가 오른쪽 → Right → SamuraiHitAnim_Right)
+-- 경로가 nil 이면 MobAnimation 이 기존 공격 클립(ATTACK_PATH)으로 폴백한다.
+MB.HIT_REACT = {
+    ENABLED = true,
+    PATHS = {
+        Front = "Content/Animation/Samurai_Mob/SamuraiHitAnim_Front.uasset",
+        Back  = "Content/Animation/Samurai_Mob/SamuraiHitAnim_Back.uasset",
+        Left  = "Content/Animation/Samurai_Mob/SamuraiHitAnim_Left.uasset",
+        Right = "Content/Animation/Samurai_Mob/SamuraiHitAnim_Right.uasset",
+    },
+    BLEND_IN          = 0.05,
+    BLEND_OUT         = 0.12,
+    PLAY_RATE         = 1.0,
+    FALLBACK_DURATION = 0.45,   -- "HitReactEnd" notify 누락 시 강제 복귀까지의 시간(초)
+
+    -- 공격 중 피격 시 진행 중이던 공격 코루틴을 취소한다 (보스의 슈퍼아머와 반대).
+    CANCEL_ATTACK_ON_HIT = true,
+}
+
 -- ── 디버그 ───────────────────────────────────
 MB.DEBUG = true   -- false 로 바꾸면 print 전부 꺼짐
 

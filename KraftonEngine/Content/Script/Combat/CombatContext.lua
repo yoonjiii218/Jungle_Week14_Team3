@@ -507,6 +507,79 @@ function CombatContext.ApplyHitToPlayer(playerContext, hitRequest)
     return HitTypes.CreateResult({ Applied = true, Target = "Player", Damage = damage, HP = playerContext.Combat.HP, MaxHP = playerContext.Combat.MaxHP })
 end
 
+-- ════════════════════════════════════════════
+-- 피격 방향 판정 (대상 기준 앞/뒤/좌/우) — 보스/잡몹 공용
+-- 플레이어 PlayerAction.ResolveHitReaction 을 적 캐릭터로 이식한 것.
+-- 대상의 forward/right 와 "대상→공격자" 반대 벡터를 내적해 4방향 중 하나로 분류한다.
+-- ════════════════════════════════════════════
+
+local function Dot2D(a, b)
+    if a == nil or b == nil then
+        return 0.0
+    end
+    return (a.X or 0.0) * (b.X or 0.0) + (a.Y or 0.0) * (b.Y or 0.0)
+end
+
+local function GetActorForward2DByCall(actor)
+    if actor == nil then return nil end
+    local dir = Reflection.Call(actor, "GetActorForward")
+    if dir == nil then return nil end
+    dir.Z = 0.0
+    if dir:Length() <= 0.001 then return nil end
+    return dir:Normalized()
+end
+
+local function GetActorRight2DByCall(actor)
+    if actor == nil then return nil end
+    local dir = Reflection.Call(actor, "GetActorRight")
+    if dir == nil then return nil end
+    dir.Z = 0.0
+    if dir:Length() <= 0.001 then return nil end
+    return dir:Normalized()
+end
+
+local function GetActorLocation2DByCall(actor)
+    if actor == nil then return nil end
+    local location = Reflection.Call(actor, "GetActorLocation")
+    if location == nil then return nil end
+    location.Z = 0.0
+    return location
+end
+
+-- @return string  "Front" | "Back" | "Left" | "Right" (정보 부족 시 "Front")
+local function ResolveHitDirection(targetOwner, sourceActor)
+    local ownerLocation = GetActorLocation2DByCall(targetOwner)
+    local sourceLocation = GetActorLocation2DByCall(sourceActor)
+    local ownerForward = GetActorForward2DByCall(targetOwner)
+    local ownerRight = GetActorRight2DByCall(targetOwner)
+
+    local ownerToSource = nil
+    if ownerLocation ~= nil and sourceLocation ~= nil then
+        local sourceToOwner = ownerLocation - sourceLocation
+        sourceToOwner.Z = 0.0
+        if sourceToOwner:Length() > 0.001 then
+            ownerToSource = sourceToOwner:Normalized() * -1.0
+        end
+    end
+
+    local hitDirection = "Front"
+    if ownerToSource ~= nil and ownerForward ~= nil and ownerRight ~= nil then
+        local frontDot = Dot2D(ownerForward, ownerToSource)
+        local rightDot = Dot2D(ownerRight, ownerToSource)
+
+        if math.abs(rightDot) > math.abs(frontDot) then
+            -- 엔진 GetActorRight 방향상 화면 기준 좌우가 반대라 스왑한다.
+            hitDirection = rightDot >= 0.0 and "Left" or "Right"
+        elseif frontDot >= 0.0 then
+            hitDirection = "Front"
+        else
+            hitDirection = "Back"
+        end
+    end
+
+    return hitDirection
+end
+
 -- 보스 사망 처리 (HP 0 도달 시 1회만)
 local function HandleBossDeath(bossContext, hit)
     if bossContext == nil or bossContext.Combat.IsDead then return end
@@ -572,6 +645,9 @@ function CombatContext.ApplyHitToBoss(hit)
     end
     bossContext.Combat.RecentHitIds[key] = now + (hit.DuplicateHitLifetime or 1.0)
 
+    -- 넉백은 보스 ActionComponent 에 면역 플래그를 켜서 막는다 (BossCharacter.BeginPlay 참고).
+    -- 그래서 여기서 넉백을 따로 취소할 필요가 없다.
+
     local damage = hit.Damage or 0
     if damage <= 0 then
         return HitTypes.CreateResult({ Applied = false, Reason = "NoDamage" })
@@ -579,12 +655,22 @@ function CombatContext.ApplyHitToBoss(hit)
 
     bossContext.Combat.HP = math.max(0.0, bossContext.Combat.HP - damage)
 
+    -- 피격 방향 판정 → 방향별 피격 모션 신호 (BossAnimation 이 소비)
+    -- 치명타(HP 0)면 사망 래그돌로 넘어가므로 피격 모션 신호는 생략한다.
+    local hitDirection = ResolveHitDirection(bossRef, hit.SourceActor)
+    local hitReactConfig = bossContext.Config.HIT_REACT
+    if (hitReactConfig == nil or hitReactConfig.ENABLED ~= false)
+        and bossContext.Combat.HP > 0.0 then
+        bossContext.Brain.HitReactSignal = hitDirection
+    end
+
     BossEvents.EmitHit(bossContext, {
         SourceActor = hit.SourceActor,
         AttackId = hit.AttackId,
         Damage = damage,
         HP = bossContext.Combat.HP,
         MaxHP = bossContext.Combat.MaxHP,
+        HitDirection = hitDirection,
     })
 
     local sourcePlayerContext = CombatContext.GetPlayerByOwner(hit.SourceActor)
@@ -658,6 +744,17 @@ function CombatContext.ApplyHitToMob(mobContext, hitRequest)
     local maxHP = mobContext.Combat.MaxHP or mobContext.Config.MAX_HP
     mobContext.Combat.MaxHP = maxHP
     mobContext.Combat.HP = math.max(0.0, mobContext.Combat.HP - damage)
+
+    -- 피격 방향 판정 → 방향별 피격 모션 신호 (MobAnimation 이 소비). 치명타면 사망 처리로 넘기고 생략.
+    -- 잡몹은 넉백을 유지하되, 공격 중(ActionLock)에 맞으면 진행 중인 공격 코루틴을 취소한다.
+    local hitReactConfig = mobContext.Config.HIT_REACT
+    if (hitReactConfig == nil or hitReactConfig.ENABLED ~= false) and mobContext.Combat.HP > 0.0 then
+        mobContext.Combat.HitReactSignal = ResolveHitDirection(mobContext.Owner, hit.SourceActor)
+        if mobContext.Combat.ActionLock == true
+            and (hitReactConfig == nil or hitReactConfig.CANCEL_ATTACK_ON_HIT ~= false) then
+            mobContext.Combat.CancelAttack = true
+        end
+    end
 
     local sourcePlayerContext = CombatContext.GetPlayerByOwner(hit.SourceActor)
     if sourcePlayerContext ~= nil then

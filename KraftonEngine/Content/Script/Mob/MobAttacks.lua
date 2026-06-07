@@ -14,10 +14,18 @@ local ATTACK_ID = "RusherAttack"
 -- HitboxClose 노티파이가 연결되지 않은 환경에서도 히트 윈도우가 닫히도록 하는 상한 시간(초).
 local HITBOX_MAX_DURATION = 0.3
 
+-- 공격 코루틴 중단 사유: 피격으로 인한 캔슬 요청, 또는 사망.
+local function IsAttackAborted(mobContext)
+    return mobContext.Combat.CancelAttack == true or mobContext.Combat.IsDead == true
+end
+
 local function WaitForNotify(mobContext, flag, timeout)
     local elapsed = 0.0
     local attack = mobContext.Attack
     while not attack[flag] and elapsed < timeout do
+        if IsAttackAborted(mobContext) then
+            return   -- 캔슬/사망 시 즉시 빠져나간다 (호출부가 IsAttackAborted 로 정리)
+        end
         elapsed = elapsed + WaitFrame()
     end
     attack[flag] = false
@@ -162,36 +170,64 @@ local function ResolveHit(mobContext, zone)
     return hitResult.Applied == true or hitRequest.Reason == "PerfectDodge"
 end
 
+-- 공격 종료 정리 — 정상 종료/캔슬 공용.
+-- 장판을 치우고 추적 재개 + 락/캔슬 플래그 해제 → 애니는 ActionLock 해제로 Locomotion(or 피격) 복귀.
+local function EndAttack(mobContext, zone)
+    HideZone(mobContext, zone)
+    mobContext.Brain.IsTracking = true
+    mobContext.Combat.ActionLock = false
+    mobContext.Combat.CancelAttack = false
+end
+
 local function MeleeAttack(mobContext)
     local config = mobContext.Config
     local attack = mobContext.Attack
+    local zone = nil
+
+    -- 지난 공격에서 남았을 수 있는 notify 플래그를 초기화한다.
+    -- StartCoroutine 은 코루틴을 생성 즉시 1회 실행하는데, 잔류 플래그가 있으면
+    -- WaitForNotify 가 곧장 통과해 prep(준비동작)을 건너뛰고 같은 프레임에 IsTracking=false 가 되어
+    -- 애니가 AttackPrep 을 0프레임 만에 지나쳐 버린다 → 준비 모션이 안 보이고 즉발 공격처럼 느껴짐.
+    attack.ZoneShow   = false
+    attack.ZoneFlash  = false
+    attack.ZoneHide   = false
+    attack.HitboxOpen = false
+    attack.HitboxClose = false
+    attack.TrackEnd   = false
 
     if mobContext.Runtime.MovementComp then
         mobContext.Runtime.MovementComp:StopMovementImmediately()
     end
 
+    -- 각 단계 사이에서 피격 캔슬(IsAttackAborted)을 감지하면 즉시 정리하고 빠져나간다.
     -- ── [준비동작 Prep / Idle1 애니] ──────────────────────────────
     -- prep 애니(Idle1)에 심어둔 ZoneShow → 장판 예고 생성
     WaitForNotify(mobContext, "ZoneShow", 1.5)
-    local zone = ShowZone(mobContext)
+    if IsAttackAborted(mobContext) then return EndAttack(mobContext, zone) end
+    zone = ShowZone(mobContext)
 
     -- prep 애니의 TrackEnd → 추적 종료(조준 고정). 이 신호로 애니가 Attack 상태로 넘어간다.
     WaitForNotify(mobContext, "TrackEnd", 1.5)
+    if IsAttackAborted(mobContext) then return EndAttack(mobContext, zone) end
     mobContext.Brain.IsTracking = false
 
     -- ── [공격 Attack 애니] ────────────────────────────────────────
     WaitForNotify(mobContext, "ZoneFlash", 1.5)
+    if IsAttackAborted(mobContext) then return EndAttack(mobContext, zone) end
     FlashZone(mobContext, zone)
 
     WaitForNotify(mobContext, "ZoneHide", 1.5)
+    if IsAttackAborted(mobContext) then return EndAttack(mobContext, zone) end
     HideZone(mobContext, zone)
 
     WaitForNotify(mobContext, "HitboxOpen", 1.5)
+    if IsAttackAborted(mobContext) then return EndAttack(mobContext, zone) end
     local hasHit = false
     local hitElapsed = 0.0
     -- HitboxClose 노티파이가 오면 즉시, 안 오면 HITBOX_MAX_DURATION 후 닫는다.
     -- (타임아웃이 없으면 노티파이 미연결 시 ActionLock 이 영구 true 로 굳어버림)
     while not attack.HitboxClose and hitElapsed < HITBOX_MAX_DURATION do
+        if IsAttackAborted(mobContext) then return EndAttack(mobContext, zone) end
         hitElapsed = hitElapsed + WaitFrame()
         if not hasHit then
             hasHit = ResolveHit(mobContext, zone)
@@ -201,12 +237,12 @@ local function MeleeAttack(mobContext)
 
     local elapsed = 0.0
     while elapsed < config.RECOVERY do
+        if IsAttackAborted(mobContext) then return EndAttack(mobContext, zone) end
         elapsed = elapsed + WaitFrame()
     end
 
-    -- 다음 추격/공격을 위해 추적 재개 + 락 해제 (애니는 ActionLock 해제로 Locomotion 복귀)
-    mobContext.Brain.IsTracking = true
-    mobContext.Combat.ActionLock = false
+    -- 정상 종료: 다음 추격/공격을 위해 추적 재개 + 락 해제
+    EndAttack(mobContext, zone)
 end
 
 -- =========================================================

@@ -22,6 +22,7 @@ local BossContext = {}
 ---@field AnimAttack string|nil
 ---@field AnimAttackStart integer|nil
 ---@field AnimAttackHits integer|nil
+---@field HitReactSignal string|nil
 
 ---@class BossAttackState
 ---@field CurrentAttackId string|nil
@@ -87,6 +88,9 @@ local function CreateBrainState()
         AnimAttack = nil,
         AnimAttackStart = nil,
         AnimAttackHits = nil,
+        -- 피격 방향 신호 (CombatContext.ApplyHitToBoss 가 1회성으로 써넣고
+        --  BossAnimation 이 소비해 방향별 피격 모션을 트리거한다.) "Front"/"Back"/"Left"/"Right"
+        HitReactSignal = nil,
     }
 end
 

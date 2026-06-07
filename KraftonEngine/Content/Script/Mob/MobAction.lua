@@ -76,6 +76,12 @@ function MobAction.Update(mobContext, dt)
         return
     end
 
+    -- 피격 모션 재생 중에는 추격/공격을 멈춘다.
+    -- (공격 캔슬로 ActionLock 이 풀린 직후 곧바로 재공격하는 것도 이 가드가 막아준다.)
+    if combat.HitReactActive then
+        return
+    end
+
     LookAtPlayer(mobContext, dt)
 
     if brain.Distance > config.ATTACK_DISTANCE then

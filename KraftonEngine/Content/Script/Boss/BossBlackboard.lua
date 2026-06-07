@@ -101,6 +101,31 @@ BB.FEEDBACK = {
     HIT_SHAKE_FREQUENCY = 70.0,
 }
 
+-- ── 방향별 피격 모션 ──────────────────────────
+-- 플레이어가 보스를 때린 위치(보스 기준 앞/뒤/좌/우)에 따라 다른 피격 애니메이션을 재생한다.
+-- 방향 판정은 CombatContext.ApplyHitToBoss 가 하고, 재생은 BossAnimation 상태머신이 한다.
+-- (플레이어 PlayerConfig.Animation.Samurai.HitReactPaths 구조를 보스로 이식한 것)
+--
+-- 방향 키는 "공격자가 보스 기준 어느 쪽에 있는가" 다. (예: 공격자가 오른쪽 → Right → SamuraiHit_Right)
+-- 경로가 nil 이면 BossAnimation 이 기존 콤보 클립(LightCombo1)으로 폴백한다.
+BB.HIT_REACT = {
+    ENABLED = true,
+    PATHS = {
+        Front = "Content/Animation/Samurai_Boss/SamuraiHit_Front.uasset",
+        Back  = "Content/Animation/Samurai_Boss/SamuraiHit_Back.uasset",
+        Left  = "Content/Animation/Samurai_Boss/SamuraiHit_Left.uasset",
+        Right = "Content/Animation/Samurai_Boss/SamuraiHit_Right.uasset",
+    },
+    BLEND_IN          = 0.05,
+    BLEND_OUT         = 0.12,
+    PLAY_RATE         = 1.0,
+    FALLBACK_DURATION = 0.45,   -- "HitReactEnd" notify 누락 시 강제 복귀까지의 시간(초)
+
+    -- true  : 공격/콤보 중에도 피격 모션으로 끊는다 (플레이어와 동일 동작)
+    -- false : 공격 중에는 피격 모션을 생략한다 (슈퍼아머)
+    INTERRUPT_ATTACK  = false,
+}
+
 -- ── 디버그 ───────────────────────────────────
 BB.DEBUG = false   -- false 로 바꾸면 print 전부 꺼짐
 

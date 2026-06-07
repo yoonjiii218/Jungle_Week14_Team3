@@ -19,6 +19,7 @@
 
 local CombatContext = require("Combat/CombatContext")
 local BossContext = require("Boss/BossContext")
+local BossConfig = require("Boss/BossBlackboard")
 
 local ANIM_BASE = "Content/Animation/Samurai_Boss/"
 
@@ -146,6 +147,13 @@ function init(self)
     self.DashSlashPressed   = false
     self.MaxLightComboHits  = 1   -- BossAttacks.lua 에서 패턴별로 덮어씀
     self.MaxHeavyComboHits  = 3   -- P3 기본값: HeavyCombo 1→2→3
+
+    -- 방향별 피격 리액션 상태 플래그
+    self.HitReactPending   = false   -- CombatContext 신호 소비 후 진입 대기
+    self.HitReactActive    = false   -- 피격 모션 재생 중
+    self.HitReactDirection = nil     -- "Front"/"Back"/"Left"/"Right"
+    self.HitReactElapsed   = 0.0
+    self.HitReactEnd       = false   -- "HitReactEnd" notify 수신
 
     ResetAttack(self)
 
@@ -346,6 +354,71 @@ function init(self)
             return false
         end, ATTACK_BLEND_OUT)
 
+    -- ── 방향별 피격 리액션 ─────────────────────────────────────────
+    -- 플레이어 PlayerAnimation 의 HitFront/Left/Right/Back 구조를 보스로 이식.
+    -- CombatContext.ApplyHitToBoss 가 bossContext.Brain.HitReactSignal 에 방향을 써넣고,
+    -- update() 가 그걸 소비해 self.HitReactPending/Direction 으로 변환하면 아래 전이가 발동한다.
+    local hitReact          = BossConfig.HIT_REACT or {}
+    local hitPaths          = hitReact.PATHS or {}
+    local hitPlayRate       = hitReact.PLAY_RATE or 1.0
+    local hitBlendIn        = hitReact.BLEND_IN or 0.05
+    local hitBlendOut       = hitReact.BLEND_OUT or 0.12
+    local hitFallbackDur    = hitReact.FALLBACK_DURATION or 0.45
+    local hitInterrupt      = hitReact.INTERRUPT_ATTACK ~= false
+    local hitFallbackPath   = LIGHT_COMBO_PATHS[1]   -- 경로 누락 시 안전 폴백
+
+    Anim.sm_add_state(top, "HitFront", Anim.create_sequence_player(hitPaths.Front or hitFallbackPath, hitPlayRate, false))
+    Anim.sm_add_state(top, "HitLeft",  Anim.create_sequence_player(hitPaths.Left  or hitFallbackPath, hitPlayRate, false))
+    Anim.sm_add_state(top, "HitRight", Anim.create_sequence_player(hitPaths.Right or hitFallbackPath, hitPlayRate, false))
+    Anim.sm_add_state(top, "HitBack",  Anim.create_sequence_player(hitPaths.Back  or hitFallbackPath, hitPlayRate, false))
+
+    -- INTERRUPT_ATTACK=false 일 때 공격 중이면 피격 모션을 생략(슈퍼아머)하기 위한 판정
+    local function IsBossAttacking()
+        return self.LightComboIndex > 0
+            or self.HeavyComboIndex > 0
+            or self.AttackPrepActive == true
+    end
+
+    local function AddHitReactionTransitions(direction, stateName)
+        -- AnyState → Hit_*: 신호가 들어오고 방향이 일치하면 진입
+        Anim.sm_add_transition(top, "AnyState", stateName,
+            function()
+                if not self.HitReactPending or self.HitReactDirection ~= direction then
+                    return false
+                end
+                if not hitInterrupt and IsBossAttacking() then
+                    return false
+                end
+                self.HitReactPending = false
+                self.HitReactActive  = true
+                self.HitReactElapsed = 0.0
+                self.HitReactEnd     = false
+                ResetAttack(self)   -- 진행 중이던 콤보/대시 플래그 정리 (애니 락 잔류 방지)
+                return true
+            end, hitBlendIn)
+
+        -- Hit_* → Locomotion: notify("HitReactEnd") 또는 fallback 시간 경과 시 복귀
+        Anim.sm_add_transition(top, stateName, "Locomotion",
+            function()
+                if not self.HitReactActive then
+                    return false
+                end
+                if self.HitReactEnd or (self.HitReactElapsed or 0.0) >= hitFallbackDur then
+                    self.HitReactActive    = false
+                    self.HitReactDirection = nil
+                    self.HitReactElapsed   = 0.0
+                    self.HitReactEnd       = false
+                    return true
+                end
+                return false
+            end, hitBlendOut)
+    end
+
+    AddHitReactionTransitions("Front", "HitFront")
+    AddHitReactionTransitions("Left",  "HitLeft")
+    AddHitReactionTransitions("Right", "HitRight")
+    AddHitReactionTransitions("Back",  "HitBack")
+
     Anim.sm_set_initial_state(top, "Locomotion")
 
     local root = Anim.create_slot("DefaultSlot", top)
@@ -372,6 +445,21 @@ function update(self, dt)
     if bossContext == nil then return end
     BossContext.Assert(bossContext, "BossAnimation.update")
     ConsumeAnimSignal(self, bossContext)
+
+    -- ── 피격 방향 신호 소비 (CombatContext.ApplyHitToBoss 가 써넣음) ──
+    local hitSignal = bossContext.Brain.HitReactSignal
+    if hitSignal ~= nil then
+        bossContext.Brain.HitReactSignal = nil
+        self.HitReactPending   = true
+        self.HitReactDirection = hitSignal
+        self.HitReactEnd       = false
+        self.HitReactElapsed   = 0.0
+    end
+
+    -- 피격 모션 재생 중이면 fallback 복귀용 경과 시간 누적
+    if self.HitReactActive then
+        self.HitReactElapsed = (self.HitReactElapsed or 0.0) + dt
+    end
 
     -- AttackPrep fallback: AttackEnd notify 누락 시 ATTACK_PREP_DURATION 후 강제 전환
     if self.AttackPrepActive then
@@ -428,6 +516,9 @@ function on_notify(self, name)
 
     if name == "AttackEnd" then
         self.AttackEnd = true
+
+    elseif name == "HitReactEnd" or name == "HitEnd" then
+        self.HitReactEnd = true
 
     elseif name == "DashEnd" then
         self.DashEnd = true
