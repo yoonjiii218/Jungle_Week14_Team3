@@ -39,11 +39,14 @@ struct FMaterialResult
 };
 
 Texture2D Tex_Diffuse : register(t0);
+Texture2D Tex_Blur : register(t6);
 
 cbuffer PerMaterial : register(b3)
 {
-    float Param_Scalar;
+    float Param_AuraIntensity;
     float3 _Pad0;
+    float Param_DistortionIntensity;
+    float3 _Pad1;
 };
 
 struct FMaterialEvalResult
@@ -56,9 +59,29 @@ struct FMaterialEvalResult
 
 FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
-    float n_43 = Param_Scalar;
+    float n_43 = Param_AuraIntensity;
     float2 n_52 = ((float2(fmod(floor(saturate(Input.SubImageIndex) * (16 - 0.0001f)), 4), floor(floor(saturate(Input.SubImageIndex) * (16 - 0.0001f)) / 4)) + Input.UV0) * float2(1.0f/4, 1.0f/4));
-    float4 n_20 = Tex_Diffuse.Sample(LinearWrapSampler, n_52);
+    float n_102 = 0.000000f;
+    float n_94 = Param_DistortionIntensity;
+    float2 n_55 = Input.UV0;
+    float2 n_57 = float2(5.000000f, 1.000000f);
+    float2 n_59 = (n_55 * n_57);
+    float n_65 = Input.Time;
+    float2 n_67 = (n_59 + float2(1.000000f, 1.000000f) * n_65);
+    float4 n_75 = Tex_Blur.Sample(LinearWrapSampler, n_67);
+    float n_86 = 0.500000f;
+    float n_88 = ((n_75).r - n_86);
+    float n_96 = (n_94 * n_88);
+    float n_167 = (float4(n_55, 0.0f, 0.0f)).g;
+    float n_170 = 0.500000f;
+    float n_172 = (n_167 - n_170);
+    float n_176 = 100.000000f;
+    float n_178 = (n_172 * n_176);
+    float n_182 = saturate(n_178);
+    float n_185 = (n_96 * n_182);
+    float2 n_104 = float2(n_102, n_185);
+    float2 n_110 = (n_52 + n_104);
+    float4 n_20 = Tex_Diffuse.Sample(LinearWrapSampler, n_110);
     float3 n_31 = ((n_20).rgb * float3((n_20).a, (n_20).a, (n_20).a));
     float4 n_1 = Input.ParticleColor;
     float3 n_37 = (n_31 * (n_1).rgb);
