@@ -490,10 +490,6 @@ function PlayerAction.ApplyMoveInput(playerContext)
         playerContext.Runtime.LastMoveInputDirection = dir
         Reflection.Call(owner, "AddMovementInput", dir, 1.0)
     end
-
-    if ActionStarted(playerContext, "Jump") then
-        Reflection.Call(owner, "Jump")
-    end
 end
 
 ---@param playerContext PlayerContext
