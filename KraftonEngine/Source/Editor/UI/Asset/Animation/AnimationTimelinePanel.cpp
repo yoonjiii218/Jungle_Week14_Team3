@@ -17,6 +17,7 @@
 #include "Object/Reflection/UClass.h"
 #include "Core/Property/SoftObjectProperty.h"
 #include "Core/Types/PropertyTypes.h"
+#include "Resource/ResourceManager.h"
 #include "Editor/UI/Asset/Animation/MorphCurveEditObject.h"
 
 #include <imgui.h>
@@ -402,13 +403,46 @@ namespace
 					FName* N = static_cast<FName*>(Prop.GetValuePtr());
 					if (N)
 					{
-						FString Cur = N->ToString();
-						char Buf[256];
-						strncpy_s(Buf, sizeof(Buf), Cur.c_str(), _TRUNCATE);
-						if (ImGui::InputText("##v", Buf, sizeof(Buf)))
+						const TMap<FString, FString>& Metadata = Prop.GetMetadata();
+						const auto AssetTypeIt = Metadata.find("assettype");
+						if (AssetTypeIt != Metadata.end() && AssetTypeIt->second == "Particle")
 						{
-							*N = FName(FString(Buf));
-							bChanged = true;
+							const FString CurrentName = N->IsNone() ? "None" : N->ToString();
+							if (ImGui::BeginCombo("##v", CurrentName.c_str()))
+							{
+								const bool bSelectedNone = N->IsNone();
+								if (ImGui::Selectable("None", bSelectedNone))
+								{
+									*N = FName::None;
+									bChanged = true;
+								}
+								if (bSelectedNone) ImGui::SetItemDefaultFocus();
+
+								TArray<FString> ParticleNames = FResourceManager::Get().GetParticleNames();
+								std::sort(ParticleNames.begin(), ParticleNames.end());
+								for (const FString& ParticleName : ParticleNames)
+								{
+									const bool bSelected = CurrentName == ParticleName;
+									if (ImGui::Selectable(ParticleName.c_str(), bSelected))
+									{
+										*N = FName(ParticleName);
+										bChanged = true;
+									}
+									if (bSelected) ImGui::SetItemDefaultFocus();
+								}
+								ImGui::EndCombo();
+							}
+						}
+						else
+						{
+							FString Cur = N->ToString();
+							char Buf[256];
+							strncpy_s(Buf, sizeof(Buf), Cur.c_str(), _TRUNCATE);
+							if (ImGui::InputText("##v", Buf, sizeof(Buf)))
+							{
+								*N = FName(FString(Buf));
+								bChanged = true;
+							}
 						}
 					}
 					break;
