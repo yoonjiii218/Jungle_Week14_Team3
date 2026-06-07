@@ -25,6 +25,25 @@ local function Bezier2(a, b, c, t)
     return a * (u * u) + b * (2.0 * u * t) + c * (t * t)
 end
 
+local function SetComponentVisible(component, visible)
+    if component == nil then
+        return
+    end
+
+    if component.IsValid ~= nil and component:IsValid() ~= true then
+        return
+    end
+
+    if component.SetVisibility ~= nil then
+        component:SetVisibility(visible)
+        return
+    end
+
+    pcall(function()
+        Reflection.Call(component, "SetVisibility", visible)
+    end)
+end
+
 local function PlayPerfectDodgeFeedback(playerContext, event)
     local feedbackConfig = playerContext.Config.Feedback
     local perfectDodgeConfig = feedbackConfig.PerfectDodge
@@ -290,6 +309,35 @@ function PlayerFeedback.SetKatanaTrailActive(playerContext, active)
     else
         PSC:Deactivate()
     end
+end
+
+---@param playerContext PlayerContext
+---@return nil
+function PlayerFeedback.BeginDashVanish(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerFeedback.BeginDashVanish")
+
+    local owner = playerContext.Owner
+    if owner == nil or owner.GetSkeletalMeshComponent == nil then
+        return
+    end
+
+    SetComponentVisible(owner:GetSkeletalMeshComponent(), false)
+    SetComponentVisible(playerContext.Feedback.KatanaComponent, false)
+    SetComponentVisible(playerContext.Feedback.KatanaPSC, false)
+end
+
+---@param playerContext PlayerContext
+---@return nil
+function PlayerFeedback.EndDashVanish(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerFeedback.EndDashVanish")
+
+    local owner = playerContext.Owner
+    if owner ~= nil and owner.GetSkeletalMeshComponent ~= nil then
+        SetComponentVisible(owner:GetSkeletalMeshComponent(), true)
+    end
+
+    SetComponentVisible(playerContext.Feedback.KatanaComponent, true)
+    SetComponentVisible(playerContext.Feedback.KatanaPSC, true)
 end
 
 ---@param playerContext PlayerContext

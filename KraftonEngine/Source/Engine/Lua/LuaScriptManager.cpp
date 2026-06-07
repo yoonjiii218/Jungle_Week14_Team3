@@ -2657,6 +2657,8 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		{
 			Component.SetCollisionEnabled(static_cast<ECollisionEnabled>(Enabled));
 		},
+		"SetVisibility", &UPrimitiveComponent::SetVisibility,
+		"IsVisible", &UPrimitiveComponent::IsVisible,
 		"SetSimulatePhysics", &UPrimitiveComponent::SetSimulatePhysics,
 		"GetSimulatePhysics", &UPrimitiveComponent::GetSimulatePhysics,
 		"AddForce", &UPrimitiveComponent::AddForce,
