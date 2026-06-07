@@ -447,6 +447,7 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
     <ClCompile Include="Source\Engine\Animation\Notify\AnimNotify_LuaFunction.cpp" />
     <ClCompile Include="Source\Engine\Animation\Notify\AnimNotify_LogMessage.cpp" />
     <ClCompile Include="Source\Engine\Animation\Notify\AnimNotify_PlaySound.cpp" />
+    <ClCompile Include="Source\Engine\Animation\Notify\AnimNotify_SpawnSubUV.cpp" />
     <ClCompile Include="Source\Engine\Animation\Sequence\AnimDataModel.cpp" />
     <ClCompile Include="Source\Engine\Animation\Sequence\AnimSequence.cpp" />
     <ClCompile Include="Source\Engine\Animation\Sequence\AnimSequenceBase.cpp" />
@@ -867,6 +868,7 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
     <ClInclude Include="Source\Engine\Animation\Notify\AnimNotify_LuaFunction.h" />
     <ClInclude Include="Source\Engine\Animation\Notify\AnimNotify_LogMessage.h" />
     <ClInclude Include="Source\Engine\Animation\Notify\AnimNotify_PlaySound.h" />
+    <ClInclude Include="Source\Engine\Animation\Notify\AnimNotify_SpawnSubUV.h" />
     <ClInclude Include="Source\Engine\Animation\Sequence\AnimDataModel.h" />
     <ClInclude Include="Source\Engine\Animation\Sequence\AnimSequence.h" />
     <ClInclude Include="Source\Engine\Animation\Sequence\AnimSequenceBase.h" />
