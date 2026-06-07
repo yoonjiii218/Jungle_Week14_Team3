@@ -8,11 +8,11 @@ local BB = {}
 BB.MAX_HP = 100.0   -- 보스 최대 체력
 
 -- ── 거리 임계값 ──────────────────────────────
-BB.CHASE_DISTANCE  = 10.0   -- 이 이상이면 추격
-BB.ATTACK_DISTANCE = 10.0   -- 이 이하이면 공격 가능
+BB.CHASE_DISTANCE  = 15.0   -- 이 이상이면 추격
+BB.ATTACK_DISTANCE = 15.0   -- 이 이하이면 공격 가능
 
 -- ── LookAt 회전 속도 (도/초) ─────────────────
-BB.LOOK_AT_SPEED = 540.0   -- 너무 작으면 허공 칼질, 너무 크면 스냅
+BB.LOOK_AT_SPEED = 500.0   -- 너무 작으면 허공 칼질, 너무 크면 스냅
 
 -- ── 글로벌 쿨타임 (패턴 종료 후 추가 대기) ───
 BB.PATTERN_COOLDOWN = {
@@ -24,7 +24,7 @@ BB.HEAVY_ATTACK_COOLDOWN = 8.0   -- P3 개별 쿨타임 (난사 방지)
 
 -- ── 패턴 선택 확률 ───────────────────────────
 BB.PROB_HEAVY  = 0.35   -- 패턴3(강공격) 선택 확률 — 길고 강하니 약간 낮춤
-BB.PROB_DOUBLE = 0  -- 패턴2(2연타) 선택 확률 (누적: 0.35 + 0.35)
+BB.PROB_DOUBLE = 0.35  -- 패턴2(2연타) 선택 확률 (누적: 0.35 + 0.35)
 -- 나머지 0.30 → 패턴1(빠른 견제)
 
 -- ── 슬로모 (공통) ────────────────────────────
@@ -63,8 +63,6 @@ BB.P3 = {
 
 -- ── 장판(텔레그래프) 연출 수치 ──────────────
 BB.FEEDBACK = {
-    -- 순수 흰색 데칼 머티리얼 — SetColorRGBA(=DecalColor)가 그대로 최종색이 됨.
-    -- ZONE_COLOR_* 값이 텍스처 패턴 없이 깔끔한 단색 장판으로 표시된다.
     DECAL_MATERIAL = "Content/Material/VFX/M_WhiteZone.mat",
 
     -- P3 직사각형 장판 크기 (데칼 볼륨 OBB)
@@ -75,7 +73,7 @@ BB.FEEDBACK = {
 
     -- 색 (R,G,B,A)
     ZONE_COLOR_IDLE  = { 1.0, 0.0, 0.0, 0.4 },   -- 평소 흐릿한 빨강
-    ZONE_COLOR_FLASH = { 1.0, 0.0, 0.0, 0.9 },   -- 번쩍임 (진해짐)
+    ZONE_COLOR_FLASH = { 1.0, 0.0, 0.0, 1.0 },   -- 번쩍임 (진해짐)
 
     -- P1 종베기 장판 (좁은 직사각형 → 옆으로 피해야 회피 성공)
     P1_LENGTH = 20.0,   -- 보스 앞으로 뻗는 길이 (P3 8.0보다 짧게)
@@ -84,7 +82,7 @@ BB.FEEDBACK = {
     -- P2 횡베기 부채꼴 장판 (가는 조각 N개를 방사형으로 펼침)
     FAN_ANGLE     = 55.0,   -- 총 중심각 (도) — 80→55, 좌우로 옆 회피 공간 확보
     FAN_SEGMENTS  = 10,      -- 조각 개수 (많을수록 매끈, 무거움)
-    FAN_RADIUS    = 20.0,    -- 부채꼴 반지름 (조각 길이)
+    FAN_RADIUS    = 15.0,    -- 부채꼴 반지름 (조각 길이)
     FAN_SEG_WIDTH = 5,    -- 조각 폭 (인접 조각과 겹치게 넉넉히 → 빈틈 방지)
 
     -- 자동 페이드 방지용 큰 값 (HideZone 에서 직접 제거)
@@ -92,6 +90,6 @@ BB.FEEDBACK = {
 }
 
 -- ── 디버그 ───────────────────────────────────
-BB.DEBUG = true   -- false 로 바꾸면 print 전부 꺼짐
+BB.DEBUG = false   -- false 로 바꾸면 print 전부 꺼짐
 
 return BB

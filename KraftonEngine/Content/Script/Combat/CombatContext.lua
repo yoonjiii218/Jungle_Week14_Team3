@@ -10,9 +10,11 @@ local PlayerAction = require("Player/PlayerAction")
 local HitTypes = require("Combat/HitTypes")
 local BossContext = require("Boss/BossContext")
 local BossEvents = require("Boss/BossEvents")
+local MobContext = require("Mob/MobContext")
 local Strict = require("Core/Strict")
 
 local playersByOwner = {}
+local mobsByOwner = {}
 local activeEnemyAttackWindows = {}
 
 local function GetOwnerKey(owner)
@@ -278,6 +280,37 @@ function CombatContext.GetBossContext()
 end
 
 -- ════════════════════════════════════════════
+-- 잡몹 등록 (Mob/ 에서 호출)
+-- 보스는 싱글톤(단일 변수)이지만 잡몹은 여러 마리라 액터 키 테이블로 관리한다.
+-- (플레이어 레지스트리와 동일한 방식)
+-- ════════════════════════════════════════════
+
+---@param mobContext MobContext
+---@return nil
+function CombatContext.RegisterMob(mobContext)
+    MobContext.Assert(mobContext, "CombatContext.RegisterMob")
+    mobContext.Combat.MaxHP = mobContext.Combat.MaxHP or mobContext.Config.MAX_HP
+    mobContext.Combat.RecentHitIds = mobContext.Combat.RecentHitIds or {}
+    mobsByOwner[GetOwnerKey(mobContext.Owner)] = mobContext
+end
+
+---@param mobContext MobContext
+---@return nil
+function CombatContext.UnregisterMob(mobContext)
+    MobContext.Assert(mobContext, "CombatContext.UnregisterMob")
+    local key = GetOwnerKey(mobContext.Owner)
+    if mobsByOwner[key] == mobContext then
+        mobsByOwner[key] = nil
+    end
+end
+
+---@param owner any
+---@return MobContext|nil
+function CombatContext.GetMobByOwner(owner)
+    return mobsByOwner[GetOwnerKey(owner)]
+end
+
+-- ════════════════════════════════════════════
 -- 퍼펙트 회피 / 슬로모
 -- ════════════════════════════════════════════
 
@@ -382,6 +415,11 @@ function CombatContext.ApplyHit(hitRequest)
 
     if hit.TargetActor.HasTag ~= nil and hit.TargetActor:HasTag("Boss") then
         return CombatContext.ApplyHitToBoss(hit)
+    end
+
+    local targetMobContext = CombatContext.GetMobByOwner(hit.TargetActor)
+    if targetMobContext ~= nil then
+        return CombatContext.ApplyHitToMob(targetMobContext, hit)
     end
 
     return HitTypes.CreateResult({ Applied = false, Reason = "NoCombatTarget" })
@@ -550,6 +588,78 @@ function CombatContext.ApplyHitToBoss(hit)
     end
 
     return HitTypes.CreateResult({ Applied = true, Target = "Boss", Damage = damage, HP = bossContext.Combat.HP, MaxHP = bossContext.Combat.MaxHP })
+end
+
+-- 잡몹 사망 처리 (HP 0 도달 시 1회만). 보스의 HandleBossDeath 대응.
+local function HandleMobDeath(mobContext, hit)
+    if mobContext == nil or mobContext.Combat.IsDead then return end
+
+    mobContext.Combat.IsDead = true
+    -- 락을 풀어 "맞고 굳어버리는" 상태를 방지 (MobAction.Update 는 IsDead 면 어차피 조기 반환).
+    mobContext.Combat.ActionLock = false
+
+    if mobContext.Runtime ~= nil and mobContext.Runtime.MovementComp ~= nil then
+        mobContext.Runtime.MovementComp:StopMovementImmediately()
+    end
+
+    print("[Mob] ☠ 사망!  attack=" .. tostring(hit and hit.AttackId or nil))
+    -- TODO: 사망 애니메이션 / 디스폰 / 보상 (에셋·연출 단계)
+end
+
+-- 보스 ApplyHitToBoss 를 잡몹용으로 옮긴 것. 잡몹은 여러 마리라 mobContext 를 인자로 받는다.
+-- (보스는 싱글톤이라 인자 없이 registeredBossContext 를 쓰는 것과 대비)
+function CombatContext.ApplyHitToMob(mobContext, hitRequest)
+    MobContext.Assert(mobContext, "CombatContext.ApplyHitToMob")
+    local hit = NormalizeHit(hitRequest)
+
+    if mobContext.Combat.IsDead then
+        return HitTypes.CreateResult({ Applied = false, Reason = "MobDead" })
+    end
+
+    local now = Now()
+    mobContext.Combat.RecentHitIds = mobContext.Combat.RecentHitIds or {}
+    PruneRecentHits(mobContext.Combat.RecentHitIds, now)
+
+    local key = MakeHitKey(hit)
+    if mobContext.Combat.RecentHitIds[key] ~= nil then
+        return HitTypes.CreateResult({ Applied = false, Reason = "DuplicateHit" })
+    end
+    mobContext.Combat.RecentHitIds[key] = now + (hit.DuplicateHitLifetime or 1.0)
+
+    local damage = hit.Damage or 0
+    if damage <= 0 then
+        return HitTypes.CreateResult({ Applied = false, Reason = "NoDamage" })
+    end
+
+    local maxHP = mobContext.Combat.MaxHP or mobContext.Config.MAX_HP
+    mobContext.Combat.MaxHP = maxHP
+    mobContext.Combat.HP = math.max(0.0, mobContext.Combat.HP - damage)
+
+    local sourcePlayerContext = CombatContext.GetPlayerByOwner(hit.SourceActor)
+    if sourcePlayerContext ~= nil then
+        local combatConfig = sourcePlayerContext.Config.Combat
+        ApplyLocalHitStop(hit.SourceActor, hit.HitStopDuration or combatConfig.HitStopDuration)
+        ApplyLocalHitStop(mobContext.Owner, hit.HitStopDuration or combatConfig.EnemyHitStopDuration)
+
+        PlayerEvents.EmitAttackHit(sourcePlayerContext, {
+            AttackId = hit.AttackId,
+            AttackIndex = hit.AttackIndex,
+            TargetActor = mobContext.Owner,
+            Damage = damage,
+            GaugeDelta = hit.GaugeDelta or 0,
+            HP = mobContext.Combat.HP,
+            MaxHP = maxHP,
+        })
+    end
+
+    print(string.format("[Mob] 피격! -%.0f   HP: %.0f / %.0f   attack=%s",
+          damage, mobContext.Combat.HP, maxHP, tostring(hit.AttackId)))
+
+    if mobContext.Combat.HP <= 0.0 then
+        HandleMobDeath(mobContext, hit)
+    end
+
+    return HitTypes.CreateResult({ Applied = true, Target = "Mob", Damage = damage, HP = mobContext.Combat.HP, MaxHP = maxHP })
 end
 
 -- [플레이어팀 호출] 플레이어가 보스를 때렸을 때

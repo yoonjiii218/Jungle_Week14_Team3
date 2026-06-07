@@ -146,6 +146,7 @@ local function ResolveHit(mobContext, zone)
         AttackId = ATTACK_ID,
         AttackInstanceId = ATTACK_ID .. "_" .. tostring(World.GetGameTime()),
         Damage = mobContext.Config.DAMAGE,
+        CanPerfectDodge = true,
     })
 
     local hitResult = CombatContext.ApplyHit(hitRequest)
@@ -158,7 +159,7 @@ local function ResolveHit(mobContext, zone)
         end
     end
 
-    return hitResult.Applied == true
+    return hitResult.Applied == true or hitRequest.Reason == "PerfectDodge"
 end
 
 local function MeleeAttack(mobContext)

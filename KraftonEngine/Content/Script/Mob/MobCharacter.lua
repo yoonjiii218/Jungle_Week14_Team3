@@ -6,6 +6,7 @@ local MobConfig  = require("Mob/MobBlackboard")
 local MobContext = require("Mob/MobContext")
 local MobAction  = require("Mob/MobAction")
 local MobAttacks = require("Mob/MobAttacks")
+local CombatContext = require("Combat/CombatContext")
 
 local mobContext = nil
 
@@ -14,6 +15,12 @@ function BeginPlay()
 
     if not obj:HasTag("Mob") then
         obj:AddTag("Mob")
+    end
+
+    -- 플레이어 공격/타게팅이 인식하는 "피격 가능 대상" 표식 (보스 BossCharacter 와 동일 규약).
+    -- PlayerConfig.Targeting.TargetTags = { "HitTarget", "Enemy", "Boss" } 가 이 태그로 스캔한다.
+    if not obj:HasTag("HitTarget") then
+        obj:AddTag("HitTarget")
     end
 
     mobContext.Brain.TargetActor = World.FindFirstActorByTag("Player")
@@ -34,6 +41,7 @@ function BeginPlay()
     MobAction.Init(mobContext)
     MobAttacks.Init(mobContext)
     MobContext.Register(mobContext)   -- MobAnimation 이 obj 로 컨텍스트를 찾도록 등록
+    CombatContext.RegisterMob(mobContext)   -- 피격/데미지 해결 대상으로 등록 (ApplyHitToMob)
 end
 
 function Tick(dt)
@@ -60,6 +68,7 @@ end
 function EndPlay()
     if mobContext ~= nil then
         MobContext.Unregister(mobContext)
+        CombatContext.UnregisterMob(mobContext)
     end
     mobContext = nil
     if MobConfig.DEBUG then

@@ -24,8 +24,10 @@ local MobContext = {}
 
 ---@class MobCombatState
 ---@field HP number
+---@field MaxHP number
 ---@field IsDead boolean
 ---@field ActionLock boolean
+---@field RecentHitIds table
 
 ---@class MobRuntimeState
 ---@field MovementComp any
@@ -67,8 +69,10 @@ local function CreateCombatState(config)
     Strict.AssertNumber(config.MAX_HP, "config.MAX_HP", "MobContext.Create")
     return {
         HP = config.MAX_HP,
+        MaxHP = config.MAX_HP,
         IsDead = false,
         ActionLock = false,
+        RecentHitIds = {},
     }
 end
 

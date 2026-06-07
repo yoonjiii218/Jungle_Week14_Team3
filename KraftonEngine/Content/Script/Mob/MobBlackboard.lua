@@ -5,11 +5,11 @@
 local MB = {}
 
 -- ── 체력 ─────────────────────────────────────
-MB.MAX_HP = 20.0   -- 잡몹 최대 체력
+MB.MAX_HP = 10000.0   -- 잡몹 최대 체력
 
 -- ── 거리 임계값 ──────────────────────────────
 MB.CHASE_DISTANCE  = 12.0   -- 이 이상이면 추격
-MB.ATTACK_DISTANCE = 10.0    -- 이 이하이면 공격 가능
+MB.ATTACK_DISTANCE = 10.0   -- 이 이하이면 공격 가능
 
 -- ── LookAt 회전 속도 (도/초) ─────────────────
 MB.LOOK_AT_SPEED = 400.0
@@ -20,11 +20,8 @@ MB.DAMAGE          = 3      -- 1회 피격 시 데미지
 MB.RECOVERY        = 0.5    -- 판정 종료 후 후딜 (ActionLock 해제까지)
 
 -- ── 장판(텔레그래프) 직사각형 규격 ───────────
--- ⚠️ ZONE_LENGTH 는 ATTACK_DISTANCE 이상이어야 한다.
---    그래야 "공격을 시작하는 거리"에 플레이어가 있으면 판정 장판 안에 들어온다.
---    (ZONE_LENGTH < ATTACK_DISTANCE 이면 멀리서 공격해도 빗나간다)
-MB.ZONE_LENGTH = MB.ATTACK_DISTANCE + 1.0   -- 잡몹 앞으로 뻗는 길이 (사거리 + 여유)
-MB.ZONE_WIDTH  = 4.0                         -- 폭 (좁으면 정면에서 살짝 벗어나도 빗나감)
+MB.ZONE_LENGTH = 20.0 -- 잡몹 앞으로 뻗는 길이 (사거리 + 여유)
+MB.ZONE_WIDTH  = 7.0                         -- 폭 (좁으면 정면에서 살짝 벗어나도 빗나감)
 
 -- ── 장판 연출 수치 ───────────────────────────
 MB.FEEDBACK = {
