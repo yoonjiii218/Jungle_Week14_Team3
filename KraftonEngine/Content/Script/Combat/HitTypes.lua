@@ -3,7 +3,6 @@
 
 local Strict = require("Core/Strict")
 local PlayerContext = require("Player/PlayerContext")
-local PlayerConfig = require("Config/PlayerConfig")
 
 local HitTypes = {}
 
@@ -80,7 +79,7 @@ end
 ---@param args table
 ---@return HitRequest
 function HitTypes.CreatePlayerAttack(args)
-    args = args or {}
+    Strict.AssertTable(args, "args", "HitTypes.CreatePlayerAttack")
     args.SourceTeam = args.SourceTeam or "Player"
     args.TargetTeam = args.TargetTeam or "Enemy"
     return Create(args, "HitTypes.CreatePlayerAttack")
@@ -89,7 +88,7 @@ end
 ---@param args table
 ---@return HitRequest
 function HitTypes.CreateBossAttack(args)
-    args = args or {}
+    Strict.AssertTable(args, "args", "HitTypes.CreateBossAttack")
     args.SourceTeam = args.SourceTeam or "Enemy"
     args.TargetTeam = args.TargetTeam or "Player"
     args.CanPerfectDodge = args.CanPerfectDodge ~= false
@@ -103,23 +102,23 @@ function HitTypes.CreatePlayerAttackFromState(args)
     Strict.AssertTable(args, "args", "HitTypes.CreatePlayerAttackFromState")
     local player = PlayerContext.Assert(args.Player, "HitTypes.CreatePlayerAttackFromState")
     local action = player.Action
-    local combatConfig = player.Config and player.Config.Combat or PlayerConfig.Default.Combat
+    local combatConfig = player.Config.Combat
 
-    local attackIndex = action.AttackIndex or 0
+    local attackIndex = action.AttackIndex
     local attackId = "PlayerAttack" .. tostring(attackIndex)
     local attackInstanceId = action.AttackInstanceId or (attackId .. "_" .. tostring(Now()))
-    local damage = combatConfig.AttackDamages and combatConfig.AttackDamages[attackIndex] or 10
-    local gaugeDelta = combatConfig.AttackHitGaugeDelta or 0
+    local damage = combatConfig.AttackDamages[attackIndex]
+    local gaugeDelta = combatConfig.AttackHitGaugeDelta
 
     if action.DashChargeAttackActive == true then
         attackId = "PlayerDashChargeAttack"
         attackInstanceId = action.DashChargeAttackInstanceId or (attackId .. "_" .. tostring(Now()))
-        damage = combatConfig.DashChargeAttackDamage or damage
-        gaugeDelta = combatConfig.DashChargeAttackGaugeDelta or gaugeDelta
+        damage = combatConfig.DashChargeAttackDamage
+        gaugeDelta = combatConfig.DashChargeAttackGaugeDelta
     elseif action.IsInUltimateMode == true then
         attackId = "PlayerUltimate"
         attackInstanceId = action.UltimateAttackInstanceId or (attackId .. "_" .. tostring(Now()))
-        damage = combatConfig.UltimateDamage or damage
+        damage = combatConfig.UltimateDamage
         gaugeDelta = 0
     end
 
@@ -159,11 +158,13 @@ end
 
 ---@param args table
 ---@return HitResult
-function HitTypes.Result(args)
-    args = args or {}
+function HitTypes.CreateResult(args)
+    Strict.AssertTable(args, "args", "HitTypes.CreateResult")
     args.Kind = "HitResult"
     args.Applied = args.Applied == true
     return args
 end
+
+HitTypes.Result = HitTypes.CreateResult
 
 return HitTypes

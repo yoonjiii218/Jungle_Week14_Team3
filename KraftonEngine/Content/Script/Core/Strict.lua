@@ -57,6 +57,50 @@ end
 ---@param value any
 ---@param name string
 ---@param caller string
+---@return function
+function Strict.AssertFunction(value, name, caller)
+    if type(value) ~= "function" then
+        Fail(caller, tostring(name or "value") .. " must be function, got " .. type(value))
+    end
+    return value
+end
+
+---@param value any
+---@param name string
+---@param caller string
+---@return table|nil
+function Strict.AssertOptionalTable(value, name, caller)
+    if value ~= nil then
+        Strict.AssertTable(value, name, caller)
+    end
+    return value
+end
+
+---@param value any
+---@param name string
+---@param caller string
+---@return number|nil
+function Strict.AssertOptionalNumber(value, name, caller)
+    if value ~= nil then
+        Strict.AssertNumber(value, name, caller)
+    end
+    return value
+end
+
+---@param value any
+---@param name string
+---@param caller string
+---@return string|nil
+function Strict.AssertOptionalString(value, name, caller)
+    if value ~= nil then
+        Strict.AssertString(value, name, caller)
+    end
+    return value
+end
+
+---@param value any
+---@param name string
+---@param caller string
 ---@return any
 function Strict.AssertNotNil(value, name, caller)
     if value == nil then

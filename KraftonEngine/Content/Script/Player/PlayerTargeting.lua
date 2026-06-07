@@ -7,32 +7,14 @@
 
 local PlayerTargeting = {}
 
-local PlayerConfig = require("Config/PlayerConfig")
 local PlayerContext = require("Player/PlayerContext")
 
-local function GetConfig(player)
-    if player ~= nil and player.Config ~= nil then
-        return player.Config
-    end
-
-    return nil
-end
-
-local function GetTargetingConfig(ctx)
-    local config = GetConfig(ctx)
-    if config ~= nil and config.Targeting ~= nil then
-        return config.Targeting
-    end
-
-    return PlayerConfig.Default.Targeting
+local function GetTargetingConfig(player)
+    return player.Config.Targeting
 end
 
 local function GetOwner(player)
-    if player ~= nil and player.Owner ~= nil then
-        return player.Owner
-    end
-
-    return obj
+    return player.Owner
 end
 
 local function Now()
@@ -110,19 +92,15 @@ local function GetForward2D(owner)
 end
 
 local function GetProfile(config, mode)
-    config = config or PlayerConfig.Default.Targeting
     mode = mode or "Attack"
 
-    local profile = nil
     if mode == "Dash" then
-        profile = config.Dash
+        return config.Dash
     elseif mode == "DashChargeAttack" then
-        profile = config.DashChargeAttack
-    else
-        profile = config.Attack
+        return config.DashChargeAttack
     end
 
-    return profile or PlayerConfig.Default.Targeting.Attack
+    return config.Attack
 end
 
 local function ForEachCandidateByTag(config, callback)
@@ -130,7 +108,7 @@ local function ForEachCandidateByTag(config, callback)
         return
     end
 
-    local tags = config.TargetTags or PlayerConfig.Default.Targeting.TargetTags
+    local tags = config.TargetTags
     local visited = {}
 
     for _, tag in ipairs(tags) do
@@ -182,8 +160,8 @@ local function IsCandidateInProfile(owner, actor, aimDir, profile, rangeScale, e
 end
 
 local function IsStickyTargetUsable(ctx, owner, aimDir, profile, now)
-    local target = ctx.TargetAssistTarget
-    if target == nil or (ctx.TargetAssistKeepUntil or 0.0) < now then
+    local target = ctx.Runtime.TargetAssistTarget
+    if target == nil or (ctx.Runtime.TargetAssistKeepUntil or 0.0) < now then
         return nil
     end
 
@@ -239,7 +217,7 @@ function PlayerTargeting.FindTarget(player, mode, aimDirection)
         candidate.Score = angleScore * 0.65 + distanceScore * 0.35
 
         if sticky ~= nil and actor == sticky.Actor then
-            candidate.Score = candidate.Score - (config.StickyScoreBonus or 0.15)
+            candidate.Score = candidate.Score - config.StickyScoreBonus
         end
 
         if best == nil or candidate.Score < best.Score then
@@ -257,26 +235,22 @@ end
 ---@param player PlayerContext
 function PlayerTargeting.BeginAssist(player, mode, aimDirection)
     local ctx = PlayerContext.Assert(player, "PlayerTargeting.BeginAssist")
-    if ctx == nil then
-        return nil, nil
-    end
-
     local config = GetTargetingConfig(ctx)
     local profile = GetProfile(config, mode)
     local target, dir, distance = PlayerTargeting.FindTarget(ctx, mode, aimDirection)
     local now = Now()
 
-    ctx.TargetAssistMode = mode
-    ctx.TargetAssistTarget = target
-    ctx.TargetAssistDirection = dir
-    ctx.TargetAssistDistance = distance
-    ctx.TargetAssistEndTime = now + (profile.TurnDuration or 0.0)
-    ctx.TargetAssistKeepUntil = now + (config.StickyTime or 0.0)
+    ctx.Runtime.TargetAssistMode = mode
+    ctx.Runtime.TargetAssistTarget = target
+    ctx.Runtime.TargetAssistDirection = dir
+    ctx.Runtime.TargetAssistDistance = distance
+    ctx.Runtime.TargetAssistEndTime = now + (profile.TurnDuration or 0.0)
+    ctx.Runtime.TargetAssistKeepUntil = now + (config.StickyTime or 0.0)
 
     if profile.LockDirection == true then
-        ctx.TargetAssistLockedDirection = dir
+        ctx.Runtime.TargetAssistLockedDirection = dir
     else
-        ctx.TargetAssistLockedDirection = nil
+        ctx.Runtime.TargetAssistLockedDirection = nil
     end
 
     return target, dir, distance
@@ -285,62 +259,50 @@ end
 ---@param player PlayerContext
 function PlayerTargeting.GetAssistDirection(player)
     local ctx = PlayerContext.Assert(player, "PlayerTargeting.GetAssistDirection")
-    if ctx == nil then
-        return nil
+    if ctx.Runtime.TargetAssistLockedDirection ~= nil then
+        return ctx.Runtime.TargetAssistLockedDirection
     end
 
-    if ctx.TargetAssistLockedDirection ~= nil then
-        return ctx.TargetAssistLockedDirection
-    end
-
-    local target = ctx.TargetAssistTarget
+    local target = ctx.Runtime.TargetAssistTarget
     local owner = GetOwner(ctx)
     if IsValidActor(target) and owner ~= nil then
         local dir, distance = GetDirection2D(GetActorLocation(owner), GetActorLocation(target))
         if dir ~= nil then
-            ctx.TargetAssistDirection = dir
-            ctx.TargetAssistDistance = distance
+            ctx.Runtime.TargetAssistDirection = dir
+            ctx.Runtime.TargetAssistDistance = distance
             return dir
         end
     end
 
-    return ctx.TargetAssistDirection
+    return ctx.Runtime.TargetAssistDirection
 end
 
 ---@param player PlayerContext
 function PlayerTargeting.GetTurnSpeed(player)
     local ctx = PlayerContext.Assert(player, "PlayerTargeting.GetTurnSpeed")
     local config = GetTargetingConfig(ctx)
-    local profile = GetProfile(config, ctx and ctx.TargetAssistMode or "Attack")
-    return profile.TurnSpeed or PlayerConfig.Default.Action.AttackTurnSpeed
+    local profile = GetProfile(config, ctx.Runtime.TargetAssistMode or "Attack")
+    return profile.TurnSpeed
 end
 
 ---@param player PlayerContext
 function PlayerTargeting.IsAssistTurnActive(player)
     local ctx = PlayerContext.Assert(player, "PlayerTargeting.IsAssistTurnActive")
-    if ctx == nil then
-        return false
-    end
-
-    return (ctx.TargetAssistEndTime or 0.0) > Now()
+    return (ctx.Runtime.TargetAssistEndTime or 0.0) > Now()
 end
 
 ---@param player PlayerContext
 function PlayerTargeting.ClearAssist(player, clearSticky)
     local ctx = PlayerContext.Assert(player, "PlayerTargeting.ClearAssist")
-    if ctx == nil then
-        return
-    end
-
-    ctx.TargetAssistMode = nil
-    ctx.TargetAssistDirection = nil
-    ctx.TargetAssistDistance = nil
-    ctx.TargetAssistLockedDirection = nil
-    ctx.TargetAssistEndTime = 0.0
+    ctx.Runtime.TargetAssistMode = nil
+    ctx.Runtime.TargetAssistDirection = nil
+    ctx.Runtime.TargetAssistDistance = nil
+    ctx.Runtime.TargetAssistLockedDirection = nil
+    ctx.Runtime.TargetAssistEndTime = 0.0
 
     if clearSticky == true then
-        ctx.TargetAssistTarget = nil
-        ctx.TargetAssistKeepUntil = 0.0
+        ctx.Runtime.TargetAssistTarget = nil
+        ctx.Runtime.TargetAssistKeepUntil = 0.0
     end
 end
 

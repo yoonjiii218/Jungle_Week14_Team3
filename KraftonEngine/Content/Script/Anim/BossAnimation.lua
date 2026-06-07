@@ -18,6 +18,7 @@
 --   "HitboxClose"     -- 히트박스 비활성화
 
 local CombatContext = require("Combat/CombatContext")
+local BossContext = require("Boss/BossContext")
 
 local ANIM_BASE = "Content/Animation/Samurai_Boss/"
 
@@ -84,26 +85,26 @@ local function BeginHeavyCombo(self, index)
     self.AttackTimer     = 0.0   -- fallback 타이머 리셋
 end
 
--- 보스 Blackboard 를 lazy 하게 가져온다.
--- (BossCharacter.BeginPlay 가 AnimInstance init 보다 늦게 돌 수 있어 update 에서 조회)
-local function GetBB(self)
-    if self.BB == nil then
-        self.BB = CombatContext.GetBossBlackboard()
+local function GetBossContext(self)
+    if self.BossContext == nil then
+        self.BossContext = CombatContext.GetBossContext()
     end
-    return self.BB
+    BossContext.Assert(self.BossContext, "BossAnimation.GetBossContext")
+    return self.BossContext
 end
 
 -- bb 에 쌓인 공격 신호를 소비해 상태머신 트리거 플래그로 변환
-local function ConsumeAnimSignal(self, bb)
-    if bb == nil or bb.AnimAttack == nil then return end
+local function ConsumeAnimSignal(self, bossContext)
+    local brain = bossContext.Brain
+    if brain.AnimAttack == nil then return end
 
-    local kind = bb.AnimAttack
-    local start = bb.AnimAttackStart or 1
-    local hits  = bb.AnimAttackHits  or 1
+    local kind = brain.AnimAttack
+    local start = brain.AnimAttackStart or 1
+    local hits  = brain.AnimAttackHits  or 1
 
-    bb.AnimAttack      = nil
-    bb.AnimAttackStart = nil
-    bb.AnimAttackHits  = nil
+    brain.AnimAttack      = nil
+    brain.AnimAttackStart = nil
+    brain.AnimAttackHits  = nil
 
     if kind == "dash" then
         self.DashSlashPressed = true
@@ -369,8 +370,8 @@ function update(self, dt)
     Anim.blend_space_1d_set_input(self.LocoBlendSpace, self.BlendSpeed)
 
     -- ── AI(BossAttacks) → 애니메이션 신호 처리 ─────────────────
-    local bb = GetBB(self)
-    ConsumeAnimSignal(self, bb)
+    local bossContext = GetBossContext(self)
+    ConsumeAnimSignal(self, bossContext)
 
     -- AttackPrep fallback: AttackEnd notify 누락 시 ATTACK_PREP_DURATION 후 강제 전환
     if self.AttackPrepActive then
@@ -378,7 +379,7 @@ function update(self, dt)
         if not self.AttackEnd then
             if self.AttackPrepTimer >= ATTACK_PREP_DURATION then
                 self.AttackEnd = true
-            elseif bb ~= nil and not bb.ActionLock then
+            elseif not bossContext.Brain.ActionLock then
                 self.AttackEnd = true
             end
         end
@@ -409,7 +410,7 @@ function update(self, dt)
         -- 단, 현재 단의 최소 재생 시간(stageDur * 0.5)을 채운 이후에만 발동
         -- → ActionLock이 콤보 전환 직후 잠깐 false인 타이밍에 2타가 즉사하는 것을 방지
         local minPlayed = (stageDur ~= nil) and (self.AttackTimer >= stageDur * 0.5) or true
-        if bb ~= nil and not bb.ActionLock and minPlayed then
+        if not bossContext.Brain.ActionLock and minPlayed then
             self.AttackEnd = true
         end
     end
@@ -427,28 +428,28 @@ function on_notify(self, name)
         self.DashEnd = true
 
     elseif name == "HitboxOpen" then
-        local bb = GetBB(self)
-        if bb then bb.HitboxOpen = true end
+        local bossContext = GetBossContext(self)
+        bossContext.Attack.HitboxOpen = true
 
     elseif name == "HitboxClose" then
-        local bb = GetBB(self)
-        if bb then bb.HitboxClose = true end
+        local bossContext = GetBossContext(self)
+        bossContext.Attack.HitboxClose = true
 
     elseif name == "ZoneShow" then
-        local bb = GetBB(self)
-        if bb then bb.ZoneShow = true end
+        local bossContext = GetBossContext(self)
+        bossContext.Attack.ZoneShow = true
 
     elseif name == "ZoneFlash" then
-        local bb = GetBB(self)
-        if bb then bb.ZoneFlash = true end
+        local bossContext = GetBossContext(self)
+        bossContext.Attack.ZoneFlash = true
 
     elseif name == "ZoneHide" then
-        local bb = GetBB(self)
-        if bb then bb.ZoneHide = true end
+        local bossContext = GetBossContext(self)
+        bossContext.Attack.ZoneHide = true
 
     elseif name == "TrackEnd" then
-        local bb = GetBB(self)
-        if bb then bb.TrackEnd = true end
+        local bossContext = GetBossContext(self)
+        bossContext.Attack.TrackEnd = true
 
     elseif name == "TrailActivate" or name == "TrailOn" then
         -- TODO: BossFeedback 연동

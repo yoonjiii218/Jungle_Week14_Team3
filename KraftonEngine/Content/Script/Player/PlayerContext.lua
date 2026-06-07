@@ -1,6 +1,6 @@
 -- Player/PlayerContext.lua
 -- Defines the PlayerContext data contract used across player Lua modules.
--- The legacy flat field proxy exists only to keep this first refactor behavior-compatible.
+-- New code must use explicit buckets: player.Input / Action / Combat / Feedback / Runtime.
 
 local Strict = require("Core/Strict")
 local PlayerConfig = require("Config/PlayerConfig")
@@ -63,7 +63,6 @@ local PlayerContext = {}
 ---@field EventQueue PlayerEvent[]
 ---@field DashPrevOrientRotationToMovement any
 ---@field DashMoveDirection any
----@field DashSlashMoveDirection any
 ---@field StepForwardActive boolean
 ---@field StepForwardElapsed number
 ---@field StepForwardDuration number
@@ -88,112 +87,6 @@ local PlayerContext = {}
 ---@field Combat PlayerCombatState
 ---@field Feedback PlayerFeedbackState
 ---@field Runtime PlayerRuntimeState
-
-local LEGACY_FIELD_MAP = {
-    -- Input
-    MoveDir = { "Input", "MoveDir" },
-    AttackPressed = { "Input", "AttackPressed" },
-    AttackDown = { "Input", "AttackDown" },
-    AttackHoldTime = { "Input", "AttackHoldTime" },
-    DashPressed = { "Input", "DashPressed" },
-    DashReleased = { "Input", "DashReleased" },
-    DashDown = { "Input", "DashDown" },
-    DashHoldTime = { "Input", "DashHoldTime" },
-    DashChargingPressed = { "Input", "DashChargingPressed" },
-    DashChargingReleased = { "Input", "DashChargingReleased" },
-    DashChargingConsumedInput = { "Input", "DashChargingConsumedInput" },
-    DashSlashPressed = { "Input", "DashPressed" },
-    UltimatePressed = { "Input", "UltimatePressed" },
-
-    -- Action
-    State = { "Action", "State" },
-    AttackIndex = { "Action", "AttackIndex" },
-    AttackInstanceId = { "Action", "AttackInstanceId" },
-    ComboWindow = { "Action", "ComboWindow" },
-    ComboQueued = { "Action", "ComboQueued" },
-    AttackEnd = { "Action", "AttackEnd" },
-    DashActive = { "Action", "DashActive" },
-    DashElapsed = { "Action", "DashElapsed" },
-    DashEnd = { "Action", "DashEnd" },
-    DashSlashActive = { "Action", "DashActive" },
-    DashSlashElapsed = { "Action", "DashElapsed" },
-    DashSlashEnd = { "Action", "DashEnd" },
-    DashChargingActive = { "Action", "DashChargingActive" },
-    DashChargingElapsed = { "Action", "DashChargingElapsed" },
-    DashChargingEnd = { "Action", "DashChargingEnd" },
-    DashChargeAttackActive = { "Action", "DashChargeAttackActive" },
-    DashChargeAttackElapsed = { "Action", "DashChargeAttackElapsed" },
-    DashChargeAttackEnd = { "Action", "DashChargeAttackEnd" },
-    DashChargeAttackInstanceId = { "Action", "DashChargeAttackInstanceId" },
-    IsUltimateRunning = { "Action", "IsUltimateRunning" },
-    IsInUltimateMode = { "Action", "IsInUltimateMode" },
-
-    -- Combat
-    HP = { "Combat", "HP" },
-    MaxHP = { "Combat", "MaxHP" },
-    UltimateGauge = { "Combat", "UltimateGauge" },
-    MaxUltimateGauge = { "Combat", "MaxUltimateGauge" },
-    IsDead = { "Combat", "IsDead" },
-    InvincibleUntil = { "Combat", "InvincibleUntil" },
-    DodgeInvincibleUntil = { "Combat", "DodgeInvincibleUntil" },
-    PerfectDodgeConsumedUntil = { "Combat", "PerfectDodgeConsumedUntil" },
-    RecentHitIds = { "Combat", "RecentHitIds" },
-    CurrentThreat = { "Combat", "CurrentThreat" },
-    CombatDodgeActive = { "Combat", "CombatDodgeActive" },
-    DodgeStartLocation = { "Combat", "DodgeStartLocation" },
-    LastHitTime = { "Combat", "LastHitTime" },
-
-    -- Feedback
-    KatanaComponent = { "Feedback", "KatanaComponent" },
-    KatanaPSC = { "Feedback", "KatanaPSC" },
-
-    -- Runtime
-    MovementComp = { "Runtime", "MovementComp" },
-    LastMoveInputDirection = { "Runtime", "LastMoveInputDirection" },
-    PendingActionEvents = { "Runtime", "EventQueue" },
-    EventQueue = { "Runtime", "EventQueue" },
-    DashPrevOrientRotationToMovement = { "Runtime", "DashPrevOrientRotationToMovement" },
-    DashMoveDirection = { "Runtime", "DashMoveDirection" },
-    DashSlashMoveDirection = { "Runtime", "DashMoveDirection" },
-    DashSlashPrevOrientRotationToMovement = { "Runtime", "DashPrevOrientRotationToMovement" },
-    StepForwardActive = { "Runtime", "StepForwardActive" },
-    StepForwardElapsed = { "Runtime", "StepForwardElapsed" },
-    StepForwardDuration = { "Runtime", "StepForwardDuration" },
-    StepForwardDistance = { "Runtime", "StepForwardDistance" },
-    StepForwardAppliedDistance = { "Runtime", "StepForwardAppliedDistance" },
-    StepForwardDirection = { "Runtime", "StepForwardDirection" },
-    TargetAssistMode = { "Runtime", "TargetAssistMode" },
-    TargetAssistTarget = { "Runtime", "TargetAssistTarget" },
-    TargetAssistDirection = { "Runtime", "TargetAssistDirection" },
-    TargetAssistDistance = { "Runtime", "TargetAssistDistance" },
-    TargetAssistLockedDirection = { "Runtime", "TargetAssistLockedDirection" },
-    TargetAssistEndTime = { "Runtime", "TargetAssistEndTime" },
-    TargetAssistKeepUntil = { "Runtime", "TargetAssistKeepUntil" },
-}
-
-local PlayerContextMetatable = {
-    __index = function(player, key)
-        local map = LEGACY_FIELD_MAP[key]
-        if map ~= nil then
-            local bucket = rawget(player, map[1])
-            return bucket and bucket[map[2]] or nil
-        end
-        return nil
-    end,
-    __newindex = function(player, key, value)
-        local map = LEGACY_FIELD_MAP[key]
-        if map ~= nil then
-            local bucket = rawget(player, map[1])
-            if bucket == nil then
-                bucket = {}
-                rawset(player, map[1], bucket)
-            end
-            bucket[map[2]] = value
-            return
-        end
-        rawset(player, key, value)
-    end,
-}
 
 local function CreateInputState()
     return {
@@ -236,12 +129,12 @@ local function CreateActionState()
 end
 
 local function CreateCombatState(config)
-    local combatConfig = config.Combat or PlayerConfig.Default.Combat
+    local combatConfig = config.Combat
     return {
-        HP = combatConfig.MaxHP or PlayerConfig.Default.Combat.MaxHP,
-        MaxHP = combatConfig.MaxHP or PlayerConfig.Default.Combat.MaxHP,
+        HP = combatConfig.MaxHP,
+        MaxHP = combatConfig.MaxHP,
         UltimateGauge = 0,
-        MaxUltimateGauge = combatConfig.MaxUltimateGauge or PlayerConfig.Default.Combat.MaxUltimateGauge,
+        MaxUltimateGauge = combatConfig.MaxUltimateGauge,
         IsDead = false,
         InvincibleUntil = 0.0,
         DodgeInvincibleUntil = 0.0,
@@ -261,7 +154,6 @@ local function CreateRuntimeState()
         EventQueue = {},
         DashPrevOrientRotationToMovement = nil,
         DashMoveDirection = nil,
-        DashSlashMoveDirection = nil,
         StepForwardActive = false,
         StepForwardElapsed = 0.0,
         StepForwardDuration = 0.0,
@@ -301,7 +193,7 @@ function PlayerContext.Create(owner, component)
         Runtime = CreateRuntimeState(),
     }
 
-    return setmetatable(player, PlayerContextMetatable)
+    return player
 end
 
 ---@param player PlayerContext
@@ -313,12 +205,13 @@ function PlayerContext.Assert(player, caller)
     Strict.AssertTable(player.Action, "player.Action", caller or "PlayerContext.Assert")
     Strict.AssertTable(player.Combat, "player.Combat", caller or "PlayerContext.Assert")
     Strict.AssertTable(player.Runtime, "player.Runtime", caller or "PlayerContext.Assert")
+    Strict.AssertTable(player.Config, "player.Config", caller or "PlayerContext.Assert")
+    Strict.AssertTable(player.Config.Input, "player.Config.Input", caller or "PlayerContext.Assert")
+    Strict.AssertTable(player.Config.Action, "player.Config.Action", caller or "PlayerContext.Assert")
+    Strict.AssertTable(player.Config.Combat, "player.Config.Combat", caller or "PlayerContext.Assert")
+    Strict.AssertTable(player.Config.Feedback, "player.Config.Feedback", caller or "PlayerContext.Assert")
+    Strict.AssertTable(player.Config.Animation, "player.Config.Animation", caller or "PlayerContext.Assert")
     return player
-end
-
----@return table
-function PlayerContext.GetLegacyFieldMap()
-    return LEGACY_FIELD_MAP
 end
 
 return PlayerContext

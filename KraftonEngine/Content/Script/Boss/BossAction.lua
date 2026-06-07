@@ -1,170 +1,182 @@
--- BossAction.lua
--- UpdateAI, LookAt, Chase, IdleLookAt, 패턴 선택 로직
+-- Boss/BossAction.lua
+-- Owns bossContext.Brain high-level decision transitions.
+-- BossAttacks owns concrete attack timing and hit request creation.
+-- Do not pass AnimInstance self as bossContext.
 
 local BossAction = {}
 
 local BossContext = require("Boss/BossContext")
+local BossEvents = require("Boss/BossEvents")
+local Strict = require("Core/Strict")
 
-local ctx_ref   = nil   -- BossCharacter.lua 에서 Init 으로 주입
-local Attacks   = nil   -- 순환 require 방지: Init 시점에 주입
-local lastState = nil   -- 디버그: 상태 전환 시에만 로그 출력
+local BossAttacks = nil
+local lastState = nil
 
--- 상태가 바뀔 때만 print (매 프레임 스팸 방지)
-local function LogState(state, dist)
+local function GetBossAttacks()
+    if BossAttacks == nil then
+        BossAttacks = require("Boss/BossAttacks")
+    end
+    return BossAttacks
+end
+
+local function LogState(bossContext, state, distance)
     if state ~= lastState then
-        if ctx_ref.BB.DEBUG then
-            print("[BossAction] STATE -> " .. state
-                  .. "  dist=" .. string.format("%.2f", dist))
+        if bossContext.Config.DEBUG then
+            print("[BossAction] STATE -> " .. state .. "  dist=" .. string.format("%.2f", distance))
         end
         lastState = state
     end
 end
 
--- ────────────────────────────────────────────
----@param boss BossContext
----@return nil
-function BossAction.Init(boss)
-    ctx_ref = BossContext.Assert(boss, "BossAction.Init")
-    Attacks = require("Boss/BossAttacks")
-end
+local function LookAtPlayer(bossContext, dt)
+    local brain = bossContext.Brain
+    if not brain.IsTracking then return end
 
----@return any
-function BossAction.GetPlayerRef()
-    return ctx_ref and ctx_ref.playerRef
-end
+    local targetActor = brain.TargetActor
+    if not targetActor or not targetActor:IsValid() then return end
 
--- ────────────────────────────────────────────
--- ① LookAt: 방향 벡터 → Yaw → SetActorRotation (보간)
--- bb.IsTracking == false 이면 회전 정지 (P3 TRACK_END 이후)
--- ────────────────────────────────────────────
-local function LookAtPlayer(dt)
-    if not ctx_ref.bb.IsTracking then return end
+    local ownerActor = bossContext.Owner
+    local bossPos = ownerActor.Location
+    local targetPos = targetActor.Location
 
-    local playerRef = ctx_ref.playerRef
-    if not playerRef or not playerRef:IsValid() then return end
+    local toTarget = Vector(targetPos.X - bossPos.X, targetPos.Y - bossPos.Y, 0.0)
+    if toTarget:Length() < 0.001 then return end
 
-    local bossPos = ctx_ref.obj.Location
-    local plrPos  = playerRef.Location
-
-    local toPlayer = Vector(plrPos.X - bossPos.X, plrPos.Y - bossPos.Y, 0.0)
-    if toPlayer:Length() < 0.001 then return end
-
-    -- 목표 Yaw (도 단위, atan2는 라디안 반환 → 기존 코드와 동일 패턴)
-    local targetYaw = math.atan2(toPlayer.Y, toPlayer.X) * 180.0 / math.pi
-
-    -- 현재 Yaw: obj.Rotation = Vector(Roll, Pitch, Yaw), .Z = Yaw
-    local currentYaw = ctx_ref.obj.Rotation.Z
-
-    -- 각도 정규화 (-180 ~ +180)
+    local targetYaw = math.atan2(toTarget.Y, toTarget.X) * 180.0 / math.pi
+    local currentYaw = ownerActor.Rotation.Z
     local diff = targetYaw - currentYaw
-    while diff >  180.0 do diff = diff - 360.0 end
+    while diff > 180.0 do diff = diff - 360.0 end
     while diff < -180.0 do diff = diff + 360.0 end
 
-    -- bb.TimeScale 적용 후 clamp
-    local scaledDt = dt * ctx_ref.bb.TimeScale
-    local maxStep  = ctx_ref.BB.LOOK_AT_SPEED * scaledDt
-    local step     = math.max(-maxStep, math.min(maxStep, diff))
+    local scaledDt = dt * brain.TimeScale
+    local maxStep = bossContext.Config.LOOK_AT_SPEED * scaledDt
+    local step = math.max(-maxStep, math.min(maxStep, diff))
 
-    -- Vector(Roll, Pitch, Yaw) 컨벤션
-    ctx_ref.obj.Rotation = Vector(0.0, 0.0, currentYaw + step)
+    ownerActor.Rotation = Vector(0.0, 0.0, currentYaw + step)
 end
 
--- ────────────────────────────────────────────
--- ② Chase: 플레이어 방향으로 이동 + LookAt
--- ────────────────────────────────────────────
-local function Chase(dt)
-    LookAtPlayer(dt)
+local function Chase(bossContext, dt)
+    LookAtPlayer(bossContext, dt)
 
-    local playerRef = ctx_ref.playerRef
-    if not playerRef or not playerRef:IsValid() then return end
+    local targetActor = bossContext.Brain.TargetActor
+    if not targetActor or not targetActor:IsValid() then return end
 
-    local bossPos = ctx_ref.obj.Location
-    local plrPos  = playerRef.Location
-    local toPlayer = Vector(plrPos.X - bossPos.X, plrPos.Y - bossPos.Y, 0.0)
-    if toPlayer:Length() < 0.001 then return end
+    local ownerActor = bossContext.Owner
+    local bossPos = ownerActor.Location
+    local targetPos = targetActor.Location
+    local toTarget = Vector(targetPos.X - bossPos.X, targetPos.Y - bossPos.Y, 0.0)
+    if toTarget:Length() < 0.001 then return end
 
-    -- AddMovementInput 은 정규화된 방향 필요 (Vector:Normalized 사용)
-    Reflection.Call(ctx_ref.obj, "AddMovementInput", toPlayer:Normalized(), 1.0)
+    Reflection.Call(ownerActor, "AddMovementInput", toTarget:Normalized(), 1.0)
 end
 
--- ────────────────────────────────────────────
--- Idle: 플레이어 방향만 바라보며 대기
--- ────────────────────────────────────────────
-local function IdleLookAt(dt)
-    LookAtPlayer(dt)
-    -- TODO: Idle 애니메이션 상태 전환 (2단계에서 연결)
-end
-
--- ────────────────────────────────────────────
--- ⑦ 패턴 선택: LastPattern 큐 + 가중치 랜덤
--- 직전 P3 → 무조건 P1 or P2 (연속 P3 방지)
--- ────────────────────────────────────────────
-local function SelectPattern()
-    local bb = ctx_ref.bb
-    local BB = ctx_ref.BB
+local function SelectPattern(bossContext)
+    local brain = bossContext.Brain
+    local config = bossContext.Config
     local roll = math.random()
+    local attacks = GetBossAttacks()
 
-    -- 직전 패턴이 P3였으면 강제로 가벼운 패턴
-    if bb.LastPattern == "P3" then
-        if BB.DEBUG then print("[BossAction] P3 직후 → 강제 경량 패턴") end
+    if brain.LastPattern == "P3" then
+        if config.DEBUG then print("[BossAction] P3 cooldown pattern forced light") end
         if roll < 0.5 then
-            Attacks.RunPattern(ctx_ref, "P2")
+            attacks.StartAttack(bossContext, { AttackId = "P2" })
         else
-            Attacks.RunPattern(ctx_ref, "P1")
+            attacks.StartAttack(bossContext, { AttackId = "P1" })
         end
         return
     end
 
-    -- 일반 가중치 선택
-    if bb.HeavyAttackCooldown <= 0 and roll < BB.PROB_HEAVY then
-        Attacks.RunPattern(ctx_ref, "P3")
-    elseif roll < BB.PROB_HEAVY + BB.PROB_DOUBLE then
-        Attacks.RunPattern(ctx_ref, "P2")
+    if brain.HeavyAttackCooldown <= 0 and roll < config.PROB_HEAVY then
+        attacks.StartAttack(bossContext, { AttackId = "P3" })
+    elseif roll < config.PROB_HEAVY + config.PROB_DOUBLE then
+        attacks.StartAttack(bossContext, { AttackId = "P2" })
     else
-        Attacks.RunPattern(ctx_ref, "P1")
+        attacks.StartAttack(bossContext, { AttackId = "P1" })
     end
 end
 
--- ────────────────────────────────────────────
--- UpdateAI: 매 프레임 BossCharacter.Tick 에서 호출
--- ────────────────────────────────────────────
----@param boss BossContext
+-- =========================================================
+-- Public API
+-- =========================================================
+
+---@param bossContext BossContext
+---@return nil
+function BossAction.Init(bossContext)
+    BossContext.Assert(bossContext, "BossAction.Init")
+    GetBossAttacks()
+end
+
+---@param bossContext BossContext
 ---@param dt number
 ---@return nil
-function BossAction.UpdateAI(boss, dt)
-    ctx_ref = BossContext.Assert(boss, "BossAction.UpdateAI")
-    local bb = ctx_ref.bb
-    local BB = ctx_ref.BB
+function BossAction.Update(bossContext, dt)
+    BossContext.Assert(bossContext, "BossAction.Update")
+    Strict.AssertNumber(dt, "dt", "BossAction.Update")
 
-    -- 사망: 모든 행동 정지
-    if bb.IsDead then
-        LogState("Dead(사망)", bb.Distance)
+    local brain = bossContext.Brain
+    local config = bossContext.Config
+
+    if bossContext.Combat.IsDead then
+        brain.State = "Dead"
+        LogState(bossContext, "Dead", brain.Distance)
         return
     end
 
-    -- ③ 슈퍼아머: ActionLock 중에는 AI 진입 완전 차단
-    if bb.ActionLock then
-        LogState("ActionLock(공격중)", bb.Distance)
+    if brain.ActionLock then
+        brain.State = "ActionLock"
+        LogState(bossContext, "ActionLock", brain.Distance)
         return
     end
 
-    -- 조건 1: 너무 멀면 추격
-    if bb.Distance >= BB.CHASE_DISTANCE then
-        LogState("Chase", bb.Distance)
-        Chase(dt)
+    if brain.Distance >= config.CHASE_DISTANCE then
+        brain.State = "Chase"
+        LogState(bossContext, "Chase", brain.Distance)
+        Chase(bossContext, dt)
         return
     end
 
-    -- 조건 2: 공격 가능 사거리 + 쿨타임 완료
-    if bb.Distance <= BB.ATTACK_DISTANCE and bb.PatternCooldown <= 0.0 then
-        LogState("Attack", bb.Distance)
-        SelectPattern()
+    if brain.Distance <= config.ATTACK_DISTANCE and brain.PatternCooldown <= 0.0 then
+        brain.State = "Attack"
+        LogState(bossContext, "Attack", brain.Distance)
+        SelectPattern(bossContext)
         return
     end
 
-    -- 조건 3: 사거리 안이지만 쿨타임 중(또는 3~7 중간 거리) → Idle
-    LogState("Idle", bb.Distance)
-    IdleLookAt(dt)
+    brain.State = "Idle"
+    LogState(bossContext, "Idle", brain.Distance)
+    LookAtPlayer(bossContext, dt)
+end
+
+---@param bossContext BossContext
+---@param args table
+---@return nil
+function BossAction.RequestAttack(bossContext, args)
+    BossContext.Assert(bossContext, "BossAction.RequestAttack")
+    Strict.AssertTable(args, "args", "BossAction.RequestAttack")
+    GetBossAttacks().StartAttack(bossContext, args)
+end
+
+---@param bossContext BossContext
+---@param notifyName string
+---@return nil
+function BossAction.OnAnimNotify(bossContext, notifyName)
+    BossContext.Assert(bossContext, "BossAction.OnAnimNotify")
+    Strict.AssertString(notifyName, "notifyName", "BossAction.OnAnimNotify")
+
+    if notifyName == "HitboxOpen" then
+        GetBossAttacks().OpenHitWindow(bossContext, {})
+    elseif notifyName == "HitboxClose" then
+        GetBossAttacks().CloseHitWindow(bossContext, {})
+    elseif notifyName == "ZoneShow" then
+        bossContext.Attack.ZoneShow = true
+        BossEvents.EmitAttackTelegraphStarted(bossContext, { AttackId = bossContext.Attack.CurrentAttackId })
+    elseif notifyName == "ZoneFlash" then
+        bossContext.Attack.ZoneFlash = true
+    elseif notifyName == "ZoneHide" then
+        bossContext.Attack.ZoneHide = true
+    elseif notifyName == "TrackEnd" then
+        bossContext.Attack.TrackEnd = true
+    end
 end
 
 return BossAction

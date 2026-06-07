@@ -1,21 +1,22 @@
 -- Boss/BossCharacter.lua
 -- ULuaScriptComponent entry point for the boss actor.
--- Owns BossContext and passes it explicitly to boss modules.
+-- Owns BossContext and wires explicit boss module calls.
 
-local BB            = require("Boss/BossBlackboard")
+local BossConfig    = require("Boss/BossBlackboard")
 local BossContext   = require("Boss/BossContext")
-local Action        = require("Boss/BossAction")
-local Attacks       = require("Boss/BossAttacks")
-local Feedback      = require("Boss/BossFeedback")
-local Hitbox        = require("Boss/BossHitbox")
+local BossEvents    = require("Boss/BossEvents")
+local BossAction    = require("Boss/BossAction")
+local BossAttacks   = require("Boss/BossAttacks")
+local BossFeedback  = require("Boss/BossFeedback")
+local BossHitbox    = require("Boss/BossHitbox")
 local CombatContext = require("Combat/CombatContext")
 
-local boss = nil
+local bossContext = nil
 
 function BeginPlay()
     math.randomseed((World.GetGameTime() or 0) * 1000.0 + 1.0)
 
-    boss = BossContext.Create(obj, this, BB)
+    bossContext = BossContext.Create(obj, this, BossConfig)
 
     if not obj:HasTag("Boss") then
         obj:AddTag("Boss")
@@ -25,63 +26,69 @@ function BeginPlay()
         obj:AddTag("HitTarget")
     end
 
-    boss.Runtime.PlayerRef = World.FindFirstActorByTag("Player")
+    bossContext.Brain.TargetActor = World.FindFirstActorByTag("Player")
 
-    if boss.Runtime.MovementComp then
-        Reflection.Call(boss.Runtime.MovementComp, "SetMovementInputEnabled", true)
+    if bossContext.Runtime.MovementComp then
+        Reflection.Call(bossContext.Runtime.MovementComp, "SetMovementInputEnabled", true)
     end
 
-    if BB.DEBUG then
-        local found = (boss.Runtime.PlayerRef ~= nil and boss.Runtime.PlayerRef:IsValid())
+    if BossConfig.DEBUG then
+        local found = bossContext.Brain.TargetActor ~= nil and bossContext.Brain.TargetActor:IsValid()
         print("[BossCharacter] BeginPlay - playerRef found: " .. tostring(found)
-              .. " / movComp: " .. tostring(boss.Runtime.MovementComp ~= nil))
+            .. " / movComp: " .. tostring(bossContext.Runtime.MovementComp ~= nil))
     end
 
-    Action.Init(boss)
-    Attacks.Init(boss)
-    Feedback.Init(boss)
-    Hitbox.Init(boss)
-
-    CombatContext.RegisterBoss(boss)
+    BossAction.Init(bossContext)
+    BossAttacks.Init(bossContext)
+    BossFeedback.Init(bossContext)
+    BossHitbox.Init(bossContext)
+    CombatContext.RegisterBoss(bossContext)
 end
 
 function Tick(dt)
-    if boss == nil then
+    if bossContext == nil then
         return
     end
 
-    local bb = boss.bb
-    if bb.SlomoRemaining == nil then
-        return
-    end
+    BossEvents.BeginFrame(bossContext)
 
-    if bb.SlomoRemaining > 0 then
-        bb.SlomoRemaining = bb.SlomoRemaining - dt
-        if bb.SlomoRemaining <= 0 then
-            bb.SlomoRemaining = 0.0
-            bb.TimeScale = 1.0
-            if BB.DEBUG then print("[BossCharacter] Slomo 종료 @ " .. string.format("%.3f", World.GetGameTime())) end
+    local brain = bossContext.Brain
+    if brain.SlomoRemaining > 0 then
+        brain.SlomoRemaining = brain.SlomoRemaining - dt
+        if brain.SlomoRemaining <= 0 then
+            brain.SlomoRemaining = 0.0
+            brain.TimeScale = 1.0
+            if BossConfig.DEBUG then
+                print("[BossCharacter] Slomo end @ " .. string.format("%.3f", World.GetGameTime()))
+            end
         end
     end
 
-    local scaledDt = dt * bb.TimeScale
+    local scaledDt = dt * brain.TimeScale
+    brain.PatternCooldown = math.max(0.0, brain.PatternCooldown - scaledDt)
+    brain.HeavyAttackCooldown = math.max(0.0, brain.HeavyAttackCooldown - scaledDt)
 
-    bb.PatternCooldown = math.max(0.0, bb.PatternCooldown - scaledDt)
-    bb.HeavyAttackCooldown = math.max(0.0, bb.HeavyAttackCooldown - scaledDt)
-
-    local playerRef = Action.GetPlayerRef()
-    if playerRef and playerRef:IsValid() then
-        local d = obj.Location - playerRef.Location
+    local targetActor = brain.TargetActor
+    if targetActor and targetActor:IsValid() then
+        local d = obj.Location - targetActor.Location
         d.Z = 0.0
-        bb.Distance = d:Length()
+        brain.Distance = d:Length()
+        brain.TargetLastKnownPosition = targetActor.Location
     end
 
     UpdateCoroutines(scaledDt)
-    Action.UpdateAI(boss, dt)
+    BossAction.Update(bossContext, dt)
+    BossAttacks.Update(bossContext, scaledDt)
+
+    local events = BossEvents.Drain(bossContext)
+    CombatContext.ProcessBossEvents(bossContext, events)
+    BossFeedback.ProcessEvents(bossContext, events)
 end
 
 function EndPlay()
     CombatContext.Clear()
-    boss = nil
-    if BB.DEBUG then print("[BossCharacter] EndPlay") end
+    bossContext = nil
+    if BossConfig.DEBUG then
+        print("[BossCharacter] EndPlay")
+    end
 end

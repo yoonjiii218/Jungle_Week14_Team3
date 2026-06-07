@@ -4,11 +4,12 @@
 
 local CombatContext = {}
 
-local PlayerConfig = require("Config/PlayerConfig")
 local PlayerContext = require("Player/PlayerContext")
 local PlayerEvents = require("Player/PlayerEvents")
 local HitTypes = require("Combat/HitTypes")
 local BossContext = require("Boss/BossContext")
+local BossEvents = require("Boss/BossEvents")
+local Strict = require("Core/Strict")
 
 local playersByOwner = {}
 local activeEnemyAttackWindows = {}
@@ -55,12 +56,8 @@ local function Clamp(value, minValue, maxValue)
     return value
 end
 
-local function GetCombatConfig(ctx)
-    if ctx ~= nil and ctx.Config ~= nil and ctx.Config.Combat ~= nil then
-        return ctx.Config.Combat
-    end
-
-    return PlayerConfig.Default.Combat
+local function GetCombatConfig(player)
+    return player.Config.Combat
 end
 
 local function NormalizeHit(hit)
@@ -80,47 +77,34 @@ local function MakeHitKey(hit)
     return sourceKey .. ":" .. targetKey .. ":" .. tostring(hit.AttackInstanceId or hit.AttackId)
 end
 
-local function PruneRecentHits(ctx, now)
-    if ctx == nil or ctx.RecentHitIds == nil then
-        return
-    end
-
-    for key, expireAt in pairs(ctx.RecentHitIds) do
+local function PruneRecentHits(recentHitIds, now)
+    for key, expireAt in pairs(recentHitIds) do
         if expireAt ~= true and expireAt <= now then
-            ctx.RecentHitIds[key] = nil
+            recentHitIds[key] = nil
         end
     end
 end
 
-local function MarkHitIfNew(ctx, hit, now, lifetime)
-    if ctx == nil then
-        return true
-    end
-
-    ctx.RecentHitIds = ctx.RecentHitIds or {}
-    PruneRecentHits(ctx, now)
+local function MarkHitIfNew(recentHitIds, hit, now, lifetime)
+    PruneRecentHits(recentHitIds, now)
 
     local key = MakeHitKey(hit)
-    if ctx.RecentHitIds[key] ~= nil then
+    if recentHitIds[key] ~= nil then
         return false
     end
 
-    ctx.RecentHitIds[key] = now + (lifetime or 1.0)
+    recentHitIds[key] = now + lifetime
     return true
 end
 
-local function AddGauge(ctx, amount)
-    if ctx == nil or amount == nil then
-        return
-    end
-
-    local combatConfig = GetCombatConfig(ctx)
-    local maxGauge = combatConfig.MaxUltimateGauge or ctx.MaxUltimateGauge or PlayerConfig.Default.Combat.MaxUltimateGauge
-    local gauge = (ctx.UltimateGauge or 0) + amount
+local function AddGauge(player, amount)
+    local combatConfig = GetCombatConfig(player)
+    local maxGauge = combatConfig.MaxUltimateGauge
+    local gauge = player.Combat.UltimateGauge + amount
     if gauge < 0 then gauge = 0 end
     if gauge > maxGauge then gauge = maxGauge end
-    ctx.UltimateGauge = gauge
-    ctx.MaxUltimateGauge = maxGauge
+    player.Combat.UltimateGauge = gauge
+    player.Combat.MaxUltimateGauge = maxGauge
 end
 
 local function GetOrAddActionComponent(actor)
@@ -186,19 +170,9 @@ end
 
 function CombatContext.RegisterPlayer(player)
     local ctx = PlayerContext.Assert(player, "CombatContext.RegisterPlayer")
-    if ctx.Owner == nil then
-        return
-    end
-
     local combatConfig = GetCombatConfig(ctx)
-    ctx.MaxHP = ctx.MaxHP or combatConfig.MaxHP or PlayerConfig.Default.Combat.MaxHP
-    ctx.HP = ctx.HP or ctx.MaxHP
-    ctx.IsDead = ctx.IsDead or false
-    ctx.InvincibleUntil = ctx.InvincibleUntil or 0.0
-    ctx.DodgeInvincibleUntil = ctx.DodgeInvincibleUntil or 0.0
-    ctx.PerfectDodgeConsumedUntil = ctx.PerfectDodgeConsumedUntil or 0.0
-    ctx.RecentHitIds = ctx.RecentHitIds or {}
-    ctx.MaxUltimateGauge = combatConfig.MaxUltimateGauge or PlayerConfig.Default.Combat.MaxUltimateGauge
+    ctx.Combat.MaxHP = combatConfig.MaxHP
+    ctx.Combat.MaxUltimateGauge = combatConfig.MaxUltimateGauge
 
     playersByOwner[GetOwnerKey(ctx.Owner)] = ctx
 end
@@ -207,10 +181,6 @@ end
 ---@return nil
 function CombatContext.UnregisterPlayer(player)
     local ctx = PlayerContext.Assert(player, "CombatContext.UnregisterPlayer")
-    if ctx.Owner == nil then
-        return
-    end
-
     local key = GetOwnerKey(ctx.Owner)
     if playersByOwner[key] == ctx then
         playersByOwner[key] = nil
@@ -226,14 +196,14 @@ end
 ---@return nil
 function CombatContext.SetCurrentThreat(player, threat)
     local ctx = PlayerContext.Assert(player, "CombatContext.SetCurrentThreat")
-    ctx.CurrentThreat = threat
+    ctx.Combat.CurrentThreat = threat
 end
 
 ---@param player PlayerContext
 ---@return any
 function CombatContext.GetCurrentThreat(player)
     local ctx = PlayerContext.Assert(player, "CombatContext.GetCurrentThreat")
-    return ctx.CurrentThreat
+    return ctx.Combat.CurrentThreat
 end
 
 ---@param player PlayerContext
@@ -241,46 +211,42 @@ end
 ---@return nil
 function CombatContext.ProcessPlayerEvents(player, events)
     local ctx = PlayerContext.Assert(player, "CombatContext.ProcessPlayerEvents")
-    if events == nil then
-        return
-    end
+    Strict.AssertTable(events, "events", "CombatContext.ProcessPlayerEvents")
 
     local now = Now()
     local combatConfig = GetCombatConfig(ctx)
 
     for _, event in ipairs(events) do
-        if PlayerEvents.Is(event, "PerfectDodge") then
+        if PlayerEvents.Is(event, PlayerEvents.Type.PerfectDodge) then
             CombatContext.SetCurrentThreat(ctx, event.Threat)
             AddGauge(ctx, event.GaugeDelta or 0)
-        elseif PlayerEvents.Is(event, "AttackHit") then
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.AttackHit) then
             AddGauge(ctx, event.GaugeDelta or 0)
-        elseif PlayerEvents.Is(event, "UltimateStart") then
-            ctx.UltimateGauge = 0
-        elseif PlayerEvents.Is(event, "GaugeChanged") then
-            ctx.UltimateGauge = event.Value
-            ctx.MaxUltimateGauge = event.MaxValue or combatConfig.MaxUltimateGauge or ctx.MaxUltimateGauge
-        elseif PlayerEvents.Is(event, "DashStart") then
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.UltimateStarted) then
+            ctx.Combat.UltimateGauge = 0
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.GaugeChanged) then
+            ctx.Combat.UltimateGauge = event.Value
+            ctx.Combat.MaxUltimateGauge = event.MaxValue or combatConfig.MaxUltimateGauge
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.DashStarted) then
             local duration = combatConfig.DashPerfectDodgeDuration
-                or combatConfig.PerfectDodgeWindowDuration
-                or PlayerConfig.Default.Action.DashDuration
-            ctx.DodgeInvincibleUntil = math.max(ctx.DodgeInvincibleUntil or 0.0, now + duration)
-            ctx.CombatDodgeActive = true
+            ctx.Combat.DodgeInvincibleUntil = math.max(ctx.Combat.DodgeInvincibleUntil or 0.0, now + duration)
+            ctx.Combat.CombatDodgeActive = true
             -- 대시 시작 순간의 위치를 기록한다. 회피로 장판을 벗어나도 "대시를 시작한 위치가
             -- 장판 안이었으면" 퍼펙트 회피를 인정하기 위해 보스 ResolveHit 이 이 좌표로 재검사한다.
             if ctx.Owner ~= nil and ctx.Owner.Location ~= nil then
                 local loc = ctx.Owner.Location
-                ctx.DodgeStartLocation = Vector(loc.X, loc.Y, loc.Z)
+                ctx.Combat.DodgeStartLocation = Vector(loc.X, loc.Y, loc.Z)
             end
             print(string.format("[PerfectDodge] 대시무적 ON: now=%.3f ~ until=%.3f (dur=%.3f)",
-                now, ctx.DodgeInvincibleUntil, duration))
-        elseif PlayerEvents.Is(event, "DashEnd") then
-            local grace = combatConfig.PerfectDodgeGraceAfterDash or 0.0
-            ctx.DodgeInvincibleUntil = math.max(ctx.DodgeInvincibleUntil or 0.0, now + grace)
-            ctx.CombatDodgeActive = false
-        elseif PlayerEvents.Is(event, "DashChargingStart") then
-            ctx.CombatDodgeActive = false
-        elseif PlayerEvents.Is(event, "DashChargeAttackStart") then
-            ctx.CombatDodgeActive = false
+                now, ctx.Combat.DodgeInvincibleUntil, duration))
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.DashEnded) then
+            local grace = combatConfig.PerfectDodgeGraceAfterDash
+            ctx.Combat.DodgeInvincibleUntil = math.max(ctx.Combat.DodgeInvincibleUntil or 0.0, now + grace)
+            ctx.Combat.CombatDodgeActive = false
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.DashChargingStarted) then
+            ctx.Combat.CombatDodgeActive = false
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.DashChargeAttackStarted) then
+            ctx.Combat.CombatDodgeActive = false
         end
     end
 end
@@ -290,15 +256,13 @@ end
 -- 보스 관련 (Boss/ 에서 호출)
 -- ════════════════════════════════════════════
 
-local bossRef      = nil   -- 보스 액터
-local bossBB       = nil   -- 보스 런타임 Blackboard
-local bossBBConfig = nil   -- 보스 수치 Blackboard
+local registeredBossContext = nil
+local bossRef = nil
 
 -- ⑥ 재시작/레벨 언로드 시 BossCharacter.EndPlay 에서 호출
 function CombatContext.Clear()
-    bossRef      = nil
-    bossBB       = nil
-    bossBBConfig = nil
+    registeredBossContext = nil
+    bossRef = nil
     activeEnemyAttackWindows = {}
 end
 
@@ -306,15 +270,14 @@ end
 ---@return nil
 function CombatContext.RegisterBoss(boss)
     local bossContext = BossContext.Assert(boss, "CombatContext.RegisterBoss")
-    bossRef      = bossContext.Owner
-    bossBB       = bossContext.bb
-    bossBBConfig = bossContext.BB
+    registeredBossContext = bossContext
+    bossRef = bossContext.Owner
 end
 
 -- 보스 런타임 Blackboard 조회 (BossAnimation 이 공격 신호를 읽기 위해 사용)
 -- AI(BossAttacks)가 bb 에 쓴 AnimAttack 신호를 AnimInstance 가 폴링한다.
-function CombatContext.GetBossBlackboard()
-    return bossBB
+function CombatContext.GetBossContext()
+    return registeredBossContext
 end
 
 -- ════════════════════════════════════════════
@@ -325,24 +288,21 @@ end
 --   ⚠️ 플레이어가 ActionComponent.Slomo 를 부른 직후 반드시 같이 호출.
 --      안 그러면 보스 코루틴이 보정 안 돼서 혼자 정상 속도로 폭주함.
 function CombatContext.OnSlomoStarted(duration, scale)
-    if not bossBB then return end
-    duration = duration or (bossBBConfig and bossBBConfig.PERFECT.SLOMO_DURATION) or 1.5
-    scale    = scale    or (bossBBConfig and bossBBConfig.PERFECT.SLOMO_SCALE)    or 0.1
+    if registeredBossContext == nil then return end
+    local perfectConfig = registeredBossContext.Config.PERFECT
+    duration = duration or perfectConfig.SLOMO_DURATION
+    scale = scale or perfectConfig.SLOMO_SCALE
 
     -- ⑤ 보스 코루틴/쿨타임/LookAt 보정 → Tick 의 scaledDt 에 반영
-    bossBB.TimeScale      = scale
-    bossBB.SlomoRemaining = duration
+    registeredBossContext.Brain.TimeScale = scale
+    registeredBossContext.Brain.SlomoRemaining = duration
 
     print(string.format("[CombatContext] 슬로모 시작 알림 → 보스 보정 (x%.2f / %.1fs)",
           scale, duration))
 end
 
-local function IsPerfectDodgeActive(ctx, now)
-    if ctx == nil then
-        return false
-    end
-
-    return (ctx.DodgeInvincibleUntil or 0.0) > now
+local function IsPerfectDodgeActive(player, now)
+    return player.Combat.DodgeInvincibleUntil > now
 end
 
 -- [진단용] 특정 플레이어 액터가 지금 대시 무적(퍼펙트 회피 윈도우) 상태인지 조회.
@@ -354,7 +314,7 @@ function CombatContext.DebugPlayerDodgeState(playerActor)
         return false, 0.0, 0.0
     end
     local now    = Now()
-    local until_ = ctx.DodgeInvincibleUntil or 0.0
+    local until_ = ctx.Combat.DodgeInvincibleUntil or 0.0
     return until_ > now, now, until_
 end
 
@@ -367,8 +327,8 @@ function CombatContext.GetPlayerDodgeSnapshot(playerActor)
         return false, nil
     end
     local now     = Now()
-    local dodging = (ctx.DodgeInvincibleUntil or 0.0) > now
-    return dodging, ctx.DodgeStartLocation
+    local dodging = (ctx.Combat.DodgeInvincibleUntil or 0.0) > now
+    return dodging, ctx.Combat.DodgeStartLocation
 end
 
 ---@param player PlayerContext
@@ -378,15 +338,15 @@ function CombatContext.OnPlayerPerfectDodge(player, hit)
     local ctx = PlayerContext.Assert(player, "CombatContext.OnPlayerPerfectDodge")
 
     local combatConfig = GetCombatConfig(ctx)
-    local duration = hit.SlomoDuration or combatConfig.PerfectDodgeSlomoDuration or 1.5
-    local scale = hit.SlomoScale or combatConfig.PerfectDodgeSlomoScale or 0.1
+    local duration = hit.SlomoDuration or combatConfig.PerfectDodgeSlomoDuration
+    local scale = hit.SlomoScale or combatConfig.PerfectDodgeSlomoScale
 
     CombatContext.SetCurrentThreat(ctx, hit.SourceActor)
 
     PlayerEvents.EmitPerfectDodge(ctx, {
         Threat = hit.SourceActor,
         AttackId = hit.AttackId,
-        GaugeDelta = combatConfig.PerfectDodgeGaugeDelta or hit.GaugeDelta or 0,
+        GaugeDelta = combatConfig.PerfectDodgeGaugeDelta,
         SlomoDuration = duration,
         SlomoScale = scale,
     })
@@ -437,33 +397,33 @@ function CombatContext.ApplyHitToPlayer(player, hit)
     local ctx = PlayerContext.Assert(player, "CombatContext.ApplyHitToPlayer")
     hit = NormalizeHit(hit)
 
-    if ctx.IsDead == true then
+    if ctx.Combat.IsDead == true then
         return { Applied = false, Reason = "PlayerDead" }
     end
 
     local now = Now()
     local combatConfig = GetCombatConfig(ctx)
 
-    if MarkHitIfNew(ctx, hit, now, combatConfig.DuplicateHitLifetime or 1.0) == false then
+    if MarkHitIfNew(ctx.Combat.RecentHitIds, hit, now, hit.DuplicateHitLifetime or combatConfig.DuplicateHitLifetime) == false then
         return { Applied = false, Reason = "DuplicateHit" }
     end
 
     -- [진단] 여기 도달했다 = Hitbox.Check 통과(장판 안) → 퍼펙트 회피 판정 단계.
     -- dodging=false 면 "장판 안에 있었지만 무적 타이밍이 안 맞음"(윈도우 미겹침).
     print(string.format("[PerfectDodge] ApplyHit 도달: now=%.3f until=%.3f dodging=%s attack=%s",
-        now, ctx.DodgeInvincibleUntil or 0.0,
+        now, ctx.Combat.DodgeInvincibleUntil or 0.0,
         tostring(IsPerfectDodgeActive(ctx, now)), tostring(hit.AttackId)))
 
     if hit.CanPerfectDodge ~= false and IsPerfectDodgeActive(ctx, now) then
         -- 같은 회피 윈도우에서 여러 타가 한꺼번에 들어와도 첫 타만 슬로모를 건다.
-        if (ctx.PerfectDodgeConsumedUntil or 0.0) < now then
-            ctx.PerfectDodgeConsumedUntil = ctx.DodgeInvincibleUntil or now
+        if (ctx.Combat.PerfectDodgeConsumedUntil or 0.0) < now then
+            ctx.Combat.PerfectDodgeConsumedUntil = ctx.Combat.DodgeInvincibleUntil or now
             CombatContext.OnPlayerPerfectDodge(ctx, hit)
         end
         return { Applied = false, Reason = "PerfectDodge" }
     end
 
-    if (ctx.InvincibleUntil or 0.0) > now then
+    if (ctx.Combat.InvincibleUntil or 0.0) > now then
         return { Applied = false, Reason = "Invincible" }
     end
 
@@ -472,28 +432,28 @@ function CombatContext.ApplyHitToPlayer(player, hit)
         return { Applied = false, Reason = "NoDamage" }
     end
 
-    ctx.MaxHP = ctx.MaxHP or combatConfig.MaxHP or PlayerConfig.Default.Combat.MaxHP
-    ctx.HP = Clamp((ctx.HP or ctx.MaxHP) - damage, 0.0, ctx.MaxHP)
-    ctx.LastHitTime = now
-    ctx.InvincibleUntil = now + (hit.InvincibleDuration or combatConfig.HitInvincibleDuration or 0.5)
+    ctx.Combat.MaxHP = combatConfig.MaxHP
+    ctx.Combat.HP = Clamp(ctx.Combat.HP - damage, 0.0, ctx.Combat.MaxHP)
+    ctx.Combat.LastHitTime = now
+    ctx.Combat.InvincibleUntil = now + (hit.InvincibleDuration or combatConfig.HitInvincibleDuration)
     CombatContext.SetCurrentThreat(ctx, hit.SourceActor)
 
-    ApplyLocalHitStop(ctx.Owner, hit.HitStopDuration or combatConfig.HitStopDuration or 0.0)
-    ApplyLocalHitStop(hit.SourceActor, hit.HitStopDuration or combatConfig.EnemyHitStopDuration or 0.0)
+    ApplyLocalHitStop(ctx.Owner, hit.HitStopDuration or combatConfig.HitStopDuration)
+    ApplyLocalHitStop(hit.SourceActor, hit.HitStopDuration or combatConfig.EnemyHitStopDuration)
 
     PlayerEvents.EmitHit(ctx, {
         SourceActor = hit.SourceActor,
         AttackId = hit.AttackId,
         Damage = damage,
-        HP = ctx.HP,
-        MaxHP = ctx.MaxHP,
+        HP = ctx.Combat.HP,
+        MaxHP = ctx.Combat.MaxHP,
     })
 
     print(string.format("[Player] 피격! -%.0f   HP: %.0f / %.0f   attack=%s",
-        damage, ctx.HP, ctx.MaxHP, tostring(hit.AttackId)))
+        damage, ctx.Combat.HP, ctx.Combat.MaxHP, tostring(hit.AttackId)))
 
-    if ctx.HP <= 0.0 then
-        ctx.IsDead = true
+    if ctx.Combat.HP <= 0.0 then
+        ctx.Combat.IsDead = true
         PlayerEvents.EmitDead(ctx, {
             SourceActor = hit.SourceActor,
             AttackId = hit.AttackId,
@@ -501,15 +461,15 @@ function CombatContext.ApplyHitToPlayer(player, hit)
         print("[Player] ☠ 사망!")
     end
 
-    return { Applied = true, Target = "Player", Damage = damage, HP = ctx.HP, MaxHP = ctx.MaxHP }
+    return { Applied = true, Target = "Player", Damage = damage, HP = ctx.Combat.HP, MaxHP = ctx.Combat.MaxHP }
 end
 
 -- 보스 사망 처리 (HP 0 도달 시 1회만)
-local function HandleBossDeath()
-    if bossBB == nil or bossBB.IsDead then return end
+local function HandleBossDeath(bossContext, hit)
+    if bossContext == nil or bossContext.Combat.IsDead then return end
 
-    bossBB.IsDead    = true
-    bossBB.ActionLock = false   -- 락 해제 (진행 중 코루틴은 IsDead 로 무력화됨)
+    bossContext.Combat.IsDead = true
+    bossContext.Brain.ActionLock = false
 
     -- 이동 정지
     if bossRef and bossRef:IsValid() then
@@ -517,64 +477,75 @@ local function HandleBossDeath()
         if mov then mov:StopMovementImmediately() end
     end
 
+    BossEvents.EmitDead(bossContext, {
+        SourceActor = hit and hit.SourceActor or nil,
+        AttackId = hit and hit.AttackId or nil,
+    })
+
     print("[Boss] ☠ 사망!")
     -- TODO: 사망 애니메이션, 전투 종료 이벤트, 보상 등 (에셋/연출 단계)
 end
 
 function CombatContext.ApplyHitToBoss(hit)
     hit = NormalizeHit(hit)
+    local bossContext = registeredBossContext
 
-    if not bossBB or bossBB.HP == nil then
+    if bossContext == nil then
         return { Applied = false, Reason = "BossMissing" }
     end
-    if bossBB.IsDead then
+    if bossContext.Combat.IsDead then
         return { Applied = false, Reason = "BossDead" }
     end
 
     local now = Now()
-    if bossBB.RecentHitIds == nil then
-        bossBB.RecentHitIds = {}
-    end
-    PruneRecentHits(bossBB, now)
+    PruneRecentHits(bossContext.Combat.RecentHitIds, now)
 
     local key = MakeHitKey(hit)
-    if bossBB.RecentHitIds[key] ~= nil then
+    if bossContext.Combat.RecentHitIds[key] ~= nil then
         return { Applied = false, Reason = "DuplicateHit" }
     end
-    bossBB.RecentHitIds[key] = now + (hit.DuplicateHitLifetime or 1.0)
+    bossContext.Combat.RecentHitIds[key] = now + (hit.DuplicateHitLifetime or 1.0)
 
     local damage = hit.Damage or 0
     if damage <= 0 then
         return { Applied = false, Reason = "NoDamage" }
     end
 
-    bossBB.HP = math.max(0.0, bossBB.HP - damage)
+    bossContext.Combat.HP = math.max(0.0, bossContext.Combat.HP - damage)
 
-    local combatConfig = PlayerConfig.Default.Combat
-    ApplyLocalHitStop(hit.SourceActor, hit.HitStopDuration or combatConfig.HitStopDuration or 0.0)
-    ApplyLocalHitStop(bossRef, hit.HitStopDuration or combatConfig.EnemyHitStopDuration or 0.0)
+    BossEvents.EmitHit(bossContext, {
+        SourceActor = hit.SourceActor,
+        AttackId = hit.AttackId,
+        Damage = damage,
+        HP = bossContext.Combat.HP,
+        MaxHP = bossContext.Combat.MaxHP,
+    })
 
     local sourceCtx = CombatContext.GetPlayerByOwner(hit.SourceActor)
     if sourceCtx ~= nil then
+        local combatConfig = GetCombatConfig(sourceCtx)
+        ApplyLocalHitStop(hit.SourceActor, hit.HitStopDuration or combatConfig.HitStopDuration)
+        ApplyLocalHitStop(bossRef, hit.HitStopDuration or combatConfig.EnemyHitStopDuration)
+
         PlayerEvents.EmitAttackHit(sourceCtx, {
             AttackId = hit.AttackId,
             AttackIndex = hit.AttackIndex,
             TargetActor = bossRef,
             Damage = damage,
             GaugeDelta = hit.GaugeDelta or 0,
-            HP = bossBB.HP,
-            MaxHP = bossBB.MaxHP,
+            HP = bossContext.Combat.HP,
+            MaxHP = bossContext.Combat.MaxHP,
         })
     end
 
     print(string.format("[Boss] 피격! -%.0f   HP: %.0f / %.0f   attack=%s",
-          damage, bossBB.HP, bossBB.MaxHP or 0.0, tostring(hit.AttackId)))
+          damage, bossContext.Combat.HP, bossContext.Combat.MaxHP, tostring(hit.AttackId)))
 
-    if bossBB.HP <= 0.0 then
-        HandleBossDeath()
+    if bossContext.Combat.HP <= 0.0 then
+        HandleBossDeath(bossContext, hit)
     end
 
-    return { Applied = true, Target = "Boss", Damage = damage, HP = bossBB.HP, MaxHP = bossBB.MaxHP }
+    return { Applied = true, Target = "Boss", Damage = damage, HP = bossContext.Combat.HP, MaxHP = bossContext.Combat.MaxHP }
 end
 
 -- [플레이어팀 호출] 플레이어가 보스를 때렸을 때
@@ -630,7 +601,7 @@ end
 ---@param args table
 ---@return HitResult
 function CombatContext.TryResolvePlayerOverlapHit(args)
-    args = args or {}
+    Strict.AssertTable(args, "args", "CombatContext.TryResolvePlayerOverlapHit")
     local playerCtx = PlayerContext.Assert(args.Player, "CombatContext.TryResolvePlayerOverlapHit")
     local otherActor = args.OtherActor
     if otherActor == nil then
@@ -654,36 +625,39 @@ function CombatContext.TryResolvePlayerOverlapHit(args)
     return CombatContext.ApplyHit(hit)
 end
 
+---@param bossContext BossContext
+---@param events BossEvent[]
+---@return nil
+function CombatContext.ProcessBossEvents(bossContext, events)
+    BossContext.Assert(bossContext, "CombatContext.ProcessBossEvents")
+    Strict.AssertTable(events, "events", "CombatContext.ProcessBossEvents")
+end
+
 -- [플레이어팀 조회] HP 바 UI 용 (0.0 ~ 1.0)
 function CombatContext.GetBossHPRatio()
-    if not bossBB or not bossBB.MaxHP or bossBB.MaxHP <= 0 then return 0.0 end
-    return (bossBB.HP or 0.0) / bossBB.MaxHP
+    if registeredBossContext == nil or registeredBossContext.Combat.MaxHP <= 0 then return 0.0 end
+    return registeredBossContext.Combat.HP / registeredBossContext.Combat.MaxHP
 end
 
 -- [플레이어팀 조회] 현재/최대 체력 (current, max)
 function CombatContext.GetBossHP()
-    if not bossBB then return 0.0, 0.0 end
-    return bossBB.HP or 0.0, bossBB.MaxHP or 0.0
+    if registeredBossContext == nil then return 0.0, 0.0 end
+    return registeredBossContext.Combat.HP, registeredBossContext.Combat.MaxHP
 end
 
 -- [플레이어팀 조회] 생존 여부
 function CombatContext.IsBossAlive()
-    return bossBB ~= nil and (bossBB.HP or 0.0) > 0.0
+    return registeredBossContext ~= nil and registeredBossContext.Combat.HP > 0.0
 end
 
----@param player PlayerContext|nil
+---@param player PlayerContext
 ---@return number, number
 function CombatContext.GetPlayerHP(player)
-    local ctx = player or CombatContext.GetPlayerByOwner(obj)
-    if ctx == nil then
-        return 0.0, 0.0
-    end
-    PlayerContext.Assert(ctx, "CombatContext.GetPlayerHP")
-
-    return ctx.HP or 0.0, ctx.MaxHP or 0.0
+    local ctx = PlayerContext.Assert(player, "CombatContext.GetPlayerHP")
+    return ctx.Combat.HP, ctx.Combat.MaxHP
 end
 
----@param player PlayerContext|nil
+---@param player PlayerContext
 ---@return number
 function CombatContext.GetPlayerHPRatio(player)
     local hp, maxHP = CombatContext.GetPlayerHP(player)

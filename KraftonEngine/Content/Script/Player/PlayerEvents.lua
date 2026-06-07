@@ -25,28 +25,9 @@ PlayerEvents.Type = {
     GaugeChanged = "Player.GaugeChanged",
 }
 
-local LegacyType = {
-    DashStart = PlayerEvents.Type.DashStarted,
-    DashEnd = PlayerEvents.Type.DashEnded,
-    DashChargingStart = PlayerEvents.Type.DashChargingStarted,
-    DashChargingEnd = PlayerEvents.Type.DashChargingEnded,
-    DashChargeAttackStart = PlayerEvents.Type.DashChargeAttackStarted,
-    DashChargeAttackEnd = PlayerEvents.Type.DashChargeAttackEnded,
-    AttackStart = PlayerEvents.Type.AttackStarted,
-    AttackHit = PlayerEvents.Type.AttackHit,
-    AttackEnd = PlayerEvents.Type.AttackEnded,
-    PlayerHit = PlayerEvents.Type.Hit,
-    PerfectDodge = PlayerEvents.Type.PerfectDodge,
-    UltimateStart = PlayerEvents.Type.UltimateStarted,
-    UltimateEnd = PlayerEvents.Type.UltimateEnded,
-    PlayerDead = PlayerEvents.Type.Dead,
-    GaugeChanged = PlayerEvents.Type.GaugeChanged,
-}
-
 ---@class PlayerEvent
 ---@field Kind string
 ---@field Type string
----@field LegacyType string|nil
 
 ---@class PlayerDashStartedEvent : PlayerEvent
 ---@field Dir any
@@ -78,23 +59,6 @@ local LegacyType = {
 ---@field SlomoDuration number
 ---@field SlomoScale number
 
-local function NormalizeLegacyEvent(event)
-    if event == nil then
-        return nil
-    end
-
-    if event.Kind == "PlayerEvent" then
-        return event
-    end
-
-    local legacy = event.Type
-    local mapped = LegacyType[legacy] or legacy
-    event.Kind = "PlayerEvent"
-    event.LegacyType = legacy
-    event.Type = mapped
-    return event
-end
-
 local function MakeEvent(eventType, args)
     args = args or {}
     args.Kind = "PlayerEvent"
@@ -110,7 +74,7 @@ end
 ---@return nil
 function PlayerEvents.BeginFrame(player)
     PlayerContext.Assert(player, "PlayerEvents.BeginFrame")
-    player.Runtime.EventQueue = player.Runtime.EventQueue or {}
+    player.Runtime.EventQueue = {}
 end
 
 ---@param player PlayerContext
@@ -119,15 +83,18 @@ end
 function PlayerEvents.Push(player, event)
     PlayerContext.Assert(player, "PlayerEvents.Push")
     Strict.AssertTable(event, "event", "PlayerEvents.Push")
-    player.Runtime.EventQueue = player.Runtime.EventQueue or {}
-    table.insert(player.Runtime.EventQueue, NormalizeLegacyEvent(event))
+    if event.Kind ~= "PlayerEvent" then
+        error("[PlayerEvents.Push] event.Kind must be PlayerEvent")
+    end
+    Strict.AssertString(event.Type, "event.Type", "PlayerEvents.Push")
+    table.insert(player.Runtime.EventQueue, event)
 end
 
 ---@param player PlayerContext
 ---@return PlayerEvent[]
 function PlayerEvents.Drain(player)
     PlayerContext.Assert(player, "PlayerEvents.Drain")
-    local events = player.Runtime.EventQueue or {}
+    local events = player.Runtime.EventQueue
     player.Runtime.EventQueue = {}
     return events
 end
@@ -231,14 +198,10 @@ function PlayerEvents.EmitGaugeChanged(player, args)
 end
 
 ---@param event PlayerEvent
----@param legacyType string
+---@param eventType string
 ---@return boolean
-function PlayerEvents.Is(event, legacyType)
-    if event == nil then
-        return false
-    end
-    local eventType = event.Type
-    return eventType == legacyType or eventType == LegacyType[legacyType]
+function PlayerEvents.Is(event, eventType)
+    return event ~= nil and event.Type == eventType
 end
 
 return PlayerEvents
