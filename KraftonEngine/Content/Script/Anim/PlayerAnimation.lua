@@ -95,6 +95,31 @@ local function EndDashChargeAttack(self)
     PlayerAction.EndDashChargeAttack(playerContext)
 end
 
+local function BeginHitReactionAnim(self, direction)
+    local playerContext = self.PlayerContext
+    PlayerContext.Assert(playerContext, "PlayerAnimation.BeginHitReactionAnim")
+    playerContext.Action.HitReactPending = false
+    playerContext.Action.HitReactDirection = direction
+    playerContext.Action.HitReactEnd = false
+end
+
+local function EndHitReactionAnim(self)
+    local playerContext = self.PlayerContext
+    PlayerContext.Assert(playerContext, "PlayerAnimation.EndHitReactionAnim")
+    PlayerAction.EndHitReaction(playerContext)
+end
+
+local function ShouldEnterHitReaction(self, direction)
+    if self.PlayerContext == nil then
+        return false
+    end
+
+    return self.PlayerContext.Action.HitReactPending == true
+        and self.PlayerContext.Action.HitReactDirection == direction
+        and self.PlayerContext.Action.IsUltimateRunning ~= true
+        and self.PlayerContext.Action.IsInUltimateMode ~= true
+end
+
 function init(self)
     self.Speed = 0.0
     self.BlendSpeed = 0.0
@@ -127,6 +152,44 @@ function init(self)
     Anim.sm_add_state(top, "DashCharging", Anim.create_sequence_player(samuraiConfig.DashChargingPath, samuraiConfig.DashChargingPlayRate, false))
     Anim.sm_add_state(top, "DashChargeAttack", Anim.create_sequence_player(samuraiConfig.DashChargeAttackPath, samuraiConfig.DashChargeAttackPlayRate, false))
 
+    local hitReactPaths = samuraiConfig.HitReactPaths or {}
+    Anim.sm_add_state(top, "HitFront", Anim.create_sequence_player(hitReactPaths.Front or attackPaths[1], samuraiConfig.HitReactPlayRate, false))
+    Anim.sm_add_state(top, "HitLeft", Anim.create_sequence_player(hitReactPaths.Left or attackPaths[1], samuraiConfig.HitReactPlayRate, false))
+    Anim.sm_add_state(top, "HitRight", Anim.create_sequence_player(hitReactPaths.Right or attackPaths[1], samuraiConfig.HitReactPlayRate, false))
+    Anim.sm_add_state(top, "HitBack", Anim.create_sequence_player(hitReactPaths.Back or attackPaths[1], samuraiConfig.HitReactPlayRate, false))
+
+    local function AddHitReactionTransitions(direction, stateName)
+        Anim.sm_add_transition(top, "AnyState", stateName,
+            function()
+                if ShouldEnterHitReaction(self, direction) then
+                    BeginHitReactionAnim(self, direction)
+                    return true
+                end
+                return false
+            end,
+            samuraiConfig.HitReactBlendIn
+        )
+
+        Anim.sm_add_transition(top, stateName, "Locomotion",
+            function()
+                if self.PlayerContext == nil then return false end
+                local elapsed = self.PlayerContext.Action.HitReactElapsed or 0.0
+                if self.PlayerContext.Action.HitReactEnd
+                    or elapsed >= (samuraiConfig.HitReactFallbackDuration or 0.45) then
+                    EndHitReactionAnim(self)
+                    return true
+                end
+                return false
+            end,
+            samuraiConfig.HitReactBlendOut
+        )
+    end
+
+    AddHitReactionTransitions("Front", "HitFront")
+    AddHitReactionTransitions("Left", "HitLeft")
+    AddHitReactionTransitions("Right", "HitRight")
+    AddHitReactionTransitions("Back", "HitBack")
+
     Anim.sm_add_transition(top, "AnyState", "DashCharging",
         function()
             if self.PlayerContext == nil then return false end
@@ -135,6 +198,8 @@ function init(self)
                 and not self.PlayerContext.Action.DashActive
                 and not self.PlayerContext.Action.DashChargingActive
                 and not self.PlayerContext.Action.DashChargeAttackActive
+                and not self.PlayerContext.Action.HitReactActive
+                and (self.PlayerContext.Action.AttackIndex or 0) == 0
                 and not Anim.is_owner_falling()
                 and not self.PlayerContext.Action.IsUltimateRunning then
                 BeginDashCharging(self)
@@ -152,6 +217,8 @@ function init(self)
                 and not self.PlayerContext.Action.DashActive
                 and not self.PlayerContext.Action.DashChargingActive
                 and not self.PlayerContext.Action.DashChargeAttackActive
+                and not self.PlayerContext.Action.HitReactActive
+                and (self.PlayerContext.Action.AttackIndex or 0) == 0
                 and not Anim.is_owner_falling()
                 and not self.PlayerContext.Action.IsUltimateRunning then
                 BeginDash(self)
@@ -180,6 +247,7 @@ function init(self)
             if self.PlayerContext.Input.DashChargingPressed
                 and not self.PlayerContext.Action.DashChargingActive
                 and not self.PlayerContext.Action.DashChargeAttackActive
+                and not self.PlayerContext.Action.HitReactActive
                 and not Anim.is_owner_falling()
                 and not self.PlayerContext.Action.IsUltimateRunning then
                 self.PlayerContext.Input.DashChargingPressed = false
@@ -261,7 +329,10 @@ function init(self)
     Anim.sm_add_transition(top, "Locomotion", "Attack1",
         function()
             if self.PlayerContext == nil then return false end
-            if self.PlayerContext.Input.AttackPressed then
+            if self.PlayerContext.Input.AttackPressed
+                and self.PlayerContext.Action.HitReactActive ~= true
+                and self.PlayerContext.Action.IsUltimateRunning ~= true
+                and self.PlayerContext.Action.IsInUltimateMode ~= true then
                 BeginAttack(self, 1)
                 return true
             end
@@ -454,6 +525,11 @@ function update(self, dt)
         playerContext.Action.ComboQueued = true
     end
 
+    if playerContext.Action.HitReactActive then
+        PlayerAction.UpdateHitReaction(playerContext, dt)
+        return
+    end
+
     PlayerAction.UpdateStepForward(playerContext, dt)
 
     if playerContext.Action.DashActive then
@@ -496,7 +572,9 @@ function on_attack_end(self)
     if playerContext == nil then return end
     PlayerContext.Assert(playerContext, "PlayerAnimation.on_attack_end")
     playerContext.Action.ComboWindow = false
-    if playerContext.Action.DashChargeAttackActive then
+    if playerContext.Action.HitReactActive then
+        playerContext.Action.HitReactEnd = true
+    elseif playerContext.Action.DashChargeAttackActive then
         playerContext.Action.DashChargeAttackEnd = true
     else
         playerContext.Action.AttackEnd = true
@@ -569,6 +647,11 @@ function on_notify(self, name)
 
     if name == "AttackEnd" then
         on_attack_end(self)
+        return
+    end
+
+    if name == "HitReactEnd" or name == "HitEnd" then
+        playerContext.Action.HitReactEnd = true
         return
     end
 

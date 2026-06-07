@@ -51,6 +51,8 @@ PlayerEvents.Type = {
 ---@field Damage number
 ---@field HP number
 ---@field MaxHP number
+---@field HitDirection string|nil
+---@field KnockbackDirection any
 
 ---@class PlayerPerfectDodgeEvent : PlayerEvent
 ---@field Threat any

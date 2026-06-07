@@ -16,7 +16,7 @@ PlayerConfig.Default = {
     Action = {
         DashDistance = 8.0,
         DashDuration = 0.15,
-        DashChargingHoldThreshold = 0.20,
+        DashChargingHoldThreshold = 0.4,
         AttackStepForwardDistance = 1.5,
         AttackStepForwardDuration = 0.12,
         AttackStepForwardDistances = {
@@ -40,6 +40,8 @@ PlayerConfig.Default = {
         DashChargeAttackStepForwardDistance = 10.0,
         DashChargeAttackStepForwardDuration = 0.12,
         AttackTurnSpeed = 12.0,
+        HitKnockbackDistance = 2.5,
+        HitKnockbackDuration = 0.16,
     },
 
     -- Attack-time soft lock-on.
@@ -182,6 +184,12 @@ PlayerConfig.Default = {
             DashChargingPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1_Start2.uasset",
             DashChargeAttackPath = "Content/Animation/Samurai_Player/SamuraiAttackHeavy1.uasset",
             UltimateAttackPath = "Content/Animation/Samurai_Player/SamuraiAttackUltimate.uasset",
+            HitReactPaths = {
+                Front = "Content/Animation/Samurai_Player/SamuraiHitFront.uasset",
+                Left = "Content/Animation/Samurai_Player/SamuraiHitLeft.uasset",
+                Right = "Content/Animation/Samurai_Player/SamuraiHitRight.uasset",
+                Back = "Content/Animation/Samurai_Player/SamuraiHitBack.uasset",
+            },
 
             WalkThreshold = 0.1,
             RunThreshold = 8.0,
@@ -215,6 +223,11 @@ PlayerConfig.Default = {
             UltimateAttackBlendIn = 0.05,
             UltimateAttackBlendOut = 0.12,
             UltimateAttackPlayRate = 1.2,
+
+            HitReactBlendIn = 0.03,
+            HitReactBlendOut = 0.10,
+            HitReactPlayRate = 1.0,
+            HitReactFallbackDuration = 0.45,
 
             JumpBlendIn = 0.1,
             JumpBlendOut = 0.2,

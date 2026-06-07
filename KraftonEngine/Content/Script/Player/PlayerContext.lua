@@ -19,6 +19,7 @@ local PlayerContext = {}
 ---@field DashChargingPressed boolean
 ---@field DashChargingReleased boolean
 ---@field DashChargingConsumedInput boolean
+---@field DashBlockedUntilReleased boolean
 ---@field UltimatePressed boolean
 
 ---@class PlayerActionState
@@ -38,6 +39,11 @@ local PlayerContext = {}
 ---@field DashChargeAttackElapsed number
 ---@field DashChargeAttackEnd boolean
 ---@field DashChargeAttackInstanceId string|nil
+---@field HitReactActive boolean
+---@field HitReactPending boolean
+---@field HitReactDirection string|nil
+---@field HitReactElapsed number
+---@field HitReactEnd boolean
 ---@field IsUltimateRunning boolean
 ---@field IsInUltimateMode boolean
 
@@ -63,6 +69,9 @@ local PlayerContext = {}
 ---@field EventQueue PlayerEvent[]
 ---@field DashPrevOrientRotationToMovement any
 ---@field DashMoveDirection any
+---@field DashPreserveFacing boolean
+---@field HitKnockbackDirection any
+---@field HitKnockbackAppliedDistance number
 ---@field StepForwardActive boolean
 ---@field StepForwardElapsed number
 ---@field StepForwardDuration number
@@ -101,6 +110,7 @@ local function CreateInputState()
         DashChargingPressed = false,
         DashChargingReleased = false,
         DashChargingConsumedInput = false,
+        DashBlockedUntilReleased = false,
         UltimatePressed = false,
     }
 end
@@ -123,6 +133,11 @@ local function CreateActionState()
         DashChargeAttackElapsed = 0.0,
         DashChargeAttackEnd = false,
         DashChargeAttackInstanceId = nil,
+        HitReactActive = false,
+        HitReactPending = false,
+        HitReactDirection = nil,
+        HitReactElapsed = 0.0,
+        HitReactEnd = false,
         IsUltimateRunning = false,
         IsInUltimateMode = false,
     }
@@ -154,6 +169,9 @@ local function CreateRuntimeState()
         EventQueue = {},
         DashPrevOrientRotationToMovement = nil,
         DashMoveDirection = nil,
+        DashPreserveFacing = false,
+        HitKnockbackDirection = nil,
+        HitKnockbackAppliedDistance = 0.0,
         StepForwardActive = false,
         StepForwardElapsed = 0.0,
         StepForwardDuration = 0.0,
