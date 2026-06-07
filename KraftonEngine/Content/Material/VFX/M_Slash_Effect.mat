@@ -4,12 +4,12 @@
     "BlendState" : "AlphaBlend",
     "Domain" : "ParticleSprite",
     "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
-    "GraphHash" : "CD4EA7EBC61F63B6",
+    "GraphHash" : "58304E78649FF5BF",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
       "EmissiveIntensity" : {
         "Type" : "Float",
-        "Value" : [3.000000, 1.000000, 1.000000, 1.000000]
+        "Value" : [20.000000, 1.000000, 1.000000, 1.000000]
       }
     },
     "ReceiveLighting" : false,
@@ -331,7 +331,7 @@
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "ScalarParameter",
-        "Value" : [3.000000, 1.000000, 1.000000, 1.000000]
+        "Value" : [20.000000, 1.000000, 1.000000, 1.000000]
       }, {
         "DisplayName" : "Multiply",
         "Mask" : "RGBA",
@@ -366,7 +366,7 @@
   },
   "GraphShaderMode" : "Generated",
   "MaterialGuid" : "490EC72CB797E6B00000F3480A1987C8",
-  "PathFileName" : "Content/Material/VFX/NewMaterial.mat",
+  "PathFileName" : "Content/Material/VFX/M_Slash_Effect.mat",
   "RasterizerState" : "SolidNoCull",
   "ReceiveLighting" : false,
   "RenderPass" : "AlphaBlend",
