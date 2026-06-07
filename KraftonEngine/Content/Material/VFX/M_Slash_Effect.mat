@@ -4,7 +4,7 @@
     "BlendState" : "Additive",
     "Domain" : "ParticleSprite",
     "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
-    "GraphHash" : "ED8972615FD433A7",
+    "GraphHash" : "E5BB685427B245AF",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
       "EmissiveIntensity" : {
@@ -17,7 +17,7 @@
     "ShadingModel" : "UnLit",
     "Textures" : {
       "DiffuseTexture" : {
-        "Path" : "Content/Texture/SlashFX_PinkGold/T_Slash_PinkGold_Main_SubUV_4x4_RGBA.png",
+        "Path" : "Content/Texture/SlashFX_PinkGold/T_Slash_PinkGold_Main_SubUV_4x4_RGBA_FlipV.png",
         "Slot" : "Diffuse"
       }
     }
@@ -220,7 +220,7 @@
           }],
         "PosX" : -309.000000,
         "PosY" : 350.000000,
-        "TexturePath" : "Content/Texture/SlashFX_PinkGold/T_Slash_PinkGold_Main_SubUV_4x4_RGBA.png",
+        "TexturePath" : "Content/Texture/SlashFX_PinkGold/T_Slash_PinkGold_Main_SubUV_4x4_RGBA_FlipV.png",
         "TextureSlot" : "Diffuse",
         "Type" : "TextureObject",
         "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
