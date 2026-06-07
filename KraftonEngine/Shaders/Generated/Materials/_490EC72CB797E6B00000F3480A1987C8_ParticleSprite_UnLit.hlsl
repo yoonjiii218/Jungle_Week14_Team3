@@ -1,4 +1,4 @@
-// Generated from Content/Material/VFX/NewMaterial.mat
+// Generated from Content/Material/VFX/M_Slash_Effect.mat
 // Domain: ParticleSprite
 // ShadingModel: UnLit
 
