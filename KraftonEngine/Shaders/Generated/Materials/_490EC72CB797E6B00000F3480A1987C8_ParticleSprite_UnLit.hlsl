@@ -8,8 +8,6 @@
 #include "Common/SystemSamplers.hlsli"
 #define USE_FOG 1
 #include "Common/Fog.hlsli"
-Texture2D GeneratedSceneColorTexture : register(t17);
-
 cbuffer ParticleFrameBuffer : register(b2)
 {
     float3 ParticleFrameRight;
@@ -17,6 +15,8 @@ cbuffer ParticleFrameBuffer : register(b2)
     float3 ParticleFrameUp;
     float ParticleFramePad1;
 };
+
+Texture2D GeneratedSceneColorTexture : register(t17);
 
 struct FMaterialPixelInput
 {
@@ -104,7 +104,7 @@ PS_Input_MaterialParticle VS(VS_Input_ParticleQuad quad, VS_Input_ParticleInstan
         quad.cornerUV.x * sinR + quad.cornerUV.y * cosR
     );
 
-    float3 worldPos = inst.position
+	float3 worldPos = inst.position
                     + ParticleFrameRight * rotUV.x * inst.size.x
                     + ParticleFrameUp * rotUV.y * inst.size.y;
 
