@@ -99,6 +99,7 @@ end
 
 local function ResetDashInput(playerContext)
     playerContext.Input.DashHoldTime = 0.0
+    playerContext.Input.DashConsumedInput = false
     playerContext.Input.DashChargingConsumedInput = false
     playerContext.Input.DashBlockedUntilReleased = false
 
@@ -516,6 +517,49 @@ function PlayerAction.SmoothFaceOwnerToDirection(playerContext, dir, dt, turnSpe
     Reflection.Call(owner, "SetActorRotation", Vector(currentRot.X, currentRot.Y, nextYaw))
 end
 
+local function IsUsableActor(actor)
+    return actor ~= nil and actor.IsValid ~= nil and actor:IsValid()
+end
+
+local function GetDirectionToActor2D(fromActor, toActor)
+    local from = GetActorLocation2D(fromActor)
+    local to = GetActorLocation2D(toActor)
+    if from == nil or to == nil then
+        return nil
+    end
+
+    local dir = to - from
+    dir.Z = 0.0
+    if dir:Length() <= 0.001 then
+        return nil
+    end
+
+    return dir:Normalized()
+end
+
+local function ResolveDashChargingTargetDirection(playerContext)
+    local owner = playerContext.Owner
+    if owner == nil then
+        return nil
+    end
+
+    local target = playerContext.Runtime.TargetAssistTarget
+    if IsUsableActor(target) then
+        local stickyDir = GetDirectionToActor2D(owner, target)
+        if stickyDir ~= nil then
+            return stickyDir
+        end
+    end
+
+    local aimDir = PlayerAction.GetOwnerForward2D(playerContext)
+    local foundTarget = PlayerTargeting.FindTarget(playerContext, "DashChargeAttack", aimDir)
+    if IsUsableActor(foundTarget) then
+        return GetDirectionToActor2D(owner, foundTarget)
+    end
+
+    return nil
+end
+
 ---@param playerContext PlayerContext
 ---@return nil
 function PlayerAction.BeginAttackAssist(playerContext, attackIndex)
@@ -739,15 +783,25 @@ function PlayerAction.UpdateActionInput(playerContext, dt)
 
     playerContext.Input.AttackDown = attackDown
 
-    playerContext.Input.DashPressed = false
-    playerContext.Input.DashChargingPressed = false
+    if playerContext.Input.DashConsumedInput ~= true
+        or playerContext.Action.DashActive == true
+        or playerContext.Action.DashChargingActive == true
+        or playerContext.Action.DashChargeAttackActive == true then
+        playerContext.Input.DashPressed = false
+    end
+    if playerContext.Input.DashChargingConsumedInput ~= true
+        or playerContext.Action.DashChargingActive == true
+        or playerContext.Action.DashChargeAttackActive == true then
+        playerContext.Input.DashChargingPressed = false
+    end
     playerContext.Input.DashChargingReleased = false
 
     local dashDown = ActionDown(playerContext, "Dash")
-    local dashPressed = ActionStarted(playerContext, "Dash")
     local dashReleased = ActionCompleted(playerContext, "Dash")
     local secondaryDashPressed = ActionStarted(playerContext, "SecondaryDash")
     local wasDashChargingConsumed = playerContext.Input.DashChargingConsumedInput == true
+    local dashChargingLocked = playerContext.Action.DashChargingActive == true
+        or playerContext.Action.DashChargeAttackActive == true
     local dashBlockedByAction = PlayerAction.IsAttackBusy(playerContext)
         or playerContext.Action.HitReactActive == true
         or playerContext.Action.IsUltimateRunning == true
@@ -755,47 +809,41 @@ function PlayerAction.UpdateActionInput(playerContext, dt)
 
     if dashReleased then
         playerContext.Input.DashHoldTime = 0.0
+        playerContext.Input.DashConsumedInput = false
         playerContext.Input.DashChargingConsumedInput = false
+        playerContext.Input.DashChargingPressed = false
         playerContext.Input.DashBlockedUntilReleased = false
     end
 
     if dashBlockedByAction then
-        if dashDown or dashPressed or secondaryDashPressed then
-            playerContext.Input.DashBlockedUntilReleased = true
-        end
         playerContext.Input.DashHoldTime = 0.0
-        playerContext.Input.DashChargingConsumedInput = false
+        playerContext.Input.DashChargingPressed = false
         return
-    end
-
-    if playerContext.Input.DashBlockedUntilReleased == true then
-        if dashDown then
-            return
-        end
-        playerContext.Input.DashBlockedUntilReleased = false
     end
 
     if dashDown then
         playerContext.Input.DashHoldTime = (playerContext.Input.DashHoldTime or 0.0) + (dt or 0.0)
 
-        if dashPressed then
+        if playerContext.Input.DashConsumedInput ~= true then
             playerContext.Input.DashPressed = true
+            playerContext.Input.DashConsumedInput = true
         end
 
-        if playerContext.Input.DashChargingConsumedInput == true then
-            playerContext.Input.DashChargingPressed = true
-        elseif playerContext.Input.DashHoldTime >= (actionConfig.DashChargingHoldThreshold) then
+        if dashChargingLocked ~= true
+            and playerContext.Input.DashChargingConsumedInput ~= true
+            and playerContext.Input.DashHoldTime >= (actionConfig.DashChargingHoldThreshold) then
             playerContext.Input.DashChargingPressed = true
             playerContext.Input.DashChargingConsumedInput = true
         end
     end
 
-    if dashReleased and wasDashChargingConsumed == true then
+    if dashReleased and wasDashChargingConsumed == true and playerContext.Action.DashChargingActive == true then
         playerContext.Input.DashChargingReleased = true
     end
 
     if secondaryDashPressed then
         playerContext.Input.DashPressed = true
+        playerContext.Input.DashConsumedInput = true
     end
 end
 
@@ -896,6 +944,7 @@ function PlayerAction.BeginDashCharging(playerContext)
     playerContext.Action.DashChargingElapsed = 0.0
     playerContext.Action.DashChargingEnd = false
     playerContext.Input.DashChargingReleased = false
+    playerContext.Runtime.DashChargingTurnTarget = "None"
 
     PlayerEvents.EmitDashChargingStarted(playerContext)
 end
@@ -908,6 +957,7 @@ function PlayerAction.EndDashCharging(playerContext, unlockMovement)
     playerContext.Action.DashChargingElapsed = 0.0
     playerContext.Action.DashChargingEnd = false
     playerContext.Input.DashChargingReleased = false
+    playerContext.Runtime.DashChargingTurnTarget = "None"
 
     if unlockMovement ~= false then
         SetMovementInputEnabled(playerContext, true)
@@ -922,6 +972,23 @@ function PlayerAction.UpdateDashCharging(playerContext, dt)
     PlayerContext.Assert(playerContext, "PlayerAction.UpdateDashCharging")
     playerContext.Action.DashChargingElapsed = (playerContext.Action.DashChargingElapsed or 0.0) + (dt or 0.0)
     StopMovementImmediately(playerContext)
+
+    local actionConfig = playerContext.Config.Action
+    local targetDir = ResolveDashChargingTargetDirection(playerContext)
+    if targetDir ~= nil then
+        playerContext.Runtime.DashChargingTurnTarget = "Target"
+        PlayerAction.SmoothFaceOwnerToDirection(playerContext, targetDir, dt, actionConfig.DashChargingTargetTurnSpeed or actionConfig.DashChargingTurnSpeed)
+        return
+    end
+
+    local moveDir = PlayerAction.GetMoveInputWorldDirection(playerContext)
+    if moveDir ~= nil then
+        playerContext.Runtime.DashChargingTurnTarget = "Input"
+        PlayerAction.SmoothFaceOwnerToDirection(playerContext, moveDir, dt, actionConfig.DashChargingTurnSpeed)
+        return
+    end
+
+    playerContext.Runtime.DashChargingTurnTarget = "None"
 end
 
 ---@param playerContext PlayerContext
@@ -980,6 +1047,7 @@ function PlayerAction.CancelDashActions(playerContext, unlockMovement)
     playerContext.Action.DashChargingActive = false
     playerContext.Action.DashChargingElapsed = 0.0
     playerContext.Action.DashChargingEnd = false
+    playerContext.Runtime.DashChargingTurnTarget = "None"
 
     playerContext.Action.DashChargeAttackActive = false
     playerContext.Action.DashChargeAttackElapsed = 0.0

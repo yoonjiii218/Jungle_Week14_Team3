@@ -136,15 +136,15 @@ function GetDebugSnapshotText()
     return string.format(
         "LuaState: %s\n" ..
         "Dash: %.3f / %.3f  active=%s end=%s\n" ..
-        "DashCharge: %.3f  active=%s released=%s\n" ..
+        "DashCharge: DashChargingElapsed=%.3f DashChargingActive=%s DashChargingReleased=%s DashChargingConsumedInput=%s DashChargingTurnTarget=%s\n" ..
         "PerfectDodge: window=%s consumed=%s  now=%.3f until=%.3f consumedUntil=%.3f\n" ..
         "InvincibleUntil: %.3f  HP: %.0f / %.0f  Gauge: %.0f / %.0f\n" ..
         "Attack: index=%d comboWindow=%s queued=%s end=%s\n" ..
-        "Input: dashDown=%s hold=%.3f dashPressed=%s chargePressed=%s chargeReleased=%s\n" ..
+        "Input: DashDown=%s DashHoldTime=%.3f dashPressed=%s DashChargingPressed=%s DashChargingReleased=%s\n" ..
         "Assist: %s target=%s",
         DerivePlayerDebugState(ctx),
         NumberOrZero(action.DashElapsed), NumberOrZero(actionConfig.DashDuration), BoolText(action.DashActive), BoolText(action.DashEnd),
-        NumberOrZero(action.DashChargingElapsed), BoolText(action.DashChargingActive), BoolText(input.DashChargingReleased),
+        NumberOrZero(action.DashChargingElapsed), BoolText(action.DashChargingActive), BoolText(input.DashChargingReleased), BoolText(input.DashChargingConsumedInput), tostring(runtime.DashChargingTurnTarget or "None"),
         BoolText(perfectWindow), BoolText(perfectConsumed), now, dodgeUntil, consumedUntil,
         invincibleUntil, NumberOrZero(combat.HP), NumberOrZero(combat.MaxHP or combatConfig.MaxHP), NumberOrZero(combat.UltimateGauge), NumberOrZero(combat.MaxUltimateGauge or combatConfig.MaxUltimateGauge),
         math.floor(NumberOrZero(action.AttackIndex)), BoolText(action.ComboWindow), BoolText(action.ComboQueued), BoolText(action.AttackEnd),

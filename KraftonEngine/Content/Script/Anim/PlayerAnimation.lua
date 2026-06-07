@@ -198,6 +198,7 @@ function init(self)
                 and not self.PlayerContext.Action.DashActive
                 and not self.PlayerContext.Action.DashChargingActive
                 and not self.PlayerContext.Action.DashChargeAttackActive
+                and not self.PlayerContext.Input.DashChargingReleased
                 and not self.PlayerContext.Action.HitReactActive
                 and (self.PlayerContext.Action.AttackIndex or 0) == 0
                 and not Anim.is_owner_falling()
@@ -245,8 +246,10 @@ function init(self)
         function()
             if self.PlayerContext == nil then return false end
             if self.PlayerContext.Input.DashChargingPressed
+                and self.PlayerContext.Action.DashActive
                 and not self.PlayerContext.Action.DashChargingActive
                 and not self.PlayerContext.Action.DashChargeAttackActive
+                and not self.PlayerContext.Input.DashChargingReleased
                 and not self.PlayerContext.Action.HitReactActive
                 and not Anim.is_owner_falling()
                 and not self.PlayerContext.Action.IsUltimateRunning then
