@@ -402,6 +402,53 @@ namespace
 								ImGui::EndCombo();
 							}
 						}
+						else if (AssetType == "Socket")
+						{
+							const FString Preview = (CurrentPath.empty() || CurrentPath == "None") ? "None" : CurrentPath;
+							if (ImGui::BeginCombo("##v", Preview.c_str()))
+							{
+								const bool bSelectedNone = CurrentPath.empty() || CurrentPath == "None";
+								if (ImGui::Selectable("None", bSelectedNone))
+								{
+									SoftProperty->SetPath(Prop.ContainerPtr, "");
+									CurrentPath.clear();
+									bChanged = true;
+								}
+								if (bSelectedNone) ImGui::SetItemDefaultFocus();
+
+								if (Skeleton)
+								{
+									TArray<FString> SocketNames;
+									SocketNames.reserve(Skeleton->GetSockets().size());
+									for (const FSkeletonSocket& Socket : Skeleton->GetSockets())
+									{
+										if (!Socket.Name.IsNone())
+										{
+											SocketNames.push_back(Socket.Name.ToString());
+										}
+									}
+									std::sort(SocketNames.begin(), SocketNames.end());
+
+									for (const FString& SocketName : SocketNames)
+									{
+										const bool bSelected = CurrentPath == SocketName;
+										if (ImGui::Selectable(SocketName.c_str(), bSelected))
+										{
+											SoftProperty->SetPath(Prop.ContainerPtr, SocketName);
+											CurrentPath = SocketName;
+											bChanged = true;
+										}
+										if (bSelected) ImGui::SetItemDefaultFocus();
+									}
+								}
+								else
+								{
+									ImGui::TextDisabled("(no skeleton)");
+								}
+
+								ImGui::EndCombo();
+							}
+						}
 						else if (AssetType == "UParticleSystem")
 						{
 							const FString Preview = (CurrentPath.empty() || CurrentPath == "None") ? "None" : CurrentPath;
