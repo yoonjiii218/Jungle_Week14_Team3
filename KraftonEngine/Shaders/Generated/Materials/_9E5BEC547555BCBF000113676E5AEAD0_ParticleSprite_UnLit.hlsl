@@ -1,4 +1,4 @@
-// Generated from Content/Material/VFX/M_Slash_Effect.mat
+// Generated from Content/Material/VFX/M_Slash_Aura.mat
 // Domain: ParticleSprite
 // ShadingModel: UnLit
 
@@ -38,11 +38,11 @@ struct FMaterialResult
     float2 UVOffset;
 };
 
-Texture2D Tex_SlashAtlas : register(t0);
+Texture2D Tex_Diffuse : register(t0);
 
 cbuffer PerMaterial : register(b3)
 {
-    float Param_EmissiveIntensity;
+    float Param_Scalar;
     float3 _Pad0;
 };
 
@@ -56,16 +56,16 @@ struct FMaterialEvalResult
 
 FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
-    float2 n_42 = ((float2(fmod(floor(saturate(Input.SubImageIndex) * (16 - 0.0001f)), 4), floor(floor(saturate(Input.SubImageIndex) * (16 - 0.0001f)) / 4)) + Input.UV0) * float2(1.0f/4, 1.0f/4));
-    float4 n_32 = Tex_SlashAtlas.Sample(LinearWrapSampler, n_42);
-    float3 n_45 = ((n_32).rgb * float3((n_32).a, (n_32).a, (n_32).a));
+    float n_43 = Param_Scalar;
+    float2 n_52 = ((float2(fmod(floor(saturate(Input.SubImageIndex) * (16 - 0.0001f)), 4), floor(floor(saturate(Input.SubImageIndex) * (16 - 0.0001f)) / 4)) + Input.UV0) * float2(1.0f/4, 1.0f/4));
+    float4 n_20 = Tex_Diffuse.Sample(LinearWrapSampler, n_52);
+    float3 n_31 = ((n_20).rgb * float3((n_20).a, (n_20).a, (n_20).a));
     float4 n_1 = Input.ParticleColor;
-    float3 n_72 = (n_45 * (n_1).rgb);
-    float n_59 = Param_EmissiveIntensity;
-    float3 n_100 = (n_72 * float3(n_59, n_59, n_59));
+    float3 n_37 = (n_31 * (n_1).rgb);
+    float3 n_45 = (float3(n_43, n_43, n_43) * n_37);
     FMaterialResult Result;
     Result.Color = float3(0, 0, 0);
-    Result.Emissive = n_100;
+    Result.Emissive = n_45;
     Result.Opacity = 1.0f;
     Result.UVOffset = float2(0, 0);
     FMaterialEvalResult Eval;

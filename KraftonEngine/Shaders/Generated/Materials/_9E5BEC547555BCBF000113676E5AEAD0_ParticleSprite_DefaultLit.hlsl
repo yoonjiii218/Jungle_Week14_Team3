@@ -1,6 +1,6 @@
-// Generated from Content/Material/VFX/M_Slash_Effect.mat
+// Generated from Content/Material/VFX/NewMaterial.mat
 // Domain: ParticleSprite
-// ShadingModel: UnLit
+// ShadingModel: DefaultLit
 
 #include "Common/ConstantBuffers.hlsli"
 #include "Common/VertexLayouts.hlsli"
@@ -38,14 +38,6 @@ struct FMaterialResult
     float2 UVOffset;
 };
 
-Texture2D Tex_SlashAtlas : register(t0);
-
-cbuffer PerMaterial : register(b3)
-{
-    float Param_EmissiveIntensity;
-    float3 _Pad0;
-};
-
 struct FMaterialEvalResult
 {
     FMaterialResult Material;
@@ -56,17 +48,11 @@ struct FMaterialEvalResult
 
 FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
-    float2 n_42 = ((float2(fmod(floor(saturate(Input.SubImageIndex) * (16 - 0.0001f)), 4), floor(floor(saturate(Input.SubImageIndex) * (16 - 0.0001f)) / 4)) + Input.UV0) * float2(1.0f/4, 1.0f/4));
-    float4 n_32 = Tex_SlashAtlas.Sample(LinearWrapSampler, n_42);
-    float3 n_45 = ((n_32).rgb * float3((n_32).a, (n_32).a, (n_32).a));
     float4 n_1 = Input.ParticleColor;
-    float3 n_72 = (n_45 * (n_1).rgb);
-    float n_59 = Param_EmissiveIntensity;
-    float3 n_100 = (n_72 * float3(n_59, n_59, n_59));
     FMaterialResult Result;
-    Result.Color = float3(0, 0, 0);
-    Result.Emissive = n_100;
-    Result.Opacity = 1.0f;
+    Result.Color = (n_1).xyz;
+    Result.Emissive = float3(0, 0, 0);
+    Result.Opacity = (n_1).x;
     Result.UVOffset = float2(0, 0);
     FMaterialEvalResult Eval;
     Eval.Material = Result;
