@@ -1134,13 +1134,12 @@ function PlayerAction.Update(playerContext, dt)
 
     PlayerAction.UpdateActionInput(playerContext, dt)
 
-    local maxUltimateGauge = playerContext.Combat.MaxUltimateGauge
+    local maxUltimateGauge = playerContext.Combat.MaxUltimateGauge or playerContext.Config.Combat.MaxUltimateGauge or 0
     local ultimateGauge = playerContext.Combat.UltimateGauge or 0
-
-    ultimateGauge = 1000
 
     if not playerContext.Action.IsUltimateRunning
         and ActionStarted(playerContext, "Ultimate")
+        and maxUltimateGauge > 0
         and ultimateGauge >= maxUltimateGauge then
         playerContext.Action.IsUltimateRunning = true
         PlayerEvents.EmitUltimateStarted(playerContext)
