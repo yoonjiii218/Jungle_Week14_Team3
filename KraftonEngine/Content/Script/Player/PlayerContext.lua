@@ -93,6 +93,8 @@ local PlayerContext = {}
 ---@field TargetAssistKeepUntil number
 ---@field DashChargingTurnTarget string
 ---@field LastActionInputUpdateTime number|nil
+---@field FlyingSlashes table
+---@field FlyingSlashSerial integer
 
 ---@class PlayerContext
 ---@field Kind string
@@ -201,6 +203,8 @@ local function CreateRuntimeState()
         TargetAssistKeepUntil = 0.0,
         DashChargingTurnTarget = "None",
         LastActionInputUpdateTime = nil,
+        FlyingSlashes = {},
+        FlyingSlashSerial = 0,
     }
 end
 

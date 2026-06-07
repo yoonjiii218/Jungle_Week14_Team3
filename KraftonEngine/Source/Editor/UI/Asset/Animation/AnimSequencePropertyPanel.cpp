@@ -8,6 +8,27 @@
 
 namespace
 {
+
+	void RenderPoseAdjustmentSection(UAnimSequence* Seq)
+	{
+		ImGui::TextUnformatted("Pose Adjustment");
+		ImGui::Separator();
+
+		float GroundZOffset = Seq->GetGroundZOffset();
+		ImGui::SetNextItemWidth(-1.0f);
+		if (ImGui::DragFloat("Ground Z Offset", &GroundZOffset, 0.1f, -10000.0f, 10000.0f, "%.3f"))
+		{
+			Seq->SetGroundZOffset(GroundZOffset);
+		}
+		if (ImGui::IsItemDeactivatedAfterEdit())
+		{
+			FAnimationManager::Get().SaveAnimationPreservingMetadata(Seq);
+		}
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::SetTooltip("Evaluated pose 의 skeleton root local Z 에 더해지는 per-sequence 보정값입니다.\nForce Root Lock / Root Motion 처리 후 적용됩니다.");
+		}
+	}
 	void RenderRootMotionSection(UAnimSequence* Seq)
 	{
 		ImGui::TextUnformatted("Root Motion");
@@ -80,6 +101,8 @@ void FAnimSequencePropertyPanel::Render(UAnimSequence* Seq)
 		return;
 	}
 
+	RenderPoseAdjustmentSection(Seq);
+	ImGui::Dummy(ImVec2(0.0f, 8.0f));
 	RenderRootMotionSection(Seq);
 	// 향후 추가 section 은 여기에 ImGui::Dummy + 호출 추가.
 }

@@ -99,6 +99,15 @@ public:
     const FRawAnimSequenceTrack* FindTrackByBoneIndex(int32 TrackIndex) const;
 
     // ─────────────────────────────────────────────────────────────
+    // Ground Z Offset
+    //   일부 AnimSequence 의 발 높이가 지면과 맞지 않을 때, 에셋 단위로
+    //   전체 pose 를 Z 축으로 보정한다. Root Lock / Root Motion 처리 후
+    //   skeleton root local Z 에 더해져 프리뷰와 런타임 평가 경로가 동일하다.
+    // ─────────────────────────────────────────────────────────────
+    float GetGroundZOffset() const { return GroundZOffset; }
+    void SetGroundZOffset(float InOffset) { GroundZOffset = InOffset; }
+
+    // ─────────────────────────────────────────────────────────────
     // Force Root Lock 옵션 (UE 의 bForceRootLock 와 동등, per-asset, .uasset 에 저장).
     //   bForceRootLock = true 면 GetBonePose 시 RootMotionBoneName 본의
     //   local translation 의 horizontal (X/Y) 성분을 bind 값으로 고정 (vertical Z 는 anim 유지).
@@ -158,6 +167,7 @@ private:
     FString AssetPathFileName = "None";
     FSkeletonBinding TargetSkeleton;
 
+    float   GroundZOffset     = 0.0f;
     bool    bForceRootLock    = false;
     bool    bEnableRootMotion = false;
     FString RootMotionBoneName;

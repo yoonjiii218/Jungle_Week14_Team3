@@ -73,13 +73,8 @@ protected:
 
 	void OnOwnedComponentRemoved(UActorComponent* Component) override;
 	void RefreshCharacterComponents();
-	void ActivateTemporaryWorldSlomo();
-	void TickTemporaryWorldSlomo(float DeltaTime);
 
 	UCapsuleComponent*           CapsuleComponent  = nullptr;
 	USkeletalMeshComponent*      Mesh              = nullptr;
 	UCharacterMovementComponent* CharacterMovement = nullptr;
-	bool bTemporaryWorldSlomoActive = false;
-	float TemporaryWorldSlomoRemainingTime = 0.0f;
-	float TemporaryWorldSlomoPreviousCustomTimeDilation = 1.0f;
 };

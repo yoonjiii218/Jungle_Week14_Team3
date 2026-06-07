@@ -6,7 +6,7 @@
 namespace
 {
     constexpr int32 NotifyTrackMagic = 0x4E54524B; // "NTRK"
-    constexpr int32 NotifyTrackVersion = 1;
+    constexpr int32 NotifyTrackVersion = 2;
 }
 
 void UAnimDataModel::AddReferencedObjects(FReferenceCollector& Collector)
@@ -60,6 +60,8 @@ void UAnimDataModel::Serialize(FArchive& Ar)
         {
             Ar << Notify.TrackIndex;
         }
+
+        Ar << GroundZOffset;
     }
     else if (Ar.HasRemaining())
     {
@@ -69,7 +71,7 @@ void UAnimDataModel::Serialize(FArchive& Ar)
         {
             int32 Version = 0;
             Ar << Version;
-            if (Version == NotifyTrackVersion)
+            if (Version >= 1)
             {
                 Ar << NotifyTracks;
 
@@ -84,6 +86,15 @@ void UAnimDataModel::Serialize(FArchive& Ar)
                 {
                     int32 IgnoredTrackIndex = 0;
                     Ar << IgnoredTrackIndex;
+                }
+
+                if (Version >= 2)
+                {
+                    Ar << GroundZOffset;
+                }
+                else
+                {
+                    GroundZOffset = 0.0f;
                 }
             }
         }

@@ -5,6 +5,7 @@
 local PlayerAction = {}
 
 local PlayerTargeting = require("Player/PlayerTargeting")
+local PlayerProjectile = require("Player/PlayerProjectile")
 local PlayerContext = require("Player/PlayerContext")
 local PlayerEvents = require("Player/PlayerEvents")
 
@@ -1307,6 +1308,14 @@ function PlayerAction.OnAnimNotify(playerContext, notifyName)
         playerContext.Action.DashEnd = true
     elseif notifyName == "DashChargeAttackEnd" or notifyName == "DashChargingAttackEnd" then
         playerContext.Action.DashChargeAttackEnd = true
+    elseif notifyName == "FlyingSlashFire" then
+        PlayerProjectile.SpawnFlyingSlash(playerContext, {
+            AttackId = "PlayerFlyingSlash",
+        })
+    elseif notifyName == "DashChargeFlyingSlashFire" then
+        PlayerProjectile.SpawnFlyingSlash(playerContext, {
+            AttackId = "PlayerDashChargeFlyingSlash",
+        })
     elseif notifyName == "HitReactEnd" or notifyName == "HitEnd" then
         playerContext.Action.HitReactEnd = true
     end
