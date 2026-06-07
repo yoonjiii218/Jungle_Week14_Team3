@@ -4,12 +4,14 @@
 #include "Component/Primitive/ParticleSystemComponent.h"
 #include "Component/Primitive/SkeletalMeshComponent.h"
 #include "Core/Logging/Log.h"
-#include "Engine/Runtime/Engine.h"
 #include "GameFramework/AActor.h"
 #include "GameFramework/World.h"
+#include "Math/MathUtils.h"
 #include "Object/Reflection/UClass.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemManager.h"
+
+#include <cstring>
 
 namespace
 {
@@ -17,6 +19,107 @@ namespace
 	// notify 측에서 한 번만 load 보장 (LoadAudio 매번 호출 시 release+reload 비용 회피).
 	// 프로세스 lifetime 동안 누적, 캐시 무효화 필요 시 process restart.
 	static TSet<FString> GLoadedPlaySoundPaths;
+
+	enum class ENotifyParticleTransformMode
+	{
+		World,
+		FollowSocket,
+		SocketRotation,
+		CharacterRotation,
+	};
+
+	static ENotifyParticleTransformMode ResolveNotifyParticleTransformMode(
+		bool bFollowSocket,
+		bool bUseSocketRotation,
+		bool bUseCharacterRotation
+	)
+	{
+		// Preserve the old runtime priority for assets saved with multiple flags enabled.
+		if (bFollowSocket)
+		{
+			return ENotifyParticleTransformMode::FollowSocket;
+		}
+		if (bUseSocketRotation)
+		{
+			return ENotifyParticleTransformMode::SocketRotation;
+		}
+		if (bUseCharacterRotation)
+		{
+			return ENotifyParticleTransformMode::CharacterRotation;
+		}
+		return ENotifyParticleTransformMode::World;
+	}
+
+	static FMatrix GetNotifySocketWorldMatrix(const USkeletalMeshComponent* MeshComp, const FString& SocketName)
+	{
+		if (!MeshComp)
+		{
+			return FMatrix::Identity;
+		}
+
+		const FName AttachSocketName(SocketName);
+		if (!SocketName.empty() && MeshComp->HasSocket(AttachSocketName))
+		{
+			return MeshComp->GetSocketTransform(AttachSocketName).ToMatrix();
+		}
+
+		return MeshComp->GetWorldMatrix();
+	}
+
+	static FVector GetNotifySocketWorldLocation(const USkeletalMeshComponent* MeshComp, const FString& SocketName)
+	{
+		return GetNotifySocketWorldMatrix(MeshComp, SocketName).GetLocation();
+	}
+
+	static FRotator GetNotifyCharacterFacingRotation(const USkeletalMeshComponent* MeshComp)
+	{
+		FVector Forward = FVector::ForwardVector;
+		if (MeshComp)
+		{
+			if (const AActor* Owner = MeshComp->GetOwner())
+			{
+				Forward = Owner->GetActorForward();
+			}
+			else
+			{
+				Forward = MeshComp->GetForwardVector();
+			}
+		}
+
+		Forward.Z = 0.0f;
+		if (Forward.IsNearlyZero())
+		{
+			Forward = FVector::ForwardVector;
+		}
+		Forward.Normalize();
+
+		return FRotator(0.0f, atan2f(Forward.Y, Forward.X) * RAD_TO_DEG, 0.0f);
+	}
+
+	static void SetNotifySpawnTransform(
+		UParticleSystemComponent* PSC,
+		const FVector& Origin,
+		const FRotator& BasisRotation,
+		const FVector& LocationOffset,
+		const FVector& RotationOffset,
+		const FVector& Scale
+	)
+	{
+		if (!PSC)
+		{
+			return;
+		}
+
+		const FVector SpawnLocation = Origin
+			+ BasisRotation.GetForwardVector() * LocationOffset.X
+			+ BasisRotation.GetRightVector() * LocationOffset.Y
+			+ BasisRotation.GetUpVector() * LocationOffset.Z;
+		const FQuat SpawnRotation = BasisRotation.ToQuaternion() * FRotator(RotationOffset).ToQuaternion();
+
+		PSC->SetRelativeLocation(SpawnLocation);
+		PSC->SetRelativeRotation(SpawnRotation);
+		PSC->SetRelativeScale(Scale);
+	}
 }
 
 void UAnimNotify_PlaySound::Notify(USkeletalMeshComponent* /*MeshComp*/, UAnimSequenceBase* /*Anim*/)
@@ -42,6 +145,31 @@ void UAnimNotify_PlaySound::Notify(USkeletalMeshComponent* /*MeshComp*/, UAnimSe
 	FAudioManager::Get().PlayAudio(Key, Volume);
 }
 
+void UAnimNotify_PlayParticle::PostEditProperty(const char* PropertyName)
+{
+	UObject::PostEditProperty(PropertyName);
+	if (!PropertyName)
+	{
+		return;
+	}
+
+	if ((std::strcmp(PropertyName, "bFollowSocket") == 0 || std::strcmp(PropertyName, "Follow Socket") == 0) && bFollowSocket)
+	{
+		bUseSocketRotation = false;
+		bUseCharacterRotation = false;
+	}
+	else if ((std::strcmp(PropertyName, "bUseSocketRotation") == 0 || std::strcmp(PropertyName, "Use Socket Rotation") == 0) && bUseSocketRotation)
+	{
+		bFollowSocket = false;
+		bUseCharacterRotation = false;
+	}
+	else if ((std::strcmp(PropertyName, "bUseCharacterRotation") == 0 || std::strcmp(PropertyName, "Use Character Rotation") == 0) && bUseCharacterRotation)
+	{
+		bFollowSocket = false;
+		bUseSocketRotation = false;
+	}
+}
+
 void UAnimNotify_PlayParticle::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* /*Anim*/)
 {
 	if (!MeshComp) return;
@@ -56,9 +184,7 @@ void UAnimNotify_PlayParticle::Notify(USkeletalMeshComponent* MeshComp, UAnimSeq
 		return;
 	}
 
-	if (!GEngine) return;
-
-	UWorld* World = GEngine->GetWorld();
+	UWorld* World = MeshComp->GetWorld();
 	if (!World) return;
 
 	UClass* ActorClass = UClass::FindByName("AActor");
@@ -66,6 +192,7 @@ void UAnimNotify_PlayParticle::Notify(USkeletalMeshComponent* MeshComp, UAnimSeq
 
 	AActor* ParticleActor = World->SpawnActorByClass(ActorClass);
 	if (!ParticleActor) return;
+	ParticleActor->bTickInEditor = true;
 
 	UParticleSystemComponent* PSC = ParticleActor->AddComponent<UParticleSystemComponent>();
 	if (!PSC)
@@ -75,10 +202,53 @@ void UAnimNotify_PlayParticle::Notify(USkeletalMeshComponent* MeshComp, UAnimSeq
 	}
 
 	ParticleActor->SetRootComponent(PSC);
-	PSC->AttachToComponentWithSocket(MeshComp, SocketName);
-	PSC->SetRelativeLocation(LocationOffset);
-	PSC->SetRelativeRotation(RotationOffset);
-	PSC->SetRelativeScale(Scale);
+
+	const ENotifyParticleTransformMode TransformMode = ResolveNotifyParticleTransformMode(
+		bFollowSocket,
+		bUseSocketRotation,
+		bUseCharacterRotation
+	);
+
+	if (TransformMode == ENotifyParticleTransformMode::FollowSocket)
+	{
+		PSC->AttachToComponentWithSocket(MeshComp, SocketName);
+		PSC->SetRelativeLocation(LocationOffset);
+		PSC->SetRelativeRotation(RotationOffset);
+		PSC->SetRelativeScale(Scale);
+	}
+	else
+	{
+		const FMatrix SocketWorldMatrix = GetNotifySocketWorldMatrix(MeshComp, SocketName);
+		if (TransformMode == ENotifyParticleTransformMode::SocketRotation)
+		{
+			SetNotifySpawnTransform(
+				PSC,
+				SocketWorldMatrix.GetLocation(),
+				SocketWorldMatrix.ToRotator(),
+				LocationOffset,
+				RotationOffset,
+				Scale
+			);
+		}
+		else if (TransformMode == ENotifyParticleTransformMode::CharacterRotation)
+		{
+			SetNotifySpawnTransform(
+				PSC,
+				GetNotifySocketWorldLocation(MeshComp, SocketName),
+				GetNotifyCharacterFacingRotation(MeshComp),
+				LocationOffset,
+				RotationOffset,
+				Scale
+			);
+		}
+		else
+		{
+			PSC->SetRelativeLocation(SocketWorldMatrix.GetLocation() + LocationOffset);
+			PSC->SetRelativeRotation(RotationOffset);
+			PSC->SetRelativeScale(Scale);
+		}
+	}
+
 	PSC->SetTemplate(Template);
 	PSC->SetAutoDestroyOwnerAfter(AutoDestroyAfter);
 	PSC->Activate();

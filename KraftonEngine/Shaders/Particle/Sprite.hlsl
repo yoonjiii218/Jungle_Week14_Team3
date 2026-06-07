@@ -6,13 +6,13 @@
 
 Texture2D ParticleTexture : register(t0);
 
-// b2: 카메라 Right/Up (빌보드 확장용 — FFrameContext에서 매 프레임 업데이트)
+// b2: emitter별 sprite 확장 축. Billboard가 꺼지면 카메라 축 대신 emitter 축이 들어온다.
 cbuffer ParticleFrameBuffer : register(b2)
 {
-    float3 CameraRight;
-    float _pad0;
-    float3 CameraUp;
-    float _pad1;
+    float3 ParticleFrameRight;
+    float ParticleFramePad0;
+    float3 ParticleFrameUp;
+    float ParticleFramePad1;
 }
 
 struct PS_Input_Particle
@@ -34,8 +34,8 @@ PS_Input_Particle VS(VS_Input_ParticleQuad quad, VS_Input_ParticleInstance inst)
     );
 
     float3 worldPos = inst.position
-                    + CameraRight * rotUV.x * inst.size.x
-                    + CameraUp * rotUV.y * inst.size.y;
+                    + ParticleFrameRight * rotUV.x * inst.size.x
+                    + ParticleFrameUp * rotUV.y * inst.size.y;
 
     PS_Input_Particle output;
     output.position = mul(float4(worldPos, 1.0f), mul(View, Projection));

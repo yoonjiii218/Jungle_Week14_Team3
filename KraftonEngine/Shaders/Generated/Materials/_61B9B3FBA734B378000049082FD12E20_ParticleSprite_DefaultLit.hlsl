@@ -163,7 +163,8 @@ float4 PS(PS_Input_MaterialParticle input) : SV_TARGET
     FMaterialEvalResult Eval = EvaluateMaterialWithRefraction(MaterialInput);
     FMaterialResult Result = Eval.Material;
     float4 FinalColor = float4(Result.Color + Result.Emissive, Result.Opacity);
-    clip(FinalColor.a - 0.01f);
+    float ClipThreshold = Eval.RefractionEnabled >= 0.5f ? 0.0001f : 0.01f;
+    clip(FinalColor.a - ClipThreshold);
 
     float4 ForegroundColor = ApplyFogTranslucent(FinalColor, input.worldPos, CameraWorldPos);
     if (Eval.RefractionEnabled < 0.5f)

@@ -375,9 +375,11 @@ void UParticleEmitter::InitializeDefaultSpriteEmitter()
 	Required->EmitterLoops       = 0;
 
 	Required->ScreenAlignment      = PSA_FacingCameraPosition;
+	Required->bUseBillboard        = true;
 	Required->SortMode             = PSORTMODE_None;
 	Required->SubImages_Horizontal = 1;
 	Required->SubImages_Vertical   = 1;
+	Required->SubUVPlayRate        = 1.0f;
 	Required->SpawnRate            = 10.0f;
 	Required->bUseMaxDrawCount     = false;
 	Required->MaxDrawCount         = 0;

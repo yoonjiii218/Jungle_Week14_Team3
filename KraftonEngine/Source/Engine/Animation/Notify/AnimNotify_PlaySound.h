@@ -41,8 +41,17 @@ public:
 	UPROPERTY(Edit, Save, Category="PlayParticle", DisplayName="Particle System", AssetType="UParticleSystem")
 	FSoftObjectPtr ParticleSystemPath = "None";
 
-	UPROPERTY(Edit, Save, Category="PlayParticle", DisplayName="Socket Name")
+	UPROPERTY(Edit, Save, Category="PlayParticle", DisplayName="Socket Name", AssetType="Socket")
 	FString SocketName;
+
+	UPROPERTY(Edit, Save, Category="PlayParticle", DisplayName="Follow Socket")
+	bool bFollowSocket = false;
+
+	UPROPERTY(Edit, Save, Category="PlayParticle", DisplayName="Use Socket Rotation")
+	bool bUseSocketRotation = false;
+
+	UPROPERTY(Edit, Save, Category="PlayParticle", DisplayName="Use Character Rotation")
+	bool bUseCharacterRotation = true;
 
 	UPROPERTY(Edit, Save, Category="PlayParticle", DisplayName="Location Offset")
 	FVector LocationOffset = FVector::ZeroVector;
@@ -56,5 +65,6 @@ public:
 	UPROPERTY(Edit, Save, Category="PlayParticle", DisplayName="Auto Destroy After", Min=0.0f, Max=10.0f, Speed=0.1f)
 	float AutoDestroyAfter = 1.0f;
 
+	void PostEditProperty(const char* PropertyName) override;
 	void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Anim) override;
 };

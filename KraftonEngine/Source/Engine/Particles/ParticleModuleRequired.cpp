@@ -45,7 +45,7 @@ void UParticleModuleRequired::Serialize(FArchive& Ar)
 {
 	UParticleModule::Serialize(Ar);
 
-	int32 Version = 0;
+	int32 Version = 2;
 	Ar << Version;
 
 	FString SlotPath = Ar.IsSaving() ? MaterialSlot.ToString() : FString();
@@ -77,6 +77,15 @@ void UParticleModuleRequired::Serialize(FArchive& Ar)
 	Ar << EmitterLoops;
 	Ar << bDelayFirstLoopOnly;
 
+	if (Version >= 1)
+	{
+		Ar << bUseBillboard;
+	}
+	else if (Ar.IsLoading())
+	{
+		bUseBillboard = true;
+	}
+
 	int32 SA = static_cast<int32>(ScreenAlignment);
 	int32 SM = static_cast<int32>(SortMode);
 	Ar << SA;
@@ -89,6 +98,14 @@ void UParticleModuleRequired::Serialize(FArchive& Ar)
 
 	Ar << SubImages_Horizontal;
 	Ar << SubImages_Vertical;
+	if (Version >= 2)
+	{
+		Ar << SubUVPlayRate;
+	}
+	else if (Ar.IsLoading())
+	{
+		SubUVPlayRate = 1.0f;
+	}
 
 	Ar << SpawnRate;
 	Ar << BurstList;          // TArray<FParticleBurst> — trivially copyable, fast path.
@@ -98,6 +115,10 @@ void UParticleModuleRequired::Serialize(FArchive& Ar)
 
 	if (Ar.IsLoading())
 	{
+		if (SubUVPlayRate < 0.0f)
+		{
+			SubUVPlayRate = 0.0f;
+		}
 		ResolveMaterialFromSlot();
 	}
 }

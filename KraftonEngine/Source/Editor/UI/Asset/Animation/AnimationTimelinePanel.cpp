@@ -6,6 +6,7 @@
 #include "Animation/Sequence/AnimDataModel.h"
 #include "Animation/Notify/AnimNotify.h"
 #include "Animation/Notify/AnimNotifyState.h"
+#include "Animation/Skeleton/Skeleton.h"
 #include "Animation/AnimationManager.h"
 #include "Asset/AssetRegistry.h"
 #include "Component/Primitive/SkeletalMeshComponent.h"
@@ -17,6 +18,7 @@
 #include "Object/Reflection/UClass.h"
 #include "Core/Property/SoftObjectProperty.h"
 #include "Core/Types/PropertyTypes.h"
+#include "Resource/ResourceManager.h"
 #include "Editor/UI/Asset/Animation/MorphCurveEditObject.h"
 
 #include <imgui.h>
@@ -184,7 +186,7 @@ namespace
 	// payload 편집용 경량 인스펙터 — 풀 FEditorPropertyWidget 의존성 없이 timeline 패널 안에서
 	// 자족. 지원 타입은 Notify payload 에 흔히 쓰일 단순형 (Bool/Int/Float/String/Vec3/Vec4/Color4).
 	// 그 외 타입은 disabled placeholder.
-	bool RenderObjectPropertiesInline(UObject* Object)
+	bool RenderObjectPropertiesInline(UObject* Object, USkeleton* Skeleton = nullptr)
 	{
 		if (!Object)
 		{
@@ -306,6 +308,51 @@ namespace
 								ImGui::EndCombo();
 							}
 						}
+						else if (AssetTypeIt != Metadata.end() && AssetTypeIt->second == "Socket")
+						{
+							const FString Preview = S->empty() ? "None" : *S;
+							if (ImGui::BeginCombo("##v", Preview.c_str()))
+							{
+								const bool bSelectedNone = S->empty();
+								if (ImGui::Selectable("None", bSelectedNone))
+								{
+									S->clear();
+									bChanged = true;
+								}
+								if (bSelectedNone) ImGui::SetItemDefaultFocus();
+
+								if (Skeleton)
+								{
+									TArray<FString> SocketNames;
+									SocketNames.reserve(Skeleton->GetSockets().size());
+									for (const FSkeletonSocket& Socket : Skeleton->GetSockets())
+									{
+										if (!Socket.Name.IsNone())
+										{
+											SocketNames.push_back(Socket.Name.ToString());
+										}
+									}
+									std::sort(SocketNames.begin(), SocketNames.end());
+
+									for (const FString& SocketName : SocketNames)
+									{
+										const bool bSelected = *S == SocketName;
+										if (ImGui::Selectable(SocketName.c_str(), bSelected))
+										{
+											*S = SocketName;
+											bChanged = true;
+										}
+										if (bSelected) ImGui::SetItemDefaultFocus();
+									}
+								}
+								else
+								{
+									ImGui::TextDisabled("(no skeleton)");
+								}
+
+								ImGui::EndCombo();
+							}
+						}
 						else
 						{
 							char Buf[256];
@@ -352,6 +399,53 @@ namespace
 									}
 									if (bSelected) ImGui::SetItemDefaultFocus();
 								}
+								ImGui::EndCombo();
+							}
+						}
+						else if (AssetType == "Socket")
+						{
+							const FString Preview = (CurrentPath.empty() || CurrentPath == "None") ? "None" : CurrentPath;
+							if (ImGui::BeginCombo("##v", Preview.c_str()))
+							{
+								const bool bSelectedNone = CurrentPath.empty() || CurrentPath == "None";
+								if (ImGui::Selectable("None", bSelectedNone))
+								{
+									SoftProperty->SetPath(Prop.ContainerPtr, "");
+									CurrentPath.clear();
+									bChanged = true;
+								}
+								if (bSelectedNone) ImGui::SetItemDefaultFocus();
+
+								if (Skeleton)
+								{
+									TArray<FString> SocketNames;
+									SocketNames.reserve(Skeleton->GetSockets().size());
+									for (const FSkeletonSocket& Socket : Skeleton->GetSockets())
+									{
+										if (!Socket.Name.IsNone())
+										{
+											SocketNames.push_back(Socket.Name.ToString());
+										}
+									}
+									std::sort(SocketNames.begin(), SocketNames.end());
+
+									for (const FString& SocketName : SocketNames)
+									{
+										const bool bSelected = CurrentPath == SocketName;
+										if (ImGui::Selectable(SocketName.c_str(), bSelected))
+										{
+											SoftProperty->SetPath(Prop.ContainerPtr, SocketName);
+											CurrentPath = SocketName;
+											bChanged = true;
+										}
+										if (bSelected) ImGui::SetItemDefaultFocus();
+									}
+								}
+								else
+								{
+									ImGui::TextDisabled("(no skeleton)");
+								}
+
 								ImGui::EndCombo();
 							}
 						}
@@ -402,13 +496,46 @@ namespace
 					FName* N = static_cast<FName*>(Prop.GetValuePtr());
 					if (N)
 					{
-						FString Cur = N->ToString();
-						char Buf[256];
-						strncpy_s(Buf, sizeof(Buf), Cur.c_str(), _TRUNCATE);
-						if (ImGui::InputText("##v", Buf, sizeof(Buf)))
+						const TMap<FString, FString>& Metadata = Prop.GetMetadata();
+						const auto AssetTypeIt = Metadata.find("assettype");
+						if (AssetTypeIt != Metadata.end() && AssetTypeIt->second == "Particle")
 						{
-							*N = FName(FString(Buf));
-							bChanged = true;
+							const FString CurrentName = N->IsNone() ? "None" : N->ToString();
+							if (ImGui::BeginCombo("##v", CurrentName.c_str()))
+							{
+								const bool bSelectedNone = N->IsNone();
+								if (ImGui::Selectable("None", bSelectedNone))
+								{
+									*N = FName::None;
+									bChanged = true;
+								}
+								if (bSelectedNone) ImGui::SetItemDefaultFocus();
+
+								TArray<FString> ParticleNames = FResourceManager::Get().GetParticleNames();
+								std::sort(ParticleNames.begin(), ParticleNames.end());
+								for (const FString& ParticleName : ParticleNames)
+								{
+									const bool bSelected = CurrentName == ParticleName;
+									if (ImGui::Selectable(ParticleName.c_str(), bSelected))
+									{
+										*N = FName(ParticleName);
+										bChanged = true;
+									}
+									if (bSelected) ImGui::SetItemDefaultFocus();
+								}
+								ImGui::EndCombo();
+							}
+						}
+						else
+						{
+							FString Cur = N->ToString();
+							char Buf[256];
+							strncpy_s(Buf, sizeof(Buf), Cur.c_str(), _TRUNCATE);
+							if (ImGui::InputText("##v", Buf, sizeof(Buf)))
+							{
+								*N = FName(FString(Buf));
+								bChanged = true;
+							}
 						}
 					}
 					break;
@@ -1715,7 +1842,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 	ImGui::EndChild();
 }
 
-bool FAnimationTimelinePanel::RenderNotifyDetails(UAnimSequence* Seq, int32 SelectedNotifyIndex)
+bool FAnimationTimelinePanel::RenderNotifyDetails(UAnimSequence* Seq, USkeletalMesh* SkeletalMesh, int32 SelectedNotifyIndex)
 {
 	if (!Seq) return false;
 	const TArray<FAnimNotifyEvent>& Notifies = Seq->GetNotifies();
@@ -1741,6 +1868,7 @@ bool FAnimationTimelinePanel::RenderNotifyDetails(UAnimSequence* Seq, int32 Sele
 	ImGui::Dummy(ImVec2(0, 4));
 
 	bool bChanged = false;
+	USkeleton* Skeleton = SkeletalMesh ? SkeletalMesh->GetSkeleton() : nullptr;
 
 	// Name 편집 — 인플레이스.
 	{
@@ -1828,11 +1956,11 @@ bool FAnimationTimelinePanel::RenderNotifyDetails(UAnimSequence* Seq, int32 Sele
 
 	if (N.Notify)
 	{
-		if (RenderObjectPropertiesInline(N.Notify))      bChanged = true;
+		if (RenderObjectPropertiesInline(N.Notify, Skeleton))      bChanged = true;
 	}
 	if (N.NotifyState)
 	{
-		if (RenderObjectPropertiesInline(N.NotifyState)) bChanged = true;
+		if (RenderObjectPropertiesInline(N.NotifyState, Skeleton)) bChanged = true;
 	}
 	if (!N.Notify && !N.NotifyState)
 	{

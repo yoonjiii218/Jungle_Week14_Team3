@@ -154,6 +154,9 @@ public:
 	UPROPERTY(Edit, Save, Category = "Rendering", DisplayName = "Screen Alignment")
 	EParticleScreenAlignment ScreenAlignment = PSA_FacingCameraPosition;
 
+	UPROPERTY(Edit, Save, Category = "Rendering", DisplayName = "Use Billboard")
+	bool bUseBillboard = true;
+
 	UPROPERTY(Edit, Save, Category = "Rendering", DisplayName = "Sort Mode")
 	EParticleSortMode SortMode = PSORTMODE_None;
 
@@ -162,6 +165,9 @@ public:
 
 	UPROPERTY(Edit, Save, Category = "SubUV", DisplayName = "Sub Images Vertical", Min = "1")
 	int32 SubImages_Vertical = 1;
+
+	UPROPERTY(Edit, Save, Category = "SubUV", DisplayName = "SubUV Play Rate", Min = "0.0", Speed = "0.1")
+	float SubUVPlayRate = 1.0f;
 
 	UPROPERTY(Edit, Save, Category = "Spawn", DisplayName = "Spawn Rate", Min = "0.0", Speed = "0.1")
 	float SpawnRate = 10.0f;
