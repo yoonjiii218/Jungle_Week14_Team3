@@ -97,6 +97,27 @@ local function SetOrientRotationToMovement(playerContext, enabled)
     end
 end
 
+local function ClearAttackBuffer(playerContext)
+    playerContext.Input.AttackBuffered = false
+    playerContext.Input.AttackBufferTimer = 0.0
+    if playerContext.Input.LastBufferedAction == "Attack" then
+        playerContext.Input.LastBufferedAction = nil
+    end
+end
+
+local function ClearDashBuffer(playerContext)
+    playerContext.Input.DashBuffered = false
+    playerContext.Input.DashBufferTimer = 0.0
+    if playerContext.Input.LastBufferedAction == "Dash" then
+        playerContext.Input.LastBufferedAction = nil
+    end
+end
+
+local function ClearInputBuffers(playerContext)
+    ClearAttackBuffer(playerContext)
+    ClearDashBuffer(playerContext)
+end
+
 local function ResetDashInput(playerContext)
     playerContext.Input.DashHoldTime = 0.0
     playerContext.Input.DashConsumedInput = false
@@ -106,6 +127,7 @@ local function ResetDashInput(playerContext)
     playerContext.Input.DashPressed = false
     playerContext.Input.DashChargingPressed = false
     playerContext.Input.DashChargingReleased = false
+    ClearDashBuffer(playerContext)
 end
 
 ---@param playerContext PlayerContext
@@ -125,9 +147,11 @@ function PlayerAction.Init(playerContext)
     playerContext.Runtime.HitKnockbackDirection = nil
     playerContext.Runtime.HitKnockbackAppliedDistance = 0.0
     playerContext.Runtime.EventQueue = {}
+    playerContext.Runtime.LastActionInputUpdateTime = nil
     playerContext.Input.AttackDown = false
     playerContext.Input.AttackPressed = false
     playerContext.Input.AttackHoldTime = 0.0
+    ClearAttackBuffer(playerContext)
     playerContext.Runtime.StepForwardActive = false
     playerContext.Runtime.StepForwardElapsed = 0.0
     playerContext.Runtime.StepForwardDuration = 0.0
@@ -758,92 +782,267 @@ function PlayerAction.ApplyMoveInput(playerContext)
     end
 end
 
+local function GetActionInputFrameTime()
+    if World ~= nil and World.GetGameTime ~= nil then
+        return World.GetGameTime()
+    end
+
+    return nil
+end
+
+local function UpdateBufferedInputTimers(playerContext, dt)
+    local input = playerContext.Input
+    local deltaTime = dt or 0.0
+
+    if input.AttackBuffered == true then
+        input.AttackBufferTimer = (input.AttackBufferTimer or 0.0) - deltaTime
+        if input.AttackBufferTimer <= 0.0 then
+            ClearAttackBuffer(playerContext)
+        end
+    end
+
+    if input.DashBuffered == true then
+        input.DashBufferTimer = (input.DashBufferTimer or 0.0) - deltaTime
+        if input.DashBufferTimer <= 0.0 then
+            ClearDashBuffer(playerContext)
+        end
+    end
+end
+
+local function IsPlayerDead(playerContext)
+    return playerContext.Combat ~= nil and playerContext.Combat.IsDead == true
+end
+
+local function IsHardActionLocked(playerContext)
+    local action = playerContext.Action
+    return action.HitReactActive == true
+        or action.IsUltimateRunning == true
+        or action.IsInUltimateMode == true
+        or IsPlayerDead(playerContext)
+end
+
+local function IsDashChargeActionActive(playerContext)
+    local action = playerContext.Action
+    return action.DashChargingActive == true
+        or action.DashChargeAttackActive == true
+end
+
+local function CanConsumeAttackForStart(playerContext)
+    local action = playerContext.Action
+    return IsHardActionLocked(playerContext) ~= true
+        and IsDashChargeActionActive(playerContext) ~= true
+        and action.DashActive ~= true
+        and (action.AttackIndex or 0) == 0
+end
+
+local function CanConsumeAttackForCombo(playerContext)
+    local action = playerContext.Action
+    return IsHardActionLocked(playerContext) ~= true
+        and IsDashChargeActionActive(playerContext) ~= true
+        and (action.AttackIndex or 0) > 0
+        and action.ComboWindow == true
+        and action.ComboQueued ~= true
+end
+
+local function CanDashCancelAttack(playerContext)
+    local action = playerContext.Action
+    return (action.AttackIndex or 0) > 0
+        and action.ComboWindow == true
+        and action.AttackEnd ~= true
+end
+
+local function ClearQueuedAttackForDashPriority(playerContext)
+    local action = playerContext.Action
+    if (action.AttackIndex or 0) > 0 then
+        action.ComboQueued = false
+        ClearAttackBuffer(playerContext)
+    end
+end
+
+local function CanConsumeDash(playerContext)
+    local action = playerContext.Action
+    return IsHardActionLocked(playerContext) ~= true
+        and action.DashActive ~= true
+        and action.DashChargingActive ~= true
+        and action.DashChargeAttackActive ~= true
+        and ((action.AttackIndex or 0) == 0 or CanDashCancelAttack(playerContext) == true)
+end
+
+local function CanEmitDashChargingPressed(playerContext)
+    local action = playerContext.Action
+    return IsHardActionLocked(playerContext) ~= true
+        and action.DashChargingActive ~= true
+        and action.DashChargeAttackActive ~= true
+        and (action.AttackIndex or 0) == 0
+end
+
+---@param playerContext PlayerContext
+---@return boolean
+function PlayerAction.ShouldChainDashToCharging(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.ShouldChainDashToCharging")
+    local input = playerContext.Input
+    local action = playerContext.Action
+
+    return IsHardActionLocked(playerContext) ~= true
+        and action.DashActive == true
+        and action.DashEnd == true
+        and action.DashChargingActive ~= true
+        and action.DashChargeAttackActive ~= true
+        and input.DashDown == true
+        and input.DashChargingReleased ~= true
+        and (action.AttackIndex or 0) == 0
+end
+
+---@param playerContext PlayerContext
+---@return nil
+function PlayerAction.ConsumeDashChargingInput(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.ConsumeDashChargingInput")
+    playerContext.Input.DashChargingPressed = false
+    playerContext.Input.DashChargingConsumedInput = true
+    playerContext.Input.DashConsumedInput = true
+    ClearDashBuffer(playerContext)
+end
+
+---@param playerContext PlayerContext
+---@return boolean
+function PlayerAction.ConsumeBufferedAttackForCombo(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.ConsumeBufferedAttackForCombo")
+    if playerContext.Input.AttackBuffered ~= true then
+        return false
+    end
+    if CanConsumeAttackForCombo(playerContext) ~= true then
+        return false
+    end
+
+    playerContext.Action.ComboQueued = true
+    ClearAttackBuffer(playerContext)
+    return true
+end
+
+---@param playerContext PlayerContext
+---@return nil
+function PlayerAction.ClearInputBuffers(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.ClearInputBuffers")
+    ClearInputBuffers(playerContext)
+end
+
 ---@param playerContext PlayerContext
 ---@return nil
 function PlayerAction.UpdateActionInput(playerContext, dt)
     PlayerContext.Assert(playerContext, "PlayerAction.UpdateActionInput")
+
+    local frameTime = GetActionInputFrameTime()
+    if frameTime ~= nil and playerContext.Runtime.LastActionInputUpdateTime == frameTime then
+        return
+    end
+    playerContext.Runtime.LastActionInputUpdateTime = frameTime
+
+    local input = playerContext.Input
     local actionConfig = playerContext.Config.Action
+
+    -- These are 1-frame pulses consumed by the animation state machine.
+    input.AttackPressed = false
+    input.DashPressed = false
+    input.DashChargingPressed = false
+    input.DashChargingReleased = false
+
     local attackDown = ActionDown(playerContext, "Attack")
-
-    if attackDown then
-        playerContext.Input.AttackHoldTime = (playerContext.Input.AttackHoldTime or 0.0) + (dt or 0.0)
-    else
-        playerContext.Input.AttackHoldTime = 0.0
-    end
-
-    if playerContext.Input.AttackHoldTime > 0.05 then
-        playerContext.Input.AttackPressed = true
-    else
-        -- 첫 입력은 적용
-        if playerContext.Action.AttackIndex == 0 then
-            playerContext.Input.AttackPressed = true
-        end
-        playerContext.Input.AttackPressed = false
-    end
-
-    playerContext.Input.AttackDown = attackDown
-
-    if playerContext.Input.DashConsumedInput ~= true
-        or playerContext.Action.DashActive == true
-        or playerContext.Action.DashChargingActive == true
-        or playerContext.Action.DashChargeAttackActive == true then
-        playerContext.Input.DashPressed = false
-    end
-    if playerContext.Input.DashChargingConsumedInput ~= true
-        or playerContext.Action.DashChargingActive == true
-        or playerContext.Action.DashChargeAttackActive == true then
-        playerContext.Input.DashChargingPressed = false
-    end
-    playerContext.Input.DashChargingReleased = false
-
+    local attackStarted = ActionStarted(playerContext, "Attack")
     local dashDown = ActionDown(playerContext, "Dash")
+    local dashStarted = ActionStarted(playerContext, "Dash")
     local dashReleased = ActionCompleted(playerContext, "Dash")
-    local secondaryDashPressed = ActionStarted(playerContext, "SecondaryDash")
-    local wasDashChargingConsumed = playerContext.Input.DashChargingConsumedInput == true
-    local dashChargingLocked = playerContext.Action.DashChargingActive == true
-        or playerContext.Action.DashChargeAttackActive == true
-    local dashBlockedByAction = PlayerAction.IsAttackBusy(playerContext)
-        or playerContext.Action.HitReactActive == true
-        or playerContext.Action.IsUltimateRunning == true
-        or playerContext.Action.IsInUltimateMode == true
+    local secondaryDashStarted = ActionStarted(playerContext, "SecondaryDash")
+    local wasDashChargingConsumed = input.DashChargingConsumedInput == true
 
-    if dashReleased then
-        playerContext.Input.DashHoldTime = 0.0
-        playerContext.Input.DashConsumedInput = false
-        playerContext.Input.DashChargingConsumedInput = false
-        playerContext.Input.DashChargingPressed = false
-        playerContext.Input.DashBlockedUntilReleased = false
+    input.AttackDown = attackDown
+    input.DashDown = dashDown
+    input.DashReleased = dashReleased
+
+    -- Debug-only hold time. AttackPressed must never be derived from this value.
+    if attackDown then
+        input.AttackHoldTime = (input.AttackHoldTime or 0.0) + (dt or 0.0)
+    else
+        input.AttackHoldTime = 0.0
     end
 
-    if dashBlockedByAction then
-        playerContext.Input.DashHoldTime = 0.0
-        playerContext.Input.DashChargingPressed = false
+    if IsPlayerDead(playerContext) then
+        input.DashHoldTime = 0.0
+        input.DashConsumedInput = false
+        input.DashChargingConsumedInput = false
+        input.DashBlockedUntilReleased = false
+        ClearInputBuffers(playerContext)
         return
     end
 
-    if dashDown then
-        playerContext.Input.DashHoldTime = (playerContext.Input.DashHoldTime or 0.0) + (dt or 0.0)
-
-        if playerContext.Input.DashConsumedInput ~= true then
-            playerContext.Input.DashPressed = true
-            playerContext.Input.DashConsumedInput = true
-        end
-
-        if dashChargingLocked ~= true
-            and playerContext.Input.DashChargingConsumedInput ~= true
-            and playerContext.Input.DashHoldTime >= (actionConfig.DashChargingHoldThreshold) then
-            playerContext.Input.DashChargingPressed = true
-            playerContext.Input.DashChargingConsumedInput = true
+    if attackStarted then
+        if IsDashChargeActionActive(playerContext) == true then
+            ClearAttackBuffer(playerContext)
+        elseif playerContext.Action.ComboQueued ~= true then
+            input.AttackBuffered = true
+            if (playerContext.Action.AttackIndex or 0) > 0 then
+                input.AttackBufferTimer = actionConfig.ComboInputBufferTime or actionConfig.AttackInputBufferTime or 0.30
+            else
+                input.AttackBufferTimer = actionConfig.AttackInputBufferTime or 0.25
+            end
+            input.LastBufferedAction = "Attack"
         end
     end
+
+    if dashStarted or secondaryDashStarted then
+        input.DashBuffered = true
+        input.DashBufferTimer = actionConfig.DashInputBufferTime or 0.20
+        input.LastBufferedAction = "Dash"
+    end
+
+    if dashReleased then
+        input.DashHoldTime = 0.0
+        input.DashConsumedInput = false
+        input.DashChargingConsumedInput = false
+        input.DashChargingPressed = false
+        input.DashBlockedUntilReleased = false
+    elseif dashDown then
+        input.DashHoldTime = (input.DashHoldTime or 0.0) + (dt or 0.0)
+    else
+        input.DashHoldTime = 0.0
+    end
+
+    UpdateBufferedInputTimers(playerContext, dt)
 
     if dashReleased and wasDashChargingConsumed == true and playerContext.Action.DashChargingActive == true then
-        playerContext.Input.DashChargingReleased = true
+        input.DashChargingReleased = true
     end
 
-    if secondaryDashPressed then
-        playerContext.Input.DashPressed = true
-        playerContext.Input.DashConsumedInput = true
+    -- DashCharging / DashChargeAttack intentionally drop attack inputs for game-jam simplicity.
+    if IsDashChargeActionActive(playerContext) == true then
+        ClearAttackBuffer(playerContext)
+    end
+
+    PlayerAction.ConsumeBufferedAttackForCombo(playerContext)
+
+    if input.AttackBuffered == true and CanConsumeAttackForStart(playerContext) == true then
+        input.AttackPressed = true
+        ClearAttackBuffer(playerContext)
+        return
+    end
+
+    local shouldChainDashToCharging = PlayerAction.ShouldChainDashToCharging(playerContext)
+
+    if dashDown
+        and input.DashChargingConsumedInput ~= true
+        and CanEmitDashChargingPressed(playerContext) == true
+        and ((input.DashHoldTime or 0.0) >= (actionConfig.DashChargingHoldThreshold or 0.0)
+            or shouldChainDashToCharging == true) then
+        input.DashChargingPressed = true
+        PlayerAction.ConsumeDashChargingInput(playerContext)
+        input.DashChargingPressed = true
+        return
+    end
+
+    if input.DashBuffered == true and CanConsumeDash(playerContext) == true then
+        ClearQueuedAttackForDashPriority(playerContext)
+        input.DashPressed = true
+        input.DashConsumedInput = true
+        ClearDashBuffer(playerContext)
     end
 end
 
@@ -1095,6 +1294,7 @@ function PlayerAction.OnAnimNotify(playerContext, notifyName)
     PlayerContext.Assert(playerContext, "PlayerAction.OnAnimNotify")
     if notifyName == "ComboWindowOpen" then
         playerContext.Action.ComboWindow = true
+        PlayerAction.ConsumeBufferedAttackForCombo(playerContext)
     elseif notifyName == "ComboWindowClose" then
         playerContext.Action.ComboWindow = false
     elseif notifyName == "AttackEnd" then
@@ -1131,8 +1331,6 @@ end
 ---@return nil
 function PlayerAction.Update(playerContext, dt)
     PlayerContext.Assert(playerContext, "PlayerAction.Update")
-
-    PlayerAction.UpdateActionInput(playerContext, dt)
 
     local maxUltimateGauge = playerContext.Combat.MaxUltimateGauge or playerContext.Config.Combat.MaxUltimateGauge or 0
     local ultimateGauge = playerContext.Combat.UltimateGauge or 0

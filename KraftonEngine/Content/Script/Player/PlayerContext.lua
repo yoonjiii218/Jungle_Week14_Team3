@@ -12,6 +12,8 @@ local PlayerContext = {}
 ---@field AttackPressed boolean
 ---@field AttackDown boolean
 ---@field AttackHoldTime number
+---@field AttackBuffered boolean
+---@field AttackBufferTimer number
 ---@field DashPressed boolean
 ---@field DashConsumedInput boolean
 ---@field DashReleased boolean
@@ -21,6 +23,9 @@ local PlayerContext = {}
 ---@field DashChargingReleased boolean
 ---@field DashChargingConsumedInput boolean
 ---@field DashBlockedUntilReleased boolean
+---@field DashBuffered boolean
+---@field DashBufferTimer number
+---@field LastBufferedAction string|nil
 ---@field UltimatePressed boolean
 
 ---@class PlayerActionState
@@ -87,6 +92,7 @@ local PlayerContext = {}
 ---@field TargetAssistEndTime number
 ---@field TargetAssistKeepUntil number
 ---@field DashChargingTurnTarget string
+---@field LastActionInputUpdateTime number|nil
 
 ---@class PlayerContext
 ---@field Kind string
@@ -105,6 +111,8 @@ local function CreateInputState()
         AttackPressed = false,
         AttackDown = false,
         AttackHoldTime = 0.0,
+        AttackBuffered = false,
+        AttackBufferTimer = 0.0,
         DashPressed = false,
         DashConsumedInput = false,
         DashReleased = false,
@@ -114,6 +122,9 @@ local function CreateInputState()
         DashChargingReleased = false,
         DashChargingConsumedInput = false,
         DashBlockedUntilReleased = false,
+        DashBuffered = false,
+        DashBufferTimer = 0.0,
+        LastBufferedAction = nil,
         UltimatePressed = false,
     }
 end
@@ -189,6 +200,7 @@ local function CreateRuntimeState()
         TargetAssistEndTime = 0.0,
         TargetAssistKeepUntil = 0.0,
         DashChargingTurnTarget = "None",
+        LastActionInputUpdateTime = nil,
     }
 end
 

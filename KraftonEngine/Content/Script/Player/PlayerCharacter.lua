@@ -165,7 +165,9 @@ function GetDebugSnapshotText()
         "DashChargeAttack: active=%s elapsed=%.3f end=%s\n" ..
         "PerfectDodge: window=%s consumed=%s  now=%.3f until=%.3f consumedUntil=%.3f\n" ..
         "InvincibleUntil: %.3f\n" ..
-        "Input: DashDown=%s DashHoldTime=%.3f dashPressed=%s DashChargingPressed=%s DashChargingReleased=%s\n" ..
+        "InputBuffer: attackBuffered=%s attackTimer=%.3f dashBuffered=%s dashTimer=%.3f last=%s\n" ..
+        "InputPulse: attackPressed=%s dashPressed=%s dashChargingPressed=%s dashChargingReleased=%s\n" ..
+        "InputHold: DashDown=%s DashHoldTime=%.3f\n" ..
         "Assist: mode=%s target=%s",
         DerivePlayerDebugState(ctx),
         hp, maxHP,
@@ -177,7 +179,9 @@ function GetDebugSnapshotText()
         BoolText(action.DashChargeAttackActive), NumberOrZero(action.DashChargeAttackElapsed), BoolText(action.DashChargeAttackEnd),
         BoolText(perfectWindow), BoolText(perfectConsumed), now, dodgeUntil, consumedUntil,
         invincibleUntil,
-        BoolText(input.DashDown), NumberOrZero(input.DashHoldTime), BoolText(input.DashPressed), BoolText(input.DashChargingPressed), BoolText(input.DashChargingReleased),
+        BoolText(input.AttackBuffered), NumberOrZero(input.AttackBufferTimer), BoolText(input.DashBuffered), NumberOrZero(input.DashBufferTimer), tostring(input.LastBufferedAction or "None"),
+        BoolText(input.AttackPressed), BoolText(input.DashPressed), BoolText(input.DashChargingPressed), BoolText(input.DashChargingReleased),
+        BoolText(input.DashDown), NumberOrZero(input.DashHoldTime),
         tostring(targetAssist), tostring(targetName)
     )
 end
