@@ -2013,6 +2013,52 @@ void FParticleSystemEditorWidget::RenderModuleProperties(UParticleModule* Module
         ImGui::SetNextItemOpen(true, ImGuiCond_Once);
         if (ImGui::CollapsingHeader("Rendering##Req"))
         {
+            if (ImGui::BeginCombo("Screen Alignment", ScreenAlignmentName(Required->ScreenAlignment)))
+            {
+                constexpr EParticleScreenAlignment Alignments[] = {
+                    PSA_FacingCameraPosition,
+                    PSA_Square,
+                    PSA_Rectangle,
+                    PSA_Velocity,
+                    PSA_AwayFromCenter,
+                    PSA_TypeSpecific,
+                    PSA_FacingCameraDistanceBlend
+                };
+                for (EParticleScreenAlignment Alignment : Alignments)
+                {
+                    const bool bSelected = Required->ScreenAlignment == Alignment;
+                    if (ImGui::Selectable(ScreenAlignmentName(Alignment), bSelected))
+                    {
+                        Required->ScreenAlignment = Alignment;
+                        bChanged = true;
+                    }
+                    if (bSelected) ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+
+            if (ImGui::BeginCombo("Sort Mode", SortModeName(Required->SortMode)))
+            {
+                constexpr EParticleSortMode SortModes[] = {
+                    PSORTMODE_None,
+                    PSORTMODE_ViewProjDepth,
+                    PSORTMODE_DistanceToView,
+                    PSORTMODE_Age_OldestFirst,
+                    PSORTMODE_Age_NewestFirst
+                };
+                for (EParticleSortMode SortMode : SortModes)
+                {
+                    const bool bSelected = Required->SortMode == SortMode;
+                    if (ImGui::Selectable(SortModeName(SortMode), bSelected))
+                    {
+                        Required->SortMode = SortMode;
+                        bChanged = true;
+                    }
+                    if (bSelected) ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+
             bChanged |= ImGui::Checkbox("Use Max Draw Count", &Required->bUseMaxDrawCount);
             if (!Required->bUseMaxDrawCount) ImGui::BeginDisabled();
             bChanged |= ImGui::DragInt("Max Draw Count", &Required->MaxDrawCount, 1.0f, 0, 100000);
@@ -2022,6 +2068,24 @@ void FParticleSystemEditorWidget::RenderModuleProperties(UParticleModule* Module
                 bChanged               = true;
             }
             if (!Required->bUseMaxDrawCount) ImGui::EndDisabled();
+        }
+
+        // ── SubUV ──
+        ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+        if (ImGui::CollapsingHeader("SubUV##Req"))
+        {
+            bChanged |= ImGui::DragInt("Sub Images Horizontal", &Required->SubImages_Horizontal, 1.0f, 1, 1024);
+            bChanged |= ImGui::DragInt("Sub Images Vertical", &Required->SubImages_Vertical, 1.0f, 1, 1024);
+            if (Required->SubImages_Horizontal < 1)
+            {
+                Required->SubImages_Horizontal = 1;
+                bChanged = true;
+            }
+            if (Required->SubImages_Vertical < 1)
+            {
+                Required->SubImages_Vertical = 1;
+                bChanged = true;
+            }
         }
 
         // ── Flags ──
