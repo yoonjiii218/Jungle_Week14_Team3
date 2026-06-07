@@ -29,7 +29,7 @@ PlayerConfig.Default = {
         PostDashAttack = {
             Enabled = true,
             WindowDuration = 2.5,
-            MaxAttacks = 5,
+            MaxAttacks = 3,
             VariantCount = 2,
             SpawnFlyingSlashOnAttackStart = false,
         },

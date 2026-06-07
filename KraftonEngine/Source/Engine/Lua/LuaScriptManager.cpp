@@ -1484,6 +1484,12 @@ namespace
 		)
 	{
 		sol::state_view Lua(State);
+		if (Instance && !IsValid(Instance))
+		{
+			UE_LOG("[LuaReflection] Reflection.CallSignature failed: target object is invalid: %s", Signature.c_str());
+			return sol::make_object(Lua, sol::nil);
+		}
+
 		UStruct*        TargetStruct = Instance ? Instance->GetClass() : StaticClass;
 		if (!TargetStruct)
 		{
@@ -1565,7 +1571,7 @@ namespace
 		sol::protected_function Callback
 		)
 	{
-		if (!Object || !Object->GetClass() || !Callback.valid())
+		if (!IsValid(Object) || !Object->GetClass() || !Callback.valid())
 		{
 			return false;
 		}
@@ -1587,7 +1593,7 @@ namespace
 
 	bool LuaUnbindReflectedEventOverride(UObject* Object, const FString& FunctionNameOrSignature)
 	{
-		if (!Object || !Object->GetClass())
+		if (!IsValid(Object) || !Object->GetClass())
 		{
 			return false;
 		}
@@ -1603,7 +1609,7 @@ namespace
 
 	bool LuaHasReflectedEventOverride(UObject* Object, const FString& FunctionNameOrSignature)
 	{
-		if (!Object || !Object->GetClass())
+		if (!IsValid(Object) || !Object->GetClass())
 		{
 			return false;
 		}
@@ -1628,6 +1634,12 @@ namespace
 		)
 	{
 		sol::state_view Lua(State);
+		if (Instance && !IsValid(Instance))
+		{
+			UE_LOG("[LuaReflection] Reflection.Call failed: target object is invalid: %s", FunctionName.c_str());
+			return sol::make_object(Lua, sol::nil);
+		}
+
 		UStruct*        TargetStruct = Instance ? Instance->GetClass() : StaticClass;
 		if (!TargetStruct)
 		{
