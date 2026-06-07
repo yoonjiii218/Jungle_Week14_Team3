@@ -138,6 +138,10 @@ PlayerConfig.Default = {
             CameraShakeScale = 0.5,
         },
 
+        AttackHit = {
+            CameraShakeScale = 0.25,
+        },
+
         UltimateCamera = {
             BackDistance = 7.0,
             Height = 10,

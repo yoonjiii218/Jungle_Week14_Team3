@@ -22,6 +22,7 @@ public:
 	void HitStop(float Duration, float TimeDilation);
 	void LocalHitStop(float Duration);
 	void HitSquash(const FVector& SquashedScale, float SquashInDuration, float RecoverDuration);
+	void HitSquashComponent(USceneComponent* TargetComponent, const FVector& SquashedScale, float SquashInDuration, float RecoverDuration);
 	void Knockback(const FVector& Direction, float Distance, float Duration);
 	void Slomo(float Duration, float TimeDilation);
 
@@ -54,6 +55,7 @@ private:
 		float ElapsedTime = 0.0f;
 		FVector StartScale = FVector::OneVector;
 		FVector SquashedScale = FVector::OneVector;
+		USceneComponent* TargetComponent = nullptr;
 	};
 
 	struct FLocalHitStopAction

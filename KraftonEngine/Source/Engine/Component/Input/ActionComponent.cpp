@@ -75,8 +75,8 @@ void UActionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 	if (HitSquashAction.bActive)
 	{
-		USceneComponent* TargetComponent = GetTargetSceneComponent();
-		if (!TargetComponent)
+		USceneComponent* TargetComponent = HitSquashAction.TargetComponent;
+		if (!IsValid(TargetComponent))
 		{
 			HitSquashAction.bActive = false;
 		}
@@ -183,8 +183,12 @@ void UActionComponent::LocalHitStop(float Duration)
 
 void UActionComponent::HitSquash(const FVector& SquashedScale, float SquashInDuration, float RecoverDuration)
 {
-	USceneComponent* TargetComponent = GetTargetSceneComponent();
-	if (!TargetComponent)
+	HitSquashComponent(GetTargetSceneComponent(), SquashedScale, SquashInDuration, RecoverDuration);
+}
+
+void UActionComponent::HitSquashComponent(USceneComponent* TargetComponent, const FVector& SquashedScale, float SquashInDuration, float RecoverDuration)
+{
+	if (!IsValid(TargetComponent))
 	{
 		return;
 	}
@@ -199,6 +203,7 @@ void UActionComponent::HitSquash(const FVector& SquashedScale, float SquashInDur
 	HitSquashAction.ElapsedTime = 0.0f;
 	HitSquashAction.StartScale = OriginalScale;
 	HitSquashAction.SquashedScale = SquashedScale;
+	HitSquashAction.TargetComponent = TargetComponent;
 
 	if (HitSquashAction.SquashInDuration <= 0.0f)
 	{
@@ -293,7 +298,8 @@ void UActionComponent::StopHitSquash()
 {
 	if (HitSquashAction.bActive)
 	{
-		if (USceneComponent* TargetComponent = GetTargetSceneComponent())
+		USceneComponent* TargetComponent = HitSquashAction.TargetComponent;
+		if (IsValid(TargetComponent))
 		{
 			TargetComponent->SetRelativeScale(HitSquashAction.StartScale);
 		}

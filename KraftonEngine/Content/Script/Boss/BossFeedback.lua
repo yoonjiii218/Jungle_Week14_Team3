@@ -46,6 +46,77 @@ local function AttachKatanaToBoss(bossContext)
     bossContext.Feedback.KatanaComponent = katana
 end
 
+local function GetOrAddActionComponent(ownerActor)
+    if ownerActor == nil or ownerActor:IsValid() ~= true then
+        return nil
+    end
+
+    if ownerActor.GetActionComponent ~= nil then
+        local action = ownerActor:GetActionComponent()
+        if action ~= nil then
+            return action
+        end
+    end
+
+    if ownerActor.AddActionComponent ~= nil then
+        return ownerActor:AddActionComponent()
+    end
+
+    return nil
+end
+
+local function PlayHitSquash(bossContext, event)
+    local feedbackConfig = bossContext.Config.FEEDBACK
+    if feedbackConfig.HIT_SQUASH_ENABLED == false then
+        return
+    end
+
+    local ownerActor = bossContext.Owner
+    if ownerActor == nil or ownerActor:IsValid() ~= true then
+        return
+    end
+
+    local meshComp = bossContext.Runtime.SkeletalMeshComp
+    if meshComp == nil and ownerActor.GetSkeletalMeshComponent ~= nil then
+        meshComp = ownerActor:GetSkeletalMeshComponent()
+    end
+
+    if meshComp == nil then
+        if bossContext.Config.DEBUG then
+            print("[BossFeedback] Hit squash skipped: SkeletalMeshComponent not found")
+        end
+        return
+    end
+
+    local action = GetOrAddActionComponent(ownerActor)
+    if action == nil or action.HitSquashComponent == nil then
+        if bossContext.Config.DEBUG then
+            print("[BossFeedback] Hit squash skipped: ActionComponent.HitSquashComponent not available")
+        end
+        return
+    end
+
+    local baseScale = Reflection.Call(meshComp, "GetRelativeScale")
+    local squashScale = Vector(
+        baseScale.X * feedbackConfig.HIT_SQUASH_SCALE.X,
+        baseScale.Y * feedbackConfig.HIT_SQUASH_SCALE.Y,
+        baseScale.Z * feedbackConfig.HIT_SQUASH_SCALE.Z
+    )
+
+    local ok, err = pcall(function()
+        action:HitSquashComponent(
+            meshComp,
+            squashScale,
+            feedbackConfig.HIT_SQUASH_IN_DURATION,
+            feedbackConfig.HIT_SQUASH_RECOVER_DURATION
+        )
+    end)
+
+    if not ok and bossContext.Config.DEBUG then
+        print("[BossFeedback] Hit squash failed: " .. tostring(err))
+    end
+end
+
 local function StartDeathRagdoll(bossContext)
     local movementComp = bossContext.Runtime.MovementComp
     if movementComp ~= nil then
@@ -207,7 +278,9 @@ function BossFeedback.ProcessEvents(bossContext, events)
     Strict.AssertTable(events, "events", "BossFeedback.ProcessEvents")
 
     for _, event in ipairs(events) do
-        if BossEvents.Is(event, BossEvents.Type.Dead) then
+        if BossEvents.Is(event, BossEvents.Type.Hit) then
+            PlayHitSquash(bossContext, event)
+        elseif BossEvents.Is(event, BossEvents.Type.Dead) then
             StartDeathRagdoll(bossContext)
         end
     end

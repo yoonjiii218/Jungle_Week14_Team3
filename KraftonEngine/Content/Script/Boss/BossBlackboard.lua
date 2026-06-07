@@ -89,6 +89,12 @@ BB.FEEDBACK = {
 
     -- 자동 페이드 방지용 큰 값 (HideZone 에서 직접 제거)
     NO_FADE_DELAY = 9999.0,
+
+    -- 플레이어에게 맞았을 때 보스 메시만 잠깐 눌렀다가 복구하는 피격 squash.
+    HIT_SQUASH_ENABLED = true,
+    HIT_SQUASH_SCALE = Vector(1.06, 1.06, 0.95),
+    HIT_SQUASH_IN_DURATION = 0.035,
+    HIT_SQUASH_RECOVER_DURATION = 0.09,
 }
 
 -- ── 디버그 ───────────────────────────────────

@@ -37,6 +37,16 @@ local function PlayPerfectDodgeFeedback(playerContext, event)
     print("Perfect Dodge")
 end
 
+local function PlayAttackHitFeedback(playerContext, event)
+    local feedbackConfig = playerContext.Config.Feedback
+    local attackHitConfig = feedbackConfig.AttackHit or {}
+    local shakeScale = attackHitConfig.CameraShakeScale or 0.0
+
+    if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil and shakeScale > 0.0 then
+        CameraManager.StartWaveShake(shakeScale)
+    end
+end
+
 local function BuildGroundDecalAABBScale3(a, b, c, padding, minSize, projectionDepth)
     padding = padding or 5.0
     minSize = minSize or 8.0
@@ -489,6 +499,7 @@ function PlayerFeedback.ProcessEvents(playerContext, events)
                 CameraManager.StartWaveShake(0.35)
             end
         elseif PlayerEvents.Is(event, PlayerEvents.Type.AttackHit) then
+            PlayAttackHitFeedback(playerContext, event)
             -- AttackHitWindow 자체 hitstop은 C++ NotifyState가 처리한다.
             -- 여기서는 이후 피격 VFX/UI/사운드를 붙일 수 있도록 이벤트만 한 곳에서 받는다.
         elseif PlayerEvents.Is(event, PlayerEvents.Type.Dead) then

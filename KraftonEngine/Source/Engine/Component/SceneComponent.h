@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Math/Transform.h"
 #include "Math/Rotator.h"
@@ -92,7 +92,7 @@ public:
 	UFUNCTION(Pure, Category="Scene|Transform")
 	FRotator GetRelativeRotation() const { return RelativeTransform.GetRotator(); }
 	const FQuat& GetRelativeQuat() const { return RelativeTransform.Rotation; }
-	UFUNCTION(Pure, Category="Scene|Transform")
+	UFUNCTION(Callable, Pure, Category="Scene|Transform")
 	FVector GetRelativeScale() const { return RelativeTransform.Scale; }
 	UFUNCTION(Pure, Category="Scene|Transform")
 	FVector GetForwardVector() const;

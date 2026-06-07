@@ -2555,6 +2555,7 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		"HitStop", &UActionComponent::HitStop,
 		"LocalHitStop", &UActionComponent::LocalHitStop,
 		"HitSquash", &UActionComponent::HitSquash,
+		"HitSquashComponent", &UActionComponent::HitSquashComponent,
 		"Knockback", &UActionComponent::Knockback,
 		"Slomo", &UActionComponent::Slomo,
 		"StopHitStop", &UActionComponent::StopHitStop,
