@@ -167,6 +167,39 @@ bool ULuaAnimInstance::InvokeLuaFunction(const FString& FunctionName)
 	return true;
 }
 
+bool ULuaAnimInstance::GetDebugSnapshotText(FString& OutText)
+{
+	OutText.clear();
+	if (!Env.valid() || !LuaSelf.valid())
+	{
+		return false;
+	}
+
+	sol::protected_function Function = Env["get_debug_snapshot_text"];
+	if (!Function.valid())
+	{
+		return false;
+	}
+
+	FLuaCallScope Scope(this);
+	sol::protected_function_result Result = Function(LuaSelf);
+	if (!Result.valid())
+	{
+		sol::error Err = Result;
+		UE_LOG("[LuaAnimInstance] get_debug_snapshot_text() error: %s", Err.what());
+		return false;
+	}
+
+	sol::object Value = Result.get<sol::object>();
+	if (!Value.valid() || Value.get_type() != sol::type::string)
+	{
+		return false;
+	}
+
+	OutText = Value.as<std::string>();
+	return !OutText.empty();
+}
+
 bool ULuaAnimInstance::InvokeLuaFunction(const FString& FunctionName, AActor* OtherActor,
 	UPrimitiveComponent* HitComponent, UPrimitiveComponent* OtherComp, const FHitResult& HitResult, float HitStopDuration)
 {
@@ -672,6 +705,12 @@ void ULuaAnimInstance::InstallBindings()
 		[](FAnimNode_StateMachine* SM, std::string Name)
 		{
 			if (SM) SM->SetInitialState(FName(Name.c_str()));
+		});
+
+	Anim.set_function("sm_get_current_state",
+		[](FAnimNode_StateMachine* SM) -> std::string
+		{
+			return SM ? SM->GetCurrentStateName().ToString() : std::string("None");
 		});
 
 	// 트리의 root 박기 — UAnimInstance::SetRootNode 가 Initialize 호출.

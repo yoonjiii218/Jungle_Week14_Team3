@@ -50,6 +50,7 @@ public:
 	void PostEvaluatePose(FPoseContext& Output) override;
 
 	bool InvokeLuaFunction(const FString& FunctionName);
+	bool GetDebugSnapshotText(FString& OutText);
 	bool InvokeLuaFunction(const FString& FunctionName, AActor* OtherActor, UPrimitiveComponent* HitComponent,
 		UPrimitiveComponent* OtherComp, const FHitResult& HitResult, float HitStopDuration = 0.0f);
 

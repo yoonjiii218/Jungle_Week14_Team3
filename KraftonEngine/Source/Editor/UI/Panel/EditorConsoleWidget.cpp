@@ -591,6 +591,10 @@ void FEditorConsoleWidget::RegisterDiagnosticsCommands()
 		"Diagnostics", "stat physics", "Shows the physics and ragdoll overlay stat.");
 	RegisterCommand("stat none", [this](const TArray<FString>& Args) { HandleStatNone(Args); },
 		"Diagnostics", "stat none", "Hides all overlay stats.");
+	RegisterCommand("showdebug player", [this](const TArray<FString>& Args) { HandleShowDebugPlayer(Args); },
+		"Diagnostics", "showdebug player", "Toggles the player gameplay-state debug HUD.");
+	RegisterCommand("showdebug none", [this](const TArray<FString>& Args) { HandleShowDebugNone(Args); },
+		"Diagnostics", "showdebug none", "Hides all showdebug HUD overlays.");
 	RegisterCommand("cause crash", [this](const TArray<FString>& Args) { HandleCauseCrash(Args); },
 		"Diagnostics", "cause crash", "Immediately raises an intentional crash for minidump testing.");
 }
@@ -1502,6 +1506,30 @@ void FEditorConsoleWidget::HandleStatNone(const TArray<FString>& Args)
 	}
 	EditorEngine->GetOverlayStatSystem().HideAll();
 	AddLog("Overlay stat disabled: all\n");
+}
+
+void FEditorConsoleWidget::HandleShowDebugPlayer(const TArray<FString>& Args)
+{
+	(void)Args;
+	if (!EditorEngine)
+	{
+		AddLog("[ERROR] EditorEngine is null.\n");
+		return;
+	}
+	const bool bEnabled = EditorEngine->GetOverlayStatSystem().ToggleDebugPlayer();
+	AddLog("ShowDebug %s: player\n", bEnabled ? "enabled" : "disabled");
+}
+
+void FEditorConsoleWidget::HandleShowDebugNone(const TArray<FString>& Args)
+{
+	(void)Args;
+	if (!EditorEngine)
+	{
+		AddLog("[ERROR] EditorEngine is null.\n");
+		return;
+	}
+	EditorEngine->GetOverlayStatSystem().HideAllDebug();
+	AddLog("ShowDebug disabled: all\n");
 }
 
 void FEditorConsoleWidget::HandleCauseCrash(const TArray<FString>& Args)

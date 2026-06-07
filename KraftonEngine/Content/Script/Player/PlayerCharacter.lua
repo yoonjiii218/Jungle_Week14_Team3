@@ -86,4 +86,71 @@ function Tick(dt)
     PlayerFeedback.ProcessEvents(currentPlayerContext, events)
 end
 
+local function BoolText(value)
+    return value == true and "true" or "false"
+end
+
+local function NumberOrZero(value)
+    return value or 0.0
+end
+
+local function DerivePlayerDebugState(ctx)
+    if ctx == nil or ctx.Action == nil then return "None" end
+    local action = ctx.Action
+    if action.IsUltimateRunning or action.IsInUltimateMode then return "Ultimate" end
+    if action.DashChargeAttackActive then return "DashChargeAttack" end
+    if action.DashChargingActive then return "DashCharging" end
+    if action.DashActive then return "Dash" end
+    if (action.AttackIndex or 0) > 0 then return "Attack" .. tostring(action.AttackIndex) end
+    if ctx.Combat ~= nil and ctx.Combat.IsDead == true then return "Dead" end
+    return "Locomotion"
+end
+
+function GetDebugSnapshotText()
+    local ctx = GetPlayerContext()
+    if ctx == nil then
+        return "[Player] No PlayerContext"
+    end
+
+    local now = World.GetGameTime()
+    local action = ctx.Action or {}
+    local input = ctx.Input or {}
+    local combat = ctx.Combat or {}
+    local config = ctx.Config or {}
+    local actionConfig = config.Action or {}
+    local combatConfig = config.Combat or {}
+    local runtime = ctx.Runtime or {}
+
+    local dodgeUntil = NumberOrZero(combat.DodgeInvincibleUntil)
+    local consumedUntil = NumberOrZero(combat.PerfectDodgeConsumedUntil)
+    local invincibleUntil = NumberOrZero(combat.InvincibleUntil)
+    local perfectWindow = dodgeUntil > now
+    local perfectConsumed = consumedUntil >= dodgeUntil and dodgeUntil > 0.0
+
+    local targetAssist = runtime.TargetAssistMode or "None"
+    local targetName = "None"
+    if runtime.TargetAssistTarget ~= nil and runtime.TargetAssistTarget.GetName ~= nil then
+        targetName = runtime.TargetAssistTarget:GetName()
+    end
+
+    return string.format(
+        "LuaState: %s\n" ..
+        "Dash: %.3f / %.3f  active=%s end=%s\n" ..
+        "DashCharge: %.3f  active=%s released=%s\n" ..
+        "PerfectDodge: window=%s consumed=%s  now=%.3f until=%.3f consumedUntil=%.3f\n" ..
+        "InvincibleUntil: %.3f  HP: %.0f / %.0f  Gauge: %.0f / %.0f\n" ..
+        "Attack: index=%d comboWindow=%s queued=%s end=%s\n" ..
+        "Input: dashDown=%s hold=%.3f dashPressed=%s chargePressed=%s chargeReleased=%s\n" ..
+        "Assist: %s target=%s",
+        DerivePlayerDebugState(ctx),
+        NumberOrZero(action.DashElapsed), NumberOrZero(actionConfig.DashDuration), BoolText(action.DashActive), BoolText(action.DashEnd),
+        NumberOrZero(action.DashChargingElapsed), BoolText(action.DashChargingActive), BoolText(input.DashChargingReleased),
+        BoolText(perfectWindow), BoolText(perfectConsumed), now, dodgeUntil, consumedUntil,
+        invincibleUntil, NumberOrZero(combat.HP), NumberOrZero(combat.MaxHP or combatConfig.MaxHP), NumberOrZero(combat.UltimateGauge), NumberOrZero(combat.MaxUltimateGauge or combatConfig.MaxUltimateGauge),
+        math.floor(NumberOrZero(action.AttackIndex)), BoolText(action.ComboWindow), BoolText(action.ComboQueued), BoolText(action.AttackEnd),
+        BoolText(input.DashDown), NumberOrZero(input.DashHoldTime), BoolText(input.DashPressed), BoolText(input.DashChargingPressed), BoolText(input.DashChargingReleased),
+        tostring(targetAssist), tostring(targetName)
+    )
+end
+
 return PlayerCharacter

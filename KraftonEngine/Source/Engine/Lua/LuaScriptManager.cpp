@@ -133,10 +133,6 @@ namespace
 		{
 			return IsPadButtonDown(Snapshot, EGamepadButton::B);
 		}
-		if (ActionName == "Jump")
-		{
-			return Snapshot.KeyDown[VK_SPACE] || IsPadButtonDown(Snapshot, EGamepadButton::A);
-		}
 
 		return false;
 	}
