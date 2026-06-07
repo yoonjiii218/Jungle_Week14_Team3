@@ -12,7 +12,7 @@ BB.CHASE_DISTANCE  = 15.0   -- 이 이상이면 추격
 BB.ATTACK_DISTANCE = 15.0   -- 이 이하이면 공격 가능
 
 -- ── LookAt 회전 속도 (도/초) ─────────────────
-BB.LOOK_AT_SPEED = 500.0   -- 너무 작으면 허공 칼질, 너무 크면 스냅
+BB.LOOK_AT_SPEED = 400.0   -- 너무 작으면 허공 칼질, 너무 크면 스냅
 
 -- ── 글로벌 쿨타임 (패턴 종료 후 추가 대기) ───
 BB.PATTERN_COOLDOWN = {
