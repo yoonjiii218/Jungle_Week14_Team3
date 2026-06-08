@@ -1931,6 +1931,10 @@ function PlayerAction.Update(playerContext, dt)
         playerContext.Action.IsUltimateRunning = true
         PlayerEvents.EmitUltimateStarted(playerContext)
     end
+
+    -- Update persistent targeting (lock-on) candidate on every tick
+    local currentTarget, _, _ = PlayerTargeting.FindTarget(playerContext, "Attack")
+    playerContext.Runtime.CurrentTarget = currentTarget
 end
 
 return PlayerAction

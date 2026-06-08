@@ -8,7 +8,7 @@ class AActor;
 class FEditorSceneWidget : public FEditorWidget
 {
 public:
-	virtual void Initialize(UEditorEngine* InEditorEngine) override;
+	void Initialize(UEditorEngine* InEditorEngine);
 	virtual void Render(float DeltaTime) override;
 
 private:

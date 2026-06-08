@@ -258,4 +258,5 @@ private:
 	bool bAnalysisDirty = true;
 	bool bDesignerDirty = true;
 	bool bSyncingSourceFromDesigner = false;
+	bool bSourceOnlyDocument = false;
 };

@@ -1,4 +1,4 @@
-﻿#include "LuaScriptManager.h"
+#include "LuaScriptManager.h"
 
 #include "Core/Logging/Log.h"
 #include "Core/Logging/Notification.h"
@@ -2407,17 +2407,21 @@ void FLuaScriptManager::RegisterCoreBindings(sol::state& Lua)
 	{
 		return FAudioManager::Get().LoadAudio(SoundName, Path, bLoop.value_or(false));
 	});
-	AudioManager.set_function("Play", [](const FString& SoundName, float Volume)
+	AudioManager.set_function("Play", [](const FString& SoundName, sol::optional<float> Volume, sol::optional<float> Pitch)
 	{
-		FAudioManager::Get().PlayAudio(SoundName, Volume);
+		FAudioManager::Get().PlayAudio(SoundName, Volume.value_or(1.0f), Pitch.value_or(1.0f));
 	});
-	AudioManager.set_function("PlayBGM", [](const FString& SoundName, float Volume)
+	AudioManager.set_function("PlayBGM", [](const FString& SoundName, sol::optional<float> Volume, sol::optional<float> Pitch)
 	{
-		FAudioManager::Get().PlayBGM(SoundName, Volume);
+		FAudioManager::Get().PlayBGM(SoundName, Volume.value_or(1.0f), Pitch.value_or(1.0f));
 	});
 	AudioManager.set_function("StopBGM", []()
 	{
 		FAudioManager::Get().StopBGM();
+	});
+	AudioManager.set_function("SetBGMPitch", [](float Pitch)
+	{
+		FAudioManager::Get().SetBGMPitch(Pitch);
 	});
 	AudioManager.set_function("PlayLoop", [](const FString& SoundName, const FString& LoopName, sol::optional<float> Volume, sol::optional<float> Pitch)
 	{
@@ -3032,7 +3036,8 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 
 	Lua.new_usertype<UCameraComponent>("CameraComponent",
 		sol::base_classes,
-		sol::bases<USceneComponent, UActorComponent, UObject>()
+		sol::bases<USceneComponent, UActorComponent, UObject>(),
+		"ProjectWorldToScreen", &UCameraComponent::ProjectWorldToScreen
 	);
 
 	Lua.new_usertype<AActor>("Actor",
@@ -3747,6 +3752,10 @@ void FLuaScriptManager::RegisterUIBindings(sol::state& Lua)
 		"bind_click", [](UUserWidget& Widget, const FString& ElementId, sol::protected_function Callback)
 	{
 		Widget.BindClick(ElementId, Callback);
+	},
+		"bind_event", [](UUserWidget& Widget, const FString& ElementId, const FString& EventName, sol::protected_function Callback)
+	{
+		Widget.BindEvent(ElementId, EventName, Callback);
 	},
 		"SetText", &UUserWidget::SetText,
 		"set_text", &UUserWidget::SetText,

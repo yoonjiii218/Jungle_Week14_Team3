@@ -1,6 +1,13 @@
 #include "Editor/EditorEngine.h"
 
 #include "Profiling/StartupProfiler.h"
+#include "Profiling/Time/Timer.h"
+#include "UI/RmlUiDocumentAsset.h"
+#include "UI/RmlUiDocumentManager.h"
+#include <filesystem>
+#include <fstream>
+#include <sstream>
+
 #include "Audio/AudioManager.h"
 #include "Core/Logging/Notification.h"
 #include "Core/Logging/Log.h"
@@ -260,6 +267,77 @@ void UEditorEngine::Init(FWindowsWindow* InWindow)
 			HasCommandLineFlag(CommandLine, L"--optimize-static-mesh-instances");
 		bUnrealSceneCommandletQueued = true;
 	}
+
+	// 에디터 엔진이 완전히 이니셜라이즈된 시점에 디스크의 RML 소스를 UAsset으로 안전하게 싱크
+	auto SyncRmlToUasset = []() {
+		const std::filesystem::path ContentRoot = std::filesystem::path(FPaths::RootDir()) / L"Content";
+		if (!std::filesystem::exists(ContentRoot))
+		{
+			return;
+		}
+
+		const std::filesystem::path ProjectRoot(FPaths::RootDir());
+
+		for (const auto& Entry : std::filesystem::recursive_directory_iterator(ContentRoot))
+		{
+			if (!Entry.is_regular_file())
+			{
+				continue;
+			}
+
+			std::wstring Ext = Entry.path().extension().wstring();
+			std::transform(Ext.begin(), Ext.end(), Ext.begin(), ::towlower);
+			if (Ext != L".rml")
+			{
+				continue;
+			}
+
+			std::filesystem::path UassetPath = Entry.path();
+			UassetPath.replace_extension(L".uasset");
+
+
+
+			std::ifstream RmlFile(Entry.path(), std::ios::binary);
+			if (!RmlFile.is_open())
+			{
+				continue;
+			}
+			std::stringstream Ss;
+			Ss << RmlFile.rdbuf();
+			std::string RmlContent = Ss.str();
+			RmlFile.close();
+
+			FString RelUassetPath = FPaths::ToUtf8(UassetPath.lexically_relative(ProjectRoot).generic_wstring());
+			URmlUiDocumentAsset* Asset = FRmlUiDocumentManager::Get().Load(RelUassetPath);
+			if (Asset)
+			{
+				if (Asset->GetDocumentSource() != RmlContent)
+				{
+					Asset->SetDocumentSource(RmlContent);
+					FRmlUiDocumentManager::Get().Save(Asset);
+					FRmlUiDocumentManager::Get().Reload(RelUassetPath);
+					UE_LOG("[AutoSync] Successfully updated RML to uasset: %s", RelUassetPath.c_str());
+				}
+			}
+			else
+			{
+				URmlUiDocumentAsset* NewAsset = UObjectManager::Get().CreateObject<URmlUiDocumentAsset>();
+				NewAsset->SetSourcePath(RelUassetPath);
+				NewAsset->SetDocumentSource(RmlContent);
+				if (FRmlUiDocumentManager::Get().Save(NewAsset))
+				{
+					FRmlUiDocumentManager::Get().Reload(RelUassetPath);
+					UE_LOG("[AutoSync] Successfully recreated and saved corrupted/new uasset: %s", RelUassetPath.c_str());
+				}
+				else
+				{
+					UE_LOG("[AutoSync] Failed to recreate and save uasset: %s", RelUassetPath.c_str());
+				}
+			}
+		}
+	};
+
+	SyncRmlToUasset();
 }
 
 void UEditorEngine::Shutdown()
@@ -625,6 +703,11 @@ void UEditorEngine::StartPlayInEditorSession(const FRequestPlaySessionParams& Pa
 {
 	InputSystem::Get().ResetAllKeyStates();
 	InputSystem::Get().ResetTransientState();
+
+	if (FTimer* T = GetTimer())
+	{
+		T->Initialize();
+	}
 
 	// 1) 현재 에디터 월드를 복제해 PIE 월드 생성 (UE의 CreatePIEWorldByDuplication 대응).
 	UWorld* EditorWorld = GetWorld();

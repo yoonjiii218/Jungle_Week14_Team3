@@ -12,7 +12,7 @@ void UUserWidget::BeginDestroy()
 
     RemoveFromParent();
     ClearEventListeners();
-    PendingClickBindings.clear();
+    PendingEventBindings.clear();
     ClearDocument();
 
     OwningPlayer.Reset();
@@ -46,7 +46,12 @@ void UUserWidget::RemoveFromParent()
 
 void UUserWidget::BindClick(const FString& ElementId, sol::protected_function Callback)
 {
-	PendingClickBindings.push_back({ ElementId, Callback });
+	BindEvent(ElementId, "click", std::move(Callback));
+}
+
+void UUserWidget::BindEvent(const FString& ElementId, const FString& EventName, sol::protected_function Callback)
+{
+	PendingEventBindings.push_back({ ElementId, EventName, Callback });
 	if (IsDocumentLoaded())
 	{
 		RegisterEventListeners();
@@ -62,18 +67,18 @@ void UUserWidget::RegisterEventListeners()
 
 	ClearEventListeners();
 
-	for (const auto& Binding : PendingClickBindings)
+	for (const FWidgetEventBinding& Binding : PendingEventBindings)
 	{
-		Rml::Element* Element = Document->GetElementById(Binding.first);
+		Rml::Element* Element = Document->GetElementById(Binding.ElementId);
 		if (!Element)
 		{
-			UE_LOG("[RmlUi] Click target not found: %s", Binding.first.c_str());
+			UE_LOG("[RmlUi] Event target not found: %s", Binding.ElementId.c_str());
 			continue;
 		}
 
-		auto* Listener = new FWidgetClickEventListener(Binding.first, Binding.second);
-		Element->AddEventListener("click", Listener);
-		ClickListeners.push_back(Listener);
+		auto* Listener = new FWidgetEventListener(Binding.ElementId, Binding.EventName, Binding.Callback);
+		Element->AddEventListener(Binding.EventName.c_str(), Listener);
+		EventListeners.push_back(Listener);
 	}
 }
 
@@ -81,7 +86,7 @@ void UUserWidget::ClearEventListeners()
 {
 	if (Document)
 	{
-		for (FWidgetClickEventListener* Listener : ClickListeners)
+		for (FWidgetEventListener* Listener : EventListeners)
 		{
 			if (!Listener)
 			{
@@ -91,16 +96,16 @@ void UUserWidget::ClearEventListeners()
 			Rml::Element* Element = Document->GetElementById(Listener->GetElementId());
 			if (Element)
 			{
-				Element->RemoveEventListener("click", Listener);
+				Element->RemoveEventListener(Listener->GetEventName().c_str(), Listener);
 			}
 		}
 	}
 
-	for (FWidgetClickEventListener* Listener : ClickListeners)
+	for (FWidgetEventListener* Listener : EventListeners)
 	{
 		delete Listener;
 	}
-	ClickListeners.clear();
+	EventListeners.clear();
 }
 
 void UUserWidget::SetText(const FString& ElementId, const FString& Text)

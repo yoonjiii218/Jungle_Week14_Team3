@@ -1,0 +1,63 @@
+<rml>
+<head>
+    <title>Boss HP Panel</title>
+    <style>
+        body { width: 100%; height: 100%; margin: 0; font-family: Maplestory; color: #ffffff; pointer-events: none; }
+        .panel { position: absolute; background-color: #02050bc8; border-width: 1px; border-color: #dceeff; overflow: hidden; }
+        .plate { position: absolute; opacity: 0.22; }
+        .label { position: absolute; font-size: 11px; color: #f4fbff; }
+        .label-cyan { position: absolute; font-size: 11px; color: #00eaff; }
+        .label-pink { position: absolute; font-size: 11px; color: #ff2bd6; }
+        .readout { position: absolute; font-size: 10px; color: #8db6c8; }
+        .line-white { position: absolute; height: 1px; background-color: #edf8ff; }
+        .line-cyan { position: absolute; height: 2px; background-color: #00eaff; }
+        .line-pink { position: absolute; height: 2px; background-color: #ff2bd6; }
+        .scan-v { position: absolute; width: 1px; background-color: #23465a; }
+        .bar { position: absolute; height: 10px; background-color: #00030add; border-width: 1px; border-color: #86eaff; overflow: hidden; }
+        .bar-fill { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #f7fbff; }
+        .bar-damage-fill { background-color: #d74355; }
+        .bar-hotline { position: absolute; left: 0px; top: 2px; width: 100%; height: 1px; background-color: #ffffff; }
+        .bar-tick { position: absolute; top: 0px; width: 2px; height: 10px; background-color: #02050b; }
+
+        #boss-root { position: absolute; left: 334px; top: 8px; width: 612px; height: 62px; }
+        #boss-plate { left: 0px; top: 0px; width: 612px; height: 62px; }
+        #boss-shell { left: 0px; top: 0px; width: 612px; height: 62px; }
+        #boss-bracket-left { left: 18px; top: 12px; width: 58px; }
+        #boss-bracket-right { left: 536px; top: 12px; width: 58px; }
+        #boss-title-cyan { left: 240px; top: 7px; width: 140px; height: 16px; color: #00eaff; }
+        #boss-title-pink { left: 244px; top: 7px; width: 140px; height: 16px; color: #ff2bd6; }
+        #boss-title-main { left: 242px; top: 7px; width: 140px; height: 16px; font-size: 12px; color: #ffffff; }
+        #boss-hp-text { left: 30px; top: 26px; width: 170px; height: 14px; font-size: 11px; color: #ffffff; }
+        #boss-sub { left: 452px; top: 26px; width: 116px; height: 12px; }
+        #boss-bar { left: 30px; top: 43px; width: 552px; height: 8px; }
+        #boss-accent-a { left: 30px; top: 55px; width: 138px; }
+        #boss-accent-b { left: 470px; top: 55px; width: 112px; }
+        #boss-grid-a { left: 14px; top: 13px; height: 38px; }
+        #boss-grid-b { left: 596px; top: 13px; height: 38px; }
+    </style>
+</head>
+<body>
+    <div id="boss-root" data-ue-anchors="0.5 0 0.5 0" data-ue-offsets="0 8 612 62" data-ue-alignment="0.5 0">
+        <img id="boss-plate" class="plate" src="Images/hud_data_plate.png" />
+        <div id="boss-shell" class="panel">
+            <div id="boss-grid-a" class="scan-v"></div>
+            <div id="boss-grid-b" class="scan-v"></div>
+            <div id="boss-bracket-left" class="line-white"></div>
+            <div id="boss-bracket-right" class="line-white"></div>
+            <div id="boss-title-cyan" class="label-cyan">ASCENDANT</div>
+            <div id="boss-title-pink" class="label-pink">ASCENDANT</div>
+            <div id="boss-title-main" class="label">ASCENDANT</div>
+            <div id="boss-hp-text" class="label">TARGET INTEGRITY</div>
+            <div id="boss-sub" class="readout">HOSTILE CORE</div>
+            <div id="boss-bar" class="bar">
+                <div id="boss-hp-damage-fill" class="bar-fill bar-damage-fill"></div>
+                <div id="boss-hp-fill" class="bar-fill"></div>
+                <div class="bar-hotline"></div>
+                <div class="bar-tick" style="left: 8%;"></div><div class="bar-tick" style="left: 16%;"></div><div class="bar-tick" style="left: 24%;"></div><div class="bar-tick" style="left: 32%;"></div><div class="bar-tick" style="left: 40%;"></div><div class="bar-tick" style="left: 48%;"></div><div class="bar-tick" style="left: 56%;"></div><div class="bar-tick" style="left: 64%;"></div><div class="bar-tick" style="left: 72%;"></div><div class="bar-tick" style="left: 80%;"></div><div class="bar-tick" style="left: 88%;"></div><div class="bar-tick" style="left: 96%;"></div>
+            </div>
+            <div id="boss-accent-a" class="line-pink"></div>
+            <div id="boss-accent-b" class="line-cyan"></div>
+        </div>
+    </div>
+</body>
+</rml>

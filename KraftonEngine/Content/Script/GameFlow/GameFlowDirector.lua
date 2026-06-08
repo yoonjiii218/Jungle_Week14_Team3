@@ -16,8 +16,10 @@ local START_MENU_BOOT_DURATION = 1.50
 local START_MENU_BOOT_BASE_WIDTH = 1280.0
 local START_MENU_BOOT_BASE_HEIGHT = 720.0
 local FILM_COUNTDOWN_WIDGET_FALLBACK = "Content/UI/GameFlow/FilmCountdown.uasset"
-local FILM_COUNTDOWN_DURATION = 3.35
-local FILM_COUNTDOWN_PLAY_SECONDS = 3.0
+local FILM_COUNTDOWN_DURATION = 5.35
+local FILM_COUNTDOWN_PLAY_SECONDS = 5.0
+local pendingTransitionAction = nil
+local pendingTransitionFrameDelay = 0
 local FILM_SPROCKET_COUNT = 11
 local FILM_SPROCKET_SPACING = 86.0
 local FILM_SPROCKET_SPEED = 210.0
@@ -26,6 +28,16 @@ local CLEAR_TO_CREDITS_DELAY = 2.35
 local CREDITS_ROLL_DURATION = 18.0
 local CREDITS_ROLL_START_PADDING = 120.0
 local CREDITS_ROLL_END_OFFSET = 1080.0
+local BOSS_HP_PANEL_WIDGET_PATH = "Content/UI/GameFlow/BossHPPanel.uasset"
+local BOSS_DAMAGE_LAG_RATIO_PER_SECOND = 0.72
+local COMBO_HOLD_DURATION = 3.0
+local COMBO_IMPACT_DURATION = 0.42
+local UI_AUDIO = {
+    Hover = { key = "UI_ButtonHover", path = "UI/button_hover.mp3", volume = 0.55 },
+    Down = { key = "UI_ButtonDown", path = "UI/button_down.mp3", volume = 0.75 },
+    FilmCountdown = { key = "UI_FilmCountdown", path = "UI/Film countdown.mp3", volume = 0.95 },
+}
+local COMBO_IMPACT_THRESHOLDS = { 10, 30, 50, 99 }
 local START_MENU_BOOT_ELEMENT_IDS = {
     "boot-black",
     "boot-shutter-top",
@@ -53,6 +65,15 @@ local startMenuBootTime = START_MENU_BOOT_DURATION + 1.0
 local filmCountdownTime = FILM_COUNTDOWN_DURATION + 1.0
 local clearToCreditsTime = 0.0
 local creditsRollTime = CREDITS_ROLL_DURATION + 1.0
+local bossHudWasVisible = false
+local bossHudHP = nil
+local bossDamageHP = nil
+local bossPanelCreateFailed = false
+local comboHoldRemaining = 0.0
+local lastComboCount = 0
+local comboImpactTime = 0.0
+local comboImpactThreshold = 0
+local loadedUiAudio = {}
 local startHudFlow = nil
 local showCredits = nil
 local FLOW_BGM = {
@@ -112,6 +133,49 @@ local function stopFlowBGM()
         AudioManager.StopBGM()
     end
     currentFlowBgmKey = nil
+end
+
+local function ensureUiAudio(config)
+    if config == nil or AudioManager == nil or AudioManager.Load == nil then
+        return false
+    end
+    if loadedUiAudio[config.key] == true then
+        return true
+    end
+    if AudioManager.Load(config.key, config.path, false) ~= true then
+        print("[GameFlow] Failed to load UI audio: " .. tostring(config.path))
+        return false
+    end
+    loadedUiAudio[config.key] = true
+    return true
+end
+
+local function playUiAudio(config)
+    if config == nil or AudioManager == nil or AudioManager.Play == nil then
+        return
+    end
+    if ensureUiAudio(config) ~= true then
+        return
+    end
+    AudioManager.Play(config.key, config.volume or 1.0)
+end
+
+local function playButtonHover()
+    playUiAudio(UI_AUDIO.Hover)
+end
+
+local function playButtonDown()
+    playUiAudio(UI_AUDIO.Down)
+end
+
+local function bindButtonAudio(widget, buttonIds)
+    if widget == nil or widget.bind_event == nil or buttonIds == nil then
+        return
+    end
+    for _, buttonId in ipairs(buttonIds) do
+        widget:bind_event(buttonId, "mouseover", playButtonHover)
+        widget:bind_event(buttonId, "mousedown", playButtonDown)
+    end
 end
 
 local function isTrainingMapFlow(d, bTrainingQueued)
@@ -211,8 +275,90 @@ local function percent(current, maxValue)
     return math.floor(clamp((current or 0.0) / maxValue, 0.0, 1.0) * 100.0 + 0.5)
 end
 
+local function updateBossDamageBar(hud, hp, maxHP, dt)
+    local safeMax = math.max(maxHP or 0.0, 1.0)
+    local targetHP = clamp(hp or 0.0, 0.0, safeMax)
+    local frameDt = math.max(dt or 0.0, 0.0)
+
+    if bossHudWasVisible ~= true or bossHudHP == nil or bossDamageHP == nil then
+        bossHudHP = targetHP
+        bossDamageHP = targetHP
+    elseif targetHP < bossHudHP - 0.001 then
+        bossDamageHP = math.max(bossDamageHP, bossHudHP)
+    elseif targetHP > bossHudHP + 0.001 then
+        bossDamageHP = targetHP
+    end
+
+    bossHudHP = targetHP
+    if bossDamageHP > targetHP then
+        bossDamageHP = math.max(targetHP, bossDamageHP - safeMax * BOSS_DAMAGE_LAG_RATIO_PER_SECOND * frameDt)
+    else
+        bossDamageHP = targetHP
+    end
+
+    setBar(hud, "boss-hp-fill", targetHP, safeMax)
+    setBar(hud, "boss-hp-damage-fill", bossDamageHP, safeMax)
+    bossHudWasVisible = true
+end
+
 local function hasRegisteredPlayer()
     return CombatContext.HasPlayer ~= nil and CombatContext.HasPlayer() == true
+end
+
+local function hasRegisteredBoss()
+    return CombatContext.HasBoss ~= nil and CombatContext.HasBoss() == true
+end
+
+local function isValidActor(actor)
+    return actor ~= nil and (actor.IsValid == nil or actor:IsValid())
+end
+
+local function hasBossActor(d)
+    if d == nil or d.GetBossActor == nil then
+        return false
+    end
+    return isValidActor(d:GetBossActor())
+end
+
+local function resetBossHudAnimation()
+    bossHudWasVisible = false
+    bossHudHP = nil
+    bossDamageHP = nil
+end
+
+local function resetComboHoldTimer()
+    comboHoldRemaining = 0.0
+    lastComboCount = 0
+    comboImpactTime = 0.0
+    comboImpactThreshold = 0
+end
+
+local function getComboImpactThreshold(previousCombo, currentCombo)
+    local hitThreshold = 0
+    for _, threshold in ipairs(COMBO_IMPACT_THRESHOLDS) do
+        if previousCombo < threshold and currentCombo >= threshold then
+            hitThreshold = threshold
+        end
+    end
+    return hitThreshold
+end
+
+local function ensureBossPanelWidget()
+    if widgets.BossPanel ~= nil then
+        return widgets.BossPanel
+    end
+    if bossPanelCreateFailed == true then
+        return nil
+    end
+
+    local panel = createWidget("BossPanel", BOSS_HP_PANEL_WIDGET_PATH, false, 1)
+    if panel == nil then
+        bossPanelCreateFailed = true
+        return nil
+    end
+
+    addToViewport(panel, 1)
+    return panel
 end
 
 local function getPlayerStats(d)
@@ -274,11 +420,105 @@ local function setUltimateForTest(d, current, maxValue)
     d:SetUltimateGauge(current, maxValue)
 end
 
+local function setComboSynced(d, count)
+    local safeCount = math.max(0, math.floor((count or 0) + 0.5))
+    local bSetCombatContext = false
+    if CombatContext.SetPlayerCombo ~= nil then
+        bSetCombatContext = CombatContext.SetPlayerCombo(safeCount) == true
+    end
+    if d ~= nil then
+        d:SetComboCount(safeCount)
+    end
+    return bSetCombatContext
+end
+
 local function setComboForTest(d, count)
-    if CombatContext.SetPlayerCombo ~= nil and CombatContext.SetPlayerCombo(count) == true then
+    setComboSynced(d, count)
+    if count == nil or count <= 0 then
+        resetComboHoldTimer()
+    end
+end
+
+local function updateComboHold(d, combo, dt)
+    local currentCombo = math.max(0, math.floor((combo or 0) + 0.5))
+    local frameDt = math.max(dt or 0.0, 0.0)
+
+    if currentCombo <= 0 then
+        resetComboHoldTimer()
+        return 0, 0.0, 0.0
+    end
+
+    if currentCombo ~= lastComboCount then
+        local impactThreshold = getComboImpactThreshold(lastComboCount, currentCombo)
+        if impactThreshold > 0 then
+            comboImpactThreshold = impactThreshold
+            comboImpactTime = COMBO_IMPACT_DURATION
+        end
+        comboHoldRemaining = COMBO_HOLD_DURATION
+        lastComboCount = currentCombo
+    else
+        comboHoldRemaining = math.max(0.0, comboHoldRemaining - frameDt)
+    end
+
+    comboImpactTime = math.max(0.0, comboImpactTime - frameDt)
+
+    if comboHoldRemaining <= 0.0 then
+        setComboSynced(d, 0)
+        resetComboHoldTimer()
+        return 0, 0.0, 0.0
+    end
+
+    return currentCombo, comboHoldRemaining, comboHoldRemaining / COMBO_HOLD_DURATION
+end
+
+local function updateComboImpactVisual(hud, combo)
+    if hud == nil then
         return
     end
-    d:SetComboCount(count)
+
+    local impactRatio = 0.0
+    if comboImpactTime > 0.0 then
+        impactRatio = comboImpactTime / COMBO_IMPACT_DURATION
+    end
+
+    if impactRatio > 0.0 and comboImpactThreshold > 0 then
+        local pulse = 1.0 - impactRatio
+        local fontSize = 36.0 + 12.0 * impactRatio
+        local alpha = 0.36 + 0.46 * impactRatio
+        setText(hud, "combo-impact", tostring(comboImpactThreshold))
+        hud:SetProperty("combo-impact", "display", "block")
+        hud:SetProperty("combo-impact", "font-size", px(fontSize))
+        hud:SetProperty("combo-impact", "opacity", scalar(alpha))
+        hud:SetProperty("combo-impact", "top", px(16.0 - 8.0 * impactRatio))
+        hud:SetProperty("combo-impact-flash", "display", "block")
+        hud:SetProperty("combo-impact-flash", "opacity", scalar(0.18 + 0.38 * impactRatio))
+        hud:SetProperty("combo-impact-flash", "width", string.format("%.1f%%", 100.0 * (1.0 - pulse * 0.16)))
+    else
+        hud:SetProperty("combo-impact", "display", "none")
+        hud:SetProperty("combo-impact-flash", "display", "none")
+    end
+
+    if combo >= 99 then
+        hud:SetProperty("combo-text", "color", "#d7ff33")
+        hud:SetProperty("combo-cyan", "color", "#00eaff")
+        hud:SetProperty("combo-pink", "color", "#ff2bd6")
+    elseif combo >= 50 then
+        hud:SetProperty("combo-text", "color", "#ffffff")
+        hud:SetProperty("combo-cyan", "color", "#d7ff33")
+        hud:SetProperty("combo-pink", "color", "#ff2bd6")
+    elseif combo >= 30 then
+        hud:SetProperty("combo-text", "color", "#ffffff")
+        hud:SetProperty("combo-cyan", "color", "#00eaff")
+        hud:SetProperty("combo-pink", "color", "#d7ff33")
+    elseif combo >= 10 then
+        hud:SetProperty("combo-text", "color", "#ffffff")
+        hud:SetProperty("combo-cyan", "color", "#00eaff")
+        hud:SetProperty("combo-pink", "color", "#ff2bd6")
+    else
+        hud:SetProperty("combo-text", "color", "#ffffff")
+        hud:SetProperty("combo-cyan", "color", "#00eaff")
+        hud:SetProperty("combo-pink", "color", "#ff2bd6")
+    end
 end
 
 local function printTestHotkeyHelp()
@@ -578,6 +818,10 @@ local function showHud()
     removeWidget("Credits")
     removeWidget("Countdown")
     removeWidget("TutorialHUD")
+    removeWidget("BossPanel")
+    bossPanelCreateFailed = false
+    resetBossHudAnimation()
+    resetComboHoldTimer()
 
     local hud = createWidget("HUD", d:GetHudWidgetPath(), false, 0)
     addToViewport(hud, 0)
@@ -711,7 +955,12 @@ local function updateFilmCountdown(dt)
         return
     end
 
-    filmCountdownTime = filmCountdownTime + (dt or 0.0)
+    local clampedDt = dt or 0.0
+    if clampedDt > 0.1 then
+        clampedDt = 0.016
+    end
+
+    filmCountdownTime = filmCountdownTime + clampedDt
     local t = filmCountdownTime
     if t >= FILM_COUNTDOWN_DURATION then
         completeFilmCountdown()
@@ -731,7 +980,7 @@ local function updateFilmCountdown(dt)
 
     local activeTime = clamp(t, 0.0, FILM_COUNTDOWN_PLAY_SECONDS - 0.001)
     local digitIndex = math.floor(activeTime)
-    local digit = 3 - digitIndex
+    local digit = 5 - digitIndex
     local digitTime = activeTime - digitIndex
     local digitText = tostring(digit)
     if t >= FILM_COUNTDOWN_PLAY_SECONDS then
@@ -740,7 +989,7 @@ local function updateFilmCountdown(dt)
     end
 
     local fadeIn = clamp(t / 0.18, 0.0, 1.0)
-    local fadeOut = t > 3.08 and (1.0 - clamp((t - 3.08) / 0.27, 0.0, 1.0)) or 1.0
+    local fadeOut = t > 5.08 and (1.0 - clamp((t - 5.08) / 0.27, 0.0, 1.0)) or 1.0
     local masterOpacity = fadeIn * fadeOut
     local digitPulse = 1.0 - clamp(digitTime / 0.92, 0.0, 1.0)
     local flash = flashPulse(digitTime, 0.0, 0.16, 1.0)
@@ -867,6 +1116,25 @@ local function updateFilmCountdown(dt)
     setCountdownOpacity(countdown, "flash", flash * 0.22 * masterOpacity)
 end
 
+local function triggerTransitionWithCountdown(action)
+    local d = getDirector()
+    if d == nil then
+        action()
+        return
+    end
+
+    local countdown = createWidget("Countdown", getCountdownWidgetPath(d), false, 400)
+    if countdown ~= nil then
+        addToViewport(countdown, 400)
+        widgets.Countdown = countdown
+        filmCountdownTime = 0.0
+        updateFilmCountdown(0.0)
+    end
+
+    pendingTransitionAction = action
+    pendingTransitionFrameDelay = 2
+end
+
 local function showFilmCountdown()
     local d = getDirector()
     if d == nil then return end
@@ -886,6 +1154,7 @@ local function showFilmCountdown()
     addToViewport(countdown, 400)
     currentScreen = "Countdown"
     filmCountdownTime = 0.0
+    playUiAudio(UI_AUDIO.FilmCountdown)
     updateFilmCountdown(0.0)
 end
 
@@ -899,8 +1168,11 @@ local function showStartMenu()
 
     local menu = createWidget("StartMenu", d:GetStartMenuWidgetPath(), true, 100)
     if menu ~= nil then
+        bindButtonAudio(menu, { "btn-story-boss", "btn-training", "btn-credits", "btn-exit" })
         menu:bind_click("btn-story-boss", function()
-            d:StartStoryBoss()
+            triggerTransitionWithCountdown(function()
+                d:StartStoryBoss()
+            end)
         end)
         menu:bind_click("btn-training", function()
             local sceneName = "TrainingMap"
@@ -909,7 +1181,9 @@ local function showStartMenu()
             end
             print("[GameFlow] Training button clicked -> " .. tostring(sceneName))
             TutorialDirector.QueueTrainingSession(sceneName)
-            d:StartTraining()
+            triggerTransitionWithCountdown(function()
+                d:StartTraining()
+            end)
         end)
         menu:bind_click("btn-credits", function()
             d:RequestCredits()
@@ -1017,11 +1291,14 @@ local function showPauseMenu()
 
     local pause = createWidget("Pause", d:GetPauseMenuWidgetPath(), true, 200)
     if pause ~= nil then
+        bindButtonAudio(pause, { "btn-resume", "btn-restart", "btn-main-menu", "btn-exit" })
         pause:bind_click("btn-resume", function()
             hidePauseMenu()
         end)
         pause:bind_click("btn-restart", function()
-            d:RestartCombatScene()
+            triggerTransitionWithCountdown(function()
+                d:RestartCombatScene()
+            end)
         end)
         pause:bind_click("btn-main-menu", function()
             d:RequestMainMenu()
@@ -1052,8 +1329,11 @@ local function showGameOver()
 
     local screen = createWidget("GameOver", d:GetGameOverWidgetPath(), true, 100)
     if screen ~= nil then
+        bindButtonAudio(screen, { "btn-retry", "btn-main-menu", "btn-exit" })
         screen:bind_click("btn-retry", function()
-            d:RestartCombatScene()
+            triggerTransitionWithCountdown(function()
+                d:RestartCombatScene()
+            end)
         end)
         screen:bind_click("btn-main-menu", function()
             d:RequestMainMenu()
@@ -1076,6 +1356,7 @@ local function showClear()
 
     local screen = createWidget("Clear", d:GetClearWidgetPath(), true, 100)
     if screen ~= nil then
+        bindButtonAudio(screen, { "btn-credits", "btn-main-menu", "btn-exit" })
         screen:bind_click("btn-credits", function()
             if showCredits ~= nil then
                 showCredits()
@@ -1187,6 +1468,7 @@ showCredits = function()
 
     local screen = createWidget("Credits", d:GetCreditsWidgetPath(), true, 100)
     if screen ~= nil then
+        bindButtonAudio(screen, { "btn-main-menu", "btn-exit" })
         setCreditsOpacity(screen, "control-panel", 0.0)
         setCreditsProperty(screen, "control-panel", "display", "none")
         screen:bind_click("btn-main-menu", function()
@@ -1201,17 +1483,21 @@ showCredits = function()
     updateCreditsRoll(0.0)
 end
 
-local function updateHud()
+local function updateHud(dt)
     local d = getDirector()
     local hud = widgets.HUD
     if d == nil or hud == nil then
         return
     end
 
-    local bossHP, bossMaxHP = CombatContext.GetBossHP()
-    if bossMaxHP ~= nil and bossMaxHP > 0.0 then
+    local hasBossInContext = hasRegisteredBoss()
+    local hasBoss = hasBossInContext or hasBossActor(d)
+    local bossHP = 0.0
+    local bossMaxHP = 0.0
+    if hasBossInContext then
+        bossHP, bossMaxHP = CombatContext.GetBossHP()
         d:SetBossHP(bossHP, bossMaxHP)
-    else
+    elseif hasBoss then
         bossHP = d:GetBossHP()
         bossMaxHP = d:GetBossMaxHP()
     end
@@ -1233,29 +1519,42 @@ local function updateHud()
 
     local playerHP = d:GetPlayerHP()
     local playerMaxHP = d:GetPlayerMaxHP()
-    local syncedBossHP = d:GetBossHP()
-    local syncedBossMaxHP = d:GetBossMaxHP()
+    local syncedBossHP = hasBoss and d:GetBossHP() or 0.0
+    local syncedBossMaxHP = hasBoss and d:GetBossMaxHP() or 0.0
     local ultimate = d:GetUltimateGauge()
     local ultimateMax = d:GetUltimateMaxGauge()
-    local combo = d:GetComboCount()
+    local combo, comboTimeRemaining, comboTimeRatio = updateComboHold(d, d:GetComboCount(), dt)
     local dashCooldownRemaining, dashCooldownDuration = getDashCooldownStats()
 
     setText(hud, "player-hp-text", "HP " .. whole(playerHP) .. "/" .. whole(playerMaxHP))
     setText(hud, "player-state", percent(playerHP, playerMaxHP) .. "% STRUCT | " .. dashCooldownText(dashCooldownRemaining, dashCooldownDuration))
-    setText(hud, "boss-hp-text", "CORE " .. whole(syncedBossHP) .. "/" .. whole(syncedBossMaxHP))
-    setText(hud, "boss-sub", syncedBossHP <= 0.0 and "CORE LOST" or "HOSTILE CORE")
     setText(hud, "ultimate-text", "BURST " .. percent(ultimate, ultimateMax) .. "%")
     setText(hud, "ultimate-sub", ultimate >= ultimateMax and "READY" or "CHARGE")
     local comboText = string.format("%02d CHAIN", combo)
     setText(hud, "combo-cyan", comboText)
     setText(hud, "combo-pink", comboText)
     setText(hud, "combo-text", comboText)
-    setText(hud, "combo-readout", combo > 0 and ("x" .. tostring(combo)) or "FLOW")
+    setText(hud, "combo-readout", combo > 0 and string.format("%.1fs", comboTimeRemaining) or "FLOW")
+    updateComboImpactVisual(hud, combo)
 
     setBar(hud, "player-hp-fill", playerHP, playerMaxHP)
-    setBar(hud, "boss-hp-fill", syncedBossHP, syncedBossMaxHP)
+    if hasBoss and syncedBossMaxHP > 0.0 then
+        local bossPanel = ensureBossPanelWidget()
+        if bossPanel ~= nil then
+            setText(bossPanel, "boss-title-cyan", "ASCENDANT")
+            setText(bossPanel, "boss-title-pink", "ASCENDANT")
+            setText(bossPanel, "boss-title-main", "ASCENDANT")
+            setText(bossPanel, "boss-hp-text", "CORE " .. whole(syncedBossHP) .. "/" .. whole(syncedBossMaxHP))
+            setText(bossPanel, "boss-sub", syncedBossHP <= 0.0 and "CORE LOST" or "HOSTILE CORE")
+            updateBossDamageBar(bossPanel, syncedBossHP, syncedBossMaxHP, dt)
+        end
+    else
+        removeWidget("BossPanel")
+        bossPanelCreateFailed = false
+        resetBossHudAnimation()
+    end
     setBar(hud, "ultimate-fill", ultimate, ultimateMax)
-    setBar(hud, "combo-fill", combo, 12.0)
+    setBar(hud, "combo-fill", comboTimeRatio, 1.0)
 end
 
 local function updateTerminalFlow()
@@ -1324,13 +1623,23 @@ function BeginPlay()
 end
 
 function Tick(dt)
+    if pendingTransitionAction ~= nil then
+        pendingTransitionFrameDelay = pendingTransitionFrameDelay - 1
+        if pendingTransitionFrameDelay <= 0 then
+            local action = pendingTransitionAction
+            pendingTransitionAction = nil
+            action()
+        end
+        return
+    end
+
     if currentScreen == "HUD" then
         if applyTrainingExitConfirmHotkeys() == true then
             TutorialDirector.Tick(dt, widgets.TutorialHUD)
             return
         end
         applyTestHotkeys()
-        updateHud()
+        updateHud(dt)
         TutorialDirector.Tick(dt, widgets.TutorialHUD)
         updateTerminalFlow()
     elseif currentScreen == "StartMenu" then

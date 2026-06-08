@@ -37,31 +37,18 @@
         #player-chip-b { left: 256px; top: 27px; width: 8px; height: 8px; }
         #player-chip-c { left: 268px; top: 27px; width: 8px; height: 8px; }
 
-        #boss-plate { left: 334px; top: 8px; width: 612px; height: 62px; }
-        #boss-shell { left: 334px; top: 8px; width: 612px; height: 62px; }
-        #boss-bracket-left { left: 18px; top: 12px; width: 58px; }
-        #boss-bracket-right { left: 536px; top: 12px; width: 58px; }
-        #boss-title-cyan { left: 240px; top: 7px; width: 140px; height: 16px; color: #00eaff; }
-        #boss-title-pink { left: 244px; top: 7px; width: 140px; height: 16px; color: #ff2bd6; }
-        #boss-title-main { left: 242px; top: 7px; width: 140px; height: 16px; font-size: 12px; color: #ffffff; }
-        #boss-hp-text { left: 30px; top: 26px; width: 170px; height: 14px; font-size: 11px; color: #ffffff; }
-        #boss-sub { left: 452px; top: 26px; width: 116px; height: 12px; }
-        #boss-bar { left: 30px; top: 43px; width: 552px; height: 8px; }
-        #boss-accent-a { left: 30px; top: 55px; width: 138px; }
-        #boss-accent-b { left: 470px; top: 55px; width: 112px; }
-        #boss-grid-a { left: 14px; top: 13px; height: 38px; }
-        #boss-grid-b { left: 596px; top: 13px; height: 38px; }
-
-        #combo-plate { left: 24px; top: 294px; width: 196px; height: 88px; }
-        #combo-shell { left: 26px; top: 296px; width: 184px; height: 78px; }
-        #combo-cyan { left: 17px; top: 10px; width: 104px; height: 22px; font-size: 19px; color: #00eaff; }
-        #combo-pink { left: 22px; top: 10px; width: 104px; height: 22px; font-size: 19px; color: #ff2bd6; }
-        #combo-text { left: 19px; top: 10px; width: 104px; height: 22px; font-size: 19px; color: #ffffff; }
-        #combo-readout { left: 124px; top: 18px; width: 42px; height: 12px; }
-        #combo-bar { left: 18px; top: 45px; width: 138px; height: 8px; }
-        #combo-accent { left: 18px; top: 62px; width: 54px; }
-        #combo-chip-a { left: 100px; top: 62px; width: 26px; height: 8px; }
-        #combo-chip-b { left: 132px; top: 62px; width: 26px; height: 8px; }
+        #combo-plate { left: 24px; top: 284px; width: 250px; height: 118px; }
+        #combo-shell { left: 26px; top: 286px; width: 238px; height: 106px; }
+        #combo-cyan { left: 18px; top: 12px; width: 150px; height: 34px; font-size: 28px; color: #00eaff; }
+        #combo-pink { left: 24px; top: 12px; width: 150px; height: 34px; font-size: 28px; color: #ff2bd6; }
+        #combo-text { left: 21px; top: 12px; width: 150px; height: 34px; font-size: 28px; color: #ffffff; }
+        #combo-readout { left: 170px; top: 24px; width: 48px; height: 14px; font-size: 12px; color: #d7ff33; text-align: right; }
+        #combo-bar { left: 18px; top: 62px; width: 188px; height: 10px; }
+        #combo-impact-flash { position: absolute; left: 18px; top: 56px; width: 188px; height: 22px; background-color: #ffffff; opacity: 0; display: none; }
+        #combo-impact { position: absolute; left: 146px; top: 16px; width: 74px; height: 52px; font-size: 38px; color: #d7ff33; text-align: right; opacity: 0; display: none; }
+        #combo-accent { left: 18px; top: 84px; width: 74px; }
+        #combo-chip-a { left: 132px; top: 84px; width: 34px; height: 9px; }
+        #combo-chip-b { left: 174px; top: 84px; width: 34px; height: 9px; }
 
         #ultimate-plate { left: 438px; top: 638px; width: 404px; height: 66px; }
         #ultimate-shell { left: 438px; top: 638px; width: 404px; height: 58px; }
@@ -75,7 +62,6 @@
     <img id="player-plate" class="plate" src="Images/hud_data_plate.png" data-ue-anchors="0 0 0 0" data-ue-offsets="12 8 286 54" data-ue-alignment="0 0" />
     <div id="player-shell" class="panel" data-ue-anchors="0 0 0 0" data-ue-offsets="14 10 274 48" data-ue-alignment="0 0">
         <div id="player-hp-text" class="label">VITAL FIELD</div>
-        <div id="player-state" class="readout">STRUCTURE</div>
         <div id="player-hp-bar" class="bar">
             <div id="player-hp-fill" class="bar-fill"></div>
             <div class="bar-hotline"></div>
@@ -85,40 +71,21 @@
         <div id="player-accent-b" class="line-white"></div>
         <div id="player-chip-a" class="chip chip-on"></div>
         <div id="player-chip-b" class="chip chip-cyan"></div>
-        <div id="player-chip-c" class="chip"></div>
     </div>
 
-    <img id="boss-plate" class="plate" src="Images/hud_data_plate.png" data-ue-anchors="0.5 0 0.5 0" data-ue-offsets="0 8 612 62" data-ue-alignment="0.5 0" />
-    <div id="boss-shell" class="panel" data-ue-anchors="0.5 0 0.5 0" data-ue-offsets="0 8 612 62" data-ue-alignment="0.5 0">
-        <div id="boss-grid-a" class="scan-v"></div>
-        <div id="boss-grid-b" class="scan-v"></div>
-        <div id="boss-bracket-left" class="line-white"></div>
-        <div id="boss-bracket-right" class="line-white"></div>
-        <div id="boss-title-cyan" class="label-cyan">ASCENDANT</div>
-        <div id="boss-title-pink" class="label-pink">ASCENDANT</div>
-        <div id="boss-title-main" class="label">ASCENDANT</div>
-        <div id="boss-hp-text" class="label">TARGET INTEGRITY</div>
-        <div id="boss-sub" class="readout">HOSTILE CORE</div>
-        <div id="boss-bar" class="bar">
-            <div id="boss-hp-fill" class="bar-fill"></div>
-            <div class="bar-hotline"></div>
-            <div class="bar-tick" style="left: 8%;"></div><div class="bar-tick" style="left: 16%;"></div><div class="bar-tick" style="left: 24%;"></div><div class="bar-tick" style="left: 32%;"></div><div class="bar-tick" style="left: 40%;"></div><div class="bar-tick" style="left: 48%;"></div><div class="bar-tick" style="left: 56%;"></div><div class="bar-tick" style="left: 64%;"></div><div class="bar-tick" style="left: 72%;"></div><div class="bar-tick" style="left: 80%;"></div><div class="bar-tick" style="left: 88%;"></div><div class="bar-tick" style="left: 96%;"></div>
-        </div>
-        <div id="boss-accent-a" class="line-pink"></div>
-        <div id="boss-accent-b" class="line-cyan"></div>
-    </div>
-
-    <img id="combo-plate" class="plate" src="Images/hud_data_plate.png" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="24 -66 196 88" data-ue-alignment="0 0.5" />
-    <div id="combo-shell" class="panel" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="26 -64 184 78" data-ue-alignment="0 0.5">
+    <img id="combo-plate" class="plate" src="Images/hud_data_plate.png" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="24 -72 250 118" data-ue-alignment="0 0.5" />
+    <div id="combo-shell" class="panel" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="26 -70 238 106" data-ue-alignment="0 0.5">
         <div id="combo-cyan" class="label-cyan">CHAIN</div>
         <div id="combo-pink" class="label-pink">CHAIN</div>
         <div id="combo-text" class="label">CHAIN</div>
         <div id="combo-readout" class="readout">FLOW</div>
+        <div id="combo-impact-flash"></div>
         <div id="combo-bar" class="bar">
             <div id="combo-fill" class="bar-fill bar-fill-pink"></div>
             <div class="bar-hotline"></div>
             <div class="bar-tick" style="left: 16%;"></div><div class="bar-tick" style="left: 33%;"></div><div class="bar-tick" style="left: 50%;"></div><div class="bar-tick" style="left: 66%;"></div><div class="bar-tick" style="left: 83%;"></div>
         </div>
+        <div id="combo-impact">10</div>
         <div id="combo-accent" class="line-pink"></div>
         <div id="combo-chip-a" class="chip chip-cyan"></div>
         <div id="combo-chip-b" class="chip chip-pink"></div>

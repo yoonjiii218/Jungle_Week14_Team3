@@ -88,3 +88,30 @@ void UCameraComponent::GetCameraView(float /*DeltaTime*/, FMinimalViewInfo& OutP
 		OutPOV.FOV = 2.0f * atanf((SensorHeight * 0.5f) / DepthOfField.FocalLength);
 	}
 }
+
+bool UCameraComponent::ProjectWorldToScreen(const FVector& WorldPosition, FVector& OutScreenPosition, float ScreenWidth, float ScreenHeight) const
+{
+	FMinimalViewInfo POV;
+	GetCameraView(0.0f, POV);
+
+	FMatrix ViewProj = POV.CalculateViewProjectionMatrix();
+
+	// W 성분을 계산하여 카메라 뒤에 있는지 판단 (Perspective LH 기준 W는 뷰공간 Z와 대략 동일)
+	float W = WorldPosition.X * ViewProj.M[0][3] + WorldPosition.Y * ViewProj.M[1][3] + WorldPosition.Z * ViewProj.M[2][3] + ViewProj.M[3][3];
+
+	if (W <= POV.NearClip)
+	{
+		return false;
+	}
+
+	FVector Ndc = ViewProj.TransformPositionWithW(WorldPosition);
+
+	float ScreenX = (Ndc.X * 0.5f + 0.5f) * ScreenWidth;
+	float ScreenY = (1.0f - (Ndc.Y * 0.5f + 0.5f)) * ScreenHeight;
+
+	OutScreenPosition.X = ScreenX;
+	OutScreenPosition.Y = ScreenY;
+	OutScreenPosition.Z = Ndc.Z;
+
+	return true;
+}

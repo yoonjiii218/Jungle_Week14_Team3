@@ -56,17 +56,17 @@
                 <div id="roll-line-a"></div>
                 <div id="roll-line-b"></div>
 
-                <div id="role-01" class="credit-role">GAME DIRECTOR</div>
-                <div id="name-01" class="credit-name">TEAM MEMBER 01</div>
-                <div id="role-02" class="credit-role">COMBAT SYSTEM</div>
-                <div id="name-02" class="credit-name">TEAM MEMBER 02</div>
-                <div id="role-03" class="credit-role">UI / GAME FLOW</div>
-                <div id="name-03" class="credit-name">TEAM MEMBER 03</div>
-                <div id="role-04" class="credit-role">BOSS / STAGE INTEGRATION</div>
-                <div id="name-04" class="credit-name">TEAM MEMBER 04</div>
+                <div id="role-01" class="credit-role">TEAM MEMBER 01</div>
+                <div id="name-01" class="credit-name">김 지수</div>
+                <div id="role-02" class="credit-role">TEAM MEMBER 02</div>
+                <div id="name-02" class="credit-name">이 준협</div>
+                <div id="role-03" class="credit-role">TEAM MEMBER 03</div>
+                <div id="name-03" class="credit-name">남 윤지</div>
+                <div id="role-04" class="credit-role">TEAM MEMBER 04</div>
+                <div id="name-04" class="credit-name">조 상현</div>
 
                 <div id="thanks-a" class="credit-note">SPECIAL THANKS TO THE JUNGLE WEEK 14 TEAM</div>
-                <div id="thanks-b" class="credit-note">RMLUI GAME FLOW DEMO BUILD</div>
+                <div id="thanks-b" class="credit-note">AND YOU</div>
                 <div id="end-title">THE END</div>
                 <div id="end-sub">THANK YOU FOR PLAYING</div>
             </div>

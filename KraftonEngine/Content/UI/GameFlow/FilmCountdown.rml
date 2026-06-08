@@ -130,10 +130,10 @@
         <div id="cross-v"></div>
         <div id="sweep-glow"></div>
         <div id="sweep"></div>
-        <div id="leader-text">PICTURE START // 3</div>
-        <div id="countdown-number-cyan">3</div>
-        <div id="countdown-number-pink">3</div>
-        <div id="countdown-number-main">3</div>
+        <div id="leader-text">PICTURE START // 5</div>
+        <div id="countdown-number-cyan">5</div>
+        <div id="countdown-number-pink">5</div>
+        <div id="countdown-number-main">5</div>
         <div id="scanline"></div>
         <div id="scratch-a"></div>
         <div id="scratch-b"></div>

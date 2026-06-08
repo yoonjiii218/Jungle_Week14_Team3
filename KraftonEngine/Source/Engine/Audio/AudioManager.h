@@ -14,9 +14,10 @@ public:
 	void Tick();
 
 	bool LoadAudio(const FString& Key, const FString& Path, bool bLoop = false);
-	void PlayAudio(const FString& Key, float Volume = 1.0f);
-	void PlayBGM(const FString& Key, float Volume = 1.0f);
+	void PlayAudio(const FString& Key, float Volume = 1.0f, float Pitch = 1.0f);
+	void PlayBGM(const FString& Key, float Volume = 1.0f, float Pitch = 1.0f);
 	void StopBGM();
+	void SetBGMPitch(float Pitch);
 	void PlayLoop(const FString& Key, const FString& LoopName, float Volume = 1.0f, float Pitch = 1.0f);
 	void StopLoop(const FString& LoopName);
 	void StopAllLoops();

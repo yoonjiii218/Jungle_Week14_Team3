@@ -6,6 +6,17 @@
 namespace
 {
 	constexpr size_t MaxOneShotChannels = 256;
+
+	float ClampVolumeFloor(float Volume)
+	{
+		return Volume < 0.0f ? 0.0f : Volume;
+	}
+
+	float ClampPitchFloor(float Pitch)
+	{
+		return Pitch < 0.1f ? 0.1f : Pitch;
+	}
+
 }
 
 bool FAudioManager::Initialize()
@@ -110,7 +121,7 @@ bool FAudioManager::LoadAudio(const FString& Key, const FString& Path, bool bLoo
 	return true;
 }
 
-void FAudioManager::PlayAudio(const FString& Key, float Volume)
+void FAudioManager::PlayAudio(const FString& Key, float Volume, float Pitch)
 {
 	if (!System)
 	{
@@ -154,12 +165,13 @@ void FAudioManager::PlayAudio(const FString& Key, float Volume)
 
 	if (Result == FMOD_OK && Channel)
 	{
-		Channel->setVolume(std::clamp(Volume, 0.0f, 1.0f));
+		Channel->setVolume(ClampVolumeFloor(Volume));
+		Channel->setPitch(ClampPitchFloor(Pitch));
 		OneShotChannels.push_back(Channel);
 	}
 }
 
-void FAudioManager::PlayBGM(const FString& Key, float Volume)
+void FAudioManager::PlayBGM(const FString& Key, float Volume, float Pitch)
 {
 	if (!System || !Audios.contains(Key))
 	{
@@ -171,7 +183,8 @@ void FAudioManager::PlayBGM(const FString& Key, float Volume)
 
 	if (BGMChannel)
 	{
-		BGMChannel->setVolume(Volume);
+		BGMChannel->setVolume(ClampVolumeFloor(Volume));
+		BGMChannel->setPitch(ClampPitchFloor(Pitch));
 	}
 }
 
@@ -184,6 +197,14 @@ void FAudioManager::StopBGM()
 	}
 }
 
+void FAudioManager::SetBGMPitch(float Pitch)
+{
+	if (BGMChannel)
+	{
+		BGMChannel->setPitch(ClampPitchFloor(Pitch));
+	}
+}
+
 void FAudioManager::PlayLoop(const FString& Key, const FString& LoopName, float Volume, float Pitch)
 {
 	if (!System || !Audios.contains(Key) || LoopName.empty())
@@ -193,8 +214,8 @@ void FAudioManager::PlayLoop(const FString& Key, const FString& LoopName, float 
 
 	if (FMOD::Channel* ExistingChannel = FindPlayingLoopChannel(LoopName))
 	{
-		ExistingChannel->setVolume(std::clamp(Volume, 0.0f, 1.0f));
-		ExistingChannel->setPitch(std::clamp(Pitch, 0.1f, 3.0f));
+		ExistingChannel->setVolume(ClampVolumeFloor(Volume));
+		ExistingChannel->setPitch(ClampPitchFloor(Pitch));
 		return;
 	}
 
@@ -204,8 +225,8 @@ void FAudioManager::PlayLoop(const FString& Key, const FString& LoopName, float 
 	if (Channel)
 	{
 		Channel->setMode(FMOD_LOOP_NORMAL);
-		Channel->setVolume(std::clamp(Volume, 0.0f, 1.0f));
-		Channel->setPitch(std::clamp(Pitch, 0.1f, 3.0f));
+		Channel->setVolume(ClampVolumeFloor(Volume));
+		Channel->setPitch(ClampPitchFloor(Pitch));
 		LoopChannels[LoopName] = Channel;
 	}
 }
@@ -240,7 +261,7 @@ void FAudioManager::SetLoopVolume(const FString& LoopName, float Volume)
 {
 	if (FMOD::Channel* Channel = FindPlayingLoopChannel(LoopName))
 	{
-		Channel->setVolume(std::clamp(Volume, 0.0f, 1.0f));
+		Channel->setVolume(ClampVolumeFloor(Volume));
 	}
 }
 
@@ -248,7 +269,7 @@ void FAudioManager::SetLoopPitch(const FString& LoopName, float Pitch)
 {
 	if (FMOD::Channel* Channel = FindPlayingLoopChannel(LoopName))
 	{
-		Channel->setPitch(std::clamp(Pitch, 0.1f, 3.0f));
+		Channel->setPitch(ClampPitchFloor(Pitch));
 	}
 }
 
@@ -299,7 +320,7 @@ void FAudioManager::SetMasterVolume(float Volume)
 {
 	if (MasterGroup)
 	{
-		MasterGroup->setVolume(Volume);
+		MasterGroup->setVolume(ClampVolumeFloor(Volume));
 	}
 }
 

@@ -41,7 +41,7 @@
         "PlayerMaxHP" : 100.000000,
         "PlayerStartLocation" : [-5.000000, 0.000000, 1.000000],
         "PlayerStartTag" : "PlayerStart",
-        "RetrySceneName" : "Default",
+        "RetrySceneName" : "Tokyo_Current",
         "StartMenuWidgetPath" : "Content/UI/GameFlow/StartMenu.uasset",
         "StartupScreen" : "StartMenu",
         "StoryBossSceneName" : "Tokyo_Current",
