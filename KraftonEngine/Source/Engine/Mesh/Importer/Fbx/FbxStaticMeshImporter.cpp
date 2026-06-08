@@ -53,6 +53,15 @@ struct hash<FFbxStaticVertexKey>
 };
 }
 
+static FMatrix MakeUnrealFbxMeshBasisCorrection()
+{
+	return FMatrix(
+		0.0f, 1.0f, 0.0f, 0.0f,
+		-1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f);
+}
+
 bool FFbxStaticMeshImporter::Import(FbxScene* Scene, const FString& SourcePath, const FImportOptions* Options, FFbxImportContext& Context, FFbxStaticMeshImportResult& OutResult, FString* OutMessage)
 {
 	OutResult = FFbxStaticMeshImportResult();
@@ -79,7 +88,7 @@ bool FFbxStaticMeshImporter::Import(FbxScene* Scene, const FString& SourcePath, 
 	TArray<FVector> StaticBitangentSums;
 	bool bNeedsNoneSlot = OutResult.Materials.empty();
 
-	for (FbxNode* Node : Context.AllNodes)
+	for (FbxNode* Node : Context.MeshNodes)
 	{
 		if (!Node)
 		{
@@ -98,7 +107,16 @@ bool FFbxStaticMeshImporter::Import(FbxScene* Scene, const FString& SourcePath, 
 		const EStaticFbxSkinnedMeshPolicy SkinnedMeshPolicy = EffectiveOptions.StaticFbxSkinnedMeshPolicy;
 
 		FbxAMatrix NodeGeometryTransform = FFbxTransformUtils::GetGeometryTransform(Node);
-		FMatrix MeshToWorld = FFbxTransformUtils::ToEngineMatrix(Node->EvaluateGlobalTransform() * NodeGeometryTransform);
+		FbxAMatrix MeshTransform = NodeGeometryTransform;
+		if (EffectiveOptions.bBakeFbxNodeTransform)
+		{
+			MeshTransform = Node->EvaluateGlobalTransform() * NodeGeometryTransform;
+		}
+		FMatrix MeshToWorld = FFbxTransformUtils::ToEngineMatrix(MeshTransform);
+		if (EffectiveOptions.bConvertUnrealFbxCoordinateSystem)
+		{
+			MeshToWorld *= MakeUnrealFbxMeshBasisCorrection();
+		}
 
 		if (bHasSkin)
 		{

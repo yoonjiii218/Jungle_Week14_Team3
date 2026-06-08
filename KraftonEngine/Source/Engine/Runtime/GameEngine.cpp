@@ -170,6 +170,8 @@ void UGameEngine::ProcessPendingTransition()
 		return;
 	}
 
+	UE_LOG("[GameEngine] TransitionToScene loaded: %s", FilePath.c_str());
+
 	// BeginPlay — UEngine::BeginPlay 와 동일 흐름.
 	if (FWorldContext* Ctx = GetWorldContextFromHandle(GetActiveWorldHandle()))
 	{

@@ -1,0 +1,5347 @@
+{
+  "version": 1,
+  "materials": [
+    {
+      "key": "MI_Awning_Black_47439b40",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Awning/MI_Awning_Black.MI_Awning_Black",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Awning/M_Awning.M_Awning",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Accent Intensity": 1.0,
+        "Base Intensity": 1.0
+      },
+      "vectors": {
+        "Base Color": [
+          0.130208,
+          0.130208,
+          0.130208,
+          0.0
+        ],
+        "Accent Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Awning_Blue_313afdd3",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Awning/MI_Awning_Blue.MI_Awning_Blue",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Awning/M_Awning.M_Awning",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Accent Intensity": 1.0,
+        "Base Intensity": 1.0
+      },
+      "vectors": {
+        "Base Color": [
+          0.098741,
+          0.264594,
+          0.729167,
+          0.0
+        ],
+        "Accent Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Awning_Cream_d2bdae18",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Awning/MI_Awning_Cream.MI_Awning_Cream",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Awning/M_Awning.M_Awning",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Accent Intensity": 1.0,
+        "Base Intensity": 1.0
+      },
+      "vectors": {
+        "Accent Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Base Color": [
+          0.661458,
+          0.393333,
+          0.206706,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Awning_Gray_a09ca984",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Awning/MI_Awning_Gray.MI_Awning_Gray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Awning/M_Awning.M_Awning",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Accent Intensity": 1.0,
+        "Base Intensity": 1.0
+      },
+      "vectors": {
+        "Base Color": [
+          0.604167,
+          0.604167,
+          0.604167,
+          0.0
+        ],
+        "Accent Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Awning_Green_0eeb9d8d",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Awning/MI_Awning_Green.MI_Awning_Green",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Awning/M_Awning.M_Awning",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Accent Intensity": 1.0,
+        "Base Intensity": 1.0
+      },
+      "vectors": {
+        "Base Color": [
+          0.079753,
+          0.4375,
+          0.151834,
+          0.0
+        ],
+        "Accent Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Awning_Red_1dd0877e",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Awning/MI_Awning_Red.MI_Awning_Red",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Awning/M_Awning.M_Awning",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Accent Intensity": 1.0,
+        "Base Intensity": 1.0
+      },
+      "vectors": {
+        "Base Color": [
+          0.703125,
+          0.082006,
+          0.036621,
+          0.0
+        ],
+        "Accent Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Awning_Yellow_6aa284c7",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Awning/MI_Awning_Yellow.MI_Awning_Yellow",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Awning/M_Awning.M_Awning",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Accent Intensity": 1.0,
+        "Base Intensity": 1.0
+      },
+      "vectors": {
+        "Base Color": [
+          1.0,
+          0.47451,
+          0.007843,
+          0.0
+        ],
+        "Accent Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Bike_Blue_2ce720d9",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/SM_Bike/MI_Bike_Blue.MI_Bike_Blue",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/SM_Bike/M_Bike.M_Bike",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0
+      },
+      "vectors": {
+        "Color": [
+          0.098958,
+          0.457582,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Bike_Gray_5f83341d",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/SM_Bike/MI_Bike_Gray.MI_Bike_Gray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/SM_Bike/M_Bike.M_Bike",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0
+      },
+      "vectors": {
+        "Color": [
+          0.151042,
+          0.151042,
+          0.151042,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Bike_Orange_36a29371",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/SM_Bike/MI_Bike_Orange.MI_Bike_Orange",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/SM_Bike/M_Bike.M_Bike",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0
+      },
+      "vectors": {
+        "Color": [
+          1.0,
+          0.231797,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Bush_Standard_2cf745b5",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/MI_Bush_Standard.MI_Bush_Standard",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/MI_Leaves01_Standard.MI_Leaves01_Standard",
+      "blendMode": "<BlendMode.BLEND_MASKED: 1>",
+      "twoSided": true,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Leaves01_Opacity_b4870800",
+          "usageGuess": "opacity"
+        }
+      ],
+      "scalars": {
+        "Emissive Int": 0.0,
+        "RefractionDepthBias": 0.0,
+        "intensity": 0.1,
+        "weigth": 0.5,
+        "speed": 0.5,
+        "rotate1": 0.5,
+        "Color Intensity": 1.0
+      },
+      "vectors": {
+        "Color": [
+          0.389624,
+          0.484375,
+          0.191731,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Decal01_Dark02_d8a0d0a4",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Dark02.MI_Decal01_Dark02",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01",
+      "blendMode": "<BlendMode.BLEND_TRANSLUCENT: 2>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "Opacity": 1.0,
+        "RefractionDepthBias": 0.0,
+        "Roughness": 1.0
+      },
+      "vectors": {
+        "Color": [
+          0.041667,
+          0.034329,
+          0.024306,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Decal01_Light01_f4187b6c",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01",
+      "blendMode": "<BlendMode.BLEND_TRANSLUCENT: 2>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "Opacity": 0.4,
+        "RefractionDepthBias": 0.0,
+        "Roughness": 1.0
+      },
+      "vectors": {
+        "Color": [
+          0.041667,
+          0.034329,
+          0.024306,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Decal01_Light02_f71b8919",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01",
+      "blendMode": "<BlendMode.BLEND_TRANSLUCENT: 2>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "Opacity": 0.4,
+        "RefractionDepthBias": 0.0,
+        "Roughness": 1.0
+      },
+      "vectors": {
+        "Color": [
+          0.041667,
+          0.034329,
+          0.024306,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_DecalMasked_RoadMarking_c5af2557",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_DecalMasked.M_DecalMasked",
+      "blendMode": "<BlendMode.BLEND_MASKED: 1>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "Dirt Mask Opacity": 0.7,
+        "Mask Size": 1289.172729,
+        "Rough": 0.7,
+        "RefractionDepthBias": 0.0
+      },
+      "vectors": {
+        "Color": [
+          0.447917,
+          0.447917,
+          0.447917,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_DecalMasked_Yellow_587ba970",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_Yellow.MI_DecalMasked_Yellow",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking",
+      "blendMode": "<BlendMode.BLEND_MASKED: 1>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "Dirt Mask Opacity": 0.7,
+        "Mask Size": 1289.172729,
+        "Rough": 0.7,
+        "RefractionDepthBias": 0.0
+      },
+      "vectors": {
+        "Color": [
+          0.489583,
+          0.199397,
+          0.020399,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Emissive_Green_Dim_2892177c",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Emissive_Light/MI_Emissive_Green_Dim.MI_Emissive_Green_Dim",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Emissive_Light/MI_Emissive_Cyan_Dim.MI_Emissive_Cyan_Dim",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "Light Intensity": 0.5,
+        "RefractionDepthBias": 0.0
+      },
+      "vectors": {
+        "Light Color": [
+          0.517884,
+          1.0,
+          0.223958,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Emissive_Unlit_f021fe84",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Emissive_Light/MI_Emissive_Unlit.MI_Emissive_Unlit",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Emissive_Light/M_Emissive.M_Emissive",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "Light Intensity": 0.001,
+        "RefractionDepthBias": 0.0
+      },
+      "vectors": {
+        "Light Color": [
+          0.583333,
+          0.872992,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Grass_49bd24b4",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Grass/MI_Grass.MI_Grass",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Master_Materials/M_TilingMat.M_TilingMat",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Grass_Base_f0d8c110",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Grass_Normal_5429a207",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Grass_RMO_2ce7af39",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 1.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Leaves01_Standard_0503fdc3",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/MI_Leaves01_Standard.MI_Leaves01_Standard",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves01.M_Leaves01",
+      "blendMode": "<BlendMode.BLEND_MASKED: 1>",
+      "twoSided": true,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Leaves01_Opacity_b4870800",
+          "usageGuess": "opacity"
+        }
+      ],
+      "scalars": {
+        "Emissive Int": 0.0,
+        "RefractionDepthBias": 0.0,
+        "intensity": 0.5,
+        "weigth": 0.5,
+        "speed": 0.5,
+        "rotate1": 0.5,
+        "Color Intensity": 1.0
+      },
+      "vectors": {
+        "Color": [
+          0.651042,
+          0.627498,
+          0.091553,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel02_Black_d641263d",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_Black.MI_Panel02_Black",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_White.MI_Panel02_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Panel02_Base_b06d104e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Panel02_Normal_8893048d",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Panel02_RMO_246626b2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 1.0,
+        "Metalness": 1.0,
+        "Rough Mask Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.098039,
+          0.098039,
+          0.098039,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel02_Cream_50f62664",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_Cream.MI_Panel02_Cream",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_White.MI_Panel02_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Panel02_Base_b06d104e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Panel02_Normal_8893048d",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Panel02_RMO_246626b2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 1.0,
+        "Metalness": 1.0,
+        "Rough Mask Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.479167,
+          0.346366,
+          0.2296,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel02_DarkGray_1f4dae3b",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_DarkGray.MI_Panel02_DarkGray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_Gray.MI_Panel02_Gray",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Panel02_Base_b06d104e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Panel02_Normal_8893048d",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Panel02_RMO_246626b2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 1.0,
+        "Metalness": 1.0,
+        "Rough Mask Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.151042,
+          0.151042,
+          0.151042,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel02_ExtraMetallic_6e869813",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_ExtraMetallic.MI_Panel02_ExtraMetallic",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_Metallic.MI_Panel02_Metallic",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Panel02_Base_b06d104e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Panel02_Normal_8893048d",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Panel02_RMO_246626b2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 1.0,
+        "Metalness": 5.0,
+        "Rough Mask Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Roughness": 1.0,
+        "Color Intensity": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.584255,
+          0.611715,
+          0.630208,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel02_ExtraMetallic_Clean_ffb67bf0",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_ExtraMetallic_Clean.MI_Panel02_ExtraMetallic_Clean",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_ExtraMetallic.MI_Panel02_ExtraMetallic",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Panel02_Base_b06d104e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Panel02_Normal_8893048d",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Panel02_RMO_246626b2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 1.0,
+        "Metalness": 5.0,
+        "Rough Mask Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Roughness": 1.0,
+        "Color Intensity": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.584255,
+          0.611715,
+          0.630208,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel02_ExtraMetallic_MaglevTrain_f94e8863",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_ExtraMetallic_MaglevTrain.MI_Panel02_ExtraMetallic_MaglevTrain",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_ExtraMetallic.MI_Panel02_ExtraMetallic",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Panel02_Base_b06d104e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Panel02_Normal_8893048d",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Panel02_RMO_246626b2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 1.0,
+        "Metalness": 3.0,
+        "Rough Mask Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Roughness": 1.0,
+        "Color Intensity": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.584255,
+          0.611715,
+          0.630208,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel02_Gray_b99d0d50",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_Gray.MI_Panel02_Gray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_White.MI_Panel02_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Panel02_Base_b06d104e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Panel02_Normal_8893048d",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Panel02_RMO_246626b2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 1.0,
+        "Metalness": 1.0,
+        "Rough Mask Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.369792,
+          0.369792,
+          0.369792,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel02_Metallic_Blue_228d9cad",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_Metallic_Blue.MI_Panel02_Metallic_Blue",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_Metallic.MI_Panel02_Metallic",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Panel02_Base_b06d104e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Panel02_Normal_8893048d",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Panel02_RMO_246626b2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 1.0,
+        "Metalness": 3.0,
+        "Rough Mask Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Roughness": 1.2,
+        "Color Intensity": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.104818,
+          0.308493,
+          0.838542,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel02_Metallic_Green_aa2d3048",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_Metallic_Green.MI_Panel02_Metallic_Green",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_Metallic_Blue.MI_Panel02_Metallic_Blue",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Panel02_Base_b06d104e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Panel02_Normal_8893048d",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Panel02_RMO_246626b2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 1.0,
+        "Metalness": 3.0,
+        "Rough Mask Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Roughness": 1.2,
+        "Color Intensity": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.252097,
+          0.614583,
+          0.220866,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel02_Metallic_e8d3511f",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_Metallic.MI_Panel02_Metallic",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_White.MI_Panel02_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Panel02_Base_b06d104e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Panel02_Normal_8893048d",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Panel02_RMO_246626b2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 1.0,
+        "Metalness": 3.0,
+        "Rough Mask Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Roughness": 1.2,
+        "Color Intensity": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.584255,
+          0.611715,
+          0.630208,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel02_White_ca44de54",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_White.MI_Panel02_White",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Master_Materials/M_TilingMat.M_TilingMat",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Panel02_Base_b06d104e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Panel02_Normal_8893048d",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Panel02_RMO_246626b2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 1.0,
+        "Metalness": 1.0,
+        "Rough Mask Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.880208,
+          0.880208,
+          0.880208,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_PanelStripe_8bc35dc8",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Stripe/MI_PanelStripe.MI_PanelStripe",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Master_Materials/M_TilingMat.M_TilingMat",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelStripe_Base_a287dbf6",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelStripe_Normal_bcb52499",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelStripe_RMO_c79759a2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_PanelStripe_Black_ea7fcc34",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Stripe/MI_PanelStripe_Black.MI_PanelStripe_Black",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Stripe/MI_PanelStripe.MI_PanelStripe",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelStripe_Base_a287dbf6",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelStripe_Normal_bcb52499",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelStripe_RMO_c79759a2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.098958,
+          0.098958,
+          0.098958,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_PanelStripe_Blue_dde0af0c",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Stripe/MI_PanelStripe_Blue.MI_PanelStripe_Blue",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Stripe/MI_PanelStripe.MI_PanelStripe",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelStripe_Base_a287dbf6",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelStripe_Normal_bcb52499",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelStripe_RMO_c79759a2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.065346,
+          0.297396,
+          0.489583,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_PanelStripe_BrownRed_635a7cca",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Stripe/MI_PanelStripe_BrownRed.MI_PanelStripe_BrownRed",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Stripe/MI_PanelStripe_Red.MI_PanelStripe_Red",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelStripe_Base_a287dbf6",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelStripe_Normal_bcb52499",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelStripe_RMO_c79759a2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "RefractionDepthBias": 0.0,
+        "Roughness": 1.3,
+        "Color Intensity": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.592157,
+          0.14902,
+          0.054902,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_PanelStripe_DarkGray_dd9a45fc",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Stripe/MI_PanelStripe_DarkGray.MI_PanelStripe_DarkGray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Stripe/MI_PanelStripe.MI_PanelStripe",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelStripe_Base_a287dbf6",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelStripe_Normal_bcb52499",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelStripe_RMO_c79759a2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "RefractionDepthBias": 0.0,
+        "Metalness": 1.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.208333,
+          0.208333,
+          0.208333,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_PanelStripe_LightGray_5d4b3a09",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Stripe/MI_PanelStripe_LightGray.MI_PanelStripe_LightGray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Stripe/MI_PanelStripe.MI_PanelStripe",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelStripe_Base_a287dbf6",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelStripe_Normal_bcb52499",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelStripe_RMO_c79759a2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.552083,
+          0.552083,
+          0.552083,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_PanelStripe_Red_7d594686",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Stripe/MI_PanelStripe_Red.MI_PanelStripe_Red",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Stripe/MI_PanelStripe.MI_PanelStripe",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelStripe_Base_a287dbf6",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelStripe_Normal_bcb52499",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelStripe_RMO_c79759a2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.651042,
+          0.069808,
+          0.04069,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_PanelStripe_Yellow_5c3c86bc",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Stripe/MI_PanelStripe_Yellow.MI_PanelStripe_Yellow",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Stripe/MI_PanelStripe.MI_PanelStripe",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelStripe_Base_a287dbf6",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelStripe_Normal_bcb52499",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelStripe_RMO_c79759a2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.776042,
+          0.454428,
+          0.056586,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel_Basic_Black_d67d6907",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_Black.MI_Panel_Basic_Black",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_DarkGray.MI_Panel_Basic_DarkGray",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "Mask Size": 2500.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.1,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.098039,
+          0.098039,
+          0.098039,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel_Basic_Blue_94061273",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_Blue.MI_Panel_Basic_Blue",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_White.MI_Panel_Basic_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "Mask Size": 2500.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.049371,
+          0.295316,
+          0.677083,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel_Basic_BrownRed_baa86160",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_BrownRed.MI_Panel_Basic_BrownRed",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_Red.MI_Panel_Basic_Red",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "Mask Size": 2500.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.592157,
+          0.14902,
+          0.054902,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel_Basic_Brown_989e0797",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_Brown.MI_Panel_Basic_Brown",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_White.MI_Panel_Basic_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "Mask Size": 2500.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.557292,
+          0.265495,
+          0.118362,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel_Basic_Cream_55b8ad20",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_Cream.MI_Panel_Basic_Cream",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_LightGray.MI_Panel_Basic_LightGray",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.9,
+        "Mask Size": 2500.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.1,
+        "Metalness": 1.0,
+        "Roughness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.567708,
+          0.492316,
+          0.413954,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel_Basic_DarkGray_b1e71a6f",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_DarkGray.MI_Panel_Basic_DarkGray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_White.MI_Panel_Basic_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "Mask Size": 2500.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.1,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.234375,
+          0.234375,
+          0.234375,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel_Basic_Green_6a1e4b60",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_Green.MI_Panel_Basic_Green",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_White.MI_Panel_Basic_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "Mask Size": 2500.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.086275,
+          0.454902,
+          0.164706,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel_Basic_LightGray_558886d8",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_LightGray.MI_Panel_Basic_LightGray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_DarkGray.MI_Panel_Basic_DarkGray",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.9,
+        "Mask Size": 2500.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.1,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.520833,
+          0.520833,
+          0.520833,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel_Basic_Orange_7d54462d",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_Orange.MI_Panel_Basic_Orange",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_Yellow.MI_Panel_Basic_Yellow",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "Mask Size": 2500.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          1.0,
+          0.209889,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel_Basic_Red_e70995fa",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_Red.MI_Panel_Basic_Red",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_White.MI_Panel_Basic_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "Mask Size": 2500.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.792157,
+          0.098039,
+          0.07451,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel_Basic_White_163af090",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_White.MI_Panel_Basic_White",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Master_Materials/M_TilingMat.M_TilingMat",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "Mask Size": 2500.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.9375,
+          0.9375,
+          0.9375,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel_Basic_White_Glossy_d300bc8b",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_White_Glossy.MI_Panel_Basic_White_Glossy",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_White.MI_Panel_Basic_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "Mask Size": 2500.0,
+        "RefractionDepthBias": 0.0,
+        "Roughness": 0.15,
+        "Color Intensity": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.9375,
+          0.9375,
+          0.9375,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel_Basic_Yellow_4e783f8b",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_Yellow.MI_Panel_Basic_Yellow",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_White.MI_Panel_Basic_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.95,
+        "Mask Size": 2500.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          1.0,
+          0.47451,
+          0.007843,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel_Gray_Text_85784de6",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Gray_Text.MI_Panel_Gray_Text",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_LightGray.MI_Panel_Basic_LightGray",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.783814,
+        "Mask Size": 389.232941,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "DirtMask Intensity": 1.374238,
+        "Rough Mask Intensity": 0.1,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.520833,
+          0.520833,
+          0.520833,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Panel_White_Text_a0a80751",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_White_Text.MI_Panel_White_Text",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Gray_Text.MI_Panel_Gray_Text",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.783814,
+        "Mask Size": 389.232941,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "DirtMask Intensity": 2.37104,
+        "Rough Mask Intensity": 0.1,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.520833,
+          0.520833,
+          0.520833,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Poster01_8250d6f9",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Posters/MI_Poster01.MI_Poster01",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Posters/M_Poster.M_Poster",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "Hue": 2.370528,
+        "RefractionDepthBias": 0.0
+      },
+      "vectors": {}
+    },
+    {
+      "key": "MI_Poster_02_3962de90",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Posters/MI_Poster_02.MI_Poster_02",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Posters/M_Poster.M_Poster",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "Hue": 2.530157,
+        "RefractionDepthBias": 0.0
+      },
+      "vectors": {}
+    },
+    {
+      "key": "MI_RoadAsphalt_Green_a384222e",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Road_Asphalt/MI_RoadAsphalt_Green.MI_RoadAsphalt_Green",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Road_Asphalt/MI_RoadAsphalt_Maroon.MI_RoadAsphalt_Maroon",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_RoadAsphalt_Base_eecf0b4d",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_RoadAsphalt_Normal_8a6ade60",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_RoadAsphalt_RMO_9d1f210f",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.85,
+        "Mask Size": 3000.0,
+        "Roughness": 1.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 2.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.097548,
+          0.645833,
+          0.436278,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_RoadAsphalt_Light_1ba53112",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Road_Asphalt/MI_RoadAsphalt_Light.MI_RoadAsphalt_Light",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Road_Asphalt/MI_RoadAsphalt.MI_RoadAsphalt",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_RoadAsphalt_Base_eecf0b4d",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_RoadAsphalt_Normal_8a6ade60",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_RoadAsphalt_RMO_9d1f210f",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.85,
+        "Mask Size": 3000.0,
+        "Roughness": 1.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 3.801847,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.677083,
+          0.677083,
+          0.677083,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_RoadAsphalt_Maroon_18dcdd8e",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Road_Asphalt/MI_RoadAsphalt_Maroon.MI_RoadAsphalt_Maroon",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Road_Asphalt/MI_RoadAsphalt.MI_RoadAsphalt",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_RoadAsphalt_Base_eecf0b4d",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_RoadAsphalt_Normal_8a6ade60",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_RoadAsphalt_RMO_9d1f210f",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.85,
+        "Mask Size": 3000.0,
+        "Roughness": 1.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 2.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          1.0,
+          0.22251,
+          0.135417,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_RoadAsphalt_f3133887",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Road_Asphalt/MI_RoadAsphalt.MI_RoadAsphalt",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Master_Materials/M_TilingMat.M_TilingMat",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_RoadAsphalt_Base_eecf0b4d",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_RoadAsphalt_Normal_8a6ade60",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_RoadAsphalt_RMO_9d1f210f",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.85,
+        "Mask Size": 3000.0,
+        "Roughness": 1.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.817708,
+          0.817708,
+          0.817708,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_RoadBarriers_BlueEmissive_4dd5df1a",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadBarriers/MI_RoadBarriers_BlueEmissive.MI_RoadBarriers_BlueEmissive",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadBarriers/MI_RoadBarriers.MI_RoadBarriers",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_RoadBarriers_Base_0418da6c",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Emissive",
+          "texture": "T_RoadBarriers_Emissive_f08a5d22",
+          "usageGuess": "emissive"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_RoadBarriers_Normal_be00cd7b",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_RoadBarriers_RMO_47cb37e2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Emissive Intensity": 10.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0
+      },
+      "vectors": {
+        "Emissive Color": [
+          0.0,
+          0.289068,
+          1.0,
+          0.0
+        ],
+        "Color Multiply": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_RoadBarriers_RedEmissive_f5d22470",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadBarriers/MI_RoadBarriers_RedEmissive.MI_RoadBarriers_RedEmissive",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadBarriers/MI_RoadBarriers_BlueEmissive.MI_RoadBarriers_BlueEmissive",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_RoadBarriers_Base_0418da6c",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Emissive",
+          "texture": "T_RoadBarriers_Emissive_f08a5d22",
+          "usageGuess": "emissive"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_RoadBarriers_Normal_be00cd7b",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_RoadBarriers_RMO_47cb37e2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Emissive Intensity": 10.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0
+      },
+      "vectors": {
+        "Emissive Color": [
+          1.0,
+          0.015278,
+          0.0,
+          0.0
+        ],
+        "Color Multiply": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_RoadBarriers_e4a5f880",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadBarriers/MI_RoadBarriers.MI_RoadBarriers",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Master_Materials/M_BasicMat.M_BasicMat",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_RoadBarriers_Base_0418da6c",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Emissive",
+          "texture": "T_RoadBarriers_Emissive_f08a5d22",
+          "usageGuess": "emissive"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_RoadBarriers_Normal_be00cd7b",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_RoadBarriers_RMO_47cb37e2",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Emissive Intensity": 10.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0
+      },
+      "vectors": {
+        "Emissive Color": [
+          1.0,
+          0.566045,
+          0.029236,
+          0.0
+        ],
+        "Color Multiply": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_RoadFences_Dark_3556e69b",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/MI_RoadFences_Dark.MI_RoadFences_Dark",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/M_RoadFences_Master.M_RoadFences_Master",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_RoadFences_Base_daa1509c",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_RoadFences_Normal_db094ee1",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_RoadFences_RMO_a5d3e0d8",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Metallic": 1.0,
+        "Roughness": 1.0,
+        "RefractionDepthBias": 0.0,
+        "Accent Intensity": 1.0,
+        "Base Intensity": 1.0
+      },
+      "vectors": {
+        "Accent Color": [
+          0.458333,
+          0.458333,
+          0.458333,
+          0.0
+        ],
+        "Base Color": [
+          0.305882,
+          0.305882,
+          0.305882,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_RoadFences_GreenAccent_bc850ffe",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/MI_RoadFences_GreenAccent.MI_RoadFences_GreenAccent",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/MI_RoadFences_YellowAccent.MI_RoadFences_YellowAccent",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_RoadFences_Base_daa1509c",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_RoadFences_Normal_db094ee1",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_RoadFences_RMO_a5d3e0d8",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Accent Intensity": 2.0,
+        "RefractionDepthBias": 0.0,
+        "Base Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metallic": 1.0
+      },
+      "vectors": {
+        "Accent Color": [
+          0.259284,
+          0.489583,
+          0.0,
+          0.0
+        ],
+        "Base Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_RoadFences_LightBlueAccent_da12d441",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/MI_RoadFences_LightBlueAccent.MI_RoadFences_LightBlueAccent",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/M_RoadFences_Master.M_RoadFences_Master",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_RoadFences_Base_daa1509c",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_RoadFences_Normal_db094ee1",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_RoadFences_RMO_a5d3e0d8",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Accent Intensity": 1.0,
+        "Base Intensity": 1.0,
+        "Metallic": 1.0,
+        "Roughness": 1.0,
+        "RefractionDepthBias": 0.0
+      },
+      "vectors": {
+        "Accent Color": [
+          0.119792,
+          0.41732,
+          1.0,
+          0.0
+        ],
+        "Base Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_RoadFences_YellowAccent_17019048",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/MI_RoadFences_YellowAccent.MI_RoadFences_YellowAccent",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/M_RoadFences_Master.M_RoadFences_Master",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_RoadFences_Base_daa1509c",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_RoadFences_Normal_db094ee1",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_RoadFences_RMO_a5d3e0d8",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Accent Intensity": 2.0,
+        "RefractionDepthBias": 0.0,
+        "Base Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metallic": 1.0
+      },
+      "vectors": {
+        "Accent Color": [
+          1.0,
+          0.43835,
+          0.0,
+          0.0
+        ],
+        "Base Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Sakura_3dde390d",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/MI_Sakura.MI_Sakura",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/MI_Leaves01_Standard.MI_Leaves01_Standard",
+      "blendMode": "<BlendMode.BLEND_MASKED: 1>",
+      "twoSided": true,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Sakura_bb7f6f58",
+          "usageGuess": "baseColor"
+        }
+      ],
+      "scalars": {
+        "Emissive Int": 0.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "intensity": 0.5,
+        "weigth": 0.5,
+        "speed": 0.5,
+        "rotate1": 0.5
+      },
+      "vectors": {
+        "Color": [
+          0.822917,
+          0.822917,
+          0.822917,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_SquarePanel_Basic_Blue_6592d3de",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_SquarePanel_Basic_Blue.MI_SquarePanel_Basic_Blue",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_SquarePanel_Basic_LightGray.MI_SquarePanel_Basic_LightGray",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.9,
+        "Mask Size": 2500.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.1,
+        "V Tiling": 2.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.043538,
+          0.184998,
+          0.557292,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_SquarePanel_Basic_Cyan_b9dd1ba6",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_SquarePanel_Basic_Cyan.MI_SquarePanel_Basic_Cyan",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_SquarePanel_Basic_Blue.MI_SquarePanel_Basic_Blue",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.9,
+        "Mask Size": 2500.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.1,
+        "V Tiling": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.0,
+          0.630208,
+          0.630208,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_SquarePanel_Basic_LightGray_d8ac40fe",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_SquarePanel_Basic_LightGray.MI_SquarePanel_Basic_LightGray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel_Plain/MI_Panel_Basic_LightGray.MI_Panel_Basic_LightGray",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_PanelPlain_Normal_b4758a83",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_PanelPlain_RMO_d4853a11",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.9,
+        "Mask Size": 2500.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.1,
+        "V Tiling": 2.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "U Tiling": 1.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.328125,
+          0.328125,
+          0.328125,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_StreetTrim_DarkGray_0a94293e",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim_DarkGray.MI_StreetTrim_DarkGray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim.MI_StreetTrim",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_StreetTrim_Base_7ef985cf",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Emissive",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "emissive"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_StreetTrim_Normal_f0c5b394",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_StreetTrim_RMO_7c8354fc",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Metalness": 0.7,
+        "Roughness": 1.0,
+        "Color Intensity": 1.0,
+        "Emissive Intensity": 0.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.395833,
+          0.395833,
+          0.395833,
+          0.0
+        ],
+        "Emissive Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_StreetTrim_GlossGray_0e4a96b7",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim_GlossGray.MI_StreetTrim_GlossGray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim_MatteBlack.MI_StreetTrim_MatteBlack",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_StreetTrim_Base_7ef985cf",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Emissive",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "emissive"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_StreetTrim_Normal_f0c5b394",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_StreetTrim_RMO_7c8354fc",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Metalness": 0.0,
+        "Roughness": 0.6,
+        "Color Intensity": 1.0,
+        "Emissive Intensity": 0.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.104167,
+          0.104167,
+          0.104167,
+          0.0
+        ],
+        "Emissive Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_StreetTrim_Green_93618dd4",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim_Green.MI_StreetTrim_Green",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim_Yellow.MI_StreetTrim_Yellow",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_StreetTrim_Base_7ef985cf",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Emissive",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "emissive"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_StreetTrim_Normal_f0c5b394",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_StreetTrim_RMO_7c8354fc",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.5,
+        "Metalness": 0.0,
+        "Roughness": 1.0,
+        "Emissive Intensity": 0.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.086275,
+          0.454902,
+          0.164706,
+          0.0
+        ],
+        "Emissive Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_StreetTrim_MatteBlack_f7a16802",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim_MatteBlack.MI_StreetTrim_MatteBlack",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim.MI_StreetTrim",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_StreetTrim_Base_7ef985cf",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Emissive",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "emissive"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_StreetTrim_Normal_f0c5b394",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_StreetTrim_RMO_7c8354fc",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Metalness": 0.0,
+        "Roughness": 1.4,
+        "Color Intensity": 1.0,
+        "Emissive Intensity": 0.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.104167,
+          0.104167,
+          0.104167,
+          0.0
+        ],
+        "Emissive Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_StreetTrim_MatteWhite_b9eab199",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim_MatteWhite.MI_StreetTrim_MatteWhite",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim.MI_StreetTrim",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_StreetTrim_Base_7ef985cf",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Emissive",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "emissive"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_StreetTrim_Normal_f0c5b394",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_StreetTrim_RMO_7c8354fc",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Metalness": 0.0,
+        "Roughness": 1.0,
+        "Color Intensity": 1.0,
+        "Emissive Intensity": 0.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Emissive Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_StreetTrim_Matte_DarkGray_cb82fed7",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim_Matte_DarkGray.MI_StreetTrim_Matte_DarkGray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim_DarkGray.MI_StreetTrim_DarkGray",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_StreetTrim_Base_7ef985cf",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Emissive",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "emissive"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_StreetTrim_Normal_f0c5b394",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_StreetTrim_RMO_7c8354fc",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Metalness": 0.0,
+        "Roughness": 1.4,
+        "Color Intensity": 1.0,
+        "Emissive Intensity": 0.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.182292,
+          0.182292,
+          0.182292,
+          0.0
+        ],
+        "Emissive Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_StreetTrim_Yellow_8c7a13a7",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim_Yellow.MI_StreetTrim_Yellow",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim.MI_StreetTrim",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_StreetTrim_Base_7ef985cf",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Emissive",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "emissive"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_StreetTrim_Normal_f0c5b394",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_StreetTrim_RMO_7c8354fc",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.5,
+        "Metalness": 0.0,
+        "Roughness": 1.57062,
+        "Emissive Intensity": 0.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          1.0,
+          0.429174,
+          0.00757,
+          0.0
+        ],
+        "Emissive Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_StreetTrim_ff13dea2",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim.MI_StreetTrim",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Master_Materials/M_BasicMat.M_BasicMat",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_StreetTrim_Base_7ef985cf",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Emissive",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "emissive"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_StreetTrim_Normal_f0c5b394",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_StreetTrim_RMO_7c8354fc",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "Emissive Intensity": 0.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Emissive Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Text01B_DarkGray_1097d133",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Text/MI_Text01B_DarkGray.MI_Text01B_DarkGray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Text/MI_Text01_DarkGray.MI_Text01_DarkGray",
+      "blendMode": "<BlendMode.BLEND_MASKED: 1>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Text",
+          "texture": "T_Text01B_3bf2ac72",
+          "usageGuess": "unknown"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0
+      },
+      "vectors": {
+        "Color": [
+          0.03125,
+          0.03125,
+          0.03125,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Text02_DarkGray_4f6d2520",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Text/MI_Text02_DarkGray.MI_Text02_DarkGray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Text/MI_Text02_White.MI_Text02_White",
+      "blendMode": "<BlendMode.BLEND_MASKED: 1>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Text",
+          "texture": "T_Text02_0a280776",
+          "usageGuess": "unknown"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0
+      },
+      "vectors": {
+        "Color": [
+          0.03125,
+          0.03125,
+          0.03125,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Text02_Red_15b0e5aa",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Text/MI_Text02_Red.MI_Text02_Red",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Text/MI_Text02_White.MI_Text02_White",
+      "blendMode": "<BlendMode.BLEND_MASKED: 1>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Text",
+          "texture": "T_Text02_0a280776",
+          "usageGuess": "unknown"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0
+      },
+      "vectors": {
+        "Color": [
+          0.792157,
+          0.098039,
+          0.07451,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Text02_White_d25e02d8",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Text/MI_Text02_White.MI_Text02_White",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Text/M_Text01_White.M_Text01_White",
+      "blendMode": "<BlendMode.BLEND_MASKED: 1>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Text",
+          "texture": "T_Text02_0a280776",
+          "usageGuess": "unknown"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0
+      },
+      "vectors": {
+        "Color": [
+          0.635417,
+          0.635417,
+          0.635417,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_TileStack_Brown_7d2436d5",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_Brown.MI_TileStack_Brown",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_White.MI_TileStack_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_TileStack_Base_2e40b10e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_TileStack_Normal_41c8c866",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_TileStack_RMO_92c0b173",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.8,
+        "Mask Size": 1000.0,
+        "U Tiling": 2.0,
+        "V Tiling": 2.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.607843,
+          0.329412,
+          0.180392,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_TileStack_Brown_Square_e396dc2f",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_Brown_Square.MI_TileStack_Brown_Square",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_DarkGray_Square.MI_TileStack_DarkGray_Square",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_TileStack_Base_2e40b10e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_TileStack_Normal_41c8c866",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_TileStack_RMO_92c0b173",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.8,
+        "Mask Size": 1000.0,
+        "U Tiling": 4.0,
+        "V Tiling": 2.0,
+        "RefractionDepthBias": 0.0,
+        "Roughness": 1.0,
+        "Color Intensity": 1.0,
+        "Metalness": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.607843,
+          0.329412,
+          0.180392,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_TileStack_Cream_Square_77c2e858",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_Cream_Square.MI_TileStack_Cream_Square",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_Brown_Square.MI_TileStack_Brown_Square",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_TileStack_Base_2e40b10e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_TileStack_Normal_41c8c866",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_TileStack_RMO_92c0b173",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.8,
+        "Mask Size": 1000.0,
+        "U Tiling": 4.0,
+        "V Tiling": 2.0,
+        "RefractionDepthBias": 0.0,
+        "Roughness": 1.0,
+        "Color Intensity": 1.0,
+        "Metalness": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.479167,
+          0.365129,
+          0.274522,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_TileStack_DarkGray_5b9af60e",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_DarkGray.MI_TileStack_DarkGray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_White.MI_TileStack_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_TileStack_Base_2e40b10e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_TileStack_Normal_41c8c866",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_TileStack_RMO_92c0b173",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.8,
+        "Mask Size": 1000.0,
+        "U Tiling": 2.0,
+        "V Tiling": 2.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.229167,
+          0.229167,
+          0.229167,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_TileStack_DarkGray_Square_63580557",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_DarkGray_Square.MI_TileStack_DarkGray_Square",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_DarkGray.MI_TileStack_DarkGray",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_TileStack_Base_2e40b10e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_TileStack_Normal_41c8c866",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_TileStack_RMO_92c0b173",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.8,
+        "Mask Size": 1000.0,
+        "U Tiling": 4.0,
+        "V Tiling": 2.0,
+        "RefractionDepthBias": 0.0,
+        "Roughness": 1.0,
+        "Color Intensity": 1.0,
+        "Metalness": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.229167,
+          0.229167,
+          0.229167,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_TileStack_LightGray_4d07093c",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_LightGray.MI_TileStack_LightGray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_White.MI_TileStack_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_TileStack_Base_2e40b10e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_TileStack_Normal_41c8c866",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_TileStack_RMO_92c0b173",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.8,
+        "Mask Size": 1000.0,
+        "U Tiling": 2.0,
+        "V Tiling": 2.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.337255,
+          0.337255,
+          0.337255,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_TileStack_LightGray_Square_ec7b67c1",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_LightGray_Square.MI_TileStack_LightGray_Square",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_DarkGray_Square.MI_TileStack_DarkGray_Square",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_TileStack_Base_2e40b10e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_TileStack_Normal_41c8c866",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_TileStack_RMO_92c0b173",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.8,
+        "Mask Size": 1000.0,
+        "U Tiling": 4.0,
+        "V Tiling": 2.0,
+        "RefractionDepthBias": 0.0,
+        "Roughness": 1.0,
+        "Color Intensity": 1.0,
+        "Metalness": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.337255,
+          0.337255,
+          0.337255,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_TileStack_Maroon_Square_fd077bb1",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_Maroon_Square.MI_TileStack_Maroon_Square",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_Brown_Square.MI_TileStack_Brown_Square",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_TileStack_Base_2e40b10e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_TileStack_Normal_41c8c866",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_TileStack_RMO_92c0b173",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.8,
+        "Mask Size": 1000.0,
+        "U Tiling": 4.0,
+        "V Tiling": 2.0,
+        "RefractionDepthBias": 0.0,
+        "Roughness": 1.0,
+        "Color Intensity": 1.0,
+        "Metalness": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.557292,
+          0.170583,
+          0.107395,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_TileStack_White_Square_8d51d07c",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_White_Square.MI_TileStack_White_Square",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_White.MI_TileStack_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_TileStack_Base_2e40b10e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_TileStack_Normal_41c8c866",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_TileStack_RMO_92c0b173",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.8,
+        "Mask Size": 1000.0,
+        "U Tiling": 4.0,
+        "V Tiling": 2.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_TileStack_White_b1894358",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Tiles_Stack/MI_TileStack_White.MI_TileStack_White",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Master_Materials/M_TilingMat.M_TilingMat",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_TileStack_Base_2e40b10e",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_TileStack_Normal_41c8c866",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_TileStack_RMO_92c0b173",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.8,
+        "Mask Size": 1000.0,
+        "U Tiling": 2.0,
+        "V Tiling": 2.0,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Rough Mask Intensity": 0.5
+      },
+      "vectors": {
+        "Color Multiply": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_TreeTrunk_Brown_Standard_eea7c2cf",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_TreeTrunk/MI_TreeTrunk_Brown_Standard.MI_TreeTrunk_Brown_Standard",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_TreeTrunk/MI_TreeTrunk_Brown.MI_TreeTrunk_Brown",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "Emissive": 0.0,
+        "RefractionDepthBias": 0.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_TreeTrunk_Brown_f89704d2",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_TreeTrunk/MI_TreeTrunk_Brown.MI_TreeTrunk_Brown",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Tile_TreeTrunk/M_TreeTrunk.M_TreeTrunk",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "Emissive": 0.0,
+        "RefractionDepthBias": 0.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.666667,
+          0.551671,
+          0.409722,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_TriangleGlass_abf33e9b",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Triangle_Glass/MI_TriangleGlass.MI_TriangleGlass",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Master_Materials/M_TilingMat.M_TilingMat",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_TriangleGlass_Base_a162d0c1",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_TriangleGlass_Normal_53043d94",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_TriangleGlass_RMO_af184541",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Dirt Mask Opacity": 0.9,
+        "Metalness": 1.0,
+        "Rough Mask Intensity": 0.04,
+        "Roughness": 0.512,
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "U Tiling": 1.0,
+        "V Tiling": 1.0,
+        "DirtMask Intensity": 1.0,
+        "Mask Size": 1000.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_UtilityTrim_Gray_bf3d01ea",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_UtilityTrim/MI_UtilityTrim_Gray.MI_UtilityTrim_Gray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_UtilityTrim/MI_UtilityTrim.MI_UtilityTrim",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_UtilityTrim_Base_ed0b1fe2",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Emissive",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "emissive"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_UtilityTrim_Normal_b580a9cc",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_UtilityTrim_RMO_2ad69b32",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "Emissive Intensity": 0.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.291667,
+          0.291667,
+          0.291667,
+          0.0
+        ],
+        "Emissive Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_UtilityTrim_e6f93333",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_UtilityTrim/MI_UtilityTrim.MI_UtilityTrim",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Master_Materials/M_BasicMat.M_BasicMat",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_UtilityTrim_Base_ed0b1fe2",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Emissive",
+          "texture": "T_PanelPlain_Base_e7ecf5eb",
+          "usageGuess": "emissive"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_UtilityTrim_Normal_b580a9cc",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_UtilityTrim_RMO_2ad69b32",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Color Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metalness": 1.0,
+        "Emissive Intensity": 0.0
+      },
+      "vectors": {
+        "Color Multiply": [
+          0.614583,
+          0.614583,
+          0.614583,
+          0.0
+        ],
+        "Emissive Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_BlackFrame_0f48677f",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Black/MI_Window01_BlackFrame.MI_Window01_BlackFrame",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/M_Window01.M_Window01",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Base_a3a838b9",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_RMO_beb8f632",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Frame Color Intensity": 1.0,
+        "Glass Color Intensity": 1.931758,
+        "RefractionDepthBias": 0.0,
+        "HeightRatio": -0.4,
+        "Light Intensity": 0.0
+      },
+      "vectors": {
+        "Frame Color": [
+          0.082353,
+          0.082353,
+          0.082353,
+          0.0
+        ],
+        "Glass Color": [
+          0.662745,
+          0.843137,
+          1.0,
+          0.0
+        ],
+        "Light Color": [
+          0.71568,
+          0.865219,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_Black_LitCool_479094d4",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Black/MI_Window01_Black_LitCool.MI_Window01_Black_LitCool",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Black/MI_Window01_Blinds_Black_LitCool.MI_Window01_Blinds_Black_LitCool",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Base_a3a838b9",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_RMO_beb8f632",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Light Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Frame Color Intensity": 1.0,
+        "Glass Color Intensity": 1.0,
+        "HeightRatio": -0.4
+      },
+      "vectors": {
+        "Frame Color": [
+          0.082353,
+          0.082353,
+          0.082353,
+          0.0
+        ],
+        "Glass Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Light Color": [
+          0.71568,
+          0.865219,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_Blinds_Black_LitCool_9b0f00fa",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Black/MI_Window01_Blinds_Black_LitCool.MI_Window01_Blinds_Black_LitCool",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_White/MI_Window01_Blinds_LitCool.MI_Window01_Blinds_LitCool",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Blinds_f7b39d33",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_Blinds_RMO_975895aa",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Light Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Frame Color Intensity": 1.0,
+        "Glass Color Intensity": 1.0,
+        "HeightRatio": -0.4
+      },
+      "vectors": {
+        "Frame Color": [
+          0.082353,
+          0.082353,
+          0.082353,
+          0.0
+        ],
+        "Glass Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Light Color": [
+          0.71568,
+          0.865219,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_Blinds_Black_bae1a814",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Black/MI_Window01_Blinds_Black.MI_Window01_Blinds_Black",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_White/MI_Window01_Blinds_White.MI_Window01_Blinds_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Blinds_f7b39d33",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_RMO_beb8f632",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Frame Color Intensity": 1.0,
+        "Glass Color Intensity": 1.0,
+        "HeightRatio": -0.4,
+        "Light Intensity": 0.0
+      },
+      "vectors": {
+        "Frame Color": [
+          0.082353,
+          0.082353,
+          0.082353,
+          0.0
+        ],
+        "Glass Color": [
+          0.662745,
+          0.843137,
+          1.0,
+          0.0
+        ],
+        "Light Color": [
+          0.71568,
+          0.865219,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_Blinds_Gray_LitCool_043869c5",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Gray/MI_Window01_Blinds_Gray_LitCool.MI_Window01_Blinds_Gray_LitCool",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_White/MI_Window01_Blinds_LitCool.MI_Window01_Blinds_LitCool",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Blinds_f7b39d33",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_Blinds_RMO_975895aa",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Light Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Frame Color Intensity": 1.0,
+        "Glass Color Intensity": 1.0,
+        "HeightRatio": -0.4
+      },
+      "vectors": {
+        "Frame Color": [
+          0.356863,
+          0.356863,
+          0.356863,
+          0.0
+        ],
+        "Glass Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Light Color": [
+          0.71568,
+          0.865219,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_Blinds_Gray_LitWarm_b42214f0",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Gray/MI_Window01_Blinds_Gray_LitWarm.MI_Window01_Blinds_Gray_LitWarm",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Gray/MI_Window01_Blinds_Gray_LitCool.MI_Window01_Blinds_Gray_LitCool",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Blinds_f7b39d33",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_Blinds_RMO_975895aa",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Light Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Frame Color Intensity": 1.0,
+        "Glass Color Intensity": 1.0,
+        "HeightRatio": -0.4
+      },
+      "vectors": {
+        "Frame Color": [
+          0.356863,
+          0.356863,
+          0.356863,
+          0.0
+        ],
+        "Light Color": [
+          1.0,
+          0.584314,
+          0.196078,
+          0.0
+        ],
+        "Glass Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_Blinds_Gray_ff0b656d",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Gray/MI_Window01_Blinds_Gray.MI_Window01_Blinds_Gray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_White/MI_Window01_Blinds_White.MI_Window01_Blinds_White",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Blinds_f7b39d33",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_RMO_beb8f632",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Frame Color Intensity": 1.0,
+        "Glass Color Intensity": 1.0,
+        "HeightRatio": -0.4,
+        "Light Intensity": 0.0
+      },
+      "vectors": {
+        "Frame Color": [
+          0.356863,
+          0.356863,
+          0.356863,
+          0.0
+        ],
+        "Glass Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Light Color": [
+          0.71568,
+          0.865219,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_Blinds_LitCool_3ab7c7c6",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_White/MI_Window01_Blinds_LitCool.MI_Window01_Blinds_LitCool",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_White/MI_Window01_LitCool.MI_Window01_LitCool",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Blinds_f7b39d33",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_Blinds_RMO_975895aa",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Light Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Frame Color Intensity": 1.0,
+        "Glass Color Intensity": 1.0,
+        "HeightRatio": -0.4
+      },
+      "vectors": {
+        "Frame Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Glass Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Light Color": [
+          0.71568,
+          0.865219,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_Blinds_LitWarm_776c987c",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_White/MI_Window01_Blinds_LitWarm.MI_Window01_Blinds_LitWarm",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_White/MI_Window01_Blinds_LitCool.MI_Window01_Blinds_LitCool",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Blinds_f7b39d33",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_Blinds_RMO_975895aa",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Light Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Frame Color Intensity": 1.0,
+        "Glass Color Intensity": 1.0,
+        "HeightRatio": -0.4
+      },
+      "vectors": {
+        "Light Color": [
+          1.0,
+          0.584314,
+          0.196078,
+          0.0
+        ],
+        "Frame Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Glass Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_Blinds_Mirror_f1963157",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Mirror/MI_Window01_Blinds_Mirror.MI_Window01_Blinds_Mirror",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Mirror/MI_Window01_Mirror.MI_Window01_Mirror",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Blinds_f7b39d33",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_RMO_beb8f632",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Glass Color Intensity": 3.0,
+        "RefractionDepthBias": 0.0,
+        "Frame Color Intensity": 1.0,
+        "HeightRatio": -0.4,
+        "Light Intensity": 0.0
+      },
+      "vectors": {
+        "Frame Color": [
+          0.296875,
+          0.296875,
+          0.296875,
+          0.0
+        ],
+        "Glass Color": [
+          0.593452,
+          0.722386,
+          0.869792,
+          0.0
+        ],
+        "Light Color": [
+          0.71568,
+          0.865219,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_Blinds_White_e25aaa66",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_White/MI_Window01_Blinds_White.MI_Window01_Blinds_White",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/M_Window01.M_Window01",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Blinds_f7b39d33",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_RMO_beb8f632",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Frame Color Intensity": 1.0,
+        "Glass Color Intensity": 1.0,
+        "HeightRatio": -0.4,
+        "Light Intensity": 0.0
+      },
+      "vectors": {
+        "Frame Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Glass Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Light Color": [
+          0.71568,
+          0.865219,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_Gray_LitCool_57760823",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Gray/MI_Window01_Gray_LitCool.MI_Window01_Gray_LitCool",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_White/MI_Window01_LitCool.MI_Window01_LitCool",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Base_a3a838b9",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_RMO_beb8f632",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Light Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Frame Color Intensity": 1.0,
+        "Glass Color Intensity": 1.0,
+        "HeightRatio": -0.4
+      },
+      "vectors": {
+        "Frame Color": [
+          0.356863,
+          0.356863,
+          0.356863,
+          0.0
+        ],
+        "Glass Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Light Color": [
+          0.71568,
+          0.865219,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_Gray_LitWarm_24f1a445",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Gray/MI_Window01_Gray_LitWarm.MI_Window01_Gray_LitWarm",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Gray/MI_Window01_Gray_LitCool.MI_Window01_Gray_LitCool",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Base_a3a838b9",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_RMO_beb8f632",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Light Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Frame Color Intensity": 1.0,
+        "Glass Color Intensity": 1.0,
+        "HeightRatio": -0.4
+      },
+      "vectors": {
+        "Frame Color": [
+          0.356863,
+          0.356863,
+          0.356863,
+          0.0
+        ],
+        "Light Color": [
+          1.0,
+          0.584314,
+          0.196078,
+          0.0
+        ],
+        "Glass Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_Gray_b7fd0ba3",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Gray/MI_Window01_Gray.MI_Window01_Gray",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/M_Window01.M_Window01",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Base_a3a838b9",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_RMO_beb8f632",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0,
+        "Frame Color Intensity": 1.0,
+        "Glass Color Intensity": 1.0,
+        "HeightRatio": -0.4,
+        "Light Intensity": 0.0
+      },
+      "vectors": {
+        "Frame Color": [
+          0.356863,
+          0.356863,
+          0.356863,
+          0.0
+        ],
+        "Glass Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Light Color": [
+          0.71568,
+          0.865219,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_LitCool_86ecf5ad",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_White/MI_Window01_LitCool.MI_Window01_LitCool",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/M_Window01.M_Window01",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Base_a3a838b9",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_RMO_beb8f632",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Light Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Frame Color Intensity": 1.0,
+        "Glass Color Intensity": 1.0,
+        "HeightRatio": -0.4
+      },
+      "vectors": {
+        "Frame Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Glass Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Light Color": [
+          0.71568,
+          0.865219,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_LitWarm_e0e0db3e",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_White/MI_Window01_LitWarm.MI_Window01_LitWarm",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_White/MI_Window01_LitCool.MI_Window01_LitCool",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Base_a3a838b9",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_RMO_beb8f632",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Light Intensity": 0.1,
+        "RefractionDepthBias": 0.0,
+        "Frame Color Intensity": 1.0,
+        "Glass Color Intensity": 1.0,
+        "HeightRatio": -0.4
+      },
+      "vectors": {
+        "Light Color": [
+          1.0,
+          0.584314,
+          0.196078,
+          0.0
+        ],
+        "Frame Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Glass Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_Mirror_5d67208e",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Mirror/MI_Window01_Mirror.MI_Window01_Mirror",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/M_Window01.M_Window01",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Base_a3a838b9",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_RMO_beb8f632",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Glass Color Intensity": 3.0,
+        "RefractionDepthBias": 0.0,
+        "Frame Color Intensity": 1.0,
+        "HeightRatio": -0.4,
+        "Light Intensity": 0.0
+      },
+      "vectors": {
+        "Frame Color": [
+          0.296875,
+          0.296875,
+          0.296875,
+          0.0
+        ],
+        "Glass Color": [
+          0.593452,
+          0.722386,
+          0.869792,
+          0.0
+        ],
+        "Light Color": [
+          0.71568,
+          0.865219,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "MI_Window01_YellowFrame_075d30f5",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/Window01_Yellow/MI_Window01_YellowFrame.MI_Window01_YellowFrame",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/M_Window01.M_Window01",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Base_a3a838b9",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_RMO_beb8f632",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Frame Color Intensity": 1.601339,
+        "Glass Color Intensity": 2.0,
+        "RefractionDepthBias": 0.0,
+        "HeightRatio": -0.4,
+        "Light Intensity": 0.0
+      },
+      "vectors": {
+        "Frame Color": [
+          1.0,
+          0.381509,
+          0.0,
+          0.0
+        ],
+        "Glass Color": [
+          1.0,
+          0.956441,
+          0.741255,
+          0.0
+        ],
+        "Light Color": [
+          0.71568,
+          0.865219,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "M_Awning_2bc81512",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Awning/M_Awning.M_Awning",
+      "baseMaterial": "",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "Accent Intensity": 1.0,
+        "Base Intensity": 1.0
+      },
+      "vectors": {
+        "Accent Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Base Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "M_Decal01_6423a0d1",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01",
+      "baseMaterial": "",
+      "blendMode": "<BlendMode.BLEND_TRANSLUCENT: 2>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "Roughness": 1.0,
+        "Opacity": 0.6
+      },
+      "vectors": {
+        "Color": [
+          0.041667,
+          0.034329,
+          0.024306,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "M_Glass_Opaque_d1e5989f",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Glass/M_Glass_Opaque.M_Glass_Opaque",
+      "baseMaterial": "",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "Metallic": 0.8,
+        "Roughness": 0.05
+      },
+      "vectors": {
+        "Color": [
+          0.181559,
+          0.255317,
+          0.359375,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "M_Glass_Ribbed_8c83a74d",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Glass/M_Glass_Ribbed.M_Glass_Ribbed",
+      "baseMaterial": "",
+      "blendMode": "<BlendMode.BLEND_TRANSLUCENT: 2>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "Roughness": 0.0,
+        "Opacity": 0.5
+      },
+      "vectors": {
+        "Glass Color": [
+          0.127902,
+          0.180951,
+          0.213542,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "M_Poster_94f69c7f",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Posters/M_Poster.M_Poster",
+      "baseMaterial": "",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [],
+      "scalars": {
+        "Hue": 0.0
+      },
+      "vectors": {}
+    },
+    {
+      "key": "M_RoadFences_Master_82a62839",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/M_RoadFences_Master.M_RoadFences_Master",
+      "baseMaterial": "",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_RoadFences_Base_daa1509c",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_RoadFences_Normal_db094ee1",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_RoadFences_RMO_a5d3e0d8",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Accent Intensity": 1.0,
+        "Base Intensity": 1.0,
+        "Roughness": 1.0,
+        "Metallic": 1.0
+      },
+      "vectors": {
+        "Accent Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Base Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "M_RoadFences_Master_GreenAll_6ba279c9",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/M_RoadFences_Master_GreenAll.M_RoadFences_Master_GreenAll",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/M_RoadFences_Master_YellowAll.M_RoadFences_Master_YellowAll",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_RoadFences_Base_daa1509c",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_RoadFences_Normal_db094ee1",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_RoadFences_RMO_a5d3e0d8",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Accent Intensity": 3.335578,
+        "Base Intensity": 2.0,
+        "Roughness": 2.0,
+        "RefractionDepthBias": 0.0,
+        "Metallic": 1.0
+      },
+      "vectors": {
+        "Accent Color": [
+          0.109804,
+          0.243137,
+          0.031373,
+          0.0
+        ],
+        "Base Color": [
+          0.109804,
+          0.243137,
+          0.031373,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "M_RoadFences_Master_YellowAll_c10d9045",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/M_RoadFences_Master_YellowAll.M_RoadFences_Master_YellowAll",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/M_RoadFences_Master.M_RoadFences_Master",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_RoadFences_Base_daa1509c",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_RoadFences_Normal_db094ee1",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_RoadFences_RMO_a5d3e0d8",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Accent Intensity": 3.335578,
+        "Base Intensity": 2.0,
+        "Roughness": 2.0,
+        "RefractionDepthBias": 0.0,
+        "Metallic": 1.0
+      },
+      "vectors": {
+        "Accent Color": [
+          1.0,
+          0.478431,
+          0.0,
+          0.0
+        ],
+        "Base Color": [
+          1.0,
+          0.478431,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "M_RoadFences_Orange_19e515ab",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/M_RoadFences_Orange.M_RoadFences_Orange",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/M_RoadFences_Master.M_RoadFences_Master",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_RoadFences_Base_daa1509c",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_RoadFences_Normal_db094ee1",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_RoadFences_RMO_a5d3e0d8",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Metallic": 0.0,
+        "Roughness": 2.0,
+        "RefractionDepthBias": 0.0,
+        "Accent Intensity": 1.0,
+        "Base Intensity": 1.0
+      },
+      "vectors": {
+        "Accent Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Base Color": [
+          0.739583,
+          0.120104,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "M_StreetTrash_a1511efa",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Street_Trash/M_StreetTrash.M_StreetTrash",
+      "baseMaterial": "",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": true,
+      "textures": [],
+      "scalars": {},
+      "vectors": {}
+    },
+    {
+      "key": "M_Text01B_White_bd45d5fe",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Text/M_Text01B_White.M_Text01B_White",
+      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Text/M_Text01_White.M_Text01_White",
+      "blendMode": "<BlendMode.BLEND_MASKED: 1>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Text",
+          "texture": "T_Text01B_3bf2ac72",
+          "usageGuess": "unknown"
+        }
+      ],
+      "scalars": {
+        "RefractionDepthBias": 0.0
+      },
+      "vectors": {
+        "Color": [
+          0.635417,
+          0.635417,
+          0.635417,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "M_Text01_White_20a43e20",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Text/M_Text01_White.M_Text01_White",
+      "baseMaterial": "",
+      "blendMode": "<BlendMode.BLEND_MASKED: 1>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Text",
+          "texture": "T_Text01_bc5207da",
+          "usageGuess": "unknown"
+        }
+      ],
+      "scalars": {},
+      "vectors": {
+        "Color": [
+          0.635417,
+          0.635417,
+          0.635417,
+          0.0
+        ]
+      }
+    },
+    {
+      "key": "M_Window01_72cb13de",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Window01/M_Window01.M_Window01",
+      "baseMaterial": "",
+      "blendMode": "<BlendMode.BLEND_OPAQUE: 0>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "Base",
+          "texture": "T_Window01_Base_a3a838b9",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "Normal",
+          "texture": "T_Window01_Normal_760488b7",
+          "usageGuess": "normal"
+        },
+        {
+          "parameter": "RMO",
+          "texture": "T_Window01_RMO_beb8f632",
+          "usageGuess": "rmo"
+        }
+      ],
+      "scalars": {
+        "Frame Color Intensity": 1.0,
+        "Glass Color Intensity": 1.0,
+        "HeightRatio": -0.4,
+        "Light Intensity": 0.0
+      },
+      "vectors": {
+        "Frame Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Glass Color": [
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "Light Color": [
+          0.71568,
+          0.865219,
+          1.0,
+          0.0
+        ]
+      }
+    }
+  ],
+  "textures": [
+    {
+      "key": "T_Grass_Base_f0d8c110",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Grass_Base.T_Grass_Base",
+      "file": "Textures/T_Grass_Base_f0d8c110.png"
+    },
+    {
+      "key": "T_Grass_Normal_5429a207",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Grass_Normal.T_Grass_Normal",
+      "file": "Textures/T_Grass_Normal_5429a207.png"
+    },
+    {
+      "key": "T_Grass_RMO_2ce7af39",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Grass_RMO.T_Grass_RMO",
+      "file": "Textures/T_Grass_RMO_2ce7af39.png"
+    },
+    {
+      "key": "T_Leaves01_Opacity_b4870800",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Leaves01_Opacity.T_Leaves01_Opacity",
+      "file": "Textures/T_Leaves01_Opacity_b4870800.png"
+    },
+    {
+      "key": "T_Panel02_Base_b06d104e",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Panel02_Base.T_Panel02_Base",
+      "file": "Textures/T_Panel02_Base_b06d104e.png"
+    },
+    {
+      "key": "T_Panel02_Normal_8893048d",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Panel02_Normal.T_Panel02_Normal",
+      "file": "Textures/T_Panel02_Normal_8893048d.png"
+    },
+    {
+      "key": "T_Panel02_RMO_246626b2",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Panel02_RMO.T_Panel02_RMO",
+      "file": "Textures/T_Panel02_RMO_246626b2.png"
+    },
+    {
+      "key": "T_PanelPlain_Base_e7ecf5eb",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_PanelPlain_Base.T_PanelPlain_Base",
+      "file": "Textures/T_PanelPlain_Base_e7ecf5eb.png"
+    },
+    {
+      "key": "T_PanelPlain_Normal_b4758a83",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_PanelPlain_Normal.T_PanelPlain_Normal",
+      "file": "Textures/T_PanelPlain_Normal_b4758a83.png"
+    },
+    {
+      "key": "T_PanelPlain_RMO_d4853a11",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_PanelPlain_RMO.T_PanelPlain_RMO",
+      "file": "Textures/T_PanelPlain_RMO_d4853a11.png"
+    },
+    {
+      "key": "T_PanelStripe_Base_a287dbf6",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_PanelStripe_Base.T_PanelStripe_Base",
+      "file": "Textures/T_PanelStripe_Base_a287dbf6.png"
+    },
+    {
+      "key": "T_PanelStripe_Normal_bcb52499",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_PanelStripe_Normal.T_PanelStripe_Normal",
+      "file": "Textures/T_PanelStripe_Normal_bcb52499.png"
+    },
+    {
+      "key": "T_PanelStripe_RMO_c79759a2",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_PanelStripe_RMO.T_PanelStripe_RMO",
+      "file": "Textures/T_PanelStripe_RMO_c79759a2.png"
+    },
+    {
+      "key": "T_RoadAsphalt_Base_eecf0b4d",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_RoadAsphalt_Base.T_RoadAsphalt_Base",
+      "file": "Textures/T_RoadAsphalt_Base_eecf0b4d.png"
+    },
+    {
+      "key": "T_RoadAsphalt_Normal_8a6ade60",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_RoadAsphalt_Normal.T_RoadAsphalt_Normal",
+      "file": "Textures/T_RoadAsphalt_Normal_8a6ade60.png"
+    },
+    {
+      "key": "T_RoadAsphalt_RMO_9d1f210f",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_RoadAsphalt_RMO.T_RoadAsphalt_RMO",
+      "file": "Textures/T_RoadAsphalt_RMO_9d1f210f.png"
+    },
+    {
+      "key": "T_RoadBarriers_Base_0418da6c",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_RoadBarriers_Base.T_RoadBarriers_Base",
+      "file": "Textures/T_RoadBarriers_Base_0418da6c.png"
+    },
+    {
+      "key": "T_RoadBarriers_Emissive_f08a5d22",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_RoadBarriers_Emissive.T_RoadBarriers_Emissive",
+      "file": "Textures/T_RoadBarriers_Emissive_f08a5d22.png"
+    },
+    {
+      "key": "T_RoadBarriers_Normal_be00cd7b",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_RoadBarriers_Normal.T_RoadBarriers_Normal",
+      "file": "Textures/T_RoadBarriers_Normal_be00cd7b.png"
+    },
+    {
+      "key": "T_RoadBarriers_RMO_47cb37e2",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_RoadBarriers_RMO.T_RoadBarriers_RMO",
+      "file": "Textures/T_RoadBarriers_RMO_47cb37e2.png"
+    },
+    {
+      "key": "T_RoadFences_Base_daa1509c",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_RoadFences_Base.T_RoadFences_Base",
+      "file": "Textures/T_RoadFences_Base_daa1509c.png"
+    },
+    {
+      "key": "T_RoadFences_Normal_db094ee1",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_RoadFences_Normal.T_RoadFences_Normal",
+      "file": "Textures/T_RoadFences_Normal_db094ee1.png"
+    },
+    {
+      "key": "T_RoadFences_RMO_a5d3e0d8",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_RoadFences_RMO.T_RoadFences_RMO",
+      "file": "Textures/T_RoadFences_RMO_a5d3e0d8.png"
+    },
+    {
+      "key": "T_Sakura_bb7f6f58",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Sakura.T_Sakura",
+      "file": "Textures/T_Sakura_bb7f6f58.png"
+    },
+    {
+      "key": "T_StreetTrim_Base_7ef985cf",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_StreetTrim_Base.T_StreetTrim_Base",
+      "file": "Textures/T_StreetTrim_Base_7ef985cf.png"
+    },
+    {
+      "key": "T_StreetTrim_Normal_f0c5b394",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_StreetTrim_Normal.T_StreetTrim_Normal",
+      "file": "Textures/T_StreetTrim_Normal_f0c5b394.png"
+    },
+    {
+      "key": "T_StreetTrim_RMO_7c8354fc",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_StreetTrim_RMO.T_StreetTrim_RMO",
+      "file": "Textures/T_StreetTrim_RMO_7c8354fc.png"
+    },
+    {
+      "key": "T_Text01B_3bf2ac72",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Text01B.T_Text01B",
+      "file": "Textures/T_Text01B_3bf2ac72.png"
+    },
+    {
+      "key": "T_Text01_bc5207da",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Text01.T_Text01",
+      "file": "Textures/T_Text01_bc5207da.png"
+    },
+    {
+      "key": "T_Text02_0a280776",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Text02.T_Text02",
+      "file": "Textures/T_Text02_0a280776.png"
+    },
+    {
+      "key": "T_TileStack_Base_2e40b10e",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_TileStack_Base.T_TileStack_Base",
+      "file": "Textures/T_TileStack_Base_2e40b10e.png"
+    },
+    {
+      "key": "T_TileStack_Normal_41c8c866",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_TileStack_Normal.T_TileStack_Normal",
+      "file": "Textures/T_TileStack_Normal_41c8c866.png"
+    },
+    {
+      "key": "T_TileStack_RMO_92c0b173",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_TileStack_RMO.T_TileStack_RMO",
+      "file": "Textures/T_TileStack_RMO_92c0b173.png"
+    },
+    {
+      "key": "T_TriangleGlass_Base_a162d0c1",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_TriangleGlass_Base.T_TriangleGlass_Base",
+      "file": "Textures/T_TriangleGlass_Base_a162d0c1.png"
+    },
+    {
+      "key": "T_TriangleGlass_Normal_53043d94",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_TriangleGlass_Normal.T_TriangleGlass_Normal",
+      "file": "Textures/T_TriangleGlass_Normal_53043d94.png"
+    },
+    {
+      "key": "T_TriangleGlass_RMO_af184541",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_TriangleGlass_RMO.T_TriangleGlass_RMO",
+      "file": "Textures/T_TriangleGlass_RMO_af184541.png"
+    },
+    {
+      "key": "T_UtilityTrim_Base_ed0b1fe2",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_UtilityTrim_Base.T_UtilityTrim_Base",
+      "file": "Textures/T_UtilityTrim_Base_ed0b1fe2.png"
+    },
+    {
+      "key": "T_UtilityTrim_Normal_b580a9cc",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_UtilityTrim_Normal.T_UtilityTrim_Normal",
+      "file": "Textures/T_UtilityTrim_Normal_b580a9cc.png"
+    },
+    {
+      "key": "T_UtilityTrim_RMO_2ad69b32",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_UtilityTrim_RMO.T_UtilityTrim_RMO",
+      "file": "Textures/T_UtilityTrim_RMO_2ad69b32.png"
+    },
+    {
+      "key": "T_Window01_Base_a3a838b9",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Window01_Base.T_Window01_Base",
+      "file": "Textures/T_Window01_Base_a3a838b9.png"
+    },
+    {
+      "key": "T_Window01_Blinds_RMO_975895aa",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Window01_Blinds_RMO.T_Window01_Blinds_RMO",
+      "file": "Textures/T_Window01_Blinds_RMO_975895aa.png"
+    },
+    {
+      "key": "T_Window01_Blinds_f7b39d33",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Window01_Blinds.T_Window01_Blinds",
+      "file": "Textures/T_Window01_Blinds_f7b39d33.png"
+    },
+    {
+      "key": "T_Window01_Normal_760488b7",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Window01_Normal.T_Window01_Normal",
+      "file": "Textures/T_Window01_Normal_760488b7.png"
+    },
+    {
+      "key": "T_Window01_RMO_beb8f632",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Window01_RMO.T_Window01_RMO",
+      "file": "Textures/T_Window01_RMO_beb8f632.png"
+    }
+  ]
+}

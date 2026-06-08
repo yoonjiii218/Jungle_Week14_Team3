@@ -530,6 +530,7 @@ FVector AActor::GetActorScale() const
 
 void AActor::SetActorScale(const FVector& NewScale)
 {
+	PendingActorScale = NewScale;
 	if (USceneComponent* Root = GetRootComponent())
 	{
 		Root->SetRelativeScale(NewScale);
@@ -585,6 +586,27 @@ void AActor::Serialize(FArchive& Ar)
 		SetVisible(PendingActorVisible);
 		SetTags(SplitTagsCommaSep(PendingTagsString));
 	}
+}
+
+void AActor::PreSave()
+{
+	UObject::PreSave();
+	PendingActorLocation = GetActorLocation();
+	PendingActorRotation = GetActorRotation();
+	PendingActorScale = GetActorScale();
+	PendingActorVisible = bVisible;
+	PendingTagsString = JoinTagsCommaSep(Tags);
+}
+
+void AActor::PostLoad()
+{
+	UObject::PostLoad();
+	SetActorLocation(PendingActorLocation);
+	SetActorRotation(PendingActorRotation);
+	SetActorScale(PendingActorScale);
+	SetVisible(PendingActorVisible);
+	SetTags(SplitTagsCommaSep(PendingTagsString));
+	bPrimitiveCacheDirty = true;
 }
 
 bool AActor::HasTag(const FName& Tag) const

@@ -11,6 +11,7 @@ local BossAttacks   = require("Boss/BossAttacks")
 local BossFeedback  = require("Boss/BossFeedback")
 local BossHitbox    = require("Boss/BossHitbox")
 local CombatContext = require("Combat/CombatContext")
+local GameplayEventBus = require("Core/GameplayEventBus")
 
 local bossContext = nil
 
@@ -103,6 +104,7 @@ function Tick(dt)
 
     local events = BossEvents.Drain(bossContext)
     CombatContext.ProcessBossEvents(bossContext, events)
+    GameplayEventBus.PublishMany(events, bossContext)
     BossFeedback.ProcessEvents(bossContext, events)
 
     CoroutineManager.End()

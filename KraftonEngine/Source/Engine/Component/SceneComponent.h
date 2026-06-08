@@ -47,6 +47,7 @@ public:
 	void PostEditProperty(const char* PropertyName) override;
 
 	void Serialize(FArchive& Ar) override;
+	void PostLoad() override;
 
 	virtual void UpdateWorldMatrix() const;
 	UFUNCTION(Callable, Category="Scene|Transform")

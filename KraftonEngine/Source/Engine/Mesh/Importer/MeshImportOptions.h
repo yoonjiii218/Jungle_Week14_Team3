@@ -29,5 +29,7 @@ struct FImportOptions
 	EStaticFbxSkinnedMeshPolicy StaticFbxSkinnedMeshPolicy = EStaticFbxSkinnedMeshPolicy::ImportBindPoseAsStatic;
 	bool bImportTextures = true;
 	bool bCreateMaterials = true;
+	bool bBakeFbxNodeTransform = true;
+	bool bConvertUnrealFbxCoordinateSystem = false;
 	static FImportOptions Default() { return {}; }
 };

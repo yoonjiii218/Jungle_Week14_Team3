@@ -40,7 +40,7 @@ FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
     Result.Roughness = 0.5f;
     Result.Metallic = 0.0f;
     Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = (n_5).x;
+    Result.Opacity = (n_5).a;
     Result.OpacityMask = 1.0f;
     Result.NormalConnected = 0.0f;
     FMaterialEvalResult Eval;

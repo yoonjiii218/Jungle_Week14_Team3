@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "Opaque",
     "Domain" : "Surface",
-    "GeneratorVersion" : "GeneratedMaterialPass_v9_SurfaceToonShading_InstancedStaticMesh",
+    "GeneratorVersion" : "GeneratedMaterialPass_v10_SurfacePinSwizzle_InstancedStaticMesh",
     "GraphHash" : "2ED345B156FD1AEF",
     "GraphShaderMode" : "Generated",
     "Parameters" : {

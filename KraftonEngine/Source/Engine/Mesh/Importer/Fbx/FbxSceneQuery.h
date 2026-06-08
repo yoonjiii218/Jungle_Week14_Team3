@@ -9,6 +9,7 @@ class FFbxSceneQuery
 public:
 	static void CollectAllNodes(FbxNode* RootNode, TArray<FbxNode*>& OutNodes);
 	static void CollectMeshNodes(FbxNode* RootNode, TArray<FbxNode*>& OutMeshNodes);
+	static bool IsCollisionMeshNode(FbxNode* Node);
 	static bool IsSkeletonNode(FbxNode* Node);
 	static bool HasNonSkeletonWrapperParent(FbxNode* Node);
 	static bool MeshHasSkin(FbxMesh* Mesh);

@@ -163,6 +163,29 @@ namespace
 		return false;
 	}
 
+	FString GetActionDisplayLabel(const FInputSystemSnapshot& Snapshot, const FString& ActionName)
+	{
+		const bool bUseGamepad = Snapshot.Gamepads[0].bConnected;
+		if (ActionName == "Move")
+		{
+			return bUseGamepad ? "왼쪽 스틱" : "W/A/S/D";
+		}
+		if (ActionName == "Attack")
+		{
+			return bUseGamepad ? "X 버튼" : "좌클릭";
+		}
+		if (ActionName == "Dash")
+		{
+			return bUseGamepad ? "RT" : "Shift";
+		}
+		if (ActionName == "Ultimate")
+		{
+			return bUseGamepad ? "Y 버튼" : "Q";
+		}
+
+		return ActionName;
+	}
+
 	float ClampAxis(float Value)
 	{
 		if (Value > 1.0f) return 1.0f;
@@ -1918,6 +1941,10 @@ void FLuaScriptManager::RegisterCoreBindings(sol::state& Lua)
 	Input.set_function("GetMouseDeltaY", []()
 	{
 		return GetLuaInputSnapshot().MouseDeltaY;
+	});
+	Input.set_function("GetActionLabel", [](const FString& ActionName)
+	{
+		return GetActionDisplayLabel(GetLuaInputSnapshot(), ActionName);
 	});
 	Input.set_function("IsActionDown", [](const FString& ActionName)
 	{

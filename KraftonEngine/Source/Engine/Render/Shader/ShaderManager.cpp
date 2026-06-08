@@ -163,6 +163,9 @@ void FShaderManager::Initialize(ID3D11Device* InDevice)
 	GetOrCreateShadowDepthPermutation(EShadowDepthDefines::EVertexFactory::StaticMesh, StartupError);
 	GetOrCreateShadowDepthPermutation(EShadowDepthDefines::EVertexFactory::InstancedStaticMesh, StartupError);
 	GetOrCreateShadowDepthPermutation(EShadowDepthDefines::EVertexFactory::SkeletalMesh, StartupError);
+	GetOrCreateShadowDepthPermutation(EShadowDepthDefines::EVertexFactory::StaticMesh, StartupError, true);
+	GetOrCreateShadowDepthPermutation(EShadowDepthDefines::EVertexFactory::InstancedStaticMesh, StartupError, true);
+	GetOrCreateShadowDepthPermutation(EShadowDepthDefines::EVertexFactory::SkeletalMesh, StartupError, true);
 	GetOrCreate(EShaderPath::ShadowMapVis, StartupError);
 	GetOrCreate(EShaderPath::CameraFade, StartupError);
 	GetOrCreate(EShaderPath::CameraVignette, StartupError);
@@ -304,13 +307,13 @@ FShader* FShaderManager::PreCompile(const FShaderKey& Key, const D3D_SHADER_MACR
 	return RawPtr;
 }
 
-FShader* FShaderManager::GetOrCreateShadowDepthPermutation(EShadowDepthDefines::EVertexFactory VF, EShaderErrorMode ErrorMode)
+FShader* FShaderManager::GetOrCreateShadowDepthPermutation(
+	EShadowDepthDefines::EVertexFactory VF,
+	EShaderErrorMode ErrorMode,
+	bool bMasked)
 {
-	const D3D_SHADER_MACRO* Defines =
-		(VF == EShadowDepthDefines::EVertexFactory::SkeletalMesh)
-		? EShadowDepthDefines::SkeletalMesh
-		: EShadowDepthDefines::StaticMesh;
-	return PreCompile(EShadowDepthDefines::MakePermutationKey(VF), Defines, ErrorMode);
+	const D3D_SHADER_MACRO* Defines = EShadowDepthDefines::GetDefines(VF, bMasked);
+	return PreCompile(EShadowDepthDefines::MakePermutationKey(VF, bMasked), Defines, ErrorMode);
 }
 
 FShader* FShaderManager::GetOrCreateUberLitPermutation(EUberLitDefines::ELightingModel LightingModel,

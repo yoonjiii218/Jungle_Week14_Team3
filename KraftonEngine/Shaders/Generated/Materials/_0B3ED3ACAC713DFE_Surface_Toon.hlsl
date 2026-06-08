@@ -57,12 +57,12 @@ FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
     float3 n_22 = Param_ToonRimColor;
     float n_24 = Param_ToonRimStrength;
     FMaterialResult Result;
-    Result.BaseColor = (n_5).xyz;
+    Result.BaseColor = (n_5).rgb;
     Result.Normal = float3(0, 0, 1);
     Result.Roughness = 0.5f;
     Result.Metallic = 0.0f;
     Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = (n_5).x;
+    Result.Opacity = (n_5).a;
     Result.OpacityMask = 1.0f;
     Result.NormalConnected = 0.0f;
     FMaterialEvalResult Eval;
