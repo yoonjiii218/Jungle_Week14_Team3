@@ -22,6 +22,22 @@ public:
 	void OnTransformDirty() override;
 
 	class UBillboardComponent* EnsureEditorBillboard();
+	void SetFogParameters(
+		float InDensity,
+		float InHeightFalloff,
+		float InStartDistance,
+		float InCutoffDistance,
+		float InMaxOpacity,
+		const FVector4& InInscatteringColor)
+	{
+		FogDensity = InDensity;
+		FogHeightFalloff = InHeightFalloff;
+		StartDistance = InStartDistance;
+		FogCutoffDistance = InCutoffDistance;
+		FogMaxOpacity = InMaxOpacity;
+		FogInscatteringColor = InInscatteringColor;
+		PushToScene();
+	}
 
 private:
 	void PushToScene();

@@ -81,6 +81,24 @@ struct VS_Input_MeshParticleInstance
     float4 dynamicParam   : INSTANCE_DYNAMICPARAM;
 };
 
+struct VS_Input_StaticMeshInstance
+{
+    float4 transformRow0  : INSTANCE_TRANSFORM0;
+    float4 transformRow1  : INSTANCE_TRANSFORM1;
+    float4 transformRow2  : INSTANCE_TRANSFORM2;
+    float4 transformRow3  : INSTANCE_TRANSFORM3;
+};
+
+float4 TransformStaticMeshInstanceVector(
+    float4 value,
+    VS_Input_StaticMeshInstance instanceData)
+{
+    return value.x * instanceData.transformRow0
+        + value.y * instanceData.transformRow1
+        + value.z * instanceData.transformRow2
+        + value.w * instanceData.transformRow3;
+}
+
 // ============================================================
 // PS Input (VS -> PS 전달 구조체)
 // ============================================================

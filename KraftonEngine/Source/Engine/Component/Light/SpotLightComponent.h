@@ -16,6 +16,12 @@ public:
 	virtual bool GetLightViewProj(FLightViewProjResult& OutResult, const FMinimalViewInfo* POV = nullptr, int32 FaceIndex = 0) const override;
 
 	float GetOuterConeAngle() const { return OuterConeAngle; }
+	void SetConeAngles(float InInnerConeAngle, float InOuterConeAngle)
+	{
+		InnerConeAngle = InInnerConeAngle;
+		OuterConeAngle = InOuterConeAngle;
+		PushToScene();
+	}
 
 protected:
 	UPROPERTY(Edit, Save, Category="Lighting", DisplayName="InnerConeAngle", Min=0.0f, Max=89.0f, Speed=0.1f)

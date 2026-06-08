@@ -1,0 +1,93 @@
+{
+  "Actors": [
+    {
+      "ClassName": "AGameFlowDirector",
+      "Name": "GameFlowDirector",
+      "ObjectId": 2,
+      "Properties": {
+        "PendingActorLocation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "PendingActorRotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "PendingActorScale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "PendingActorVisible": true,
+        "PendingTagsString": "GameDirector",
+        "bNeedsTick": true,
+        "StartMenuWidgetPath": "Content/UI/GameFlow/StartMenu.uasset",
+        "HudWidgetPath": "Content/UI/GameFlow/BossHUD.uasset",
+        "PauseMenuWidgetPath": "Content/UI/GameFlow/PauseMenu.uasset",
+        "GameOverWidgetPath": "Content/UI/GameFlow/GameOver.uasset",
+        "ClearWidgetPath": "Content/UI/GameFlow/Clear.uasset",
+        "CreditsWidgetPath": "Content/UI/GameFlow/Credits.uasset",
+        "MainMenuSceneName": "StartMenu",
+        "TrainingSceneName": "TrainingMap",
+        "StoryBossSceneName": "StoryBoss",
+        "RetrySceneName": "StoryBoss",
+        "GameOverSceneName": "GameOver",
+        "ClearSceneName": "Clear",
+        "CreditsSceneName": "Credits",
+        "PlayerActorTag": "Player",
+        "BossActorTag": "Boss",
+        "PlayerStartTag": "PlayerStart",
+        "BossStartTag": "BossStart",
+        "bApplyStartPositions": true,
+        "PlayerStartLocation": [
+          -5.0,
+          0.0,
+          1.0
+        ],
+        "BossStartLocation": [
+          5.0,
+          0.0,
+          1.0
+        ],
+        "bStartCombatOnBeginPlay": false,
+        "bAutoClearWhenBossDefeated": true,
+        "bAutoFailWhenPlayerDead": true,
+        "bEnableEscapePause": true,
+        "PlayerHP": 100.0,
+        "PlayerMaxHP": 100.0,
+        "BossHP": 100.0,
+        "BossMaxHP": 100.0,
+        "UltimateGauge": 0.0,
+        "UltimateMaxGauge": 100.0,
+        "ComboCount": 0,
+        "StartupScreen": "StartMenu"
+      },
+      "NonSceneComponents": [
+        {
+          "ClassName": "ULuaScriptComponent",
+          "ObjectId": 3,
+          "Properties": {
+            "ScriptFile": "GameFlow/GameFlowDirector.lua",
+            "bTickEnable": true,
+            "bEditorOnly": false,
+            "bIsActive": true,
+            "bAutoActivate": true,
+            "bHiddenInComponentTree": false
+          }
+        }
+      ]
+    }
+  ],
+  "ClassName": "UWorld",
+  "ContextHandle": "StartMenu",
+  "ContextName": "StartMenu",
+  "Name": "StartMenu",
+  "ObjectId": 1,
+  "Version": 2,
+  "WorldSettings": {
+    "GameMode": "ABossGameMode"
+  },
+  "WorldType": "Editor"
+}

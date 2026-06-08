@@ -174,12 +174,16 @@ void FRenderCollector::FilterVisibleProxies(const FFrameContext& Frame, FScene& 
 			continue;
 		}
 
-		if (OcclusionMut)
+		const bool bCanGpuOcclusionCull =
+			!Proxy->HasProxyFlag(EPrimitiveProxyFlags::NeverCull) &&
+			!Proxy->HasProxyFlag(EPrimitiveProxyFlags::InstancedStaticMesh);
+
+		if (OcclusionMut && bCanGpuOcclusionCull)
 		{
 			OcclusionMut->GatherAABB(Proxy);
 		}
 
-		if (Occlusion && !Proxy->HasProxyFlag(EPrimitiveProxyFlags::NeverCull) && Occlusion->IsOccluded(Proxy))
+		if (Occlusion && bCanGpuOcclusionCull && Occlusion->IsOccluded(Proxy))
 		{
 			continue;
 		}

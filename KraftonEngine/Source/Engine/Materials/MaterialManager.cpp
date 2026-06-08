@@ -153,7 +153,7 @@ namespace
 		}
 	}
 
-    constexpr const char* MaterialGraphGeneratorVersion = "GeneratedMaterialPass_v4_Decal";
+    constexpr const char* MaterialGraphGeneratorVersion = "GeneratedMaterialPass_v5_InstancedStaticMesh";
 }
 
 void FMaterialManager::ScanMaterialAssets()
@@ -348,6 +348,17 @@ bool FMaterialManager::LoadMaterialFromJson(
 	FString BlendStr = JsonData.hasKey(MatKeys::BlendState) ? JsonData[MatKeys::BlendState].ToString().c_str() : "";
 	FString DepthStr = JsonData.hasKey(MatKeys::DepthStencilState) ? JsonData[MatKeys::DepthStencilState].ToString().c_str() : "";
 	FString RasterStr = JsonData.hasKey(MatKeys::RasterizerState) ? JsonData[MatKeys::RasterizerState].ToString().c_str() : "";
+	bool bForcedUnrealImportNoCull = false;
+	if (MatFilePath.find("Content/Data/UnrealImport/") != FString::npos ||
+		MatFilePath.find("Content\\Data\\UnrealImport\\") != FString::npos)
+	{
+		if (RasterStr != "SolidNoCull")
+		{
+			RasterStr = "SolidNoCull";
+			JsonData[MatKeys::RasterizerState] = "SolidNoCull";
+			bForcedUnrealImportNoCull = true;
+		}
+	}
 
 	EBlendState BlendState = StringToBlendState(BlendStr, RenderPass);
 	EDepthStencilState DepthState = StringToDepthStencilState(DepthStr, RenderPass);
@@ -423,7 +434,7 @@ bool FMaterialManager::LoadMaterialFromJson(
 	JsonData[MatKeys::RasterizerState] = RasterStr.empty() ? "" : RasterStr.c_str();
 	JsonData[MatKeys::GraphShaderMode] = ToString(GraphShaderMode);
 
-	if (bDefaultsChanged || bInjected || bPurged)
+	if (bDefaultsChanged || bInjected || bPurged || bForcedUnrealImportNoCull)
 	{
         SaveToJSON(JsonData, MatFilePath);
     }

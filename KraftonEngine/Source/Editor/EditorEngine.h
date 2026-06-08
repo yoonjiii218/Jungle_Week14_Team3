@@ -51,6 +51,7 @@ public:
 	void NewScene();
 	bool LoadSceneWithDialog();
 	bool LoadSceneFromPath(const FString& InScenePath);
+	bool ImportUnrealSceneManifestWithDialog(bool bOptimizeStaticMeshInstances = false);
 	bool SaveScene();
 	bool SaveSceneAsWithDialog();
 	bool SaveSceneAs(const FString& InSceneName);
@@ -137,6 +138,8 @@ public:
 private:
 	// Tick 내에서 호출 — 큐에 요청이 있으면 StartPlayInEditorSession 실행
 	void StartQueuedPlaySessionRequest();
+	void ProcessQueuedPIESceneTransition();
+	bool ProcessQueuedUnrealSceneCommandlet();
 	void StartPlayInEditorSession(const FRequestPlaySessionParams& Params);
 	void EndPlayMap();
 	bool EnterPIEPossessedMode();
@@ -157,6 +160,14 @@ private:
 	std::optional<FPlayInEditorSessionInfo> PlayInEditorSessionInfo;
 	// 종료 요청 지연 플래그. Tick 선두에서 확인 후 EndPlayMap 호출.
 	bool bRequestEndPlayMapQueued = false;
+	bool bRequestPIESceneTransitionQueued = false;
+	FString QueuedPIESceneTransitionPath;
+	FRequestPlaySessionParams QueuedPIESceneTransitionParams;
+	bool bUnrealSceneCommandletQueued = false;
+	bool bExitAfterUnrealSceneCommandlet = false;
+	bool bOptimizeUnrealSceneStaticMeshInstances = false;
+	FString UnrealSceneCommandletManifestPath;
+	FString UnrealSceneCommandletSaveName;
 	EPIEControlMode PIEControlMode = EPIEControlMode::Possessed;
 	FString CurrentLevelFilePath;
 

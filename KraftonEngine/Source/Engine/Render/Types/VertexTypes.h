@@ -79,6 +79,11 @@ struct FMeshParticleInstanceVertex
 	FVector4 DynamicParam;
 };
 
+struct FStaticMeshInstanceVertex
+{
+	FMatrix Transform;
+};
+
 template<typename VertexType>
 struct TMeshData
 {

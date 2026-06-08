@@ -30,6 +30,9 @@ UWorld* FEditorViewportClient::GetWorld() const
 #include "ImGui/imgui.h"
 #include "Component/Light/LightComponentBase.h"
 
+#include <algorithm>
+#include <cmath>
+
 namespace
 {
 	bool IsActorNameInUse(UWorld* World, const FString& CandidateName)
@@ -71,11 +74,95 @@ namespace
 		}
 		return Candidate;
 	}
+
+	bool GetActorFocusBounds(AActor* Actor, FVector& OutCenter, FVector& OutExtent)
+	{
+		if (!Actor)
+		{
+			return false;
+		}
+
+		FBoundingBox CombinedBounds;
+		bool bHasBounds = false;
+		for (UActorComponent* Component : Actor->GetComponents())
+		{
+			UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component);
+			if (!Primitive || !Primitive->IsVisible())
+			{
+				continue;
+			}
+
+			const FBoundingBox Bounds = Primitive->GetWorldBoundingBox();
+			if (!Bounds.IsValid())
+			{
+				continue;
+			}
+
+			CombinedBounds.Expand(Bounds.Min);
+			CombinedBounds.Expand(Bounds.Max);
+			bHasBounds = true;
+		}
+
+		if (!bHasBounds)
+		{
+			return false;
+		}
+
+		OutCenter = CombinedBounds.GetCenter();
+		OutExtent = CombinedBounds.GetExtent();
+		return true;
+	}
 }
 
 void FEditorViewportClient::Initialize(FWindowsWindow* InWindow)
 {
 	Window = InWindow;
+}
+
+void FEditorViewportClient::FocusOnBounds(
+	const FVector& Center,
+	const FVector& Extent,
+	bool bInstant)
+{
+	const FVector CameraForward = ViewTransform.ViewRotation.GetForwardVector();
+	const float Radius = (std::max)(Extent.Length(), 0.5f);
+	const float HalfVerticalFov = (std::max)(ViewTransform.FOV * 0.5f, 0.1f);
+	const float HalfHorizontalFov = std::atan(
+		std::tan(HalfVerticalFov) * (std::max)(ViewTransform.AspectRatio, 0.1f));
+	const float LimitingHalfFov = (std::max)(
+		(std::min)(HalfVerticalFov, HalfHorizontalFov),
+		0.1f);
+	const float FocusDistance = (std::max)(
+		Radius / std::tan(LimitingHalfFov) * 1.25f,
+		2.0f);
+	const FVector NewCameraLoc = Center - CameraForward * FocusDistance;
+
+	const FVector OriginalLoc = ViewTransform.ViewLocation;
+	const FRotator OriginalRot = ViewTransform.ViewRotation;
+	ViewTransform.ViewLocation = NewCameraLoc;
+	ViewTransform.LookAt(Center);
+	const FRotator TargetRot = ViewTransform.ViewRotation;
+
+	if (bInstant)
+	{
+		bIsFocusAnimating = false;
+		ViewTransform.ViewLocation = NewCameraLoc;
+		ViewTransform.ViewRotation = TargetRot;
+		TargetLocation = NewCameraLoc;
+		LastAppliedCameraLocation = NewCameraLoc;
+		bTargetLocationInitialized = true;
+		bLastAppliedCameraLocationInitialized = true;
+		return;
+	}
+
+	ViewTransform.ViewLocation = OriginalLoc;
+	ViewTransform.ViewRotation = OriginalRot;
+	bIsFocusAnimating = true;
+	FocusAnimTimer = 0.0f;
+	FocusStartLoc = OriginalLoc;
+	FocusStartRot = OriginalRot;
+	FocusEndLoc = NewCameraLoc;
+	FocusEndRot = TargetRot;
 }
 
 void FEditorViewportClient::ResetCamera()
@@ -330,33 +417,10 @@ void FEditorViewportClient::TickEditorShortcuts()
 		AActor* Selected = SelectionManager->GetPrimarySelection();
 		if (Selected)
 		{
-			// D.2: ViewTransform 위에서 모든 계산. 임시 LookAt → 백업 복원 패턴은 동일.
 			FVector TargetLoc = Selected->GetActorLocation();
-			FVector CameraForward = ViewTransform.ViewRotation.GetForwardVector();
-
-			// 1. 현재 상태 백업
-			FVector OriginalLoc = ViewTransform.ViewLocation;
-			FRotator OriginalRot = ViewTransform.ViewRotation;
-
-			// 2. 목표 좌표 계산 (5m 거리)
-			float FocusDistance = 5.0f;
-			FVector NewCameraLoc = TargetLoc - CameraForward * FocusDistance;
-
-			// 3. 임시로 이동하여 정확한 목표 회전값 추출
-			ViewTransform.ViewLocation = NewCameraLoc;
-			ViewTransform.LookAt(TargetLoc);
-			FRotator TargetRot = ViewTransform.ViewRotation;
-
-			// 4. ViewTransform 복구 및 애니메이션 설정 (Focus animation 이 ViewTransform 에 보간 적용)
-			ViewTransform.ViewLocation = OriginalLoc;
-			ViewTransform.ViewRotation = OriginalRot;
-
-			bIsFocusAnimating = true;
-			FocusAnimTimer = 0.0f;
-			FocusStartLoc = OriginalLoc;
-			FocusStartRot = OriginalRot;
-			FocusEndLoc = NewCameraLoc;
-			FocusEndRot = TargetRot;
+			FVector TargetExtent(1.0f, 1.0f, 1.0f);
+			GetActorFocusBounds(Selected, TargetLoc, TargetExtent);
+			FocusOnBounds(TargetLoc, TargetExtent);
 		}
 	}
 

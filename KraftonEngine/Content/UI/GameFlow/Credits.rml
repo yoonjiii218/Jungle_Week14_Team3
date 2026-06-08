@@ -1,0 +1,58 @@
+<rml>
+<head>
+    <title>Credits</title>
+    <style>
+        body { width: 100%; height: 100%; margin: 0; font-family: Maplestory; color: #ffffff; }
+        #screen { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #02030a; }
+        #backdrop { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; }
+        #shade { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #0102078f; }
+        #title-panel { position: absolute; left: 360px; top: 92px; width: 570px; height: 220px; }
+        #sign { position: absolute; left: 335px; top: 366px; width: 610px; height: 286px; opacity: 0.93; }
+        #panel { position: absolute; left: 460px; top: 424px; width: 360px; height: 150px; }
+        .eyebrow { position: absolute; left: 0px; top: 0px; width: 240px; height: 18px; font-size: 16px; color: #d9ff2f; }
+        .title-stack { position: absolute; left: 0px; top: 28px; width: 520px; height: 58px; }
+        .title-layer { position: absolute; top: 0px; font-size: 46px; }
+        .title-cyan { left: -3px; color: #00eaff; }
+        .title-pink { left: 3px; color: #ff2bd6; }
+        .title-main { left: 0px; color: #ffffff; }
+        p { font-size: 18px; margin: 0; color: #d3d8e3; }
+        .credit-row { position: absolute; left: 4px; width: 500px; height: 28px; border-width: 0px 0px 1px 0px; border-color: #00eaff; }
+        #credit-row-a { top: 112px; }
+        #credit-row-b { top: 150px; }
+        .button-bg { position: absolute; left: 0px; width: 320px; height: 48px; }
+        button { position: absolute; left: 32px; width: 250px; height: 26px; font-size: 18px; color: #ffffff; background-color: #00000000; border-width: 0px; text-align: left; }
+        button:hover { color: #d9ff2f; background-color: #00000000; border-width: 0px; }
+        .widget-scan-a { width: 132px; height: 2px; background-color: #00eaff; margin-bottom: 8px; }
+        .widget-scan-b { width: 64px; height: 2px; background-color: #ff2bd6; margin-bottom: 12px; }
+        #bg-main-menu { top: 10px; }
+        #btn-main-menu { top: 22px; }
+        #bg-exit { top: 68px; }
+        #btn-exit { top: 80px; }
+    </style>
+</head>
+<body>
+    <div id="screen">
+        <img id="backdrop" src="Images/menu_graffiti_backdrop.png" />
+        <div id="shade"></div>
+        <div id="title-panel" data-ue-anchors="0.5 0 0.5 0" data-ue-offsets="0 92 570 220" data-ue-alignment="0.5 0">
+            <div class="eyebrow">ARCHIVE//CREDITS</div>
+            <div class="widget-scan-a"></div>
+            <div class="title-stack">
+                <div class="title-layer title-cyan">Credits</div>
+                <div class="title-layer title-pink">Credits</div>
+                <div class="title-layer title-main">Credits</div>
+            </div>
+            <div id="credit-row-a" class="credit-row"><p>Game Director / UI / Integration Template</p></div>
+            <div id="credit-row-b" class="credit-row"><p>Replace this text in the RmlUi widget editor.</p></div>
+            <div class="widget-scan-b"></div>
+        </div>
+        <img id="sign" src="Images/menu_neon_backboard.png" data-ue-anchors="0.5 0.5 0.5 0.5" data-ue-offsets="0 149 610 286" data-ue-alignment="0.5 0.5" />
+        <div id="panel" data-ue-anchors="0.5 0.5 0.5 0.5" data-ue-offsets="0 139 360 150" data-ue-alignment="0.5 0.5">
+            <img id="bg-main-menu" class="button-bg" src="Images/button_main_menu.png" />
+            <button id="btn-main-menu">Main Menu</button>
+            <img id="bg-exit" class="button-bg" src="Images/button_exit.png" />
+            <button id="btn-exit">Exit</button>
+        </div>
+    </div>
+</body>
+</rml>

@@ -5,6 +5,7 @@
 #include "Render/Geometry/LineGeometry.h"
 #include "Render/Geometry/FontGeometry.h"
 #include "Render/Proxy/PrimitiveSceneProxy.h"
+#include "Render/Shader/ShaderManager.h"
 
 class FPassRenderStateTable;
 class FTextRenderSceneProxy;
@@ -60,7 +61,7 @@ private:
 	// 공통 헬퍼
 	void EmitLineCommand(FLineGeometry& Lines, FShader* Shader, const FDrawCommandRenderState& RS);
 	void ApplyMaterialRenderState(FDrawCommandRenderState& OutState, const UMaterial* Mat, const FDrawCommandRenderState& BaseState);
-	FShader* SelectEffectiveShader(FShader* ProxyShader, EViewMode ViewMode, bool bUseSkeletalVertexFactory, bool bWeightBoneHeatMap, bool bFog = false);
+	FShader* SelectEffectiveShader(FShader* ProxyShader, EViewMode ViewMode, EUberLitDefines::EVertexFactory VertexFactory, bool bWeightBoneHeatMap, bool bFog = false);
 
 	FConstantBuffer* GetPerObjectCBForProxy(FScene* Scene, const FPrimitiveSceneProxy& Proxy);
 	void EnsurePerObjectCBPoolCapacity(FScene* Scene, uint32 RequiredCount);

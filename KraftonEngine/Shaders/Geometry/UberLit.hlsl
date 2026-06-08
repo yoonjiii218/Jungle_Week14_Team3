@@ -106,6 +106,46 @@ UberVS_Output VS_StaticMesh(VS_Input_PNCTT input)
     return output;
 }
 
+UberVS_Output VS_InstancedStaticMesh(VS_Input_PNCTT input, VS_Input_StaticMeshInstance inst)
+{
+    UberVS_Output output;
+
+    float4 componentPos = TransformStaticMeshInstanceVector(float4(input.position, 1.0f), inst);
+    float3 componentNormal = TransformStaticMeshInstanceVector(float4(input.normal, 0.0f), inst).xyz;
+    float3 componentTangent = TransformStaticMeshInstanceVector(float4(input.tangent.xyz, 0.0f), inst).xyz;
+    float3x3 M = (float3x3) Model;
+
+    float4 worldPos4 = mul(componentPos, Model);
+    output.worldPos = worldPos4.xyz;
+    output.position = mul(mul(worldPos4, View), Projection);
+    output.normal = normalize(mul(componentNormal, (float3x3)NormalMatrix));
+    output.color = input.color * SectionColor;
+    output.texcoord = input.texcoord;
+    output.selectedBoneWeight = 0.0f;
+
+    float3 T = normalize(mul(componentTangent, M));
+    T = normalize(T - output.normal * dot(output.normal, T));
+    output.tangent = float4(T, input.tangent.w);
+
+#if defined(LIGHTING_MODEL_GOURAUD) && LIGHTING_MODEL_GOURAUD
+    float3 N = output.normal;
+
+    if (HasNormalMap > 0.5f)
+    {
+        float3 B = normalize(cross(N, T) * input.tangent.w);
+        float3x3 TBN = float3x3(T, B, N);
+        float3 tangentNormal = NormalTexture.SampleLevel(LinearWrapSampler, input.texcoord, 0).xyz * 2.0f - 1.0f;
+        N = normalize(mul(tangentNormal, TBN));
+    }
+
+    float3 V = normalize(CameraWorldPos - output.worldPos);
+    output.litDiffuse = AccumulateDiffuseVS(output.worldPos, N);
+    output.litSpecular = AccumulateSpecularVS(output.worldPos, N, V, g_DefaultShininess);
+#endif
+
+    return output;
+}
+
 // GPU Skinning
 UberVS_Output VS_SkeletalMesh(VS_Input_PNCTTBB input)
 {

@@ -39,6 +39,7 @@ PlayerConfig.Default = {
     },
 
     Combat = {
+        MaxHP = 100,
         MaxUltimateGauge = 100,
     },
 

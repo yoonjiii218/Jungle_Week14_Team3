@@ -6,6 +6,7 @@
 #include "Mesh/Importer/Fbx/FbxSkeletalMeshImporter.h"
 #include "Mesh/Importer/Fbx/FbxSkeletonImporter.h"
 #include "Mesh/Importer/Fbx/FbxAnimationImporter.h"
+#include "Mesh/Importer/MeshImportOptions.h"
 #include "Platform/Paths.h"
 
 #include <utility>
@@ -35,9 +36,10 @@ namespace
 		return TrySpan(TakeInfo->mLocalTimeSpan) || TrySpan(TakeInfo->mReferenceTimeSpan);
 	}
 
-	static FFbxSceneLoadOptions MakeStaticMeshLoadOptions()
+	static FFbxSceneLoadOptions MakeStaticMeshLoadOptions(const FImportOptions* ImportOptions)
 	{
 		FFbxSceneLoadOptions Options;
+		Options.bImportTextures   = !ImportOptions || ImportOptions->bImportTextures;
 		Options.bImportLinks      = false;
 		Options.bImportAnimations = false;
 		Options.bImportGobos      = false;
@@ -117,7 +119,7 @@ bool FFbxImporter::ImportStaticMesh(const FString& FilePath, const FImportOption
 	OutResult = FFbxStaticMeshImportResult();
 
 	FFbxSceneHandle SceneHandle;
-	if (!FFbxSceneLoader::Load(FilePath, MakeStaticMeshLoadOptions(), SceneHandle, OutMessage))
+	if (!FFbxSceneLoader::Load(FilePath, MakeStaticMeshLoadOptions(Options), SceneHandle, OutMessage))
 	{
 		return false;
 	}

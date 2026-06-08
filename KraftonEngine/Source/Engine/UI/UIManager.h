@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Core/Types/CoreTypes.h"
 #include "Core/Singleton.h"
@@ -114,6 +114,7 @@ private:
 
 	bool LoadDocument(UUserWidget* Widget);
 	void CloseDocument(UUserWidget* Widget);
+	void ApplyDocumentAnchors(float ViewportWidth, float ViewportHeight);
 	void ProcessInput(const FFrameContext& Frame);
 	void RemoveFromViewportImmediate(UUserWidget* Widget);
 	void FlushDeferredViewportRemovals();
@@ -130,4 +131,7 @@ private:
 	Rml::Context* RmlContext = nullptr;
 	bool bRmlInitialized = false;
 	bool bDispatchingRmlEvents = false;
+	bool bAnchorLayoutDirty = true;
+	float LastAnchorLayoutViewportWidth = -1.0f;
+	float LastAnchorLayoutViewportHeight = -1.0f;
 };

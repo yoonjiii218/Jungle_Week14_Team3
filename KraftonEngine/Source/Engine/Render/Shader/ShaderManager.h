@@ -11,6 +11,7 @@ enum class EShaderVertexFactory : uint8
 {
 	Auto,
 	StaticMesh,
+	InstancedStaticMesh,
 	SkeletalMesh,
 	ParticleSprite,
 	ParticleMesh,
@@ -77,6 +78,10 @@ struct FShaderKey
 		if (InVertexFactory == EShaderVertexFactory::StaticMesh)
 		{
 			SetEntryPoints("VS_StaticMesh", "PS");
+		}
+		else if (InVertexFactory == EShaderVertexFactory::InstancedStaticMesh)
+		{
+			SetEntryPoints("VS_InstancedStaticMesh", "PS");
 		}
 		else if (InVertexFactory == EShaderVertexFactory::SkeletalMesh)
 		{
@@ -180,6 +185,7 @@ namespace EShadowDepthDefines
 	namespace EntryPoint
 	{
 		inline constexpr const char* StaticMeshVS = "VS_StaticMesh";
+		inline constexpr const char* InstancedStaticMeshVS = "VS_InstancedStaticMesh";
 		inline constexpr const char* SkeletalMeshVS = "VS_SkeletalMesh";
 		inline constexpr const char* PS = "PS";
 	}
@@ -187,6 +193,7 @@ namespace EShadowDepthDefines
 	enum class EVertexFactory : uint8
 	{
 		StaticMesh,
+		InstancedStaticMesh,
 		SkeletalMesh,
 	};
 
@@ -197,11 +204,31 @@ namespace EShadowDepthDefines
 
 	inline FShaderKey MakePermutationKey(EVertexFactory VF)
 	{
-		const D3D_SHADER_MACRO* Defines = 
+		const D3D_SHADER_MACRO* Defines =
 			(VF == EVertexFactory::SkeletalMesh) ? SkeletalMesh : StaticMesh;
-		const char* VSEntry =
-			(VF == EVertexFactory::SkeletalMesh) ? EntryPoint::SkeletalMeshVS : EntryPoint::StaticMeshVS;
-		return FShaderKey(EShaderPath::ShadowDepth, Defines, VSEntry, EntryPoint::PS);
+		const char* VSEntry = EntryPoint::StaticMeshVS;
+		if (VF == EVertexFactory::InstancedStaticMesh)
+		{
+			VSEntry = EntryPoint::InstancedStaticMeshVS;
+		}
+		else if (VF == EVertexFactory::SkeletalMesh)
+		{
+			VSEntry = EntryPoint::SkeletalMeshVS;
+		}
+		FShaderKey Key(EShaderPath::ShadowDepth, Defines, VSEntry, EntryPoint::PS);
+		if (VF == EVertexFactory::InstancedStaticMesh)
+		{
+			Key.SetVertexFactory(EShaderVertexFactory::InstancedStaticMesh);
+		}
+		else if (VF == EVertexFactory::SkeletalMesh)
+		{
+			Key.SetVertexFactory(EShaderVertexFactory::SkeletalMesh);
+		}
+		else
+		{
+			Key.SetVertexFactory(EShaderVertexFactory::StaticMesh);
+		}
+		return Key;
 	}
 
 }
@@ -210,6 +237,7 @@ namespace EUberLitDefines
 	namespace EntryPoint
 	{
 		inline constexpr const char* StaticMeshVS = "VS_StaticMesh";
+		inline constexpr const char* InstancedStaticMeshVS = "VS_InstancedStaticMesh";
 		inline constexpr const char* SkeletalMeshVS = "VS_SkeletalMesh";
 		inline constexpr const char* PS = "PS";
 	}
@@ -226,6 +254,7 @@ namespace EUberLitDefines
 	enum class EVertexFactory : uint8
 	{
 		StaticMesh,
+		InstancedStaticMesh,
 		SkeletalMesh,
 	};
 
@@ -291,10 +320,29 @@ namespace EUberLitDefines
 
 	inline FShaderKey MakePermutationKey(ELightingModel LightingModel, EVertexFactory VertexFactory, bool bWeightBoneHeatMap = false, bool bFog = false)
 	{
-		const char* VSEntryPoint = VertexFactory == EVertexFactory::SkeletalMesh
-			? EntryPoint::SkeletalMeshVS
-			: EntryPoint::StaticMeshVS;
-		return FShaderKey(EShaderPath::UberLit, GetDefines(LightingModel, VertexFactory, bWeightBoneHeatMap, bFog), VSEntryPoint, EntryPoint::PS);
+		const char* VSEntryPoint = EntryPoint::StaticMeshVS;
+		if (VertexFactory == EVertexFactory::InstancedStaticMesh)
+		{
+			VSEntryPoint = EntryPoint::InstancedStaticMeshVS;
+		}
+		else if (VertexFactory == EVertexFactory::SkeletalMesh)
+		{
+			VSEntryPoint = EntryPoint::SkeletalMeshVS;
+		}
+		FShaderKey Key(EShaderPath::UberLit, GetDefines(LightingModel, VertexFactory, bWeightBoneHeatMap, bFog), VSEntryPoint, EntryPoint::PS);
+		if (VertexFactory == EVertexFactory::InstancedStaticMesh)
+		{
+			Key.SetVertexFactory(EShaderVertexFactory::InstancedStaticMesh);
+		}
+		else if (VertexFactory == EVertexFactory::SkeletalMesh)
+		{
+			Key.SetVertexFactory(EShaderVertexFactory::SkeletalMesh);
+		}
+		else
+		{
+			Key.SetVertexFactory(EShaderVertexFactory::StaticMesh);
+		}
+		return Key;
 	}
 }
 

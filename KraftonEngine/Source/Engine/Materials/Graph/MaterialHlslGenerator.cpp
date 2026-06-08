@@ -1073,6 +1073,11 @@ MaterialSurfaceVSOutput VS_StaticMesh(VS_Input_PNCTT input)
     return BuildGeneratedSurfaceStaticMesh(input);
 }
 
+MaterialSurfaceVSOutput VS_InstancedStaticMesh(VS_Input_PNCTT input, VS_Input_StaticMeshInstance inst)
+{
+    return BuildGeneratedSurfaceInstancedStaticMesh(input, inst);
+}
+
 MaterialSurfaceVSOutput VS_SkeletalMesh(VS_Input_PNCTTBB input)
 {
     return BuildGeneratedSurfaceSkeletalMesh(input);

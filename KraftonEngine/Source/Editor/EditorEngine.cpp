@@ -8,6 +8,7 @@
 #include "Engine/Runtime/EngineInitHooks.h"
 #include "Component/Camera/CameraComponent.h"
 #include "Component/Debug/GizmoComponent.h"
+#include "Component/PrimitiveComponent.h"
 #include "Render/Types/MinimalViewInfo.h"
 #include "Editor/Viewport/ViewportCameraTransform.h"
 #include "GameFramework/World.h"
@@ -17,6 +18,7 @@
 #include "Editor/Slate/SlateApplication.h"
 #include "Editor/EditorRenderPipeline.h"
 #include "Editor/UI/Util/EditorFileUtils.h"
+#include "Editor/Import/UnrealSceneManifestImporter.h"
 #include "Editor/UI/Util/EditorTextureManager.h"
 #include "Editor/Viewport/Level/LevelEditorViewportClient.h"
 #include "Object/Reflection/ObjectFactory.h"
@@ -27,18 +29,148 @@
 #include "Materials/MaterialManager.h"
 #include "Engine/Platform/Paths.h"
 #include "Lua/LuaScriptManager.h"
-#include <filesystem>
 #include "Object/GarbageCollection.h"
+#include "SimpleJSON/json.hpp"
 
 #include "Mesh/Skeletal/SkeletalMesh.h"
 
+#include <cwctype>
+#include <filesystem>
+#include <fstream>
+
 namespace
 {
+bool GetWorldFocusBounds(UWorld* World, FVector& OutCenter, FVector& OutExtent)
+{
+	if (!World)
+	{
+		return false;
+	}
+
+	FBoundingBox CombinedBounds;
+	bool bHasBounds = false;
+	for (AActor* Actor : World->GetActors())
+	{
+		if (!IsValid(Actor) || !Actor->IsVisible())
+		{
+			continue;
+		}
+
+		for (UActorComponent* Component : Actor->GetComponents())
+		{
+			UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component);
+			if (!Primitive || !Primitive->IsVisible())
+			{
+				continue;
+			}
+
+			const FBoundingBox Bounds = Primitive->GetWorldBoundingBox();
+			if (!Bounds.IsValid())
+			{
+				continue;
+			}
+
+			CombinedBounds.Expand(Bounds.Min);
+			CombinedBounds.Expand(Bounds.Max);
+			bHasBounds = true;
+		}
+	}
+
+	if (!bHasBounds)
+	{
+		return false;
+	}
+
+	OutCenter = CombinedBounds.GetCenter();
+	OutExtent = CombinedBounds.GetExtent();
+	return true;
+}
+
 FString BuildScenePathFromStem(const FString& InStem)
 {
 	std::filesystem::path ScenePath = std::filesystem::path(FSceneSaveManager::GetSceneDirectory())
 		/ (FPaths::ToWide(InStem) + FSceneSaveManager::SceneExtension);
 	return FPaths::ToUtf8(ScenePath.wstring());
+}
+
+FString ResolveSceneFilePath(const FString& InNameOrPath)
+{
+	std::filesystem::path Input(FPaths::ToWide(InNameOrPath));
+	const std::wstring Ext = Input.has_extension() ? Input.extension().wstring() : L"";
+	if (Input.is_absolute() && std::filesystem::exists(Input))
+	{
+		return InNameOrPath;
+	}
+
+	std::filesystem::path Resolved = std::filesystem::path(FSceneSaveManager::GetSceneDirectory()) / Input;
+	if (Ext.empty())
+	{
+		Resolved += FSceneSaveManager::SceneExtension;
+	}
+	return FPaths::ToUtf8(Resolved.wstring());
+}
+
+FString ReadCommandLineOption(const std::wstring& CommandLine, const std::wstring& Option)
+{
+	size_t Position = CommandLine.find(Option);
+	while (Position != std::wstring::npos)
+	{
+		const bool bValidStart =
+			Position == 0 || std::iswspace(CommandLine[Position - 1]) != 0;
+		const size_t AfterOption = Position + Option.size();
+		const bool bValidEnd =
+			AfterOption >= CommandLine.size() || std::iswspace(CommandLine[AfterOption]) != 0;
+		if (bValidStart && bValidEnd)
+		{
+			size_t ValueStart = AfterOption;
+			while (ValueStart < CommandLine.size() && std::iswspace(CommandLine[ValueStart]) != 0)
+			{
+				++ValueStart;
+			}
+			if (ValueStart >= CommandLine.size())
+			{
+				return {};
+			}
+
+			if (CommandLine[ValueStart] == L'"')
+			{
+				const size_t ValueEnd = CommandLine.find(L'"', ValueStart + 1);
+				if (ValueEnd == std::wstring::npos)
+				{
+					return {};
+				}
+				return FPaths::ToUtf8(CommandLine.substr(ValueStart + 1, ValueEnd - ValueStart - 1));
+			}
+
+			size_t ValueEnd = ValueStart;
+			while (ValueEnd < CommandLine.size() && std::iswspace(CommandLine[ValueEnd]) == 0)
+			{
+				++ValueEnd;
+			}
+			return FPaths::ToUtf8(CommandLine.substr(ValueStart, ValueEnd - ValueStart));
+		}
+		Position = CommandLine.find(Option, Position + Option.size());
+	}
+	return {};
+}
+
+bool HasCommandLineFlag(const std::wstring& CommandLine, const std::wstring& Flag)
+{
+	size_t Position = CommandLine.find(Flag);
+	while (Position != std::wstring::npos)
+	{
+		const bool bValidStart =
+			Position == 0 || std::iswspace(CommandLine[Position - 1]) != 0;
+		const size_t AfterFlag = Position + Flag.size();
+		const bool bValidEnd =
+			AfterFlag >= CommandLine.size() || std::iswspace(CommandLine[AfterFlag]) != 0;
+		if (bValidStart && bValidEnd)
+		{
+			return true;
+		}
+		Position = CommandLine.find(Flag, Position + Flag.size());
+	}
+	return false;
 }
 
 FString GetFileStem(const FString& InPath)
@@ -107,6 +239,25 @@ void UEditorEngine::Init(FWindowsWindow* InWindow)
 		SCOPE_STARTUP_STAT("EditorRenderPipeline::Create");
 		SetRenderPipeline(std::make_unique<FEditorRenderPipeline>(this, Renderer));
 	}
+
+	const std::wstring CommandLine = GetCommandLineW();
+	UnrealSceneCommandletManifestPath =
+		ReadCommandLineOption(CommandLine, L"--import-ue-scene");
+	if (!UnrealSceneCommandletManifestPath.empty())
+	{
+		UnrealSceneCommandletSaveName =
+			ReadCommandLineOption(CommandLine, L"--save-scene");
+		if (UnrealSceneCommandletSaveName.empty())
+		{
+			UnrealSceneCommandletSaveName =
+				GetFileStem(UnrealSceneCommandletManifestPath) + "_Imported";
+		}
+		bExitAfterUnrealSceneCommandlet =
+			HasCommandLineFlag(CommandLine, L"--exit-after-import");
+		bOptimizeUnrealSceneStaticMeshInstances =
+			HasCommandLineFlag(CommandLine, L"--optimize-static-mesh-instances");
+		bUnrealSceneCommandletQueued = true;
+	}
 }
 
 void UEditorEngine::Shutdown()
@@ -137,7 +288,16 @@ void UEditorEngine::OnWindowResized(uint32 Width, uint32 Height)
 
 void UEditorEngine::Tick(float DeltaTime)
 {
+	if (bUnrealSceneCommandletQueued && ProcessQueuedUnrealSceneCommandlet())
+	{
+		return;
+	}
+
 	// --- PIE 요청 처리 (프레임 경계에서 처리되도록 Tick 선두에서 소비) ---
+	if (bRequestPIESceneTransitionQueued)
+	{
+		ProcessQueuedPIESceneTransition();
+	}
 	if (bRequestEndPlayMapQueued)
 	{
 		bRequestEndPlayMapQueued = false;
@@ -170,6 +330,140 @@ void UEditorEngine::Tick(float DeltaTime)
     
 	Render(DeltaTime);
 	SelectionManager.Tick();
+}
+
+bool UEditorEngine::ProcessQueuedUnrealSceneCommandlet()
+{
+	if (!bUnrealSceneCommandletQueued)
+	{
+		return false;
+	}
+	bUnrealSceneCommandletQueued = false;
+
+	const FString ManifestPath = UnrealSceneCommandletManifestPath;
+	const FString SaveName = UnrealSceneCommandletSaveName;
+	UE_LOG(
+		"UE_SCENE_COMMANDLET_BEGIN Manifest=%s SaveName=%s OptimizeStaticMeshInstances=%s",
+		ManifestPath.c_str(),
+		SaveName.c_str(),
+		bOptimizeUnrealSceneStaticMeshInstances ? "true" : "false");
+
+	NewScene();
+	FWorldContext* Context = GetWorldContextFromHandle(GetActiveWorldHandle());
+	FUnrealSceneImportResult Result;
+	if (!Context || !Context->World)
+	{
+		Result.ErrorMessage = "No active editor world.";
+	}
+	else
+	{
+		ID3D11Device* Device = GetRenderer().GetFD3DDevice().GetDevice();
+		FUnrealSceneImportOptions ImportOptions;
+		ImportOptions.bOptimizeStaticMeshInstances =
+			bOptimizeUnrealSceneStaticMeshInstances;
+		Result = FUnrealSceneManifestImporter::Import(
+			ManifestPath,
+			Context->World,
+			Device,
+			ImportOptions);
+	}
+
+	bool bSaved = false;
+	bool bReloaded = false;
+	int32 LoadedActorCount = 0;
+	FString SavedScenePath;
+	if (Result.bSuccess)
+	{
+		bSaved = SaveSceneAs(SaveName);
+		SavedScenePath = BuildScenePathFromStem(SaveName);
+		if (bSaved)
+		{
+			bReloaded = LoadSceneFromPath(SavedScenePath);
+			if (bReloaded)
+			{
+				UWorld* ReloadedWorld = GetWorld();
+				LoadedActorCount = ReloadedWorld
+					? static_cast<int32>(ReloadedWorld->GetActors().size())
+					: 0;
+			}
+		}
+	}
+
+	const bool bActorCountMatches =
+		Result.bSuccess &&
+		bSaved &&
+		bReloaded &&
+		LoadedActorCount == Result.EngineActorCount;
+	const bool bValidationSucceeded =
+		bActorCountMatches &&
+		Result.FailedMeshCount == 0 &&
+		Result.FailedTextureCount == 0 &&
+		Result.FailedMaterialCount == 0 &&
+		Result.SkippedActorCount == 0;
+
+	json::JSON Report = json::JSON::Make(json::JSON::Class::Object);
+	Report["success"] = bValidationSucceeded;
+	Report["manifest"] = ManifestPath;
+	Report["savedScene"] = SavedScenePath;
+	Report["importedActors"] = Result.ActorCount;
+	Report["engineActors"] = Result.EngineActorCount;
+	Report["loadedActors"] = LoadedActorCount;
+	Report["actorCountMatches"] = bActorCountMatches;
+	Report["optimizeStaticMeshInstances"] = bOptimizeUnrealSceneStaticMeshInstances;
+	Report["instancedGroups"] = Result.InstancedGroupCount;
+	Report["instancedPlacements"] = Result.InstancedPlacementCount;
+	Report["matrixTransforms"] = Result.MatrixTransformCount;
+	Report["correctedMatrixTransforms"] = Result.CorrectedMatrixTransformCount;
+	Report["meshes"] = Result.MeshCount;
+	Report["textures"] = Result.TextureCount;
+	Report["materials"] = Result.MaterialCount;
+	Report["materialAssignments"] = Result.MaterialAssignmentCount;
+	Report["environmentActors"] = Result.EnvironmentActorCount;
+	Report["failedMeshes"] = Result.FailedMeshCount;
+	Report["failedTextures"] = Result.FailedTextureCount;
+	Report["failedMaterials"] = Result.FailedMaterialCount;
+	Report["skippedActors"] = Result.SkippedActorCount;
+	Report["negativeScaleActors"] = Result.NegativeScaleCount;
+	Report["error"] = Result.ErrorMessage;
+
+	const std::filesystem::path ReportPath =
+		std::filesystem::path(FPaths::LogDir()) / L"UnrealSceneImportReport.json";
+	std::filesystem::create_directories(ReportPath.parent_path());
+	std::ofstream ReportFile(ReportPath);
+	if (ReportFile.is_open())
+	{
+		ReportFile << Report.dump();
+	}
+
+	UE_LOG(
+		"UE_SCENE_COMMANDLET_END Success=%s ImportedActors=%d EngineActors=%d LoadedActors=%d "
+		"InstancedGroups=%d InstancedPlacements=%d MatrixTransforms=%d CorrectedMatrixTransforms=%d "
+		"Meshes=%d Textures=%d Materials=%d "
+		"Environment=%d FailedMeshes=%d FailedTextures=%d FailedMaterials=%d SkippedActors=%d Report=%s",
+		bValidationSucceeded ? "true" : "false",
+		Result.ActorCount,
+		Result.EngineActorCount,
+		LoadedActorCount,
+		Result.InstancedGroupCount,
+		Result.InstancedPlacementCount,
+		Result.MatrixTransformCount,
+		Result.CorrectedMatrixTransformCount,
+		Result.MeshCount,
+		Result.TextureCount,
+		Result.MaterialCount,
+		Result.EnvironmentActorCount,
+		Result.FailedMeshCount,
+		Result.FailedTextureCount,
+		Result.FailedMaterialCount,
+		Result.SkippedActorCount,
+		FPaths::ToUtf8(ReportPath.wstring()).c_str());
+
+	if (bExitAfterUnrealSceneCommandlet)
+	{
+		PostQuitMessage(bValidationSucceeded ? 0 : 1);
+		return true;
+	}
+	return false;
 }
 
 bool UEditorEngine::GetActiveViewportPOV(FMinimalViewInfo& OutPOV) const
@@ -239,11 +533,19 @@ void UEditorEngine::RequestEndPlayMap()
 	bRequestEndPlayMapQueued = true;
 }
 
-void UEditorEngine::RequestTransitionToScene(const FString& /*InScenePath*/)
+void UEditorEngine::RequestTransitionToScene(const FString& InScenePath)
 {
-	// PIE 중이면 세션 종료(에디터 복귀)로 매핑. PIE 가 아닌 상태(에디터 직접)에서 호출되면
-	// 아무 의미 없으므로 no-op.
-	RequestEndPlayMap();
+	// Queue scene travel until the next editor tick. The Lua click callback may
+	// still be on the stack, so do not tear down the PIE world immediately here.
+	if (!PlayInEditorSessionInfo.has_value() || InScenePath.empty())
+	{
+		return;
+	}
+
+	QueuedPIESceneTransitionPath = InScenePath;
+	QueuedPIESceneTransitionParams = PlayInEditorSessionInfo->OriginalRequestParams;
+	bRequestPIESceneTransitionQueued = true;
+	bRequestEndPlayMapQueued = false;
 }
 
 UWorld* UEditorEngine::GetPlayInEditorWorld() const
@@ -256,6 +558,36 @@ UWorld* UEditorEngine::GetPlayInEditorWorld() const
 		}
 	}
 	return nullptr;
+}
+
+void UEditorEngine::ProcessQueuedPIESceneTransition()
+{
+	if (!bRequestPIESceneTransitionQueued)
+	{
+		return;
+	}
+
+	const FString ScenePath = QueuedPIESceneTransitionPath;
+	const FRequestPlaySessionParams Params = QueuedPIESceneTransitionParams;
+	bRequestPIESceneTransitionQueued = false;
+	QueuedPIESceneTransitionPath.clear();
+
+	if (ScenePath.empty())
+	{
+		return;
+	}
+
+	if (PlayInEditorSessionInfo.has_value())
+	{
+		EndPlayMap();
+	}
+
+	if (!LoadSceneFromPath(ResolveSceneFilePath(ScenePath)))
+	{
+		return;
+	}
+
+	RequestPlaySession(Params);
 }
 
 void UEditorEngine::StartQueuedPlaySessionRequest()
@@ -768,4 +1100,73 @@ bool UEditorEngine::LoadSceneWithDialog()
 	}
 
 	return LoadSceneFromPath(SelectedPath);
+}
+
+bool UEditorEngine::ImportUnrealSceneManifestWithDialog(bool bOptimizeStaticMeshInstances)
+{
+	StopPlayInEditorImmediate();
+
+	FWorldContext* Context = GetWorldContextFromHandle(GetActiveWorldHandle());
+	if (!Context || !Context->World)
+	{
+		FNotificationManager::Get().AddNotification(
+			"UE scene import failed: no active world.",
+			ENotificationType::Error,
+			5.0f);
+		return false;
+	}
+
+	const FString SelectedPath = FEditorFileUtils::OpenFileDialog({
+		.Filter = L"UE Scene Manifest (*.scene.json;*.json)\0*.scene.json;*.json\0JSON Files (*.json)\0*.json\0All Files (*.*)\0*.*\0",
+		.Title = L"Import UE Scene Manifest",
+		.OwnerWindowHandle = Window ? Window->GetHWND() : nullptr,
+		.bFileMustExist = true,
+		.bPathMustExist = true,
+		.bPromptOverwrite = false,
+		.bReturnRelativeToProjectRoot = false,
+	});
+	if (SelectedPath.empty())
+	{
+		return false;
+	}
+
+	ID3D11Device* Device = GetRenderer().GetFD3DDevice().GetDevice();
+	FUnrealSceneImportOptions ImportOptions;
+	ImportOptions.bOptimizeStaticMeshInstances = bOptimizeStaticMeshInstances;
+	const FUnrealSceneImportResult Result =
+		FUnrealSceneManifestImporter::Import(
+			SelectedPath,
+			Context->World,
+			Device,
+			ImportOptions);
+
+	if (!Result.bSuccess)
+	{
+		FNotificationManager::Get().AddNotification(
+			"UE scene import failed: " + Result.ErrorMessage,
+			ENotificationType::Error,
+			7.0f);
+		return false;
+	}
+
+	RefreshContentBrowser();
+	Context->World->WarmupPickingData();
+	if (FLevelEditorViewportClient* ActiveViewport = GetActiveViewport())
+	{
+		FVector SceneCenter;
+		FVector SceneExtent;
+		if (GetWorldFocusBounds(Context->World, SceneCenter, SceneExtent))
+		{
+			ActiveViewport->FocusOnBounds(SceneCenter, SceneExtent, true);
+		}
+	}
+
+	FNotificationManager::Get().AddNotification(
+		"UE scene imported: " + std::to_string(Result.ActorCount) +
+		" placements, " + std::to_string(Result.EngineActorCount) +
+		" engine actors, " + std::to_string(Result.MeshCount) + " meshes, " +
+		std::to_string(Result.MaterialCount) + " materials.",
+		ENotificationType::Success,
+		7.0f);
+	return true;
 }

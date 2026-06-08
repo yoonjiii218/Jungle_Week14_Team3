@@ -53,6 +53,7 @@ public:
 	void CreateCamera() {}
 	void DestroyCamera() {}
 	void ResetCamera();
+	void FocusOnBounds(const FVector& Center, const FVector& Extent, bool bInstant = false);
 
 	// IPOVProvider — World 가 LOD/render 용 POV 를 pull 할 때 호출.
 	bool GetCameraView(FMinimalViewInfo& OutPOV) const override;

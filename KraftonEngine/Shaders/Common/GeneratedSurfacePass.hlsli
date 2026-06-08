@@ -81,6 +81,16 @@ MaterialSurfaceVSOutput BuildGeneratedSurfaceStaticMesh(VS_Input_PNCTT Input)
     return BuildGeneratedSurfaceVaryings(Input.position, Input.normal, Input.tangent, Input.texcoord, Input.color);
 }
 
+MaterialSurfaceVSOutput BuildGeneratedSurfaceInstancedStaticMesh(VS_Input_PNCTT Input, VS_Input_StaticMeshInstance Instance)
+{
+    float4 ComponentPosition = TransformStaticMeshInstanceVector(float4(Input.position, 1.0f), Instance);
+    float3 ComponentNormal = TransformStaticMeshInstanceVector(float4(Input.normal, 0.0f), Instance).xyz;
+    float4 ComponentTangent = float4(
+        TransformStaticMeshInstanceVector(float4(Input.tangent.xyz, 0.0f), Instance).xyz,
+        Input.tangent.w);
+    return BuildGeneratedSurfaceVaryings(ComponentPosition.xyz, ComponentNormal, ComponentTangent, Input.texcoord, Input.color);
+}
+
 MaterialSurfaceVSOutput BuildGeneratedSurfaceSkeletalMesh(VS_Input_PNCTTBB Input)
 {
     FSkinningResult Skinned = ApplyLinearBlendSkinning(

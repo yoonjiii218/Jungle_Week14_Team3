@@ -13,6 +13,7 @@ class FRmlUiDocumentManager : public TSingleton<FRmlUiDocumentManager>, public F
 
 public:
 	URmlUiDocumentAsset* Load(const FString& Path);
+	URmlUiDocumentAsset* Reload(const FString& Path);
 	URmlUiDocumentAsset* Find(const FString& Path) const;
 	bool Save(URmlUiDocumentAsset* Asset);
 

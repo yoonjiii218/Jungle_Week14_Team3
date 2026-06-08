@@ -1,0 +1,121 @@
+<rml>
+<head>
+    <title>Start Menu</title>
+    <style>
+        body { width: 100%; height: 100%; margin: 0; font-family: Maplestory; color: #ffffff; }
+        #screen { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #03040a; }
+        #backdrop { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; }
+        #shade { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #02030a66; }
+        #boot-black { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #000000; opacity: 0; z-index: 1000; pointer-events: none; }
+        #boot-shutter-top { position: absolute; left: 0px; top: 0px; width: 1280px; height: 360px; background-color: #000000; opacity: 0; z-index: 1001; pointer-events: none; }
+        #boot-shutter-bottom { position: absolute; left: 0px; top: 360px; width: 1280px; height: 360px; background-color: #000000; opacity: 0; z-index: 1002; pointer-events: none; }
+        #boot-shutter-left { position: absolute; left: 0px; top: 0px; width: 640px; height: 720px; background-color: #000000; opacity: 0; z-index: 1003; pointer-events: none; }
+        #boot-shutter-right { position: absolute; left: 640px; top: 0px; width: 640px; height: 720px; background-color: #000000; opacity: 0; z-index: 1004; pointer-events: none; }
+        #boot-static-a { position: absolute; left: 0px; top: 0px; width: 1280px; height: 720px; opacity: 0; z-index: 1005; pointer-events: none; }
+        #boot-static-b { position: absolute; left: 0px; top: 0px; width: 1280px; height: 720px; opacity: 0; z-index: 1006; pointer-events: none; }
+        #boot-slit-glow { position: absolute; left: 384px; top: 296px; width: 512px; height: 128px; opacity: 0; z-index: 1007; pointer-events: none; }
+        #boot-glow-cyan { position: absolute; left: 636px; top: 356px; width: 8px; height: 8px; background-color: #bff7ff; opacity: 0; z-index: 1008; pointer-events: none; }
+        #boot-glow-pink { position: absolute; left: 636px; top: 356px; width: 8px; height: 8px; background-color: #ffc7f3; opacity: 0; z-index: 1009; pointer-events: none; }
+        #boot-cross-h-cyan { position: absolute; left: 636px; top: 356px; width: 8px; height: 4px; background-color: #bff7ff; opacity: 0; z-index: 1010; pointer-events: none; }
+        #boot-cross-v-cyan { position: absolute; left: 638px; top: 354px; width: 4px; height: 12px; background-color: #bff7ff; opacity: 0; z-index: 1011; pointer-events: none; }
+        #boot-cross-h-pink { position: absolute; left: 636px; top: 360px; width: 8px; height: 4px; background-color: #ffc7f3; opacity: 0; z-index: 1012; pointer-events: none; }
+        #boot-cross-v-pink { position: absolute; left: 634px; top: 354px; width: 4px; height: 12px; background-color: #ffc7f3; opacity: 0; z-index: 1013; pointer-events: none; }
+        #boot-cross-h { position: absolute; left: 636px; top: 358px; width: 8px; height: 4px; background-color: #fffef8; opacity: 0; z-index: 1014; pointer-events: none; }
+        #boot-cross-v { position: absolute; left: 638px; top: 354px; width: 4px; height: 12px; background-color: #fffef8; opacity: 0; z-index: 1015; pointer-events: none; }
+        #boot-core { position: absolute; left: 633px; top: 353px; width: 14px; height: 14px; background-color: #ffffff; border-width: 2px; border-color: #fff7d6; opacity: 0; z-index: 1016; pointer-events: none; }
+        #boot-sweep { position: absolute; left: 0px; top: -18px; width: 1280px; height: 3px; background-color: #fffef8; opacity: 0; z-index: 1017; pointer-events: none; }
+        #boot-noise-a { position: absolute; left: 0px; top: 160px; width: 1280px; height: 18px; background-color: #ffffff; opacity: 0; z-index: 1018; pointer-events: none; }
+        #boot-noise-b { position: absolute; left: 0px; top: 420px; width: 1280px; height: 14px; background-color: #a8f6ff; opacity: 0; z-index: 1019; pointer-events: none; }
+        #boot-noise-c { position: absolute; left: 0px; top: 282px; width: 1280px; height: 10px; background-color: #ffdff9; opacity: 0; z-index: 1020; pointer-events: none; }
+        #title-panel { position: absolute; left: 60px; top: 52px; width: 560px; height: 116px; }
+        #sign { position: absolute; left: 34px; top: 150px; width: 720px; height: 461px; opacity: 0.94; }
+        #panel { position: absolute; left: 100px; top: 250px; width: 390px; height: 260px; }
+        #readout { position: absolute; left: 832px; top: 116px; width: 330px; height: 210px; background-color: #020611bb; border-width: 1px; border-color: #00eaff; padding: 18px; }
+        #tag { position: absolute; left: 814px; top: 504px; width: 330px; height: 64px; color: #d9ff2f; font-size: 27px; background-color: #03040abb; border-width: 2px; border-color: #d9ff2f; padding: 14px; }
+        .eyebrow { position: absolute; left: 0px; top: 0px; width: 260px; height: 18px; font-size: 16px; color: #d9ff2f; }
+        .title-stack { position: absolute; left: 0px; top: 26px; width: 520px; height: 58px; }
+        .title-layer { position: absolute; top: 0px; font-size: 46px; }
+        .title-cyan { left: -3px; color: #00eaff; }
+        .title-pink { left: 3px; color: #ff2bd6; }
+        .title-main { left: 0px; color: #ffffff; }
+        p { position: absolute; left: 2px; top: 88px; width: 330px; height: 24px; font-size: 18px; color: #cfd4df; }
+        .button-bg { position: absolute; left: 0px; width: 330px; height: 48px; }
+        button { position: absolute; left: 32px; width: 260px; height: 26px; font-size: 18px; color: #ffffff; background-color: #00000000; border-width: 0px; text-align: left; }
+        button:hover { color: #d9ff2f; background-color: #00000000; border-width: 0px; }
+        #bg-story-boss { top: 18px; }
+        #btn-story-boss { top: 30px; }
+        #bg-training { top: 76px; }
+        #btn-training { top: 88px; }
+        #bg-credits { top: 134px; }
+        #btn-credits { top: 146px; }
+        #bg-exit { top: 192px; }
+        #btn-exit { top: 204px; }
+        .readout-head { font-size: 14px; color: #ff2bd6; margin-bottom: 12px; }
+        .readout-row { font-size: 16px; color: #d8f8ff; margin-bottom: 8px; }
+        .readout-line { width: 250px; height: 2px; background-color: #00eaff; margin: 12px 0 12px 0; }
+        .readout-gauge { width: 250px; height: 8px; background-color: #02040acc; border-width: 1px; border-color: #00eaff; margin: 7px 0 10px 0; }
+        .readout-fill { width: 72%; height: 100%; background-color: #ffffff; }
+        .widget-scan-a { width: 132px; height: 2px; background-color: #00eaff; margin-bottom: 8px; }
+        .widget-scan-b { width: 64px; height: 2px; background-color: #ff2bd6; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <div id="screen">
+        <img id="backdrop" src="Images/menu_graffiti_backdrop.png" />
+        <div id="shade"></div>
+        <div id="title-panel" data-ue-anchors="0 0 0 0" data-ue-offsets="60 52 560 116" data-ue-alignment="0 0">
+            <div class="eyebrow">DATA SPACE ROUTE</div>
+            <div class="title-stack">
+                <div class="title-layer title-cyan">Boss Prototype</div>
+                <div class="title-layer title-pink">Boss Prototype</div>
+                <div class="title-layer title-main">Boss Prototype</div>
+            </div>
+            <p>Select deployment vector.</p>
+        </div>
+        <img id="sign" src="Images/menu_neon_backboard.png" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="34 20 720 461" data-ue-alignment="0 0.5" />
+        <div id="tag" data-ue-anchors="1 1 1 1" data-ue-offsets="-466 -152 330 64" data-ue-alignment="0 1">BOSS//RUN</div>
+        <div id="readout" data-ue-anchors="1 0 1 0" data-ue-offsets="-116 116 330 210" data-ue-alignment="1 0">
+            <div class="readout-head">M.I.N.D. TERMINAL</div>
+            <div class="widget-scan-a"></div>
+            <div class="readout-row">Route: Combat Simulation</div>
+            <div class="readout-row">Status: Awaiting Link</div>
+            <div class="readout-line"></div>
+            <div class="readout-row">Signal Drift</div>
+            <div class="readout-gauge"><div class="readout-fill"></div></div>
+            <div class="readout-row">Frame Sync: Stable</div>
+            <div class="widget-scan-b"></div>
+        </div>
+        <div id="panel" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="100 20 390 260" data-ue-alignment="0 0.5">
+            <img id="bg-story-boss" class="button-bg" src="Images/button_story_boss.png" />
+            <button id="btn-story-boss">Story Boss</button>
+            <img id="bg-training" class="button-bg" src="Images/button_training.png" />
+            <button id="btn-training">Training Map</button>
+            <img id="bg-credits" class="button-bg" src="Images/button_credits.png" />
+            <button id="btn-credits">Credits</button>
+            <img id="bg-exit" class="button-bg" src="Images/button_exit.png" />
+            <button id="btn-exit">Exit</button>
+        </div>
+        <div id="boot-black"></div>
+        <div id="boot-shutter-top"></div>
+        <div id="boot-shutter-bottom"></div>
+        <div id="boot-shutter-left"></div>
+        <div id="boot-shutter-right"></div>
+        <img id="boot-static-a" src="Images/tv_static_1.png" />
+        <img id="boot-static-b" src="Images/tv_static_2.png" />
+        <img id="boot-slit-glow" src="Images/tv_slit_glow.png" />
+        <div id="boot-glow-cyan"></div>
+        <div id="boot-glow-pink"></div>
+        <div id="boot-cross-h-cyan"></div>
+        <div id="boot-cross-v-cyan"></div>
+        <div id="boot-cross-h-pink"></div>
+        <div id="boot-cross-v-pink"></div>
+        <div id="boot-cross-h"></div>
+        <div id="boot-cross-v"></div>
+        <div id="boot-core"></div>
+        <div id="boot-sweep"></div>
+        <div id="boot-noise-a"></div>
+        <div id="boot-noise-b"></div>
+        <div id="boot-noise-c"></div>
+    </div>
+</body>
+</rml>

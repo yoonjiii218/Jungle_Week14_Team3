@@ -1983,6 +1983,10 @@ void FLuaScriptManager::RegisterCoreBindings(sol::state& Lua)
 	{
 		FLuaScriptManager::SetOnEscapePressed(std::move(Callback));
 	});
+	Engine.set_function("ClearOnEscape", []()
+	{
+		FLuaScriptManager::SetOnEscapePressed(sol::protected_function());
+	});
 
 	sol::table Key = Lua.create_named_table("Key");
 	Key["W"] = static_cast<int32>('W');
@@ -2000,6 +2004,7 @@ void FLuaScriptManager::RegisterCoreBindings(sol::state& Lua)
 	Key["F6"] = VK_F6;
 	Key["F7"] = VK_F7;
 	Key["F8"] = VK_F8;
+	Key["F9"] = VK_F9;
 
 	sol::table CameraManager = Lua.create_named_table("CameraManager");
 	CameraManager.set_function("ToggleActorCamera", [](const FString& ActorName, sol::optional<float> BlendTime)
@@ -3381,5 +3386,17 @@ void FLuaScriptManager::RegisterUIBindings(sol::state& Lua)
 	UI.set_function("CreateWidget", [](const FString& DocumentPath)
 	{
 		return UUIManager::Get().CreateWidget(nullptr, DocumentPath);
+	});
+	UI.set_function("CreateWidgetForPlayer", [](const FString& DocumentPath)
+	{
+		APlayerController* OwningPlayer = nullptr;
+		if (GEngine)
+		{
+			if (UWorld* World = GEngine->GetWorld())
+			{
+				OwningPlayer = World->GetFirstPlayerController();
+			}
+		}
+		return UUIManager::Get().CreateWidget(OwningPlayer, DocumentPath);
 	});
 }

@@ -409,6 +409,12 @@
     <Filter Include="Source\Game">
       <UniqueIdentifier>{7b75b017-e44b-6189-2a88-30dc16a5724f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Game\Flow">
+      <UniqueIdentifier>{c9185c3a-27f4-42af-9033-4aa91a2350f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Editor\Import">
+      <UniqueIdentifier>{614de8fb-553c-46bd-93be-34809d68ac39}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Game\Lua">
       <UniqueIdentifier>{a904550b-6c67-d00d-ee77-c5aaf7b88e71}</UniqueIdentifier>
     </Filter>
@@ -721,6 +727,9 @@
   <ItemGroup>
     <ClCompile Include="Source\Editor\EditorEngine.cpp">
       <Filter>Source\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Editor\Import\UnrealSceneManifestImporter.cpp">
+      <Filter>Source\Editor\Import</Filter>
     </ClCompile>
     <ClCompile Include="Source\Editor\EditorRenderPipeline.cpp">
       <Filter>Source\Editor</Filter>
@@ -1131,6 +1140,9 @@
       <Filter>Source\Engine\Component\Primitive</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Component\Primitive\HeightFogComponent.cpp">
+      <Filter>Source\Engine\Component\Primitive</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Component\Primitive\InstancedStaticMeshComponent.cpp">
       <Filter>Source\Engine\Component\Primitive</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Component\Primitive\ClothComponent.cpp">
@@ -1682,6 +1694,9 @@
     <ClCompile Include="Source\Engine\Render\Proxy\GizmoSceneProxy.cpp">
       <Filter>Source\Engine\Render\Proxy</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\Render\Proxy\InstancedStaticMeshSceneProxy.cpp">
+      <Filter>Source\Engine\Render\Proxy</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Engine\Render\Proxy\ParticleSystemSceneProxy.cpp">
       <Filter>Source\Engine\Render\Proxy</Filter>
     </ClCompile>
@@ -1889,6 +1904,15 @@
     <ClCompile Include="Source\Game\GameActorPlacements.cpp">
       <Filter>Source\Game</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Game\Flow\GameFlowDirector.cpp">
+      <Filter>Source\Game\Flow</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\Flow\BossGameMode.cpp">
+      <Filter>Source\Game\Flow</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Game\Flow\BossGameState.cpp">
+      <Filter>Source\Game\Flow</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Game\Lua\GameLuaBindings.cpp">
       <Filter>Source\Game\Lua</Filter>
     </ClCompile>
@@ -1933,6 +1957,9 @@
   <ItemGroup>
     <ClInclude Include="Source\Editor\EditorEngine.h">
       <Filter>Source\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Editor\Import\UnrealSceneManifestImporter.h">
+      <Filter>Source\Editor\Import</Filter>
     </ClInclude>
     <ClInclude Include="Source\Editor\EditorRenderPipeline.h">
       <Filter>Source\Editor</Filter>
@@ -2403,6 +2430,9 @@
       <Filter>Source\Engine\Component\Primitive</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Component\Primitive\HeightFogComponent.h">
+      <Filter>Source\Engine\Component\Primitive</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Component\Primitive\InstancedStaticMeshComponent.h">
       <Filter>Source\Engine\Component\Primitive</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Component\Primitive\ClothComponent.h">
@@ -3116,6 +3146,9 @@
     <ClInclude Include="Source\Engine\Render\Proxy\GizmoSceneProxy.h">
       <Filter>Source\Engine\Render\Proxy</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\Render\Proxy\InstancedStaticMeshSceneProxy.h">
+      <Filter>Source\Engine\Render\Proxy</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Engine\Render\Proxy\ParticleSystemSceneProxy.h">
       <Filter>Source\Engine\Render\Proxy</Filter>
     </ClInclude>
@@ -3376,6 +3409,15 @@
     </ClInclude>
     <ClInclude Include="Source\Game\GameActorPlacements.h">
       <Filter>Source\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Flow\GameFlowDirector.h">
+      <Filter>Source\Game\Flow</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Flow\BossGameMode.h">
+      <Filter>Source\Game\Flow</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Game\Flow\BossGameState.h">
+      <Filter>Source\Game\Flow</Filter>
     </ClInclude>
     <ClInclude Include="Source\Game\Lua\GameLuaBindings.h">
       <Filter>Source\Game\Lua</Filter>

@@ -16,6 +16,7 @@
 #include <fstream>
 #include <imgui.h>
 #include <sstream>
+#include <unordered_map>
 
 namespace
 {
@@ -445,6 +446,448 @@ namespace
 		return Index < Fields.size() ? std::strtof(Fields[Index].c_str(), nullptr) : Fallback;
 	}
 
+	bool ParseFloatList(const FString& Text, float* OutValues, size_t Count)
+	{
+		const char* Cursor = Text.c_str();
+		char* End = nullptr;
+		for (size_t Index = 0; Index < Count; ++Index)
+		{
+			OutValues[Index] = std::strtof(Cursor, &End);
+			if (End == Cursor)
+			{
+				return false;
+			}
+			Cursor = End;
+			while (*Cursor == ' ' || *Cursor == '\t' || *Cursor == ',')
+			{
+				++Cursor;
+			}
+		}
+		return true;
+	}
+
+	FString TrimWhitespace(const FString& Text)
+	{
+		size_t Begin = 0;
+		while (Begin < Text.size() && std::isspace(static_cast<unsigned char>(Text[Begin])))
+		{
+			++Begin;
+		}
+
+		size_t End = Text.size();
+		while (End > Begin && std::isspace(static_cast<unsigned char>(Text[End - 1])))
+		{
+			--End;
+		}
+
+		return Text.substr(Begin, End - Begin);
+	}
+
+	void AppendStyleText(FString& OutStyle, const FString& Style)
+	{
+		const FString Trimmed = TrimWhitespace(Style);
+		if (Trimmed.empty())
+		{
+			return;
+		}
+		if (!OutStyle.empty() && OutStyle.back() != ';')
+		{
+			OutStyle.push_back(';');
+		}
+		OutStyle += Trimmed;
+		if (!OutStyle.empty() && OutStyle.back() != ';')
+		{
+			OutStyle.push_back(';');
+		}
+	}
+
+	FString ExtractCssValue(const FString& Style, const char* Property)
+	{
+		const size_t PropertyLen = std::strlen(Property);
+		size_t Pos = 0;
+		FString Result;
+		while ((Pos = Style.find(Property, Pos)) != FString::npos)
+		{
+			const bool bBeforeOk =
+				Pos == 0 ||
+				Style[Pos - 1] == ';' ||
+				Style[Pos - 1] == '{' ||
+				std::isspace(static_cast<unsigned char>(Style[Pos - 1]));
+			if (!bBeforeOk)
+			{
+				Pos += PropertyLen;
+				continue;
+			}
+
+			size_t Cursor = Pos + PropertyLen;
+			while (Cursor < Style.size() && std::isspace(static_cast<unsigned char>(Style[Cursor])))
+			{
+				++Cursor;
+			}
+			if (Cursor >= Style.size() || Style[Cursor] != ':')
+			{
+				Pos += PropertyLen;
+				continue;
+			}
+
+			++Cursor;
+			while (Cursor < Style.size() && std::isspace(static_cast<unsigned char>(Style[Cursor])))
+			{
+				++Cursor;
+			}
+
+			size_t End = Cursor;
+			while (End < Style.size() && Style[End] != ';' && Style[End] != '}')
+			{
+				++End;
+			}
+			Result = TrimWhitespace(Style.substr(Cursor, End - Cursor));
+			Pos = End == Cursor ? Cursor + 1 : End;
+		}
+		return Result;
+	}
+
+	float ExtractCssLength(const FString& Style, const char* Property, float Fallback, float RelativeSize)
+	{
+		const FString Value = ExtractCssValue(Style, Property);
+		if (Value.empty())
+		{
+			return Fallback;
+		}
+
+		char* End = nullptr;
+		const float Number = std::strtof(Value.c_str(), &End);
+		if (End == Value.c_str())
+		{
+			return Fallback;
+		}
+
+		while (*End != '\0' && std::isspace(static_cast<unsigned char>(*End)))
+		{
+			++End;
+		}
+		if (*End == '%')
+		{
+			return RelativeSize > 0.0f ? RelativeSize * Number * 0.01f : Fallback;
+		}
+		return Number;
+	}
+
+	int HexDigit(char C)
+	{
+		if (C >= '0' && C <= '9') return C - '0';
+		if (C >= 'a' && C <= 'f') return C - 'a' + 10;
+		if (C >= 'A' && C <= 'F') return C - 'A' + 10;
+		return 0;
+	}
+
+	float HexByteToUnit(char Hi, char Lo)
+	{
+		return static_cast<float>((HexDigit(Hi) << 4) | HexDigit(Lo)) / 255.0f;
+	}
+
+	bool ParseCssColorValue(const FString& Value, FDesignerColor& OutColor)
+	{
+		FString Text = TrimWhitespace(Value);
+		if (Text.empty())
+		{
+			return false;
+		}
+
+		FString Lower = Text;
+		std::transform(Lower.begin(), Lower.end(), Lower.begin(),
+			[](unsigned char C) { return static_cast<char>(std::tolower(C)); });
+		if (Lower == "transparent")
+		{
+			OutColor = { 0.0f, 0.0f, 0.0f, 0.0f };
+			return true;
+		}
+
+		if (Text[0] == '#')
+		{
+			if (Text.size() == 4 || Text.size() == 5)
+			{
+				OutColor.R = static_cast<float>((HexDigit(Text[1]) << 4) | HexDigit(Text[1])) / 255.0f;
+				OutColor.G = static_cast<float>((HexDigit(Text[2]) << 4) | HexDigit(Text[2])) / 255.0f;
+				OutColor.B = static_cast<float>((HexDigit(Text[3]) << 4) | HexDigit(Text[3])) / 255.0f;
+				OutColor.A = Text.size() == 5
+					? static_cast<float>((HexDigit(Text[4]) << 4) | HexDigit(Text[4])) / 255.0f
+					: 1.0f;
+				return true;
+			}
+			if (Text.size() == 7 || Text.size() == 9)
+			{
+				OutColor.R = HexByteToUnit(Text[1], Text[2]);
+				OutColor.G = HexByteToUnit(Text[3], Text[4]);
+				OutColor.B = HexByteToUnit(Text[5], Text[6]);
+				OutColor.A = Text.size() == 9 ? HexByteToUnit(Text[7], Text[8]) : 1.0f;
+				return true;
+			}
+			return false;
+		}
+
+		const bool bRgb = Lower.find("rgb(") == 0;
+		const bool bRgba = Lower.find("rgba(") == 0;
+		if (bRgb || bRgba)
+		{
+			const size_t Open = Text.find('(');
+			const size_t Close = Text.find(')', Open == FString::npos ? 0 : Open + 1);
+			if (Open == FString::npos || Close == FString::npos)
+			{
+				return false;
+			}
+
+			float Values[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+			FString Args = Text.substr(Open + 1, Close - Open - 1);
+			const char* Cursor = Args.c_str();
+			for (int32 Index = 0; Index < (bRgba ? 4 : 3); ++Index)
+			{
+				while (*Cursor == ' ' || *Cursor == '\t' || *Cursor == ',')
+				{
+					++Cursor;
+				}
+				char* End = nullptr;
+				Values[Index] = std::strtof(Cursor, &End);
+				if (End == Cursor)
+				{
+					return false;
+				}
+				Cursor = End;
+			}
+			OutColor.R = Values[0] > 1.0f ? Values[0] / 255.0f : Values[0];
+			OutColor.G = Values[1] > 1.0f ? Values[1] / 255.0f : Values[1];
+			OutColor.B = Values[2] > 1.0f ? Values[2] / 255.0f : Values[2];
+			OutColor.A = Values[3] > 1.0f ? Values[3] / 255.0f : Values[3];
+			return true;
+		}
+
+		return false;
+	}
+
+	bool ExtractCssColor(const FString& Style, const char* Property, FDesignerColor& InOutColor)
+	{
+		const FString Value = ExtractCssValue(Style, Property);
+		return ParseCssColorValue(Value, InOutColor);
+	}
+
+	using FCssStyleMap = std::unordered_map<FString, FString>;
+
+	void AddCssRule(FCssStyleMap& RuleMap, const FString& Key, const FString& Declarations)
+	{
+		if (Key.empty())
+		{
+			return;
+		}
+		AppendStyleText(RuleMap[Key], Declarations);
+	}
+
+	void CollectSimpleSelectorStyle(
+		const FString& Selector,
+		const FString& Declarations,
+		FCssStyleMap& OutIdStyles,
+		FCssStyleMap& OutClassStyles,
+		FCssStyleMap& OutTagStyles)
+	{
+		FString Trimmed = TrimWhitespace(Selector);
+		if (Trimmed.empty() || Trimmed[0] == '@')
+		{
+			return;
+		}
+		if (Trimmed.find(':') != FString::npos || Trimmed.find(' ') != FString::npos || Trimmed.find('>') != FString::npos)
+		{
+			return;
+		}
+
+		if (Trimmed[0] == '#')
+		{
+			size_t End = 1;
+			while (End < Trimmed.size() && IsNameChar(Trimmed[End]))
+			{
+				++End;
+			}
+			AddCssRule(OutIdStyles, Trimmed.substr(1, End - 1), Declarations);
+			return;
+		}
+
+		if (Trimmed[0] == '.')
+		{
+			size_t ClassPos = 0;
+			while ((ClassPos = Trimmed.find('.', ClassPos)) != FString::npos)
+			{
+				size_t End = ClassPos + 1;
+				while (End < Trimmed.size() && IsNameChar(Trimmed[End]))
+				{
+					++End;
+				}
+				AddCssRule(OutClassStyles, Trimmed.substr(ClassPos + 1, End - ClassPos - 1), Declarations);
+				ClassPos = End;
+			}
+			return;
+		}
+
+		if (IsNameChar(Trimmed[0]))
+		{
+			size_t End = 0;
+			while (End < Trimmed.size() && IsNameChar(Trimmed[End]))
+			{
+				++End;
+			}
+			if (End == Trimmed.size())
+			{
+				AddCssRule(OutTagStyles, Trimmed, Declarations);
+			}
+		}
+	}
+
+	void CollectCssRules(
+		const std::string& Source,
+		FCssStyleMap& OutIdStyles,
+		FCssStyleMap& OutClassStyles,
+		FCssStyleMap& OutTagStyles)
+	{
+		size_t SearchPos = 0;
+		while ((SearchPos = Source.find("<style", SearchPos)) != std::string::npos)
+		{
+			const size_t StyleBegin = Source.find('>', SearchPos);
+			if (StyleBegin == std::string::npos)
+			{
+				break;
+			}
+			const size_t StyleEnd = Source.find("</style", StyleBegin + 1);
+			if (StyleEnd == std::string::npos)
+			{
+				break;
+			}
+
+			const FString CssBlock = Source.substr(StyleBegin + 1, StyleEnd - StyleBegin - 1);
+			size_t BlockCursor = 0;
+			while (BlockCursor < CssBlock.size())
+			{
+				const size_t Open = CssBlock.find('{', BlockCursor);
+				if (Open == FString::npos)
+				{
+					break;
+				}
+				const size_t Close = CssBlock.find('}', Open + 1);
+				if (Close == FString::npos)
+				{
+					break;
+				}
+
+				const FString Selectors = CssBlock.substr(BlockCursor, Open - BlockCursor);
+				const FString Declarations = CssBlock.substr(Open + 1, Close - Open - 1);
+				size_t SelectorBegin = 0;
+				for (;;)
+				{
+					const size_t Comma = Selectors.find(',', SelectorBegin);
+					const size_t SelectorEnd = Comma == FString::npos ? Selectors.size() : Comma;
+					CollectSimpleSelectorStyle(
+						Selectors.substr(SelectorBegin, SelectorEnd - SelectorBegin),
+						Declarations,
+						OutIdStyles,
+						OutClassStyles,
+						OutTagStyles);
+					if (Comma == FString::npos)
+					{
+						break;
+					}
+					SelectorBegin = Comma + 1;
+				}
+
+				BlockCursor = Close + 1;
+			}
+			SearchPos = StyleEnd + 8;
+		}
+	}
+
+	void AppendClassStyles(const FCssStyleMap& ClassStyles, const FString& ClassName, FString& OutStyle)
+	{
+		size_t Begin = 0;
+		while (Begin < ClassName.size())
+		{
+			while (Begin < ClassName.size() && std::isspace(static_cast<unsigned char>(ClassName[Begin])))
+			{
+				++Begin;
+			}
+			size_t End = Begin;
+			while (End < ClassName.size() && !std::isspace(static_cast<unsigned char>(ClassName[End])))
+			{
+				++End;
+			}
+			if (End > Begin)
+			{
+				const auto Found = ClassStyles.find(ClassName.substr(Begin, End - Begin));
+				if (Found != ClassStyles.end())
+				{
+					AppendStyleText(OutStyle, Found->second);
+				}
+			}
+			Begin = End;
+		}
+	}
+
+	bool ClassNameHasToken(const FString& ClassName, const FString& Token)
+	{
+		size_t Begin = 0;
+		while (Begin < ClassName.size())
+		{
+			while (Begin < ClassName.size() && std::isspace(static_cast<unsigned char>(ClassName[Begin])))
+			{
+				++Begin;
+			}
+			size_t End = Begin;
+			while (End < ClassName.size() && !std::isspace(static_cast<unsigned char>(ClassName[End])))
+			{
+				++End;
+			}
+			if (End > Begin && ClassName.substr(Begin, End - Begin) == Token)
+			{
+				return true;
+			}
+			Begin = End;
+		}
+		return false;
+	}
+
+	int32 CountEditableSourceTags(const std::string& Source)
+	{
+		int32 Count = 0;
+		size_t Pos = 0;
+		while ((Pos = Source.find('<', Pos)) != std::string::npos)
+		{
+			if (Pos + 1 >= Source.size())
+			{
+				break;
+			}
+			const char Next = Source[Pos + 1];
+			if (Next == '!' || Next == '?' || Next == '/')
+			{
+				const size_t End = Source.find('>', Pos + 1);
+				Pos = End == std::string::npos ? Source.size() : End + 1;
+				continue;
+			}
+
+			size_t NamePos = Pos + 1;
+			while (NamePos < Source.size() && std::isspace(static_cast<unsigned char>(Source[NamePos])))
+			{
+				++NamePos;
+			}
+			const size_t NameBegin = NamePos;
+			while (NamePos < Source.size() && IsNameChar(Source[NamePos]))
+			{
+				++NamePos;
+			}
+			const FString Tag = Source.substr(NameBegin, NamePos - NameBegin);
+			if (Tag != "rml" && Tag != "head" && Tag != "style" && Tag != "body" && Tag != "title")
+			{
+				++Count;
+			}
+			const size_t End = Source.find('>', NamePos);
+			Pos = End == std::string::npos ? Source.size() : End + 1;
+		}
+		return Count;
+	}
+
 	FString StateString(const TArray<FString>& Fields, size_t Index)
 	{
 		return Index < Fields.size() ? UnescapeStateString(Fields[Index]) : FString();
@@ -486,17 +929,7 @@ namespace
 
 	float ExtractCssPx(const FString& Style, const char* Property, float Fallback)
 	{
-		const size_t Pos = Style.find(Property);
-		if (Pos == FString::npos)
-		{
-			return Fallback;
-		}
-		const size_t Colon = Style.find(':', Pos);
-		if (Colon == FString::npos)
-		{
-			return Fallback;
-		}
-		return static_cast<float>(std::atof(Style.c_str() + Colon + 1));
+		return ExtractCssLength(Style, Property, Fallback, 0.0f);
 	}
 
 	EWidgetType TypeFromTag(const FString& Tag, const FString& ClassName)
@@ -504,7 +937,7 @@ namespace
 		if (Tag == "button") return EWidgetType::Button;
 		if (Tag == "img") return EWidgetType::Image;
 		if (Tag == "input") return ClassName.find("check") != FString::npos ? EWidgetType::CheckBox : EWidgetType::InputText;
-		if (ClassName.find("progress") != FString::npos || ClassName.find("bar") != FString::npos) return EWidgetType::ProgressBar;
+		if (ClassName.find("progress") != FString::npos || ClassNameHasToken(ClassName, "bar")) return EWidgetType::ProgressBar;
 		return EWidgetType::Panel;
 	}
 
@@ -678,7 +1111,7 @@ URmlUiDocumentAsset* FRmlUiEditorWidget::GetDocumentAsset() const
 	return Cast<URmlUiDocumentAsset>(EditedObject);
 }
 
-bool FRmlUiEditorWidget::LoadFromDisk()
+bool FRmlUiEditorWidget::LoadFromDisk(bool bForceReload)
 {
 	URmlUiDocumentAsset* Asset = GetDocumentAsset();
 	if (!Asset)
@@ -689,7 +1122,9 @@ bool FRmlUiEditorWidget::LoadFromDisk()
 	LastError.clear();
 	StatusMessage.clear();
 
-	URmlUiDocumentAsset* LoadedAsset = FRmlUiDocumentManager::Get().Load(Asset->GetSourcePath());
+	URmlUiDocumentAsset* LoadedAsset = bForceReload
+		? FRmlUiDocumentManager::Get().Reload(Asset->GetSourcePath())
+		: FRmlUiDocumentManager::Get().Load(Asset->GetSourcePath());
 	if (LoadedAsset && LoadedAsset != Asset)
 	{
 		Asset = LoadedAsset;
@@ -705,7 +1140,18 @@ bool FRmlUiEditorWidget::LoadFromDisk()
 	bLoaded = true;
 	bAnalysisDirty = true;
 	bDesignerDirty = true;
-	if (Asset->GetDesignerState().empty() || !DeserializeDesignerState(Asset->GetDesignerState()))
+	const bool bLoadedDesignerState = !Asset->GetDesignerState().empty() && DeserializeDesignerState(Asset->GetDesignerState());
+	int32 DesignerElementCount = 0;
+	for (const FDesignerNode& Node : DesignerNodes)
+	{
+		if (Node.Type != EWidgetType::Canvas)
+		{
+			++DesignerElementCount;
+		}
+	}
+	const int32 SourceElementCount = CountEditableSourceTags(SourceBuffer);
+	const bool bDesignerStateLooksStale = bLoadedDesignerState && DesignerElementCount <= 1 && SourceElementCount > DesignerElementCount;
+	if (!bLoadedDesignerState || bDesignerStateLooksStale)
 	{
 		RebuildDesignerFromSource();
 	}
@@ -760,7 +1206,7 @@ void FRmlUiEditorWidget::RenderMenuBar()
 		}
 		if (ImGui::MenuItem("Reload"))
 		{
-			LoadFromDisk();
+			LoadFromDisk(true);
 		}
 		ImGui::Separator();
 		if (ImGui::MenuItem("Close"))
@@ -805,7 +1251,7 @@ void FRmlUiEditorWidget::RenderToolbar()
 	ImGui::SameLine();
 	if (ImGui::Button("Reload"))
 	{
-		LoadFromDisk();
+		LoadFromDisk(true);
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Undo"))
@@ -966,6 +1412,7 @@ void FRmlUiEditorWidget::RenderHierarchy()
 		return;
 	}
 
+	ImGui::TextDisabled("Drag a node onto another node to change its parent.");
 	RenderHierarchyNode(0);
 }
 
@@ -995,6 +1442,26 @@ void FRmlUiEditorWidget::RenderHierarchyNode(int32 NodeId)
 	if (ImGui::IsItemClicked())
 	{
 		SelectedNodeId = NodeId;
+	}
+
+	if (NodeId > 0 && ImGui::BeginDragDropSource())
+	{
+		ImGui::SetDragDropPayload("RML_DESIGNER_NODE", &NodeId, sizeof(NodeId));
+		ImGui::Text("Move %s", Label.c_str());
+		ImGui::EndDragDropSource();
+	}
+
+	if (ImGui::BeginDragDropTarget())
+	{
+		if (const ImGuiPayload* Payload = ImGui::AcceptDragDropPayload("RML_DESIGNER_NODE"))
+		{
+			if (Payload->Data && Payload->DataSize == sizeof(int32))
+			{
+				const int32 DraggedNodeId = *static_cast<const int32*>(Payload->Data);
+				ReparentDesignerNode(DraggedNodeId, NodeId);
+			}
+		}
+		ImGui::EndDragDropTarget();
 	}
 
 	if (ImGui::BeginPopupContextItem())
@@ -1291,6 +1758,14 @@ void FRmlUiEditorWidget::RenderDetails()
 	if (ImGui::DragFloat("Y", &Node->Y, 1.0f)) bChanged = true;
 	if (ImGui::DragFloat("Width", &Node->W, 1.0f, 1.0f, 4096.0f)) bChanged = true;
 	if (ImGui::DragFloat("Height", &Node->H, 1.0f, 1.0f, 4096.0f)) bChanged = true;
+	if (ImGui::DragFloat4("Anchors Min/Max", &Node->AnchorMinX, 0.01f, 0.0f, 1.0f))
+	{
+		Node->AnchorMinX = ClampFloat(Node->AnchorMinX, 0.0f, 1.0f);
+		Node->AnchorMinY = ClampFloat(Node->AnchorMinY, 0.0f, 1.0f);
+		Node->AnchorMaxX = ClampFloat(Node->AnchorMaxX, 0.0f, 1.0f);
+		Node->AnchorMaxY = ClampFloat(Node->AnchorMaxY, 0.0f, 1.0f);
+		bChanged = true;
+	}
 	if (ImGui::DragInt("Font Size", &Node->FontSize, 1.0f, 4, 128)) bChanged = true;
 	if (ImGui::DragFloat("Opacity", &Node->Opacity, 0.01f, 0.0f, 1.0f)) bChanged = true;
 	if (ImGui::DragFloat("Border", &Node->BorderWidth, 0.1f, 0.0f, 24.0f)) bChanged = true;
@@ -1815,6 +2290,11 @@ void FRmlUiEditorWidget::RebuildDesignerFromSource()
 	ClearDesignerModel();
 	EnsureDesignerModel();
 
+	FCssStyleMap IdStyles;
+	FCssStyleMap ClassStyles;
+	FCssStyleMap TagStyles;
+	CollectCssRules(SourceBuffer, IdStyles, ClassStyles, TagStyles);
+
 	int32 Stagger = 0;
 	TArray<int32> ParentStack;
 	ParentStack.push_back(0);
@@ -1878,24 +2358,86 @@ void FRmlUiEditorWidget::RebuildDesignerFromSource()
 
 		const FString Id = GetAttributeValue(TagText, "id");
 		const FString ClassName = GetAttributeValue(TagText, "class");
-		const FString Style = GetAttributeValue(TagText, "style");
+		const FString InlineStyle = GetAttributeValue(TagText, "style");
+		const FString Src = GetAttributeValue(TagText, "src");
+		const FString Anchors = GetAttributeValue(TagText, "data-ue-anchors");
+		const FString Offsets = GetAttributeValue(TagText, "data-ue-offsets");
+		const FString Alignment = GetAttributeValue(TagText, "data-ue-alignment");
 		const int32 ParentId = ParentStack.empty() ? 0 : ParentStack.back();
+		const FDesignerNode* ParentNodeForSize = FindNode(ParentId);
+		const float ParentW = ParentNodeForSize ? ParentNodeForSize->W : CanvasWidth;
+		const float ParentH = ParentNodeForSize ? ParentNodeForSize->H : CanvasHeight;
+
+		FString Style;
+		const auto TagStyle = TagStyles.find(Tag);
+		if (TagStyle != TagStyles.end())
+		{
+			AppendStyleText(Style, TagStyle->second);
+		}
+		AppendClassStyles(ClassStyles, ClassName, Style);
+		const auto IdStyle = IdStyles.find(Id);
+		if (IdStyle != IdStyles.end())
+		{
+			AppendStyleText(Style, IdStyle->second);
+		}
+		AppendStyleText(Style, InlineStyle);
+
 		const int32 NodeId = AddDesignerNode(TypeFromTag(Tag, ClassName), ParentId, 32.0f + Stagger * 18.0f, 32.0f + Stagger * 18.0f);
 		if (FDesignerNode* Node = FindNode(NodeId))
 		{
 			Node->ElementId = Id.empty() ? Node->ElementId : Id;
+			if (!Id.empty())
+			{
+				Node->Name = Id;
+			}
 			Node->ClassName = ClassName;
 			Node->CustomTag = Tag;
-			Node->X = ExtractCssPx(Style, "left", Node->X);
-			Node->Y = ExtractCssPx(Style, "top", Node->Y);
-			Node->W = ExtractCssPx(Style, "width", Node->W);
-			Node->H = ExtractCssPx(Style, "height", Node->H);
+			Node->ImageSource = Src.empty() ? Node->ImageSource : Src;
+			Node->X = ExtractCssLength(Style, "left", Node->X, ParentW);
+			Node->Y = ExtractCssLength(Style, "top", Node->Y, ParentH);
+			Node->W = ExtractCssLength(Style, "width", Node->W, ParentW);
+			Node->H = ExtractCssLength(Style, "height", Node->H, ParentH);
 			Node->FontSize = static_cast<int32>(ExtractCssPx(Style, "font-size", static_cast<float>(Node->FontSize)));
+			Node->Opacity = ExtractCssPx(Style, "opacity", Node->Opacity);
+			Node->BorderWidth = ExtractCssPx(Style, "border-width", Node->BorderWidth);
+			ExtractCssColor(Style, "background-color", Node->BackgroundColor);
+			ExtractCssColor(Style, "color", Node->TextColor);
+			ExtractCssColor(Style, "border-color", Node->BorderColor);
+			const FString Overflow = ExtractCssValue(Style, "overflow");
+			Node->bClipChildren = Overflow == "hidden";
+			const FString Display = ExtractCssValue(Style, "display");
+			const FString FlexDirection = ExtractCssValue(Style, "flex-direction");
+			if (Display == "flex")
+			{
+				Node->SlotLayout = FlexDirection == "row" ? ESlotLayout::HorizontalBox : ESlotLayout::VerticalBox;
+			}
+			float AnchorValues[4];
+			if (ParseFloatList(Anchors, AnchorValues, 4))
+			{
+				Node->AnchorMinX = AnchorValues[0];
+				Node->AnchorMinY = AnchorValues[1];
+				Node->AnchorMaxX = AnchorValues[2];
+				Node->AnchorMaxY = AnchorValues[3];
+			}
+			float OffsetValues[4];
+			if (ParseFloatList(Offsets, OffsetValues, 4))
+			{
+				Node->X = OffsetValues[0];
+				Node->Y = OffsetValues[1];
+				Node->W = OffsetValues[2];
+				Node->H = OffsetValues[3];
+			}
+			float AlignmentValues[2];
+			if (ParseFloatList(Alignment, AlignmentValues, 2))
+			{
+				Node->AlignmentX = AlignmentValues[0];
+				Node->AlignmentY = AlignmentValues[1];
+			}
 			const size_t TextBegin = End + 1;
 			const size_t TextEnd = SourceBuffer.find('<', TextBegin);
 			if (TextEnd != FString::npos && TextEnd > TextBegin)
 			{
-				Node->Text = SourceBuffer.substr(TextBegin, TextEnd - TextBegin);
+				Node->Text = TrimWhitespace(SourceBuffer.substr(TextBegin, TextEnd - TextBegin));
 				if (Node->Type == EWidgetType::Panel && !Node->Text.empty())
 				{
 					Node->Type = EWidgetType::Text;
@@ -1918,7 +2460,6 @@ void FRmlUiEditorWidget::RebuildDesignerFromSource()
 
 	SelectedNodeId = 0;
 	bDesignerDirty = false;
-	SyncSourceFromDesigner();
 }
 
 void FRmlUiEditorWidget::SyncSourceFromDesigner()
@@ -1937,7 +2478,7 @@ void FRmlUiEditorWidget::SyncSourceFromDesigner()
 FString FRmlUiEditorWidget::SerializeDesignerState() const
 {
 	std::ostringstream Out;
-	Out << "RMLUI_DESIGNER_STATE\t1\n";
+	Out << "RMLUI_DESIGNER_STATE\t2\n";
 	Out << "CANVAS\t" << CanvasWidth << "\t" << CanvasHeight << "\t" << NextNodeId << "\t" << NextTrackId << "\n";
 
 	for (const FDesignerNode& Node : DesignerNodes)
@@ -1977,6 +2518,10 @@ FString FRmlUiEditorWidget::SerializeDesignerState() const
 			<< "\t" << Node.RowSpan
 			<< "\t" << Node.ColumnSpan
 			<< "\t" << Node.ZOrder
+			<< "\t" << Node.AnchorMinX
+			<< "\t" << Node.AnchorMinY
+			<< "\t" << Node.AnchorMaxX
+			<< "\t" << Node.AnchorMaxY
 			<< "\t" << Node.BackgroundColor.R
 			<< "\t" << Node.BackgroundColor.G
 			<< "\t" << Node.BackgroundColor.B
@@ -2040,7 +2585,8 @@ bool FRmlUiEditorWidget::DeserializeDesignerState(const FString& State)
 	}
 
 	TArray<FString> Header = SplitStateFields(Line);
-	if (Header.size() < 2 || Header[0] != "RMLUI_DESIGNER_STATE" || StateInt(Header, 1) != 1)
+	const int32 StateVersion = StateInt(Header, 1);
+	if (Header.size() < 2 || Header[0] != "RMLUI_DESIGNER_STATE" || StateVersion < 1 || StateVersion > 2)
 	{
 		return false;
 	}
@@ -2115,9 +2661,18 @@ bool FRmlUiEditorWidget::DeserializeDesignerState(const FString& State)
 			Node.RowSpan = StateInt(Fields, 32, 1);
 			Node.ColumnSpan = StateInt(Fields, 33, 1);
 			Node.ZOrder = StateInt(Fields, 34);
-			Node.BackgroundColor = { StateFloat(Fields, 35, 0.08f), StateFloat(Fields, 36, 0.08f), StateFloat(Fields, 37, 0.09f), StateFloat(Fields, 38, 0.78f) };
-			Node.TextColor = { StateFloat(Fields, 39, 1.0f), StateFloat(Fields, 40, 1.0f), StateFloat(Fields, 41, 1.0f), StateFloat(Fields, 42, 1.0f) };
-			Node.BorderColor = { StateFloat(Fields, 43, 1.0f), StateFloat(Fields, 44, 1.0f), StateFloat(Fields, 45, 1.0f), StateFloat(Fields, 46, 0.35f) };
+			size_t ColorField = 35;
+			if (StateVersion >= 2)
+			{
+				Node.AnchorMinX = StateFloat(Fields, 35);
+				Node.AnchorMinY = StateFloat(Fields, 36);
+				Node.AnchorMaxX = StateFloat(Fields, 37);
+				Node.AnchorMaxY = StateFloat(Fields, 38);
+				ColorField = 39;
+			}
+			Node.BackgroundColor = { StateFloat(Fields, ColorField + 0, 0.08f), StateFloat(Fields, ColorField + 1, 0.08f), StateFloat(Fields, ColorField + 2, 0.09f), StateFloat(Fields, ColorField + 3, 0.78f) };
+			Node.TextColor = { StateFloat(Fields, ColorField + 4, 1.0f), StateFloat(Fields, ColorField + 5, 1.0f), StateFloat(Fields, ColorField + 6, 1.0f), StateFloat(Fields, ColorField + 7, 1.0f) };
+			Node.BorderColor = { StateFloat(Fields, ColorField + 8, 1.0f), StateFloat(Fields, ColorField + 9, 1.0f), StateFloat(Fields, ColorField + 10, 1.0f), StateFloat(Fields, ColorField + 11, 0.35f) };
 			LoadedNodes.push_back(Node);
 			LoadedNextNodeId = (std::max)(LoadedNextNodeId, Node.Id + 1);
 			continue;
@@ -2476,6 +3031,55 @@ void FRmlUiEditorWidget::DuplicateDesignerNode(int32 NodeId)
 	MarkDesignerChanged();
 }
 
+void FRmlUiEditorWidget::ReparentDesignerNode(int32 NodeId, int32 NewParentId)
+{
+	if (NodeId <= 0 || NodeId == NewParentId || IsDescendantOf(NewParentId, NodeId))
+	{
+		return;
+	}
+
+	FDesignerNode* Node = FindNode(NodeId);
+	FDesignerNode* NewParent = FindNode(NewParentId);
+	if (!Node || !NewParent)
+	{
+		return;
+	}
+
+	RebuildGeometryCache();
+	const FCachedGeometry* NodeGeometry = FindGeometry(NodeId);
+	const FCachedGeometry* ParentGeometry = FindGeometry(NewParentId);
+	const float NodeScreenX = NodeGeometry ? NodeGeometry->X : Node->X;
+	const float NodeScreenY = NodeGeometry ? NodeGeometry->Y : Node->Y;
+	const float ParentScreenX = ParentGeometry ? ParentGeometry->X : 0.0f;
+	const float ParentScreenY = ParentGeometry ? ParentGeometry->Y : 0.0f;
+	const float ParentW = ParentGeometry ? ParentGeometry->W : CanvasWidth;
+	const float ParentH = ParentGeometry ? ParentGeometry->H : CanvasHeight;
+
+	PushUndoSnapshot();
+	Node->ParentId = NewParentId;
+
+	const bool bAbsoluteSlot =
+		NewParent->SlotLayout == ESlotLayout::Canvas ||
+		NewParent->SlotLayout == ESlotLayout::Overlay ||
+		NewParent->SlotLayout == ESlotLayout::Grid;
+	if (bAbsoluteSlot)
+	{
+		Node->X = NodeScreenX - ParentScreenX - ParentW * Node->AnchorMinX + Node->W * ClampFloat(Node->AlignmentX, 0.0f, 1.0f);
+		Node->Y = NodeScreenY - ParentScreenY - ParentH * Node->AnchorMinY + Node->H * ClampFloat(Node->AlignmentY, 0.0f, 1.0f);
+	}
+	else
+	{
+		Node->X = 0.0f;
+		Node->Y = 0.0f;
+		Node->PaddingLeft = (std::max)(0.0f, NodeScreenX - ParentScreenX);
+		Node->PaddingTop = (std::max)(0.0f, NodeScreenY - ParentScreenY);
+	}
+
+	SelectedNodeId = NodeId;
+	BuildHitTestPath(SelectedNodeId, LastHitTestPath);
+	MarkDesignerChanged();
+}
+
 bool FRmlUiEditorWidget::IsDescendantOf(int32 NodeId, int32 PossibleParentId) const
 {
 	const FDesignerNode* Node = FindNode(NodeId);
@@ -2764,9 +3368,37 @@ void FRmlUiEditorWidget::BuildChildGeometries(int32 ParentId, const FCachedGeome
 		{
 			continue;
 		}
-		const float X = ParentGeometry.X + Child->X + Child->PaddingLeft;
-		const float Y = ParentGeometry.Y + Child->Y + Child->PaddingTop;
-		PushChild(*Child, X, Y, Child->W, Child->H);
+		const bool bStretchX = std::fabs(Child->AnchorMinX - Child->AnchorMaxX) > 0.0001f;
+		const bool bStretchY = std::fabs(Child->AnchorMinY - Child->AnchorMaxY) > 0.0001f;
+
+		float X = ParentGeometry.X;
+		float Y = ParentGeometry.Y;
+		float W = Child->W;
+		float H = Child->H;
+
+		if (bStretchX)
+		{
+			X += ParentGeometry.W * Child->AnchorMinX + Child->X + Child->PaddingLeft;
+			const float Right = ParentGeometry.X + ParentGeometry.W * Child->AnchorMaxX - Child->W - Child->PaddingRight;
+			W = (std::max)(1.0f, Right - X);
+		}
+		else
+		{
+			X += ParentGeometry.W * Child->AnchorMinX + Child->X - Child->W * ClampFloat(Child->AlignmentX, 0.0f, 1.0f) + Child->PaddingLeft;
+		}
+
+		if (bStretchY)
+		{
+			Y += ParentGeometry.H * Child->AnchorMinY + Child->Y + Child->PaddingTop;
+			const float Bottom = ParentGeometry.Y + ParentGeometry.H * Child->AnchorMaxY - Child->H - Child->PaddingBottom;
+			H = (std::max)(1.0f, Bottom - Y);
+		}
+		else
+		{
+			Y += ParentGeometry.H * Child->AnchorMinY + Child->Y - Child->H * ClampFloat(Child->AlignmentY, 0.0f, 1.0f) + Child->PaddingTop;
+		}
+
+		PushChild(*Child, X, Y, W, H);
 	}
 }
 
@@ -2851,6 +3483,12 @@ void FRmlUiEditorWidget::AppendNodeRml(std::ostringstream& Out, int32 NodeId, in
 		ParentLayout == ESlotLayout::Canvas ||
 		ParentLayout == ESlotLayout::Overlay ||
 		ParentLayout == ESlotLayout::Grid;
+	if (bAbsoluteSlot)
+	{
+		Out << " data-ue-anchors=\"" << Node->AnchorMinX << " " << Node->AnchorMinY << " " << Node->AnchorMaxX << " " << Node->AnchorMaxY << "\"";
+		Out << " data-ue-offsets=\"" << Node->X << " " << Node->Y << " " << Node->W << " " << Node->H << "\"";
+		Out << " data-ue-alignment=\"" << Node->AlignmentX << " " << Node->AlignmentY << "\"";
+	}
 
 	Out << " style=\"";
 	if (bAbsoluteSlot)

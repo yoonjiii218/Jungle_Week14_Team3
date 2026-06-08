@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "Opaque",
     "Domain" : "Surface",
-    "GeneratorVersion" : "GeneratedMaterialPass_v4_Decal",
+    "GeneratorVersion" : "GeneratedMaterialPass_v5_InstancedStaticMesh",
     "GraphHash" : "E99BF54C87424FFA",
     "GraphShaderMode" : "Generated",
     "Parameters" : {

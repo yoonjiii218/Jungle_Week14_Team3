@@ -171,7 +171,9 @@ void FFbxMaterialImporter::CollectMaterials(FbxScene* Scene, FFbxImportContext& 
 			FbxDouble3 Color = DiffuseProp.Get<FbxDouble3>();
 			MaterialInfo.DiffuseColor = FVector(static_cast<float>(Color[0]), static_cast<float>(Color[1]), static_cast<float>(Color[2]));
 
-			const int32 TextureCount = DiffuseProp.GetSrcObjectCount<FbxTexture>();
+			const int32 TextureCount = Context.bImportTextures
+				? DiffuseProp.GetSrcObjectCount<FbxTexture>()
+				: 0;
 			if (TextureCount > 0)
 			{
 				FbxFileTexture* Texture = DiffuseProp.GetSrcObject<FbxFileTexture>(0);
@@ -185,7 +187,7 @@ void FFbxMaterialImporter::CollectMaterials(FbxScene* Scene, FFbxImportContext& 
 
 		auto ReadTexturePath = [&Context](const FbxProperty& Property) -> FString
 		{
-			if (!Property.IsValid())
+			if (!Context.bImportTextures || !Property.IsValid())
 			{
 				return "";
 			}
@@ -254,7 +256,9 @@ void FFbxMaterialImporter::BuildStaticMaterials(const FFbxImportContext& Context
 	{
 		FStaticMaterial NewMaterial;
 		NewMaterial.MaterialSlotName = MaterialInfo.Name;
-		NewMaterial.MaterialInterface = FMaterialManager::Get().GetOrCreateMaterial(CreateOrUpdateMaterialAsset(MaterialInfo));
+		NewMaterial.MaterialInterface = Context.bCreateMaterials
+			? FMaterialManager::Get().GetOrCreateMaterial(CreateOrUpdateMaterialAsset(MaterialInfo))
+			: FMaterialManager::Get().GetOrCreateMaterial("None");
 		OutMaterials.push_back(NewMaterial);
 	}
 }

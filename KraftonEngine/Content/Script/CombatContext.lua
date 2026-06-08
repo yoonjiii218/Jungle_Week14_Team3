@@ -46,6 +46,17 @@ function CombatContext.GetPlayerByOwner(owner)
     return playersByOwner[GetOwnerKey(owner)]
 end
 
+function CombatContext.GetFirstPlayer()
+    for _, ctx in pairs(playersByOwner) do
+        return ctx
+    end
+    return nil
+end
+
+function CombatContext.HasPlayer()
+    return CombatContext.GetFirstPlayer() ~= nil
+end
+
 function CombatContext.SetCurrentThreat(ctx, threat)
     if ctx ~= nil then
         ctx.CurrentThreat = threat
@@ -72,6 +83,12 @@ local function AddGauge(ctx, amount)
     if gauge > maxGauge then gauge = maxGauge end
     ctx.UltimateGauge = gauge
     ctx.MaxUltimateGauge = maxGauge
+end
+
+local function Clamp(value, minValue, maxValue)
+    if value < minValue then return minValue end
+    if value > maxValue then return maxValue end
+    return value
 end
 
 function CombatContext.HandlePlayerResult(ctx, result)
@@ -193,9 +210,94 @@ function CombatContext.GetBossHP()
     return bossBB.HP or 0.0, bossBB.MaxHP or 0.0
 end
 
+function CombatContext.HasBoss()
+    return bossBB ~= nil
+end
+
+function CombatContext.SetBossHP(current, maxHP)
+    if bossBB == nil then return false end
+
+    local resolvedMax = maxHP or bossBB.MaxHP or 100.0
+    if resolvedMax <= 0.0 then resolvedMax = 1.0 end
+
+    bossBB.MaxHP = resolvedMax
+    bossBB.HP = Clamp(current or bossBB.HP or resolvedMax, 0.0, resolvedMax)
+    if bossBB.HP > 0.0 then
+        bossBB.IsDead = false
+    else
+        HandleBossDeath()
+    end
+    return true
+end
+
 -- [플레이어팀 조회] 생존 여부
 function CombatContext.IsBossAlive()
     return bossBB ~= nil and (bossBB.HP or 0.0) > 0.0
+end
+
+function CombatContext.GetPlayerHP()
+    local player = CombatContext.GetFirstPlayer()
+    if not player then return 100.0, 100.0 end
+    local maxHP = player.MaxHP or GetCombatConfig(player).MaxHP or 100.0
+    return player.HP or maxHP, maxHP
+end
+
+function CombatContext.SetPlayerHP(current, maxHP)
+    local player = CombatContext.GetFirstPlayer()
+    if player == nil then return false end
+
+    local resolvedMax = maxHP or player.MaxHP or GetCombatConfig(player).MaxHP or 100.0
+    if resolvedMax <= 0.0 then resolvedMax = 1.0 end
+
+    player.MaxHP = resolvedMax
+    player.HP = Clamp(current or player.HP or resolvedMax, 0.0, resolvedMax)
+    return true
+end
+
+function CombatContext.ApplyDamageToPlayer(amount)
+    local hp, maxHP = CombatContext.GetPlayerHP()
+    return CombatContext.SetPlayerHP(hp - math.max(0.0, amount or 0.0), maxHP)
+end
+
+function CombatContext.GetPlayerUltimate()
+    local player = CombatContext.GetFirstPlayer()
+    if not player then return 0.0, PlayerConfig.Default.Combat.MaxUltimateGauge end
+    local maxGauge = player.MaxUltimateGauge or GetCombatConfig(player).MaxUltimateGauge or PlayerConfig.Default.Combat.MaxUltimateGauge
+    return player.UltimateGauge or 0.0, maxGauge
+end
+
+function CombatContext.SetPlayerUltimate(current, maxGauge)
+    local player = CombatContext.GetFirstPlayer()
+    if player == nil then return false end
+
+    local resolvedMax = maxGauge or player.MaxUltimateGauge or GetCombatConfig(player).MaxUltimateGauge or PlayerConfig.Default.Combat.MaxUltimateGauge
+    if resolvedMax <= 0.0 then resolvedMax = 1.0 end
+
+    player.MaxUltimateGauge = resolvedMax
+    player.UltimateGauge = Clamp(current or player.UltimateGauge or 0.0, 0.0, resolvedMax)
+    return true
+end
+
+function CombatContext.AddPlayerUltimate(amount)
+    local gauge, maxGauge = CombatContext.GetPlayerUltimate()
+    return CombatContext.SetPlayerUltimate(gauge + (amount or 0.0), maxGauge)
+end
+
+function CombatContext.GetPlayerCombo()
+    local player = CombatContext.GetFirstPlayer()
+    if not player then return 0 end
+    return player.ComboCount or 0
+end
+
+function CombatContext.SetPlayerCombo(count)
+    local player = CombatContext.GetFirstPlayer()
+    if player == nil then return false end
+    player.ComboCount = math.max(0, count or 0)
+    return true
+end
+
+function CombatContext.AddPlayerCombo(delta)
+    return CombatContext.SetPlayerCombo(CombatContext.GetPlayerCombo() + (delta or 0))
 end
 
 return CombatContext

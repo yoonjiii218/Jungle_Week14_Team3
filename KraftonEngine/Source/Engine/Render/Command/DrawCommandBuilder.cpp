@@ -107,14 +107,15 @@ void FDrawCommandBuilder::BeginCollect(const FFrameContext& Frame)
 // ============================================================
 // SelectEffectiveShader — ViewMode에 따른 UberLit 셰이더 변형 선택
 // ============================================================
-FShader* FDrawCommandBuilder::SelectEffectiveShader(FShader* ProxyShader, EViewMode ViewMode, bool bUseSkeletalVertexFactory, bool bWeightBoneHeatMap, bool bFog)
+FShader* FDrawCommandBuilder::SelectEffectiveShader(
+	FShader* ProxyShader,
+	EViewMode ViewMode,
+	EUberLitDefines::EVertexFactory VertexFactory,
+	bool bWeightBoneHeatMap,
+	bool bFog)
 {
 	if (ProxyShader != FShaderManager::Get().GetOrCreate(EShaderPath::UberLit))
 		return ProxyShader;
-
-	const EUberLitDefines::EVertexFactory VertexFactory = bUseSkeletalVertexFactory
-		? EUberLitDefines::EVertexFactory::SkeletalMesh
-		: EUberLitDefines::EVertexFactory::StaticMesh;
 
 	switch (ViewMode)
 	{
@@ -128,7 +129,7 @@ FShader* FDrawCommandBuilder::SelectEffectiveShader(FShader* ProxyShader, EViewM
 	case EViewMode::LightCulling:
 		return FShaderManager::Get().GetOrCreateUberLitPermutation(EUberLitDefines::ELightingModel::Phong, VertexFactory, EShaderErrorMode::Notification, bWeightBoneHeatMap, bFog);
 	default:
-		return (bUseSkeletalVertexFactory || bFog)
+		return (VertexFactory != EUberLitDefines::EVertexFactory::StaticMesh || bFog)
 			? FShaderManager::Get().GetOrCreateUberLitPermutation(EUberLitDefines::ELightingModel::Default, VertexFactory, EShaderErrorMode::Notification, bWeightBoneHeatMap, bFog)
 			: ProxyShader;
 	}
@@ -152,10 +153,17 @@ void FDrawCommandBuilder::BuildCommandForProxy(FScene& Scene, const FPrimitiveSc
 {
 	// if (!Proxy.GetMeshBuffer() || !Proxy.GetMeshBuffer()->IsValid()) return;
 	ID3D11DeviceContext* Ctx = CachedContext;
+	const bool bMirroredTransform = Proxy.HasMirroredTransform();
 
 	const bool bSkeletal = Proxy.HasProxyFlag(EPrimitiveProxyFlags::SkeletalMesh);
+	const bool bInstancedStaticMesh = Proxy.HasProxyFlag(EPrimitiveProxyFlags::InstancedStaticMesh);
 	const bool bWeightBoneHeatMap = bSkeletal && bCollectWeightBoneHeatMap && CollectWeightBoneHeatMapBoneIndex >= 0;
 	const bool bGPUSkinning = bSkeletal && (SkinningModeRuntime::Get() == ESkinningMode::GPU || bWeightBoneHeatMap);
+	const EUberLitDefines::EVertexFactory EffectiveVertexFactory = bSkeletal
+		? EUberLitDefines::EVertexFactory::SkeletalMesh
+		: (bInstancedStaticMesh
+			? EUberLitDefines::EVertexFactory::InstancedStaticMesh
+			: EUberLitDefines::EVertexFactory::StaticMesh);
 	const FSkeletalMeshSceneProxy* SkeletalProxy = bSkeletal
 		? static_cast<const FSkeletalMeshSceneProxy*>(&Proxy)
 		: nullptr;
@@ -221,16 +229,26 @@ void FDrawCommandBuilder::BuildCommandForProxy(FScene& Scene, const FPrimitiveSc
 			&& !Section.Material->GetGeneratedShaderPath().empty())
 		{
 			FShaderKey GeneratedSurfaceKey(Section.Material->GetGeneratedShaderPath());
-			GeneratedSurfaceKey.SetVertexFactory(
-				bGPUSkinning ? EShaderVertexFactory::SkeletalMesh : EShaderVertexFactory::StaticMesh);
+			GeneratedSurfaceKey.SetVertexFactory(bSkeletal
+				? EShaderVertexFactory::SkeletalMesh
+				: (bInstancedStaticMesh
+					? EShaderVertexFactory::InstancedStaticMesh
+					: EShaderVertexFactory::StaticMesh));
 
 			if (FShader* GeneratedSurfaceShader = FShaderManager::Get().FindOrCreate(GeneratedSurfaceKey))
 			{
 				SectionShader = GeneratedSurfaceShader;
 			}
+			else if (bInstancedStaticMesh)
+			{
+				// A static-mesh fallback ignores the instance transform stream.
+				SectionShader = FShaderManager::Get().GetOrCreate(EShaderPath::UberLit);
+			}
 		}
 
-		FShader* EffectiveShader = SelectEffectiveShader(SectionShader, CollectViewMode, bGPUSkinning, bWeightBoneHeatMap, bSectionIsTranslucent);
+		FShader* EffectiveShader = SelectEffectiveShader(SectionShader, CollectViewMode, EffectiveVertexFactory, bWeightBoneHeatMap, bSectionIsTranslucent);
+		if (!EffectiveShader || !EffectiveShader->IsValid())
+			continue;
 
 		FDrawCommand& Cmd = DrawCommandList.AddCommand();
 		Cmd.Pass = Pass;
@@ -247,6 +265,14 @@ void FDrawCommandBuilder::BuildCommandForProxy(FScene& Scene, const FPrimitiveSc
 			: nullptr;
 		Cmd.Bindings.BoneHeatMapCB = bWeightBoneHeatMap ? &BoneHeatMapCB : nullptr;
 	
+		if (bDepthOnly && Section.Material)
+		{
+			// Depth prepass must match the material culling mode. Otherwise
+			// single-sided shell meshes with SolidNoCull fail the opaque pass
+			// depth test after being culled here.
+			Cmd.RenderState.Rasterizer = Section.Material->GetRasterizerState();
+		}
+
 		if (!bDepthOnly && Section.Material)
 		{
 			UMaterial* Mat = Section.Material;
@@ -265,6 +291,14 @@ void FDrawCommandBuilder::BuildCommandForProxy(FScene& Scene, const FPrimitiveSc
 			// 섹션별 Material의 RenderPass가 현재 Pass와 일치할 때만 렌더 상태 오버라이드
 			if (Pass == Mat->GetRenderPass())
 				ApplyMaterialRenderState(Cmd.RenderState, Mat, BaseRenderState);
+		}
+
+		if (bMirroredTransform)
+		{
+			if (Cmd.RenderState.Rasterizer == ERasterizerState::SolidBackCull)
+				Cmd.RenderState.Rasterizer = ERasterizerState::SolidFrontCull;
+			else if (Cmd.RenderState.Rasterizer == ERasterizerState::SolidFrontCull)
+				Cmd.RenderState.Rasterizer = ERasterizerState::SolidBackCull;
 		}
 
 		if (Pass == ERenderPass::AlphaBlend)

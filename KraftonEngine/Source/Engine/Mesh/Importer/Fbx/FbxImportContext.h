@@ -17,6 +17,8 @@ struct FFbxMorphVertexSource
 struct FFbxImportContext
 {
 	FString SourcePath;
+	bool bImportTextures = true;
+	bool bCreateMaterials = true;
 
 	TArray<FbxNode*> AllNodes;
 	TArray<FbxNode*> MeshNodes;

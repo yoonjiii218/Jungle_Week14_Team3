@@ -1,0 +1,71 @@
+<rml>
+<head>
+    <title>Pause Menu</title>
+    <style>
+        body { width: 100%; height: 100%; margin: 0; font-family: Maplestory; color: #ffffff; }
+        #screen { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #010207; }
+        #backdrop { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; }
+        #shade { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #000000bb; }
+        #title-panel { position: absolute; left: 820px; top: 102px; width: 360px; height: 120px; }
+        #sign { position: absolute; left: 642px; top: 248px; width: 610px; height: 366px; opacity: 0.92; }
+        #panel { position: absolute; left: 838px; top: 310px; width: 340px; height: 244px; }
+        #pause-readout { position: absolute; left: 70px; top: 118px; width: 420px; height: 180px; background-color: #020611aa; border-width: 1px; border-color: #00eaff; padding: 18px; }
+        .eyebrow { position: absolute; left: 0px; top: 0px; width: 210px; height: 18px; font-size: 15px; color: #00eaff; }
+        .title-stack { position: absolute; left: 0px; top: 26px; width: 340px; height: 52px; }
+        .title-layer { position: absolute; top: 0px; font-size: 40px; }
+        .title-cyan { left: -3px; color: #00eaff; }
+        .title-pink { left: 3px; color: #ff2bd6; }
+        .title-main { left: 0px; color: #ffffff; }
+        .button-bg { position: absolute; left: 0px; width: 320px; height: 48px; }
+        button { position: absolute; left: 32px; width: 250px; height: 26px; font-size: 18px; color: #ffffff; background-color: #00000000; border-width: 0px; text-align: left; }
+        button:hover { color: #d9ff2f; background-color: #00000000; border-width: 0px; }
+        #bg-resume { top: 8px; }
+        #btn-resume { top: 20px; }
+        #bg-restart { top: 66px; }
+        #btn-restart { top: 78px; }
+        #bg-main-menu { top: 124px; }
+        #btn-main-menu { top: 136px; }
+        #bg-exit { top: 182px; }
+        #btn-exit { top: 194px; }
+        .readout-head { font-size: 14px; color: #ff2bd6; margin-bottom: 12px; }
+        .readout-row { font-size: 17px; color: #d8f8ff; margin-bottom: 9px; }
+        .readout-line { width: 330px; height: 2px; background-color: #00eaff; margin: 13px 0 13px 0; }
+        .widget-scan-a { width: 132px; height: 2px; background-color: #00eaff; margin-bottom: 8px; }
+        .widget-scan-b { width: 64px; height: 2px; background-color: #ff2bd6; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <div id="screen">
+        <img id="backdrop" src="Images/menu_graffiti_backdrop.png" />
+        <div id="shade"></div>
+        <div id="pause-readout" data-ue-anchors="0 0 0 0" data-ue-offsets="70 118 420 180" data-ue-alignment="0 0">
+            <div class="readout-head">SIMULATION HOLD</div>
+            <div class="widget-scan-a"></div>
+            <div class="readout-row">Combat stream suspended.</div>
+            <div class="readout-row">Input buffer retained.</div>
+            <div class="readout-line"></div>
+            <div class="readout-row">Resume vector available.</div>
+            <div class="widget-scan-b"></div>
+        </div>
+        <div id="title-panel" data-ue-anchors="1 0 1 0" data-ue-offsets="-100 102 360 120" data-ue-alignment="1 0">
+            <div class="eyebrow">INGAME MENU</div>
+            <div class="title-stack">
+                <div class="title-layer title-cyan">Paused</div>
+                <div class="title-layer title-pink">Paused</div>
+                <div class="title-layer title-main">Paused</div>
+            </div>
+        </div>
+        <img id="sign" src="Images/menu_neon_backboard.png" data-ue-anchors="1 0.5 1 0.5" data-ue-offsets="-28 71 610 366" data-ue-alignment="1 0.5" />
+        <div id="panel" data-ue-anchors="1 0.5 1 0.5" data-ue-offsets="-102 72 340 244" data-ue-alignment="1 0.5">
+            <img id="bg-resume" class="button-bg" src="Images/button_resume.png" />
+            <button id="btn-resume">Resume</button>
+            <img id="bg-restart" class="button-bg" src="Images/button_restart.png" />
+            <button id="btn-restart">Restart</button>
+            <img id="bg-main-menu" class="button-bg" src="Images/button_main_menu.png" />
+            <button id="btn-main-menu">Main Menu</button>
+            <img id="bg-exit" class="button-bg" src="Images/button_exit.png" />
+            <button id="btn-exit">Exit</button>
+        </div>
+    </div>
+</body>
+</rml>

@@ -1,0 +1,75 @@
+{
+  "version": 2,
+  "sourceLevel": "/Game/Tests/Environment",
+  "unit": "meter",
+  "coordinateSystem": "leftHandedZUp",
+  "materialLighting": true,
+  "meshes": [],
+  "actors": [],
+  "environment": [
+    {
+      "id": "directional",
+      "name": "TestDirectional",
+      "type": "DirectionalLight",
+      "location": [0.0, 0.0, 5.0],
+      "rotation": [0.0, -45.0, 30.0],
+      "color": [1.0, 0.9, 0.8, 1.0],
+      "intensity": 3.0,
+      "visible": true,
+      "castShadows": true
+    },
+    {
+      "id": "ambient",
+      "name": "TestAmbient",
+      "type": "AmbientLight",
+      "location": [0.0, 0.0, 0.0],
+      "rotation": [0.0, 0.0, 0.0],
+      "color": [0.5, 0.6, 1.0, 1.0],
+      "intensity": 0.25,
+      "visible": true,
+      "castShadows": false
+    },
+    {
+      "id": "point",
+      "name": "TestPoint",
+      "type": "PointLight",
+      "location": [2.0, 0.0, 2.0],
+      "rotation": [0.0, 0.0, 0.0],
+      "color": [1.0, 0.2, 0.1, 1.0],
+      "intensity": 4.0,
+      "attenuationRadius": 12.0,
+      "falloffExponent": 2.0,
+      "visible": true,
+      "castShadows": true
+    },
+    {
+      "id": "spot",
+      "name": "TestSpot",
+      "type": "SpotLight",
+      "location": [-2.0, 0.0, 3.0],
+      "rotation": [0.0, -30.0, 0.0],
+      "color": [0.2, 1.0, 0.3, 1.0],
+      "intensity": 5.0,
+      "attenuationRadius": 15.0,
+      "falloffExponent": 2.0,
+      "innerConeAngle": 20.0,
+      "outerConeAngle": 40.0,
+      "visible": true,
+      "castShadows": true
+    },
+    {
+      "id": "fog",
+      "name": "TestFog",
+      "type": "HeightFog",
+      "location": [0.0, 0.0, 0.0],
+      "rotation": [0.0, 0.0, 0.0],
+      "color": [0.45, 0.55, 0.65, 1.0],
+      "density": 0.01,
+      "heightFalloff": 0.2,
+      "startDistance": 5.0,
+      "cutoffDistance": 0.0,
+      "maxOpacity": 0.8,
+      "visible": true
+    }
+  ]
+}

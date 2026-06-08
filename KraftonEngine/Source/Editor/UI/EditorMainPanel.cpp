@@ -284,6 +284,20 @@ void FEditorMainPanel::RenderMainMenuBar()
 		}
 
 		ImGui::Separator();
+		if (ImGui::BeginMenu("Import UE Scene Manifest"))
+		{
+			if (ImGui::MenuItem("Standard...") && EditorEngine)
+			{
+				EditorEngine->ImportUnrealSceneManifestWithDialog(false);
+			}
+			if (ImGui::MenuItem("Optimized (Instanced)...") && EditorEngine)
+			{
+				EditorEngine->ImportUnrealSceneManifestWithDialog(true);
+			}
+			ImGui::EndMenu();
+		}
+
+		ImGui::Separator();
 		const char* CurrentSceneLabel = "Current: Unsaved Scene";
 		FString CurrentScenePath;
 		FString CurrentSceneText;

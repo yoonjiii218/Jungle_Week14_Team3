@@ -17,6 +17,7 @@ public:
 
 	float GetAttenuationRadius() const { return AttenuationRadius; }
 	void  SetAttenuationRadius(float V) { AttenuationRadius = V; PushToScene(); }
+	void  SetLightFalloffExponent(float V) { LightFalloffExponent = V; PushToScene(); }
 
 protected:
 	UPROPERTY(Edit, Save, Category="Lighting", DisplayName="AttenuationRadius", Min=0.05f, Max=1000.0f, Speed=0.01f)

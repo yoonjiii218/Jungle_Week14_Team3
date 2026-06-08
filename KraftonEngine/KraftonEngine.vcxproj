@@ -361,6 +361,7 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\Editor\EditorEngine.cpp" />
+    <ClCompile Include="Source\Editor\Import\UnrealSceneManifestImporter.cpp" />
     <ClCompile Include="Source\Editor\EditorRenderPipeline.cpp" />
     <ClCompile Include="Source\Editor\Selection\SelectionManager.cpp" />
     <ClCompile Include="Source\Editor\Settings\EditorSettings.cpp" />
@@ -499,6 +500,7 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
     <ClCompile Include="Source\Engine\Component\Primitive\CylindricalBillboardComponent.cpp" />
     <ClCompile Include="Source\Engine\Component\Primitive\DecalComponent.cpp" />
     <ClCompile Include="Source\Engine\Component\Primitive\HeightFogComponent.cpp" />
+    <ClCompile Include="Source\Engine\Component\Primitive\InstancedStaticMeshComponent.cpp" />
     <ClCompile Include="Source\Engine\Component\Primitive\ParticleSystemComponent.cpp" />
     <ClCompile Include="Source\Engine\Component\Primitive\SkeletalMeshComponent.cpp" />
     <ClCompile Include="Source\Engine\Component\Primitive\SkinnedMeshComponent.cpp" />
@@ -682,6 +684,7 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
     <ClCompile Include="Source\Engine\Render\Proxy\CylindricalBillboardSceneProxy.cpp" />
     <ClCompile Include="Source\Engine\Render\Proxy\DecalSceneProxy.cpp" />
     <ClCompile Include="Source\Engine\Render\Proxy\GizmoSceneProxy.cpp" />
+    <ClCompile Include="Source\Engine\Render\Proxy\InstancedStaticMeshSceneProxy.cpp" />
     <ClCompile Include="Source\Engine\Render\Proxy\ParticleSystemSceneProxy.cpp" />
     <ClCompile Include="Source\Engine\Render\Proxy\PrimitiveSceneProxy.cpp" />
     <ClCompile Include="Source\Engine\Render\Proxy\ShapeSceneProxy.cpp" />
@@ -749,6 +752,9 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
     <ClCompile Include="Source\Engine\Viewport\GameViewportClient.cpp" />
     <ClCompile Include="Source\Engine\Viewport\Viewport.cpp" />
     <ClCompile Include="Source\Engine\Viewport\ViewportClient.cpp" />
+    <ClCompile Include="Source\Game\Flow\BossGameMode.cpp" />
+    <ClCompile Include="Source\Game\Flow\BossGameState.cpp" />
+    <ClCompile Include="Source\Game\Flow\GameFlowDirector.cpp" />
     <ClCompile Include="Source\Game\GameActorPlacements.cpp" />
     <ClCompile Include="Source\Game\Lua\GameLuaBindings.cpp" />
     <ClCompile Include="ThirdParty\ImGui\imgui.cpp" />
@@ -767,6 +773,7 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Editor\EditorEngine.h" />
+    <ClInclude Include="Source\Editor\Import\UnrealSceneManifestImporter.h" />
     <ClInclude Include="Source\Editor\EditorRenderPipeline.h" />
     <ClInclude Include="Source\Editor\PIE\PIETypes.h" />
     <ClInclude Include="Source\Editor\Selection\SelectionManager.h" />
@@ -925,6 +932,7 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
     <ClInclude Include="Source\Engine\Component\Primitive\CylindricalBillboardComponent.h" />
     <ClInclude Include="Source\Engine\Component\Primitive\DecalComponent.h" />
     <ClInclude Include="Source\Engine\Component\Primitive\HeightFogComponent.h" />
+    <ClInclude Include="Source\Engine\Component\Primitive\InstancedStaticMeshComponent.h" />
     <ClInclude Include="Source\Engine\Component\Primitive\ParticleSystemComponent.h" />
     <ClInclude Include="Source\Engine\Component\Primitive\SkeletalMeshComponent.h" />
     <ClInclude Include="Source\Engine\Component\Primitive\SkinnedMeshComponent.h" />
@@ -1162,6 +1170,7 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
     <ClInclude Include="Source\Engine\Render\Proxy\DecalSceneProxy.h" />
     <ClInclude Include="Source\Engine\Render\Proxy\DirtyFlag.h" />
     <ClInclude Include="Source\Engine\Render\Proxy\GizmoSceneProxy.h" />
+    <ClInclude Include="Source\Engine\Render\Proxy\InstancedStaticMeshSceneProxy.h" />
     <ClInclude Include="Source\Engine\Render\Proxy\ParticleSystemSceneProxy.h" />
     <ClInclude Include="Source\Engine\Render\Proxy\PrimitiveSceneProxy.h" />
     <ClInclude Include="Source\Engine\Render\Proxy\ShapeSceneProxy.h" />
@@ -1247,6 +1256,9 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
     <ClInclude Include="Source\Engine\Viewport\GameViewportClient.h" />
     <ClInclude Include="Source\Engine\Viewport\Viewport.h" />
     <ClInclude Include="Source\Engine\Viewport\ViewportClient.h" />
+    <ClInclude Include="Source\Game\Flow\BossGameMode.h" />
+    <ClInclude Include="Source\Game\Flow\BossGameState.h" />
+    <ClInclude Include="Source\Game\Flow\GameFlowDirector.h" />
     <ClInclude Include="Source\Game\GameActorPlacements.h" />
     <ClInclude Include="Source\Game\Lua\GameLuaBindings.h" />
     <ClInclude Include="ThirdParty\stb_image.h" />
@@ -2141,6 +2153,13 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
   </PropertyGroup>
   <Target Name="GenerateReflectionHeaders" BeforeTargets="ClCompile">
     <Exec Command="&quot;$(PythonExe)&quot; &quot;$(MSBuildProjectDirectory)\..\Scripts\GenerateHeaders.py&quot; --root &quot;$(MSBuildProjectDirectory)&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+  <Target Name="CopyPhysXRuntimeAfterBuild" AfterTargets="Build">
+    <ItemGroup>
+      <PhysXRuntimeDll Include="$(ProjectDir)packages\NVIDIA.PhysX.4.1.2\installed\x64-windows\debug\bin\*.dll" Condition="'$(Configuration)|$(Platform)'=='Debug|x64' Or '$(Configuration)|$(Platform)'=='Release|x64'" />
+      <PhysXRuntimeDll Include="$(ProjectDir)packages\NVIDIA.PhysX.4.1.2\installed\x64-windows\bin\*.dll" Condition="'$(Configuration)|$(Platform)'=='Game|x64' Or '$(Configuration)|$(Platform)'=='Demo|x64'" />
+    </ItemGroup>
+    <Copy SourceFiles="@(PhysXRuntimeDll)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" Condition="'@(PhysXRuntimeDll)' != ''" />
   </Target>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

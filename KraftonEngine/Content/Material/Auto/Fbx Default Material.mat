@@ -1,0 +1,16 @@
+{
+  "BlendState" : "",
+  "DepthStencilState" : "",
+  "GraphShaderMode" : "Generated",
+  "Origin" : "FbxImport",
+  "Parameters" : {
+    "HasDiffuseTexture" : 0.000000,
+    "HasNormalMap" : 0.000000,
+    "SectionColor" : [0.720000, 0.720000, 0.720000, 1.000000],
+    "_pad" : null
+  },
+  "PathFileName" : "Content/Material/Auto/Fbx Default Material.mat",
+  "RasterizerState" : "",
+  "RenderPass" : "Opaque",
+  "ShaderPath" : "Shaders/Geometry/UberLit.hlsl"
+}

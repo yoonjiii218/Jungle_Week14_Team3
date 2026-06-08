@@ -32,6 +32,7 @@ enum class EPrimitiveProxyFlags : uint16
 	StaticMesh        = 1 << 9,
 	SkeletalMesh      = 1 << 10,
 	Particle          = 1 << 11,
+	InstancedStaticMesh = 1 << 12,
 };
 
 inline EPrimitiveProxyFlags  operator|(EPrimitiveProxyFlags A, EPrimitiveProxyFlags B)  { return static_cast<EPrimitiveProxyFlags>(static_cast<uint16>(A) | static_cast<uint16>(B)); }
@@ -80,6 +81,15 @@ public:
 	const FBoundingBox&             GetCachedBounds()       const { return CachedBounds; }
 	const FVector&                  GetCachedWorldPos()     const { return CachedWorldPos; }
 	const TArray<FMeshSectionDraw>& GetSectionDraws()       const { return SectionDraws; }
+	bool HasMirroredTransform() const
+	{
+		const FMatrix& M = PerObjectConstants.Model;
+		const float Determinant =
+			M.M[0][0] * (M.M[1][1] * M.M[2][2] - M.M[1][2] * M.M[2][1])
+			- M.M[0][1] * (M.M[1][0] * M.M[2][2] - M.M[1][2] * M.M[2][0])
+			+ M.M[0][2] * (M.M[1][0] * M.M[2][1] - M.M[1][1] * M.M[2][0]);
+		return Determinant < 0.0f;
+	}
 
 	// --- PerObject CB 상태 ---
 	void MarkPerObjectCBDirty()   const { bPerObjectCBDirty = true; }

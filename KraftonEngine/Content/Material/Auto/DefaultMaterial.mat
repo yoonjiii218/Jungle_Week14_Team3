@@ -1,0 +1,16 @@
+{
+  "BlendState" : "AlphaBlend",
+  "DepthStencilState" : "DepthReadOnly",
+  "GraphShaderMode" : "Generated",
+  "Origin" : "FbxImport",
+  "Parameters" : {
+    "HasDiffuseTexture" : 0.000000,
+    "HasNormalMap" : 0.000000,
+    "SectionColor" : [0.800000, 0.800000, 0.800000, 0.000000],
+    "_pad" : null
+  },
+  "PathFileName" : "Content/Material/Auto/DefaultMaterial.mat",
+  "RasterizerState" : "",
+  "RenderPass" : "AlphaBlend",
+  "ShaderPath" : "Shaders/Geometry/UberLit.hlsl"
+}

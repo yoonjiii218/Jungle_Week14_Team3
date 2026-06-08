@@ -57,6 +57,9 @@ bool FFbxStaticMeshImporter::Import(FbxScene* Scene, const FString& SourcePath, 
 {
 	OutResult = FFbxStaticMeshImportResult();
 	Context.SourcePath = SourcePath;
+	const FImportOptions EffectiveOptions = Options ? *Options : FImportOptions::Default();
+	Context.bImportTextures = EffectiveOptions.bImportTextures;
+	Context.bCreateMaterials = EffectiveOptions.bCreateMaterials;
 	Context.AllNodes.clear();
 	Context.MeshNodes.clear();
 
@@ -92,7 +95,6 @@ bool FFbxStaticMeshImporter::Import(FbxScene* Scene, const FString& SourcePath, 
 		const int32                       SkinCount         = Mesh->GetDeformerCount(FbxDeformer::eSkin);
 		FbxSkin*                          Skin              = SkinCount > 0 ? static_cast<FbxSkin*>(Mesh->GetDeformer(0, FbxDeformer::eSkin)) : nullptr;
 		const bool                        bHasSkin          = Skin && Skin->GetClusterCount() > 0;
-		const FImportOptions              EffectiveOptions  = Options ? *Options : FImportOptions::Default();
 		const EStaticFbxSkinnedMeshPolicy SkinnedMeshPolicy = EffectiveOptions.StaticFbxSkinnedMeshPolicy;
 
 		FbxAMatrix NodeGeometryTransform = FFbxTransformUtils::GetGeometryTransform(Node);

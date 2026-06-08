@@ -53,6 +53,13 @@ URmlUiDocumentAsset* FRmlUiDocumentManager::Load(const FString& Path)
 	return NewAsset;
 }
 
+URmlUiDocumentAsset* FRmlUiDocumentManager::Reload(const FString& Path)
+{
+	const FString NormalizedPath = FPaths::MakeProjectRelative(Path);
+	LoadedDocuments.erase(NormalizedPath);
+	return Load(NormalizedPath);
+}
+
 URmlUiDocumentAsset* FRmlUiDocumentManager::Find(const FString& Path) const
 {
 	const FString NormalizedPath = FPaths::MakeProjectRelative(Path);

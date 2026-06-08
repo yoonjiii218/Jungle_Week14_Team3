@@ -27,5 +27,7 @@ struct FImportOptions
 	EForwardAxis ForwardAxis = EForwardAxis::NegY;  // Blender 기본: Z-up, -Y Forward
 	EWindingOrder WindingOrder = EWindingOrder::CCW_to_CW;
 	EStaticFbxSkinnedMeshPolicy StaticFbxSkinnedMeshPolicy = EStaticFbxSkinnedMeshPolicy::ImportBindPoseAsStatic;
+	bool bImportTextures = true;
+	bool bCreateMaterials = true;
 	static FImportOptions Default() { return {}; }
 };

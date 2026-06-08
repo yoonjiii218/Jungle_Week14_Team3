@@ -655,11 +655,17 @@ void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, F
 {
 	FShader* StaticShadowShader = FShaderManager::Get().GetOrCreateShadowDepthPermutation(
 		EShadowDepthDefines::EVertexFactory::StaticMesh);
+	FShader* InstancedStaticShadowShader = FShaderManager::Get().GetOrCreateShadowDepthPermutation(
+		EShadowDepthDefines::EVertexFactory::InstancedStaticMesh);
 	FShader* SkeletalShadowShader = bUseGpuSkinning
 		? FShaderManager::Get().GetOrCreateShadowDepthPermutation(EShadowDepthDefines::EVertexFactory::SkeletalMesh)
 		: StaticShadowShader;
 
 	if (!StaticShadowShader || !StaticShadowShader->IsValid()) return;
+	if (!InstancedStaticShadowShader || !InstancedStaticShadowShader->IsValid())
+	{
+		InstancedStaticShadowShader = StaticShadowShader;
+	}
 	const bool bCanDrawGpuSkinnedCasters = SkeletalShadowShader && SkeletalShadowShader->IsValid();
 
 	ID3D11Device* Device = nullptr;
@@ -682,7 +688,7 @@ void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, F
 	}
 
 	LastDrawCasterCount = 0;
-	bool bCurrentTwoSided = false;
+	ERasterizerState CurrentCasterRasterizer = ERasterizerState::SolidFrontCull;
 	for (FPrimitiveSceneProxy* Proxy : *ProxyList)
 	{
 		if (!Proxy || !Proxy->HasValidOwner() || !Proxy->IsVisible()) continue;
@@ -693,6 +699,7 @@ void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, F
 		if (!Partition && !LightFrustum.IntersectAABB(Proxy->GetCachedBounds())) continue;
 
 		const bool bSkeletal = Proxy->HasProxyFlag(EPrimitiveProxyFlags::SkeletalMesh);
+		const bool bInstancedStaticMesh = Proxy->HasProxyFlag(EPrimitiveProxyFlags::InstancedStaticMesh);
 		const bool bGpuSkinned = bSkeletal && bUseGpuSkinning;
 
 		FDrawCommandBuffer ProxyBuffer;
@@ -714,7 +721,9 @@ void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, F
 		}
 		if (!ProxyBuffer.VB || !ProxyBuffer.IB) continue;
 
-		FShader* DesiredShader = bGpuSkinned ? SkeletalShadowShader : StaticShadowShader;
+		FShader* DesiredShader = bGpuSkinned
+			? SkeletalShadowShader
+			: (bInstancedStaticMesh ? InstancedStaticShadowShader : StaticShadowShader);
 		if (DesiredShader != BoundShader)
 		{
 			DesiredShader->Bind(DC);
@@ -732,13 +741,15 @@ void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, F
 			BoundSkinMatrixSRV = SkinMatrixSRV;
 		}
 
-		// Two-sided shadow: front-cull ↔ no-cull 전환
-		bool bTwoSided = Proxy->CastsShadowAsTwoSided();
-		if (bTwoSided != bCurrentTwoSided)
+		const ERasterizerState DesiredRasterizer = Proxy->CastsShadowAsTwoSided()
+			? ERasterizerState::SolidNoCull
+			: (Proxy->HasMirroredTransform()
+				? ERasterizerState::SolidBackCull
+				: ERasterizerState::SolidFrontCull);
+		if (DesiredRasterizer != CurrentCasterRasterizer)
 		{
-			bCurrentTwoSided = bTwoSided;
-			Resources.RasterizerStateManager.Set(DC,
-				bTwoSided ? ERasterizerState::SolidNoCull : ERasterizerState::SolidFrontCull);
+			CurrentCasterRasterizer = DesiredRasterizer;
+			Resources.RasterizerStateManager.Set(DC, DesiredRasterizer);
 		}
 
 		++LastDrawCasterCount;
@@ -750,18 +761,36 @@ void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, F
 		uint32 VBStride = ProxyBuffer.VBStride;
 		uint32 Offset = 0;
 		DC->IASetVertexBuffers(0, 1, &VB, &VBStride, &Offset);
+		if (ProxyBuffer.InstanceVB && ProxyBuffer.InstanceCount > 0)
+		{
+			uint32 InstanceOffset = 0;
+			DC->IASetVertexBuffers(1, 1, &ProxyBuffer.InstanceVB,
+				&ProxyBuffer.InstanceStride, &InstanceOffset);
+		}
 
 		DC->IASetIndexBuffer(ProxyBuffer.IB, DXGI_FORMAT_R32_UINT, 0);
 
 		for (const FMeshSectionDraw& Section : Proxy->GetSectionDraws())
 		{
 			if (Section.IndexCount == 0) continue;
-			DC->DrawIndexed(Section.IndexCount, Section.FirstIndex, 0);
+			if (ProxyBuffer.InstanceVB && ProxyBuffer.InstanceCount > 0)
+			{
+				DC->DrawIndexedInstanced(Section.IndexCount, ProxyBuffer.InstanceCount, Section.FirstIndex, 0, 0);
+			}
+			else
+			{
+				DC->DrawIndexed(Section.IndexCount, Section.FirstIndex, 0);
+			}
 			SHADOW_STATS_ADD_DRAW_CALL();
 		}
+		if (ProxyBuffer.InstanceVB)
+		{
+			ID3D11Buffer* NullVB = nullptr;
+			uint32 Zero = 0;
+			DC->IASetVertexBuffers(1, 1, &NullVB, &Zero, &Zero);
+		}
 	}
-	// Front-cull로 복원
-	if (bCurrentTwoSided)
+	if (CurrentCasterRasterizer != ERasterizerState::SolidFrontCull)
 		Resources.RasterizerStateManager.Set(DC, ERasterizerState::SolidFrontCull);
 
 	ID3D11ShaderResourceView* NullSRV = nullptr;

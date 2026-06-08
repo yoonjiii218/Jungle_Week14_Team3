@@ -26,7 +26,11 @@
 #include <RmlUi/Core.h>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <filesystem>
 #include <memory>
 
@@ -81,6 +85,160 @@ namespace
 	{
 		return FPaths::ToUtf8(Path.generic_wstring());
 	}
+
+	bool IsRmlFileUrl(const Rml::String& Source)
+	{
+		return Source.rfind("file://", 0) == 0;
+	}
+
+	std::filesystem::path RmlSourceToPath(const Rml::String& Source)
+	{
+		Rml::String PathText = Source;
+		if (PathText.rfind("file:///", 0) == 0)
+		{
+			PathText = PathText.substr(8);
+		}
+		else if (PathText.rfind("file://", 0) == 0)
+		{
+			PathText = PathText.substr(7);
+		}
+
+		if (PathText.size() > 2 && PathText[0] == '/' && PathText[2] == ':')
+		{
+			PathText.erase(PathText.begin());
+		}
+		return std::filesystem::path(FPaths::ToWide(PathText));
+	}
+
+	Rml::String ToRmlFileUrl(const std::filesystem::path& Path)
+	{
+		const Rml::String GenericPath = ToRmlPath(Path.lexically_normal());
+		return IsRmlFileUrl(GenericPath) ? GenericPath : Rml::String("file:///") + GenericPath;
+	}
+
+	std::filesystem::path ResolveRmlTexturePath(const Rml::String& Source)
+	{
+		std::filesystem::path Path = RmlSourceToPath(Source);
+		if (!Path.is_relative())
+		{
+			return Path;
+		}
+
+		const std::filesystem::path Root(FPaths::RootDir());
+		std::filesystem::path Candidate = Root / Path;
+		if (std::filesystem::exists(Candidate))
+		{
+			return Candidate;
+		}
+
+		Candidate = Root / L"Content" / Path;
+		if (std::filesystem::exists(Candidate))
+		{
+			return Candidate;
+		}
+
+		Candidate = Root / L"Content" / L"UI" / L"GameFlow" / Path;
+		if (std::filesystem::exists(Candidate))
+		{
+			return Candidate;
+		}
+
+		return Root / Path;
+	}
+
+	bool ParseFloatList(const Rml::String& Text, float* OutValues, size_t Count)
+	{
+		const char* Cursor = Text.c_str();
+		char* End = nullptr;
+		for (size_t Index = 0; Index < Count; ++Index)
+		{
+			OutValues[Index] = std::strtof(Cursor, &End);
+			if (End == Cursor)
+			{
+				return false;
+			}
+			Cursor = End;
+			while (*Cursor == ' ' || *Cursor == '\t' || *Cursor == ',')
+			{
+				++Cursor;
+			}
+		}
+		return true;
+	}
+
+	Rml::String PxString(float Value)
+	{
+		char Buffer[64];
+		std::snprintf(Buffer, sizeof(Buffer), "%.0fpx", Value);
+		return Buffer;
+	}
+
+	void ApplyElementAnchors(Rml::Element* Element, float ViewportWidth, float ViewportHeight)
+	{
+		if (!Element)
+		{
+			return;
+		}
+
+		const Rml::String AnchorsText = Element->GetAttribute<Rml::String>("data-ue-anchors", Rml::String());
+		const Rml::String OffsetsText = Element->GetAttribute<Rml::String>("data-ue-offsets", Rml::String());
+		if (!AnchorsText.empty() && !OffsetsText.empty())
+		{
+			float Anchors[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+			float Offsets[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+			float Alignment[2] = { 0.0f, 0.0f };
+			const Rml::String AlignmentText = Element->GetAttribute<Rml::String>("data-ue-alignment", Rml::String("0 0"));
+
+			if (ParseFloatList(AnchorsText, Anchors, 4) &&
+				ParseFloatList(OffsetsText, Offsets, 4) &&
+				ParseFloatList(AlignmentText, Alignment, 2))
+			{
+				const bool bStretchX = std::fabs(Anchors[0] - Anchors[2]) > 0.0001f;
+				const bool bStretchY = std::fabs(Anchors[1] - Anchors[3]) > 0.0001f;
+
+				float Left = 0.0f;
+				float Top = 0.0f;
+				float Width = 1.0f;
+				float Height = 1.0f;
+
+				if (bStretchX)
+				{
+					Left = ViewportWidth * Anchors[0] + Offsets[0];
+					const float Right = ViewportWidth * Anchors[2] - Offsets[2];
+					Width = (std::max)(1.0f, Right - Left);
+				}
+				else
+				{
+					Width = (std::max)(1.0f, Offsets[2]);
+					Left = ViewportWidth * Anchors[0] + Offsets[0] - Width * Alignment[0];
+				}
+
+				if (bStretchY)
+				{
+					Top = ViewportHeight * Anchors[1] + Offsets[1];
+					const float Bottom = ViewportHeight * Anchors[3] - Offsets[3];
+					Height = (std::max)(1.0f, Bottom - Top);
+				}
+				else
+				{
+					Height = (std::max)(1.0f, Offsets[3]);
+					Top = ViewportHeight * Anchors[1] + Offsets[1] - Height * Alignment[1];
+				}
+
+				Element->SetProperty("position", "absolute");
+				Element->SetProperty("left", PxString(Left));
+				Element->SetProperty("top", PxString(Top));
+				Element->SetProperty("width", PxString(Width));
+				Element->SetProperty("height", PxString(Height));
+			}
+		}
+
+		const int NumChildren = Element->GetNumChildren();
+		for (int Index = 0; Index < NumChildren; ++Index)
+		{
+			ApplyElementAnchors(Element->GetChild(Index), ViewportWidth, ViewportHeight);
+		}
+	}
 }
 
 double FRmlSystemInterface::GetElapsedTime()
@@ -92,28 +250,28 @@ double FRmlSystemInterface::GetElapsedTime()
 
 void FRmlSystemInterface::JoinPath(Rml::String& TranslatedPath, const Rml::String& DocumentPath, const Rml::String& Path)
 {
-	std::filesystem::path ResourcePath(FPaths::ToWide(Path));
-	if (!ResourcePath.is_relative())
+	std::filesystem::path ResourcePath = RmlSourceToPath(Path);
+	if (IsRmlFileUrl(Path) || !ResourcePath.is_relative())
 	{
-		TranslatedPath = ToRmlPath(ResourcePath);
+		TranslatedPath = ToRmlFileUrl(ResourcePath);
 		return;
 	}
 
-	std::filesystem::path BasePath(FPaths::ToWide(DocumentPath));
-	TranslatedPath = ToRmlPath(BasePath.parent_path() / ResourcePath);
+	std::filesystem::path BasePath = RmlSourceToPath(DocumentPath);
+	TranslatedPath = ToRmlFileUrl(BasePath.parent_path() / ResourcePath);
 }
 
 bool FRmlSystemInterface::LogMessage(Rml::Log::Type Type, const Rml::String& Message)
 {
 	UE_LOG("[RmlUi] %s", Message.c_str());
-	return Type != Rml::Log::LT_ASSERT;
+	return true;
 }
 
 // FRmlFileInterfaceWide — 모든 RmlUi 파일 열기를 wide API 로 우회. 한글 경로의 디렉토리
 // 에서 실행될 때 기본 fopen 경로가 ANSI 로 해석되며 깨지는 것을 방지.
 Rml::FileHandle FRmlFileInterfaceWide::Open(const Rml::String& Path)
 {
-	const std::wstring WidePath = FPaths::ToWide(Path);
+	const std::wstring WidePath = RmlSourceToPath(Path).wstring();
 	FILE* Fp = nullptr;
 	if (_wfopen_s(&Fp, WidePath.c_str(), L"rb") != 0 || !Fp)
 	{
@@ -346,7 +504,8 @@ Rml::TextureHandle FRmlRenderInterfaceD3D11::LoadTexture(Rml::Vector2i& TextureD
 		return 0;
 	}
 
-	const std::wstring WidePath = FPaths::ToWide(Source);
+	const std::filesystem::path ResolvedPath = ResolveRmlTexturePath(Source);
+	const std::wstring WidePath = ResolvedPath.wstring();
 
 	ID3D11Resource* Resource = nullptr;
 	ID3D11ShaderResourceView* SRV = nullptr;
@@ -368,7 +527,7 @@ Rml::TextureHandle FRmlRenderInterfaceD3D11::LoadTexture(Rml::Vector2i& TextureD
 		{
 			Resource->Release();
 		}
-		UE_LOG("[RmlUi] Failed to load texture: %s", Source.c_str());
+		UE_LOG("[RmlUi] Failed to load texture: %s -> %s", Source.c_str(), ToRmlPath(ResolvedPath).c_str());
 		return 0;
 	}
 
@@ -661,6 +820,7 @@ void UUIManager::AddToViewport(UUserWidget* Widget, int32 /*ZOrder*/)
 	if (It == ViewportWidgets.end())
 	{
 		ViewportWidgets.push_back(Widget);
+		bAnchorLayoutDirty = true;
 	}
 
 	std::sort(ViewportWidgets.begin(), ViewportWidgets.end(),
@@ -714,6 +874,7 @@ void UUIManager::ClearViewport()
 		}
 	}
 	ViewportWidgets.clear();
+	bAnchorLayoutDirty = true;
 
 	if (RmlContext)
 	{
@@ -768,14 +929,16 @@ bool UUIManager::LoadDocument(UUserWidget* Widget)
 			return false;
 		}
 
-		URmlUiDocumentAsset* Asset = FRmlUiDocumentManager::Get().Load(DocumentPath);
+		// UI assets are commonly edited while the editor stays open; reload the
+		// package before creating a new Rml document so PIE does not reuse stale RML.
+		URmlUiDocumentAsset* Asset = FRmlUiDocumentManager::Get().Reload(DocumentPath);
 		if (!Asset || Asset->GetDocumentSource().empty())
 		{
 			UE_LOG("[RmlUi] Failed to load UI widget asset: %s", DocumentPath.c_str());
 			return false;
 		}
 
-		Document = RmlContext->LoadDocumentFromMemory(Asset->GetDocumentSource(), ToRmlPath(Path));
+		Document = RmlContext->LoadDocumentFromMemory(Asset->GetDocumentSource(), ToRmlFileUrl(Path));
 	}
 	else
 	{
@@ -790,7 +953,21 @@ bool UUIManager::LoadDocument(UUserWidget* Widget)
 	Document->Show();
 	Widget->MarkDocumentLoaded(Document);
 	Widget->RegisterEventListeners();
+	bAnchorLayoutDirty = true;
 	return true;
+}
+
+void UUIManager::ApplyDocumentAnchors(float ViewportWidth, float ViewportHeight)
+{
+	for (UUserWidget* Widget : ViewportWidgets)
+	{
+		if (!IsValid(Widget) || !Widget->GetDocument())
+		{
+			continue;
+		}
+
+		ApplyElementAnchors(Widget->GetDocument(), ViewportWidth, ViewportHeight);
+	}
 }
 
 void UUIManager::CloseDocument(UUserWidget* Widget)
@@ -816,6 +993,15 @@ void UUIManager::Render(const FPassContext& Ctx)
 		static_cast<int>(Ctx.Frame.ViewportWidth),
 		static_cast<int>(Ctx.Frame.ViewportHeight)
 	});
+	if (bAnchorLayoutDirty ||
+		std::fabs(LastAnchorLayoutViewportWidth - Ctx.Frame.ViewportWidth) > 0.5f ||
+		std::fabs(LastAnchorLayoutViewportHeight - Ctx.Frame.ViewportHeight) > 0.5f)
+	{
+		ApplyDocumentAnchors(Ctx.Frame.ViewportWidth, Ctx.Frame.ViewportHeight);
+		LastAnchorLayoutViewportWidth = Ctx.Frame.ViewportWidth;
+		LastAnchorLayoutViewportHeight = Ctx.Frame.ViewportHeight;
+		bAnchorLayoutDirty = false;
+	}
 
 	ProcessInput(Ctx.Frame);
 	FlushDeferredViewportRemovals();

@@ -82,6 +82,10 @@ public:
 		float Y = 0.0f;
 		float W = 160.0f;
 		float H = 48.0f;
+		float AnchorMinX = 0.0f;
+		float AnchorMinY = 0.0f;
+		float AnchorMaxX = 0.0f;
+		float AnchorMaxY = 0.0f;
 		float BorderWidth = 0.0f;
 		float Radius = 0.0f;
 		int32 FontSize = 18;
@@ -169,7 +173,7 @@ public:
 
 private:
 	URmlUiDocumentAsset* GetDocumentAsset() const;
-	bool LoadFromDisk();
+	bool LoadFromDisk(bool bForceReload = false);
 	bool SaveToDisk();
 	void RenderMenuBar();
 	void RenderToolbar();
@@ -205,6 +209,7 @@ private:
 	int32 AddDesignerNode(EDesignerWidgetType Type, int32 ParentId, float X, float Y);
 	void DeleteDesignerNode(int32 NodeId);
 	void DuplicateDesignerNode(int32 NodeId);
+	void ReparentDesignerNode(int32 NodeId, int32 NewParentId);
 	bool IsDescendantOf(int32 NodeId, int32 PossibleParentId) const;
 	void CollectChildren(int32 ParentId, TArray<int32>& OutChildren) const;
 	void RebuildGeometryCache();
