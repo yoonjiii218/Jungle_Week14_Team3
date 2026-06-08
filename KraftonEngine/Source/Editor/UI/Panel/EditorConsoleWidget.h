@@ -37,7 +37,7 @@ class FEditorConsoleWidget : public FEditorWidget
 {
 public:
 	static void AddLog(const char* fmt, ...);
-	virtual void Initialize(UEditorEngine* InEditorEngine) override;
+	void Initialize(UEditorEngine* InEditorEngine);
 	virtual void Render(float DeltaTime) override;
 	virtual void Shutdown();
 
