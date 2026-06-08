@@ -165,6 +165,23 @@ local function getComboCount(d)
     return d:GetComboCount()
 end
 
+local function getDashCooldownStats()
+    if hasRegisteredPlayer() and CombatContext.GetPlayerDashCooldown ~= nil then
+        return CombatContext.GetPlayerDashCooldown()
+    end
+    return 0.0, 0.0, 0.0
+end
+
+local function dashCooldownText(remaining, duration)
+    if duration == nil or duration <= 0.0 then
+        return "DASH READY"
+    end
+    if remaining == nil or remaining <= 0.01 then
+        return "DASH READY"
+    end
+    return string.format("DASH %.1fs", remaining)
+end
+
 local function setPlayerHPForTest(d, current, maxValue)
     if CombatContext.SetPlayerHP ~= nil and CombatContext.SetPlayerHP(current, maxValue) == true then
         return
@@ -777,9 +794,10 @@ local function updateHud()
     local ultimate = d:GetUltimateGauge()
     local ultimateMax = d:GetUltimateMaxGauge()
     local combo = d:GetComboCount()
+    local dashCooldownRemaining, dashCooldownDuration = getDashCooldownStats()
 
     setText(hud, "player-hp-text", "HP " .. whole(playerHP) .. "/" .. whole(playerMaxHP))
-    setText(hud, "player-state", percent(playerHP, playerMaxHP) .. "% STRUCT")
+    setText(hud, "player-state", percent(playerHP, playerMaxHP) .. "% STRUCT | " .. dashCooldownText(dashCooldownRemaining, dashCooldownDuration))
     setText(hud, "boss-hp-text", "CORE " .. whole(syncedBossHP) .. "/" .. whole(syncedBossMaxHP))
     setText(hud, "boss-sub", syncedBossHP <= 0.0 and "CORE LOST" or "HOSTILE CORE")
     setText(hud, "ultimate-text", "BURST " .. percent(ultimate, ultimateMax) .. "%")

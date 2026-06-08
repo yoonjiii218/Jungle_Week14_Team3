@@ -1208,6 +1208,28 @@ function CombatContext.GetPlayerUltimate(playerContext)
     return playerContext.Combat.UltimateGauge or 0.0, playerContext.Combat.MaxUltimateGauge or 0.0
 end
 
+---@param playerContext PlayerContext|nil
+---@return number, number, number
+function CombatContext.GetPlayerDashCooldown(playerContext)
+    playerContext = playerContext or GetFirstPlayerContext()
+    if playerContext == nil then
+        return 0.0, 0.0, 0.0
+    end
+    PlayerContext.Assert(playerContext, "CombatContext.GetPlayerDashCooldown")
+
+    if PlayerAction.GetDashCooldown ~= nil then
+        return PlayerAction.GetDashCooldown(playerContext)
+    end
+
+    local duration = playerContext.Action.DashCooldownDuration or 0.0
+    local remaining = math.max(0.0, playerContext.Action.DashCooldownRemaining or 0.0)
+    local ratio = 0.0
+    if duration > 0.0 then
+        ratio = Clamp(remaining / duration, 0.0, 1.0)
+    end
+    return remaining, duration, ratio
+end
+
 function CombatContext.SetPlayerUltimate(current, maxGauge, playerContext)
     playerContext = playerContext or GetFirstPlayerContext()
     if playerContext == nil then
