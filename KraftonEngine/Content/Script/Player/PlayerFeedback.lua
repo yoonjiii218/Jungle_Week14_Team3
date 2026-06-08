@@ -880,6 +880,10 @@ function PlayerFeedback.BeginUltimate(playerContext)
     CameraManager.ToggleOwnerCamera(ultimateCamera, 0)
     StartFOVPulse(playerContext, "Player.UltimateStartFOV", fovConfig.UltimateStart)
     StartVignettePulse(playerContext, "Player.UltimateStartVignette", GetVignetteConfig(playerContext, "UltimateStart"))
+    local ownerAction = GetOrAddActionComponent(owner)
+    if ownerAction ~= nil and ownerAction.Slomo ~= nil then
+        ownerAction:Slomo(moveConfig.SlomoDuration or 0.0, moveConfig.SlomoScale or 1.0)
+    end
     Reflection.Call(movementComp, "StopMovementImmediately")
     Reflection.Call(movementComp, "SetMovementInputEnabled", false)
 

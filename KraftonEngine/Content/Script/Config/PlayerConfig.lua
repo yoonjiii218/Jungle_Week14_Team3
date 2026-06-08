@@ -514,6 +514,8 @@ PlayerConfig.Default = {
             Duration = 0.55,
             FrameStep = 1.0 / 60.0,
             EndRightDistance = 5,
+            SlomoDuration = 0.65,
+            SlomoScale = 0.7,
             AttackStartDelay = 0.08,
             AttackDamageDelay = 0.10,
             AttackDuration = 0.95,
@@ -587,7 +589,7 @@ PlayerConfig.Default = {
 
             UltimateChargeBlendIn = 0.05,
             UltimateChargeBlendOut = 0.08,
-            UltimateChargePlayRate = 1.0,
+            UltimateChargePlayRate = 1.3,
             UltimateAttackBlendIn = 0.05,
             UltimateAttackBlendOut = 0.12,
             UltimateAttackPlayRate = 1.2,
