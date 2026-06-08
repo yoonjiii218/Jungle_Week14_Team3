@@ -33,6 +33,12 @@ local AUTO_COMPLETE_DELAY = 0.80
 local EXIT_CONFIRM_TITLE = "훈련장을 나가시겠습니까?"
 local EXIT_CONFIRM_BODY = "진행 중인 튜토리얼이 중단되고 시작 메뉴로 돌아갑니다."
 local EXIT_CONFIRM_PROMPT = "Enter: 나가기 / Esc: 취소"
+local INPUT_LABELS = {
+    Move = "W/A/S/D",
+    Attack = "좌클릭",
+    Dash = "Shift",
+    Ultimate = "Q",
+}
 
 local function SafeText(value)
     if value == nil then
@@ -72,6 +78,38 @@ local function SetMessage(title, body, status)
     messageStatus = SafeText(status)
     ApplyHudText(lastHud)
     print("[Tutorial] " .. messageTitle .. " / " .. messageBody .. " / " .. messageStatus)
+end
+
+local function ActionLabel(actionName)
+    if Input ~= nil and Input.GetActionLabel ~= nil then
+        return Input.GetActionLabel(actionName)
+    end
+
+    return INPUT_LABELS[actionName] or tostring(actionName or "")
+end
+
+local function MoveInputText()
+    if ActionLabel("Move") == "왼쪽 스틱" then
+        return ActionLabel("Move") .. "으로"
+    end
+
+    return ActionLabel("Move") .. "로"
+end
+
+local function UseInputText(actionName)
+    return ActionLabel(actionName) .. "으로"
+end
+
+local function HoldInputText(actionName)
+    return ActionLabel(actionName) .. "를"
+end
+
+local function PressInputText(actionName)
+    if ActionLabel(actionName) == "Y 버튼" then
+        return ActionLabel(actionName) .. "을"
+    end
+
+    return ActionLabel(actionName) .. "를"
 end
 
 local function ClearStepSubscriptions()
@@ -132,7 +170,7 @@ local TutorialSteps = {
         Status = "MOVE",
 
         OnEnter = function()
-            SetMessage("튜토리얼 1 - 이동", "W/A/S/D로 캐릭터를 이동해보세요.", "MOVE")
+            SetMessage("튜토리얼 1 - 이동", MoveInputText() .. " 캐릭터를 이동하세요.", "MOVE")
         end,
 
         BindEvents = function()
@@ -154,7 +192,7 @@ local TutorialSteps = {
 
         OnEnter = function()
             TutorialSpawner.PrepareBasicAttackTarget()
-            SetMessage("튜토리얼 2 - 기본 공격", "앞에 소환된 훈련 대상을 기본 공격으로 맞혀보세요.", "ATTACK")
+            SetMessage("튜토리얼 2 - 기본 공격", UseInputText("Attack") .. " 훈련 대상을 기본 공격하세요.", "ATTACK")
         end,
 
         BindEvents = function()
@@ -178,7 +216,7 @@ local TutorialSteps = {
             stepState.HitCount = 0
             stepState.TargetHitCount = 3
             TutorialSpawner.PrepareComboTarget()
-            SetMessage("튜토리얼 3 - 연속 공격", "새로 소환된 훈련 대상을 연속으로 3회 적중시켜보세요.", "COMBO 0/3")
+            SetMessage("튜토리얼 3 - 연속 공격", UseInputText("Attack") .. " 기본 공격을 3회 적중시키세요.", "COMBO 0/3")
         end,
 
         BindEvents = function()
@@ -204,7 +242,7 @@ local TutorialSteps = {
 
         OnEnter = function()
             TutorialSpawner.PrepareDashTarget()
-            SetMessage("튜토리얼 4 - 대시", "소환된 적을 기준으로 Shift를 짧게 눌러 대시하세요.", "DASH")
+            SetMessage("튜토리얼 4 - 대시", HoldInputText("Dash") .. " 짧게 눌러 적 기준으로 대시하세요.", "DASH")
         end,
 
         BindEvents = function()
@@ -227,13 +265,13 @@ local TutorialSteps = {
         OnEnter = function()
             stepState.ChargingStarted = false
             TutorialSpawner.PrepareDashChargeTarget()
-            SetMessage("튜토리얼 5 - 대시 차징", "앞의 적을 향해 Shift를 길게 눌러 차징한 뒤, 키를 떼서 차징 공격을 발동하세요.", "CHARGE")
+            SetMessage("튜토리얼 5 - 대시 차징", HoldInputText("Dash") .. " 길게 눌러 차징 후 떼서 공격하세요.", "CHARGE")
         end,
 
         BindEvents = function()
             GameplayEventBus.Subscribe(PlayerEvents.Type.DashChargingStarted, OWNER, function()
                 stepState.ChargingStarted = true
-                SetMessage("차징 중", "좋습니다. 이제 키를 떼서 차징 공격을 발동하세요.", "RELEASE")
+                SetMessage("차징 중", "좋습니다. " .. HoldInputText("Dash") .. " 떼서 차징 공격하세요.", "RELEASE")
             end)
 
             GameplayEventBus.Subscribe(PlayerEvents.Type.DashChargeAttackStarted, OWNER, function(event)
@@ -254,19 +292,19 @@ local TutorialSteps = {
 
         OnEnter = function()
             TutorialSpawner.PreparePerfectDodgeEnemy()
-            SetMessage("튜토리얼 6 - 퍼펙트 회피", "적 공격 타이밍에 맞춰 대시해서 퍼펙트 회피를 발동하세요.", "DODGE")
+            SetMessage("튜토리얼 6 - 퍼펙트 회피", "적 공격 타이밍에 " .. HoldInputText("Dash") .. " 눌러 회피하세요.", "DODGE")
         end,
 
         BindEvents = function()
             GameplayEventBus.Subscribe(BossEvents.Type.AttackTelegraphStarted, OWNER, function()
                 if stepCompleted ~= true then
-                    SetMessage("공격 예고", "적 공격 타이밍에 맞춰 대시하세요.", "DODGE")
+                    SetMessage("공격 예고", "적 공격 타이밍에 " .. HoldInputText("Dash") .. " 눌러 대시하세요.", "DODGE")
                 end
             end)
 
             GameplayEventBus.Subscribe(BossEvents.Type.AttackHitWindowOpened, OWNER, function()
                 if stepCompleted ~= true then
-                    SetMessage("회피 타이밍", "지금 대시해서 공격 판정을 피하세요.", "DODGE")
+                    SetMessage("회피 타이밍", "지금 " .. HoldInputText("Dash") .. " 눌러 공격을 피하세요.", "DODGE")
                 end
             end)
 
@@ -295,7 +333,7 @@ local TutorialSteps = {
         OnEnter = function()
             TutorialSpawner.PrepareUltimateTargets()
             GiveFullUltimateGauge()
-            SetMessage("튜토리얼 7 - 궁극기", "궁극기 게이지를 채웠습니다. 소환된 적들을 향해 Q를 눌러 궁극기를 사용하세요.", "ULT READY")
+            SetMessage("튜토리얼 7 - 궁극기", PressInputText("Ultimate") .. " 눌러 소환된 적에게 궁극기를 쓰세요.", "ULT")
         end,
 
         BindEvents = function()
