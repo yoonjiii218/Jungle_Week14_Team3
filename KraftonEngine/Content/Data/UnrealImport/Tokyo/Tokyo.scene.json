@@ -16060,8 +16060,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -16116,8 +16116,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -16172,8 +16172,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -16228,8 +16228,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -16284,8 +16284,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -16340,8 +16340,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -16396,8 +16396,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -16452,8 +16452,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -17185,8 +17185,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -17241,8 +17241,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -17297,8 +17297,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -17353,8 +17353,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -17409,8 +17409,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -18252,8 +18252,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -18308,8 +18308,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -28184,8 +28184,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -28240,8 +28240,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -28296,8 +28296,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -32504,8 +32504,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -32560,8 +32560,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -32616,8 +32616,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -36229,8 +36229,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -36285,8 +36285,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -36901,8 +36901,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -38021,8 +38021,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -38077,8 +38077,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -38133,8 +38133,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -41440,8 +41440,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -45195,8 +45195,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -45251,8 +45251,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -45307,8 +45307,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -46267,8 +46267,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -46323,8 +46323,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -46379,8 +46379,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -46435,8 +46435,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -46491,8 +46491,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -46547,8 +46547,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -46603,8 +46603,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -51268,8 +51268,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -51324,8 +51324,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -51380,8 +51380,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -51436,8 +51436,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -52613,7 +52613,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -52669,7 +52669,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -52725,7 +52725,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -52781,7 +52781,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -52837,7 +52837,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -52892,8 +52892,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -52948,8 +52948,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53004,8 +53004,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53060,8 +53060,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53116,8 +53116,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53172,8 +53172,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53228,8 +53228,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53284,8 +53284,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53340,8 +53340,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53396,8 +53396,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53452,8 +53452,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53508,8 +53508,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53564,8 +53564,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53620,8 +53620,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53676,8 +53676,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53732,8 +53732,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53788,8 +53788,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53844,8 +53844,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -53900,8 +53900,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -54068,8 +54068,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -54124,8 +54124,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -54180,8 +54180,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -55759,7 +55759,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -55815,7 +55815,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -55927,7 +55927,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -55983,7 +55983,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -56039,7 +56039,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -56095,7 +56095,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -56151,7 +56151,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -56207,7 +56207,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -56263,7 +56263,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -56937,7 +56937,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -56993,7 +56993,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -57104,8 +57104,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -57273,7 +57273,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -57781,7 +57781,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -57837,7 +57837,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -57893,7 +57893,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -58006,7 +58006,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -58062,7 +58062,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -58118,7 +58118,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -58174,7 +58174,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -58852,7 +58852,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -58908,7 +58908,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -58964,7 +58964,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -59020,7 +59020,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -59076,7 +59076,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -59132,7 +59132,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -59188,7 +59188,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -59244,7 +59244,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -60196,7 +60196,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -60252,7 +60252,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -60308,7 +60308,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -60364,7 +60364,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -60420,7 +60420,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -60476,7 +60476,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -69291,7 +69291,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -69515,7 +69515,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -69683,7 +69683,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -69738,8 +69738,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -69794,8 +69794,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -69850,8 +69850,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -69906,8 +69906,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -70581,8 +70581,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -70861,8 +70861,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -70917,8 +70917,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -71086,8 +71086,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -71142,8 +71142,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -71198,8 +71198,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -71254,8 +71254,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -71933,8 +71933,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -72101,8 +72101,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -72381,8 +72381,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -72437,8 +72437,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -73341,8 +73341,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -73397,8 +73397,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -73453,8 +73453,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -73621,8 +73621,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -73677,8 +73677,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -73733,8 +73733,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -73789,8 +73789,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -73845,8 +73845,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -73901,8 +73901,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -73957,8 +73957,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -74013,8 +74013,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -74070,7 +74070,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -74182,7 +74182,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -74238,7 +74238,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -74294,7 +74294,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -74573,8 +74573,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -74629,8 +74629,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -75973,8 +75973,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -76029,8 +76029,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -79502,8 +79502,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -79558,8 +79558,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -82024,8 +82024,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -82080,8 +82080,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -83368,8 +83368,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -83425,7 +83425,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -83481,7 +83481,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -83537,7 +83537,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -83593,7 +83593,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -83649,7 +83649,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -83705,7 +83705,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -83761,7 +83761,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -84096,8 +84096,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -84600,8 +84600,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -84656,8 +84656,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -85217,7 +85217,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -85273,7 +85273,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -85329,7 +85329,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -85385,7 +85385,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -85441,7 +85441,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -85497,7 +85497,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -85553,7 +85553,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -85609,7 +85609,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -85665,7 +85665,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -89260,8 +89260,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -89596,8 +89596,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -89652,8 +89652,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -89708,8 +89708,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -89764,8 +89764,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -97948,8 +97948,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -98284,8 +98284,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -98340,8 +98340,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -98396,8 +98396,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -101430,8 +101430,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -101486,8 +101486,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -104015,8 +104015,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -104071,8 +104071,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -104127,8 +104127,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -104744,8 +104744,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -106709,8 +106709,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -111666,8 +111666,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -111722,8 +111722,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -113347,8 +113347,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -113515,8 +113515,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -113571,8 +113571,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -113627,8 +113627,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -113683,8 +113683,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -114357,8 +114357,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -114861,8 +114861,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -114917,8 +114917,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -114973,8 +114973,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -115029,8 +115029,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -115085,8 +115085,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -115141,8 +115141,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -115197,8 +115197,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -115253,8 +115253,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -115309,8 +115309,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -115757,8 +115757,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -115813,8 +115813,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -115869,8 +115869,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -115925,8 +115925,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -115981,8 +115981,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -116037,8 +116037,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -116093,8 +116093,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -116149,8 +116149,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -116373,8 +116373,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -116429,8 +116429,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -116485,8 +116485,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -116541,8 +116541,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -116597,8 +116597,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -116653,8 +116653,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -116709,8 +116709,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -118558,8 +118558,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -118614,8 +118614,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -118838,8 +118838,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -120857,8 +120857,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -120913,8 +120913,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -121979,8 +121979,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -122035,8 +122035,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -127529,8 +127529,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -128033,8 +128033,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -128089,8 +128089,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -128145,8 +128145,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -128201,8 +128201,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -128257,8 +128257,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -128425,8 +128425,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -128481,8 +128481,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -130051,8 +130051,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -131117,8 +131117,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -131173,8 +131173,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -131901,8 +131901,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -137290,8 +137290,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -137346,8 +137346,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -138354,8 +138354,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -138410,8 +138410,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -139082,8 +139082,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -139138,8 +139138,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -139194,8 +139194,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -139870,8 +139870,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -139926,8 +139926,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -139982,8 +139982,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -140374,8 +140374,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -140430,8 +140430,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -140486,8 +140486,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -140542,8 +140542,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -145371,8 +145371,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -145427,8 +145427,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -145483,8 +145483,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -145539,8 +145539,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -145595,8 +145595,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -145651,8 +145651,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -145707,8 +145707,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -145763,8 +145763,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -145819,8 +145819,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -145875,8 +145875,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -145931,8 +145931,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -145987,8 +145987,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -146043,8 +146043,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -146099,8 +146099,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -146155,8 +146155,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -146603,8 +146603,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -146659,8 +146659,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -146715,8 +146715,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -146771,8 +146771,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -147901,8 +147901,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -148238,8 +148238,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -148294,8 +148294,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -148350,8 +148350,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -148406,8 +148406,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -148910,8 +148910,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -154460,8 +154460,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -154630,8 +154630,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -154910,8 +154910,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -154966,8 +154966,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -155078,8 +155078,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -158389,8 +158389,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -158445,8 +158445,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -158501,8 +158501,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -158557,8 +158557,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -172858,8 +172858,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -173027,7 +173027,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -173251,7 +173251,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -173307,7 +173307,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -173363,7 +173363,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -173419,7 +173419,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -173475,7 +173475,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -173531,7 +173531,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -173587,7 +173587,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -173642,8 +173642,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -173698,8 +173698,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -173923,7 +173923,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -173979,7 +173979,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -174034,8 +174034,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -174930,8 +174930,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -175434,8 +175434,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -175490,8 +175490,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -175546,8 +175546,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -175602,8 +175602,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -175826,8 +175826,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -176498,8 +176498,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -176554,8 +176554,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -177284,8 +177284,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -177340,8 +177340,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -177396,8 +177396,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -177452,8 +177452,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -177508,8 +177508,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -177564,8 +177564,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -177732,8 +177732,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -178012,8 +178012,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -178068,8 +178068,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -178124,8 +178124,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -178180,8 +178180,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -178460,8 +178460,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -178516,8 +178516,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -178572,8 +178572,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -178740,8 +178740,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -178796,8 +178796,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -178852,8 +178852,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -178908,8 +178908,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -178964,8 +178964,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -179020,8 +179020,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -179076,8 +179076,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -179244,8 +179244,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -179300,8 +179300,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -179356,8 +179356,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -179412,8 +179412,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -179468,8 +179468,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -179524,8 +179524,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -183461,8 +183461,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -183865,8 +183865,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -183921,8 +183921,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -186273,8 +186273,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -192976,8 +192976,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -193032,8 +193032,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -193088,8 +193088,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -193144,8 +193144,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -193200,8 +193200,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -193256,8 +193256,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -193312,8 +193312,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -193368,8 +193368,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -193424,8 +193424,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -193480,8 +193480,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -193536,8 +193536,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -193592,8 +193592,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -193648,8 +193648,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -193984,8 +193984,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -194040,8 +194040,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -194096,8 +194096,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -196969,8 +196969,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -197025,8 +197025,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -197081,8 +197081,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -197137,8 +197137,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -198089,8 +198089,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -198201,8 +198201,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -198257,8 +198257,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -201921,8 +201921,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -201977,8 +201977,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -202033,8 +202033,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -202089,8 +202089,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -203720,8 +203720,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -204896,8 +204896,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -204952,8 +204952,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -205008,8 +205008,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -205064,8 +205064,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -205120,8 +205120,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -205176,8 +205176,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -205232,8 +205232,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -205288,8 +205288,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -205456,8 +205456,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -205848,8 +205848,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -205904,8 +205904,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -206016,8 +206016,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -206072,8 +206072,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -206128,8 +206128,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -206240,8 +206240,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -206296,8 +206296,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -206464,8 +206464,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -206744,8 +206744,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -206800,8 +206800,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -207080,8 +207080,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -225802,7 +225802,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -225858,7 +225858,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -225914,7 +225914,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -225970,7 +225970,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -226026,7 +226026,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -226082,7 +226082,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -226138,7 +226138,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -226193,8 +226193,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -226249,8 +226249,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -226305,8 +226305,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -226361,8 +226361,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -226417,8 +226417,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -226473,8 +226473,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -226529,8 +226529,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -226585,8 +226585,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -231858,8 +231858,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -232587,7 +232587,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -232643,7 +232643,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -232699,7 +232699,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -247032,8 +247032,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -247088,8 +247088,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -247144,8 +247144,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -247200,8 +247200,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -247256,8 +247256,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -247312,8 +247312,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -247368,8 +247368,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -248100,7 +248100,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -248156,7 +248156,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -248212,7 +248212,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -248268,7 +248268,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -248324,7 +248324,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -248380,7 +248380,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -248436,7 +248436,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -251107,8 +251107,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -251163,8 +251163,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -251219,8 +251219,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -251275,8 +251275,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -251331,8 +251331,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -251387,8 +251387,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -251443,8 +251443,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -251499,8 +251499,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -252296,8 +252296,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -252409,8 +252409,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -252465,8 +252465,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -252521,8 +252521,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -253418,8 +253418,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -253474,8 +253474,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -253642,8 +253642,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -253698,8 +253698,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -254561,8 +254561,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -255018,8 +255018,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -255074,8 +255074,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -255130,8 +255130,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -255466,8 +255466,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -255522,8 +255522,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -255578,8 +255578,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -255746,8 +255746,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -255802,8 +255802,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -255858,8 +255858,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -255914,8 +255914,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -255970,8 +255970,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -256026,8 +256026,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -256082,8 +256082,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -256138,8 +256138,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -258279,8 +258279,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -258335,8 +258335,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -259015,8 +259015,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -259747,8 +259747,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -259803,8 +259803,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -259859,8 +259859,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -261152,8 +261152,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -261208,8 +261208,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -261264,8 +261264,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -261320,8 +261320,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -261432,8 +261432,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -261488,8 +261488,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -261544,8 +261544,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -261600,8 +261600,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -261656,8 +261656,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -261712,8 +261712,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -261768,8 +261768,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -261824,8 +261824,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -261880,8 +261880,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -261936,8 +261936,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -261992,8 +261992,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -262048,8 +262048,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -262104,8 +262104,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -262160,8 +262160,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -262216,8 +262216,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -262328,8 +262328,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -262384,8 +262384,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -262440,8 +262440,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -262496,8 +262496,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -262552,8 +262552,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -262608,8 +262608,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -262664,8 +262664,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -262720,8 +262720,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -262776,8 +262776,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -262832,8 +262832,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -262888,8 +262888,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -262944,8 +262944,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263000,8 +263000,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263056,8 +263056,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263112,8 +263112,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263168,8 +263168,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263224,8 +263224,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263280,8 +263280,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263336,8 +263336,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263392,8 +263392,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263448,8 +263448,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263504,8 +263504,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263560,8 +263560,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263616,8 +263616,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263672,8 +263672,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263728,8 +263728,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263784,8 +263784,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263840,8 +263840,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263896,8 +263896,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -263952,8 +263952,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -264120,8 +264120,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -264176,8 +264176,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -264232,8 +264232,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -264288,8 +264288,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -264344,8 +264344,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -264400,8 +264400,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -264456,8 +264456,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -264512,8 +264512,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -264568,8 +264568,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -264624,8 +264624,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -264680,8 +264680,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -264736,8 +264736,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -264792,8 +264792,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -264848,8 +264848,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -264904,8 +264904,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -264960,8 +264960,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265016,8 +265016,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265072,8 +265072,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265128,8 +265128,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265184,8 +265184,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265240,8 +265240,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265296,8 +265296,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265352,8 +265352,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265408,8 +265408,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265464,8 +265464,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265520,8 +265520,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265576,8 +265576,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265632,8 +265632,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265688,8 +265688,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265744,8 +265744,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265800,8 +265800,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265856,8 +265856,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -265912,8 +265912,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -266481,8 +266481,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": true
     },
     {
@@ -266537,8 +266537,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -266761,8 +266761,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -266929,8 +266929,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -267267,8 +267267,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light02.MI_Decal01_Light02"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -275332,8 +275332,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -277182,8 +277182,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -277238,8 +277238,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -279702,8 +279702,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -279758,8 +279758,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -281048,8 +281048,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -281104,8 +281104,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -281216,8 +281216,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -287419,8 +287419,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -287475,8 +287475,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_Decal01_Light01.MI_Decal01_Light01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -287532,7 +287532,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -287588,7 +287588,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -287644,7 +287644,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -287700,7 +287700,7 @@
       ],
       "visible": true,
       "castShadow": false,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -289175,8 +289175,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -289231,8 +289231,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -289287,8 +289287,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -289343,8 +289343,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -289399,8 +289399,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -289683,8 +289683,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -290075,8 +290075,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -290131,8 +290131,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -290187,8 +290187,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -290243,8 +290243,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -290299,8 +290299,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -290355,8 +290355,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -290411,8 +290411,8 @@
         "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
+      "castShadow": false,
+      "collision": "NoCollision",
       "negativeScale": false
     },
     {
@@ -297235,21 +297235,21 @@
       ],
       "worldMatrix": [
         [
-          390.949202,
+          3.909492,
           0.0,
           0.0,
           0.0
         ],
         [
           0.0,
-          29.075059,
+          0.290751,
           0.0,
           0.0
         ],
         [
           0.0,
           0.0,
-          598.15526,
+          5.981553,
           0.0
         ],
         [
@@ -297280,21 +297280,21 @@
       ],
       "worldMatrix": [
         [
-          195.474603,
-          338.571937,
+          1.954746,
+          3.385719,
           0.0,
           0.0
         ],
         [
-          -25.179775,
-          14.53755,
+          -0.251798,
+          0.145375,
           0.0,
           0.0
         ],
         [
           0.0,
           -0.0,
-          598.1553,
+          5.981553,
           0.0
         ],
         [
@@ -297325,21 +297325,21 @@
       ],
       "worldMatrix": [
         [
-          937.524319,
+          9.375243,
           0.0,
           0.0,
           0.0
         ],
         [
           0.0,
-          29.0751,
+          0.290751,
           0.0,
           0.0
         ],
         [
           0.0,
           0.0,
-          598.1553,
+          5.981553,
           0.0
         ],
         [
@@ -297370,21 +297370,21 @@
       ],
       "worldMatrix": [
         [
-          937.5243,
+          9.375243,
           0.0,
           0.0,
           0.0
         ],
         [
           0.0,
-          29.0751,
+          0.290751,
           0.0,
           0.0
         ],
         [
           0.0,
           0.0,
-          598.1553,
+          5.981553,
           0.0
         ],
         [
@@ -297415,21 +297415,21 @@
       ],
       "worldMatrix": [
         [
-          260.433886,
-          150.361573,
+          2.604339,
+          1.503616,
           0.0,
           0.0
         ],
         [
-          -14.53755,
-          25.179775,
+          -0.145375,
+          0.251798,
           0.0,
           0.0
         ],
         [
           0.0,
           -0.0,
-          598.1553,
+          5.981553,
           0.0
         ],
         [
@@ -297460,21 +297460,21 @@
       ],
       "worldMatrix": [
         [
-          166.911174,
-          -250.150041,
+          1.669112,
+          -2.5015,
           0.0,
           0.0
         ],
         [
-          24.185496,
-          16.137633,
+          0.241855,
+          0.161376,
           -0.0,
           0.0
         ],
         [
           0.0,
           0.0,
-          598.1553,
+          5.981553,
           0.0
         ],
         [
@@ -297505,21 +297505,21 @@
       ],
       "worldMatrix": [
         [
-          326.254938,
-          -302.470513,
+          3.262549,
+          -3.024705,
           0.0,
           0.0
         ],
         [
-          19.767315,
-          21.321695,
+          0.197673,
+          0.213217,
           -0.0,
           0.0
         ],
         [
           0.0,
           0.0,
-          598.1553,
+          5.981553,
           0.0
         ],
         [
@@ -297550,21 +297550,21 @@
       ],
       "worldMatrix": [
         [
-          688.810379,
-          11.981966,
+          6.888104,
+          0.11982,
           0.0,
           0.0
         ],
         [
-          -0.505689,
-          29.070702,
+          -0.005057,
+          0.290707,
           0.0,
           0.0
         ],
         [
           0.0,
           -0.0,
-          598.1553,
+          5.981553,
           0.0
         ],
         [
@@ -297595,21 +297595,21 @@
       ],
       "worldMatrix": [
         [
-          -15.245404,
-          -827.826731,
+          -0.152454,
+          -8.278267,
           0.0,
           0.0
         ],
         [
-          29.070171,
-          -0.535361,
+          0.290702,
+          -0.005354,
           -0.0,
           0.0
         ],
         [
           0.0,
           0.0,
-          598.1553,
+          5.981553,
           0.0
         ],
         [
@@ -297640,21 +297640,21 @@
       ],
       "worldMatrix": [
         [
-          827.826731,
-          -15.245414,
+          8.278267,
+          -0.152454,
           0.0,
           0.0
         ],
         [
-          0.535362,
-          29.070171,
+          0.005354,
+          0.290702,
           -0.0,
           0.0
         ],
         [
           0.0,
           0.0,
-          598.1553,
+          5.981553,
           0.0
         ],
         [
@@ -297685,21 +297685,21 @@
       ],
       "worldMatrix": [
         [
-          827.826731,
-          -15.245419,
+          8.278267,
+          -0.152454,
           0.0,
           0.0
         ],
         [
-          0.535362,
-          29.070171,
+          0.005354,
+          0.290702,
           -0.0,
           0.0
         ],
         [
           0.0,
           0.0,
-          598.1553,
+          5.981553,
           0.0
         ],
         [

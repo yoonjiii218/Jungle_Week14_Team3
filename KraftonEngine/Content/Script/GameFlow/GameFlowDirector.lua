@@ -1065,6 +1065,15 @@ end
 local function completeFilmCountdown()
     removeWidget("Countdown")
     filmCountdownTime = FILM_COUNTDOWN_DURATION + 1.0
+
+    if pendingTransitionAction ~= nil then
+        local action = pendingTransitionAction
+        pendingTransitionAction = nil
+        pendingTransitionFrameDelay = 0
+        action()
+        return
+    end
+
     if startHudFlow ~= nil then
         startHudFlow()
     end
@@ -1245,16 +1254,25 @@ local function triggerTransitionWithCountdown(action)
         return
     end
 
+    removeWidget("StartMenu")
+    removeWidget("Pause")
+    removeWidget("GameOver")
+    removeWidget("Clear")
+    removeWidget("Credits")
     local countdown = createWidget("Countdown", getCountdownWidgetPath(d), false, 400)
-    if countdown ~= nil then
-        addToViewport(countdown, 400)
-        widgets.Countdown = countdown
-        filmCountdownTime = 0.0
-        updateFilmCountdown(0.0)
+    if countdown == nil then
+        action()
+        return
     end
 
+    addToViewport(countdown, 400)
+    widgets.Countdown = countdown
+    currentScreen = "Countdown"
+    filmCountdownTime = 0.0
     pendingTransitionAction = action
-    pendingTransitionFrameDelay = 2
+    pendingTransitionFrameDelay = 0
+    playUiAudio(UI_AUDIO.FilmCountdown)
+    updateFilmCountdown(0.0)
 end
 
 local function showFilmCountdown()
@@ -1748,16 +1766,6 @@ function BeginPlay()
 end
 
 function Tick(dt)
-    if pendingTransitionAction ~= nil then
-        pendingTransitionFrameDelay = pendingTransitionFrameDelay - 1
-        if pendingTransitionFrameDelay <= 0 then
-            local action = pendingTransitionAction
-            pendingTransitionAction = nil
-            action()
-        end
-        return
-    end
-
     if currentScreen == "HUD" then
         if applyTrainingExitConfirmHotkeys() == true then
             TutorialDirector.Tick(dt, widgets.TutorialHUD)
@@ -1789,6 +1797,8 @@ function EndPlay()
     end
     removeAllWidgets()
     stopFlowBGM()
+    pendingTransitionAction = nil
+    pendingTransitionFrameDelay = 0
     director = nil
     currentScreen = "None"
 end

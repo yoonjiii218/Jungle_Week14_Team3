@@ -266,6 +266,10 @@ def is_decal_asset(asset):
         return False
 
 
+def is_decal_identity(*parts):
+    return "decal" in " ".join(str(part) for part in parts if part).lower()
+
+
 def unreal_name(value):
     name_type = getattr(unreal, "Name", None)
     if name_type is None:
@@ -1156,7 +1160,7 @@ for actor in loaded_actors:
                 round(local_extent_cm[2] * 0.01, 6)
             ]
             
-            matrix = world_matrix_rows(transform, override_scale=local_extent_cm)
+            matrix = world_matrix_rows(transform, override_scale=scale)
             is_cube = True
             
         if not is_cube:
@@ -1167,7 +1171,7 @@ for actor in loaded_actors:
             temp_transform = actor.get_actor_transform()
             temp_transform.translation = origin
             
-            matrix = world_matrix_rows(temp_transform, override_scale=box_extent)
+            matrix = world_matrix_rows(temp_transform, override_scale=scale)
             unreal.log_warning(f"BlockingVolume '{actor.get_actor_label()}' does not have a CubeBuilder. Bounding box might be inaccurate if rotated.")
 
         identity = actor.get_path_name() + "|BlockingVolume"
@@ -1232,6 +1236,16 @@ for actor in loaded_actors:
             identity = component_identity(actor, component)
             if instance_index is not None:
                 identity += f"|instance={instance_index}"
+            is_decal_static_mesh = is_decal_identity(
+                actor.get_actor_label(),
+                component.get_name(),
+                asset_path,
+            )
+            collision = (
+                "NoCollision"
+                if is_decal_static_mesh
+                else str(component.get_collision_enabled())
+            )
 
             record = {
                 "id": stable_id(identity),
@@ -1250,8 +1264,8 @@ for actor in loaded_actors:
                 ),
                 "castShadow": bool(
                     safe_property(component, "cast_shadow", True)
-                ),
-                "collision": str(component.get_collision_enabled()),
+                ) and not is_decal_static_mesh,
+                "collision": collision,
                 "negativeScale": (
                     scale[0] < 0.0
                     or scale[1] < 0.0

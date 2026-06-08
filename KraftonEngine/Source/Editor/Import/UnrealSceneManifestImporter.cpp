@@ -2402,6 +2402,8 @@ FUnrealSceneImportResult FUnrealSceneManifestImporter::Import(
 		if (IsDecalIdentity(ActorIdentity))
 		{
 			Record.bCastShadow = false;
+			Record.CollisionString = "NoCollision";
+			Record.Collision = ECollisionEnabled::NoCollision;
 		}
 		Record.bNegativeScale = Scale.X < 0.0f || Scale.Y < 0.0f || Scale.Z < 0.0f;
 		if (Record.bHasWorldMatrix)
