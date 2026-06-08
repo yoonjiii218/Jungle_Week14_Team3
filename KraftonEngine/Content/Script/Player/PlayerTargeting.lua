@@ -90,6 +90,8 @@ local function GetProfile(config, mode)
         return config.Dash
     elseif mode == "DashChargeAttack" then
         return config.DashChargeAttack
+    elseif mode == "Ultimate" then
+        return config.Ultimate or config.DashChargeAttack or config.Attack
     end
 
     return config.Attack

@@ -6,6 +6,8 @@ local PlayerFeedback = {}
 
 local PlayerContext = require("Player/PlayerContext")
 local PlayerEvents = require("Player/PlayerEvents")
+local PlayerTargeting = require("Player/PlayerTargeting")
+local CombatContext = require("Combat/CombatContext")
 
 local COLLISION_QUERY_AND_PHYSICS = 3
 
@@ -452,6 +454,68 @@ local function FaceOwnerToDirection(playerContext, dir)
     Reflection.Call(owner, "SetActorRotation", Vector(0.0, 0.0, targetYaw))
 end
 
+local function GetActorLocationSafe(actor)
+    if actor == nil then
+        return nil
+    end
+
+    local location = nil
+    if Reflection ~= nil and Reflection.Call ~= nil then
+        location = Reflection.Call(actor, "GetActorLocation")
+    end
+    if location == nil then
+        location = actor.Location
+    end
+    return location
+end
+
+local function GetDirection2D(from, to)
+    if from == nil or to == nil then
+        return nil, 0.0
+    end
+
+    local dir = to - from
+    dir.Z = 0.0
+    local distance = dir:Length()
+    if distance <= 0.001 then
+        return nil, distance
+    end
+
+    return dir:Normalized(), distance
+end
+
+local function GetRightFromForward(forward)
+    if forward == nil then
+        return nil
+    end
+
+    local right = Vector(-forward.Y, forward.X, 0.0)
+    if right:Length() <= 0.001 then
+        return nil
+    end
+    return right:Normalized()
+end
+
+local function ResolveUltimateFocus(playerContext, actorLocation, fallbackForward)
+    local target, targetDir = PlayerTargeting.FindTarget(playerContext, "Ultimate", fallbackForward)
+    if target == nil then
+        return nil, nil, fallbackForward
+    end
+
+    local targetLocation = GetActorLocationSafe(target)
+    local dir = GetDirection2D(actorLocation, targetLocation)
+    if dir == nil then
+        dir = targetDir
+    end
+    if dir == nil then
+        dir = fallbackForward
+    end
+
+    playerContext.Action.UltimateFocusTarget = target
+    playerContext.Action.UltimateFocusLocation = targetLocation
+    return target, targetLocation, dir
+end
+
 local function StartDeathRagdoll(playerContext)
     local owner = playerContext.Owner
     if owner == nil or owner.GetSkeletalMeshComponent == nil then
@@ -637,26 +701,34 @@ function PlayerFeedback.BeginUltimate(playerContext)
     PlayerContext.Assert(playerContext, "PlayerFeedback.BeginUltimate")
     print("Begin Ultimate")
 
-    playerContext.Action.IsUltimateRunning = true
-    playerContext.Action.IsInUltimateMode = false
+    local action = playerContext.Action
+    action.IsUltimateRunning = true
+    action.IsUltimateCinematic = true
+    action.IsInUltimateMode = false
+    action.UltimateAttackInstanceId = nil
+    action.UltimateFocusTarget = nil
+    action.UltimateFocusLocation = nil
 
     local owner = playerContext.Owner
     if owner == nil then
-        playerContext.Action.IsUltimateRunning = false
+        action.IsUltimateRunning = false
+        action.IsUltimateCinematic = false
         return
     end
 
     local movementComp = owner:GetCharacterMovement()
     if movementComp == nil then
         print("Movement not found")
-        playerContext.Action.IsUltimateRunning = false
+        action.IsUltimateRunning = false
+        action.IsUltimateCinematic = false
         return
     end
 
     local ultimateCamera = World.FindFirstActorByTag("UltimateCamera")
     if ultimateCamera == nil then
         print("UltimateCamera not found")
-        playerContext.Action.IsUltimateRunning = false
+        action.IsUltimateRunning = false
+        action.IsUltimateCinematic = false
         return
     end
 
@@ -665,9 +737,22 @@ function PlayerFeedback.BeginUltimate(playerContext)
 
     if actorLocation == nil or actorForward == nil or actorRight == nil then
         print("Invalid owner transform")
-        playerContext.Action.IsUltimateRunning = false
+        action.IsUltimateRunning = false
+        action.IsUltimateCinematic = false
         return
     end
+
+    local focusTarget, focusLocation, focusForward = ResolveUltimateFocus(playerContext, actorLocation, actorForward)
+    if focusForward ~= nil then
+        actorForward = focusForward
+        actorRight = GetRightFromForward(actorForward) or actorRight
+    end
+    if focusLocation == nil then
+        focusLocation = actorLocation + actorForward * 30.0
+    end
+    focusLocation.Z = actorLocation.Z
+
+    FaceOwnerToDirection(playerContext, actorForward)
 
     local PrimComp = owner:GetPrimitiveComponent()
     local PrevSimulatePhysics = false
@@ -683,12 +768,12 @@ function PlayerFeedback.BeginUltimate(playerContext)
     local vfxConfig = playerContext.Config.Feedback.UltimateVfx
     local fovConfig = playerContext.Config.Feedback.FOV or {}
     local cameraLocation =
-        actorLocation
+        focusLocation
         - actorForward * (cameraConfig.BackDistance)
         + up * (cameraConfig.Height)
 
     local slashAnchor =
-        cameraLocation
+        focusLocation
         + actorForward * (cameraConfig.SlashCameraDistance)
         + up * (cameraConfig.SlashCameraHeightOffset)
         + actorRight * (cameraConfig.SlashCameraRightOffset)
@@ -708,22 +793,22 @@ function PlayerFeedback.BeginUltimate(playerContext)
     Wait(0.15)
 
     local startPos =
-        cameraLocation
-        + actorForward * (moveConfig.StartDistance)
+        focusLocation
+        - actorForward * (moveConfig.StartDistance)
         + actorRight * (moveConfig.SideOffset)
 
     startPos.Z = actorLocation.Z
 
     local cinematicEndPos =
-        cameraLocation
-        + actorForward * (moveConfig.EndDistance)
+        focusLocation
+        - actorForward * (moveConfig.EndDistance)
         + actorRight * (moveConfig.EndRightDistance)
 
     cinematicEndPos.Z = actorLocation.Z
 
     local controlPos =
-        cameraLocation
-        + actorForward * (((moveConfig.StartDistance) + (moveConfig.EndDistance)) * 0.5)
+        focusLocation
+        - actorForward * (((moveConfig.StartDistance) + (moveConfig.EndDistance)) * 0.5)
         + actorRight * (moveConfig.ControlSideOffset)
 
     controlPos.Z = actorLocation.Z
@@ -738,9 +823,9 @@ function PlayerFeedback.BeginUltimate(playerContext)
     )
 
     Reflection.Call(owner, "SetActorLocation", startPos)
+    FaceOwnerToDirection(playerContext, actorForward)
 
     local elapsed = 0.0
-    local prevPos = startPos
 
     local spawnedAirSlashA = false
     local spawnedAirSlashB = false
@@ -748,8 +833,6 @@ function PlayerFeedback.BeginUltimate(playerContext)
     local spawnedAirSlashD = false
     local spawnedAirSlashE = false
     local spawnedSlashFlash = false
-
-    playerContext.Action.IsInUltimateMode = true
 
     local moveDuration = moveConfig.Duration
     local frameStep = moveConfig.FrameStep
@@ -805,14 +888,17 @@ function PlayerFeedback.BeginUltimate(playerContext)
         Reflection.Call(ultimateCamera, "SetActorRotation", GetUltimateCameraRotation(cameraConfig, baseCameraRotation, t))
         Reflection.Call(owner, "SetActorLocation", nextPos)
 
-        local moveDir = nextPos - prevPos
-        moveDir.Z = 0.0
-
-        if moveDir:Length() > 0.001 then
-            FaceOwnerToDirection(playerContext, moveDir:Normalized())
+        local faceDir = actorForward
+        if focusTarget ~= nil then
+            local latestFocusLocation = GetActorLocationSafe(focusTarget) or focusLocation
+            latestFocusLocation.Z = actorLocation.Z
+            faceDir = GetDirection2D(nextPos, latestFocusLocation) or actorForward
+            focusLocation = latestFocusLocation
         end
 
-        prevPos = nextPos
+        if faceDir ~= nil then
+            FaceOwnerToDirection(playerContext, faceDir)
+        end
     end
 
     local decal = VFX.SpawnGroundCrackDecal(
@@ -828,11 +914,29 @@ function PlayerFeedback.BeginUltimate(playerContext)
     end
 
     Reflection.Call(owner, "SetActorLocation", cinematicEndPos)
+    local attackFaceDir = GetDirection2D(cinematicEndPos, focusLocation) or actorForward
+    FaceOwnerToDirection(playerContext, attackFaceDir)
     CameraManager.StartWaveShake(1.0)
     StartFOVPulse(playerContext, "Player.UltimateImpactFOV", fovConfig.UltimateImpact)
     StartVignettePulse(playerContext, "Player.UltimateImpactVignette", GetVignetteConfig(playerContext, "UltimateImpact"))
 
-    Wait(0.4)
+    Wait(moveConfig.AttackStartDelay or 0.0)
+
+    action.IsUltimateCinematic = false
+    action.UltimateAttackInstanceId = "PlayerUltimate_" .. tostring(World.GetGameTime())
+    action.IsInUltimateMode = true
+
+    Wait(moveConfig.AttackDamageDelay or 0.0)
+    CombatContext.ApplyPlayerUltimateDamage(playerContext, focusLocation, focusTarget)
+
+    local remainingAttackTime = (moveConfig.AttackDuration or 0.0) - (moveConfig.AttackDamageDelay or 0.0)
+    if remainingAttackTime > 0.0 then
+        Wait(remainingAttackTime)
+    end
+
+    action.IsInUltimateMode = false
+
+    Wait(moveConfig.RecoverHold or 0.0)
 
     Reflection.Call(movementComp, "SetMovementInputEnabled", true)
     StartFOVPulse(playerContext, "Player.UltimateRecoverFOV", fovConfig.UltimateRecover)
@@ -843,8 +947,11 @@ function PlayerFeedback.BeginUltimate(playerContext)
         Reflection.Call(PrimComp, "SetSimulatePhysics", PrevSimulatePhysics)
     end
 
-    playerContext.Action.IsInUltimateMode = false
-    playerContext.Action.IsUltimateRunning = false
+    action.IsUltimateCinematic = false
+    action.IsInUltimateMode = false
+    action.IsUltimateRunning = false
+    action.UltimateFocusTarget = nil
+    action.UltimateFocusLocation = nil
     PlayerEvents.EmitUltimateEnded(playerContext)
 
     print("End Ultimate")

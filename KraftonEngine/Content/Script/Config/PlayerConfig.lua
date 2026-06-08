@@ -135,6 +135,15 @@ PlayerConfig.Default = {
             TurnSpeed = 36.0,
             LockDirection = true,
         },
+
+        Ultimate = {
+            Enabled = true,
+            Range = 120.0,
+            ConeDeg = 360.0,
+            TurnDuration = 0.0,
+            TurnSpeed = 999.0,
+            LockDirection = true,
+        },
     },
 
     Combat = {
@@ -156,6 +165,9 @@ PlayerConfig.Default = {
         FlyingSlashGaugeDelta = 8,
         FlyingSlashHitStopDuration = 0.03,
         UltimateDamage = 100,
+        UltimateRange = 42.0,
+        UltimateHitStopDuration = 0.08,
+        UltimateDuplicateHitLifetime = 1.2,
 
         -- Gauge/anti-duplicate policy.
         AttackHitGaugeDelta = 10,
@@ -443,8 +455,8 @@ PlayerConfig.Default = {
         },
 
         UltimateCamera = {
-            BackDistance = 7.0,
-            Height = 10,
+            BackDistance = 50.0,
+            Height = 8.0,
             SlashCameraDistance = 30.0,
             SlashCameraRightOffset = 15,
             SlashCameraHeightOffset = -5.0,
@@ -464,12 +476,16 @@ PlayerConfig.Default = {
 
         UltimateMove = {
             StartDistance = 100.0,
-            EndDistance = 30,
+            EndDistance = 10,
             SideOffset = -10.0,
             ControlSideOffset = 40.0,
-            Duration = 0.3,
+            Duration = 0.55,
             FrameStep = 1.0 / 60.0,
             EndRightDistance = 5,
+            AttackStartDelay = 0.08,
+            AttackDamageDelay = 0.10,
+            AttackDuration = 0.95,
+            RecoverHold = 0.15,
         },
     },
 
@@ -537,6 +553,9 @@ PlayerConfig.Default = {
             DashChargeAttackPlayRate = 1.4,
             DashChargeAttackFallbackDuration = 0.65,
 
+            UltimateChargeBlendIn = 0.05,
+            UltimateChargeBlendOut = 0.08,
+            UltimateChargePlayRate = 1.0,
             UltimateAttackBlendIn = 0.05,
             UltimateAttackBlendOut = 0.12,
             UltimateAttackPlayRate = 1.2,

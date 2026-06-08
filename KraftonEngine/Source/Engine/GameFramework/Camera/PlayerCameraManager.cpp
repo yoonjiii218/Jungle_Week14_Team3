@@ -11,7 +11,27 @@
 #include "Object/Reflection/ObjectFactory.h"
 #include "Object/Reflection/UClass.h"
 #include <algorithm>
+#include <cmath>
 #include "Object/GarbageCollection.h"
+
+namespace
+{
+	float NormalizeAngleDeltaDegrees(float Delta)
+	{
+		Delta = std::fmod(Delta + 180.0f, 360.0f);
+		if (Delta < 0.0f)
+		{
+			Delta += 360.0f;
+		}
+		return Delta - 180.0f;
+	}
+
+	float LerpAngleShortestDegrees(float From, float To, float Alpha)
+	{
+		return From + NormalizeAngleDeltaDegrees(To - From) * Alpha;
+	}
+}
+
 
 void APlayerCameraManager::AddReferencedObjects(FReferenceCollector& Collector)
 {
@@ -1118,9 +1138,9 @@ FMinimalViewInfo APlayerCameraManager::LerpPOV(const FMinimalViewInfo& From, con
 {
 	FMinimalViewInfo Result;
 	Result.Location = From.Location + (To.Location - From.Location) * Alpha;
-	Result.Rotation.Pitch = From.Rotation.Pitch + (To.Rotation.Pitch - From.Rotation.Pitch) * Alpha;
-	Result.Rotation.Yaw = From.Rotation.Yaw + (To.Rotation.Yaw - From.Rotation.Yaw) * Alpha;
-	Result.Rotation.Roll = From.Rotation.Roll + (To.Rotation.Roll - From.Rotation.Roll) * Alpha;
+	Result.Rotation.Pitch = LerpAngleShortestDegrees(From.Rotation.Pitch, To.Rotation.Pitch, Alpha);
+	Result.Rotation.Yaw = LerpAngleShortestDegrees(From.Rotation.Yaw, To.Rotation.Yaw, Alpha);
+	Result.Rotation.Roll = LerpAngleShortestDegrees(From.Rotation.Roll, To.Rotation.Roll, Alpha);
 	Result.FOV = From.FOV + (To.FOV - From.FOV) * Alpha;
 	Result.AspectRatio = From.AspectRatio + (To.AspectRatio - From.AspectRatio) * Alpha;
 	Result.OrthoWidth = From.OrthoWidth + (To.OrthoWidth - From.OrthoWidth) * Alpha;

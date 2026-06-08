@@ -1230,6 +1230,7 @@ local function IsHardActionLocked(playerContext)
     local action = playerContext.Action
     return action.HitReactActive == true
         or action.IsUltimateRunning == true
+        or action.IsUltimateCinematic == true
         or action.IsInUltimateMode == true
         or IsPlayerDead(playerContext)
 end
@@ -1746,6 +1747,13 @@ end
 function PlayerAction.IsUltimateRunning(playerContext)
     PlayerContext.Assert(playerContext, "PlayerAction.IsUltimateRunning")
     return playerContext.Action.IsUltimateRunning == true
+end
+
+---@param playerContext PlayerContext
+---@return boolean
+function PlayerAction.IsUltimateCinematic(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.IsUltimateCinematic")
+    return playerContext.Action.IsUltimateCinematic == true
 end
 
 ---@param playerContext PlayerContext

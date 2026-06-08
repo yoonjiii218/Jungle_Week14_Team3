@@ -57,6 +57,7 @@ local PlayerContext = {}
 ---@field HitReactElapsed number
 ---@field HitReactEnd boolean
 ---@field IsUltimateRunning boolean
+---@field IsUltimateCinematic boolean
 ---@field IsInUltimateMode boolean
 
 ---@class PlayerCombatState
@@ -168,7 +169,11 @@ local function CreateActionState()
         HitReactElapsed = 0.0,
         HitReactEnd = false,
         IsUltimateRunning = false,
+        IsUltimateCinematic = false,
         IsInUltimateMode = false,
+        UltimateAttackInstanceId = nil,
+        UltimateFocusTarget = nil,
+        UltimateFocusLocation = nil,
     }
 end
 
