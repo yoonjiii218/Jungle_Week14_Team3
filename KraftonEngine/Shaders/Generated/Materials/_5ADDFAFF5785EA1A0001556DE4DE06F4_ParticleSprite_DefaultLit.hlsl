@@ -1,4 +1,4 @@
-// Generated from Content/Material/VFX/M_Lightning.mat
+// Generated from Content/Material/VFX/NewMaterial.mat
 // Domain: ParticleSprite
 // ShadingModel: DefaultLit
 
@@ -38,8 +38,6 @@ struct FMaterialResult
     float2 UVOffset;
 };
 
-Texture2D Tex_Diffuse : register(t0);
-
 struct FMaterialEvalResult
 {
     FMaterialResult Material;
@@ -50,13 +48,11 @@ struct FMaterialEvalResult
 
 FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
-    float4 n_3 = Tex_Diffuse.Sample(LinearWrapSampler, Input.UV0);
-    float4 n_12 = Input.ParticleColor;
-    float3 n_19 = ((n_3).rgb * (n_12).rgb);
+    float4 n_1 = Input.ParticleColor;
     FMaterialResult Result;
-    Result.Color = n_19;
+    Result.Color = (n_1).xyz;
     Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = (n_3).a;
+    Result.Opacity = (n_1).x;
     Result.UVOffset = float2(0, 0);
     FMaterialEvalResult Eval;
     Eval.Material = Result;

@@ -1,6 +1,6 @@
-// Generated from Content/Material/VFX/M_Lightning.mat
+// Generated from Content/Material/VFX/M_Slash_Spark.mat
 // Domain: ParticleSprite
-// ShadingModel: DefaultLit
+// ShadingModel: UnLit
 
 #include "Common/ConstantBuffers.hlsli"
 #include "Common/VertexLayouts.hlsli"
@@ -38,7 +38,13 @@ struct FMaterialResult
     float2 UVOffset;
 };
 
-Texture2D Tex_Diffuse : register(t0);
+Texture2D Tex_SparkMask : register(t0);
+
+cbuffer PerMaterial : register(b3)
+{
+    float Param_SparkIntensity;
+    float3 _Pad0;
+};
 
 struct FMaterialEvalResult
 {
@@ -50,13 +56,17 @@ struct FMaterialEvalResult
 
 FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
-    float4 n_3 = Tex_Diffuse.Sample(LinearWrapSampler, Input.UV0);
-    float4 n_12 = Input.ParticleColor;
-    float3 n_19 = ((n_3).rgb * (n_12).rgb);
+    float2 n_72 = Input.UV0;
+    float4 n_22 = Tex_SparkMask.Sample(LinearWrapSampler, n_72);
+    float4 n_1 = Input.ParticleColor;
+    float3 n_32 = ((n_22).rgb * (n_1).rgb);
+    float n_36 = Param_SparkIntensity;
+    float3 n_38 = (n_32 * float3(n_36, n_36, n_36));
+    float n_42 = ((n_22).r * (n_1).a);
     FMaterialResult Result;
-    Result.Color = n_19;
-    Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = (n_3).a;
+    Result.Color = n_32;
+    Result.Emissive = n_38;
+    Result.Opacity = n_42;
     Result.UVOffset = float2(0, 0);
     FMaterialEvalResult Eval;
     Eval.Material = Result;
