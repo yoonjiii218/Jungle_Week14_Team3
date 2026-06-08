@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "AlphaBlend",
     "Domain" : "Decal",
-    "GeneratorVersion" : "GeneratedMaterialPass_v9_SurfaceToonShading_InstancedStaticMesh",
+    "GeneratorVersion" : "GeneratedMaterialPass_v10_SurfacePinSwizzle_InstancedStaticMesh",
     "GraphHash" : "A0C88D39F4AB2835",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
