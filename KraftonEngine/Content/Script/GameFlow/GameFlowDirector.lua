@@ -1,5 +1,5 @@
 local CombatContext = require("Combat/CombatContext")
-local TutorialEventDebug = require("Tutorial/TutorialEventDebug")
+local TutorialDirector = require("Tutorial/TutorialDirector")
 
 local widgets = {}
 local director = nil
@@ -487,11 +487,37 @@ local function showHud()
     removeWidget("GameOver")
     removeWidget("Clear")
     removeWidget("Credits")
+    removeWidget("TutorialHUD")
 
     local hud = createWidget("HUD", d:GetHudWidgetPath(), false, 0)
     addToViewport(hud, 0)
     currentScreen = "HUD"
     printTestHotkeyHelp()
+end
+
+local function getTutorialHudWidgetPath(d)
+    if d ~= nil and d.GetTutorialHudWidgetPath ~= nil then
+        local path = d:GetTutorialHudWidgetPath()
+        if path ~= nil and path ~= "" then
+            return path
+        end
+    end
+
+    return "Content/UI/GameFlow/TutorialHUD.uasset"
+end
+
+local function showTutorialHud()
+    local d = getDirector()
+    if d == nil then return nil end
+
+    local tutorialHud = createWidget("TutorialHUD", getTutorialHudWidgetPath(d), false, 50)
+    addToViewport(tutorialHud, 50)
+    if tutorialHud ~= nil then
+        print("[GameFlow] Tutorial HUD created: " .. tostring(getTutorialHudWidgetPath(d)))
+    else
+        print("[GameFlow] Tutorial HUD unavailable. Tutorial will keep logging only.")
+    end
+    return tutorialHud
 end
 
 local function showStartMenu()
@@ -512,7 +538,7 @@ local function showStartMenu()
                 sceneName = d:GetTrainingSceneName()
             end
             print("[GameFlow] Training button clicked -> " .. tostring(sceneName))
-            TutorialEventDebug.QueueTrainingSession(sceneName)
+            TutorialDirector.QueueTrainingSession(sceneName)
             d:StartTraining()
         end)
         menu:bind_click("btn-credits", function()
@@ -756,8 +782,11 @@ function BeginPlay()
     elseif startup == "HUD" then
         d:StartCombat()
         showHud()
-        if TutorialEventDebug.BeginIfQueued("TrainingMap") == true then
-            print("[GameFlow] Training event debug enabled after HUD startup")
+        if TutorialDirector.HasQueuedTrainingSession ~= nil and TutorialDirector.HasQueuedTrainingSession() == true then
+            showTutorialHud()
+        end
+        if TutorialDirector.BeginIfQueued("TrainingMap", widgets.TutorialHUD) == true then
+            print("[GameFlow] Training tutorial enabled after HUD startup")
         end
     elseif startup == "GameOver" then
         showGameOver()
@@ -774,6 +803,7 @@ function Tick(dt)
     if currentScreen == "HUD" then
         applyTestHotkeys()
         updateHud()
+        TutorialDirector.Tick(dt, widgets.TutorialHUD)
         updateTerminalFlow()
     elseif currentScreen == "StartMenu" then
         applyStartMenuHotkeys()
@@ -782,7 +812,7 @@ function Tick(dt)
 end
 
 function EndPlay()
-    TutorialEventDebug.End()
+    TutorialDirector.End()
     if Engine.ClearOnEscape ~= nil then
         Engine.ClearOnEscape()
     else
