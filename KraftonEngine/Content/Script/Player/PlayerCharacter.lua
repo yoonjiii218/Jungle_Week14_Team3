@@ -88,6 +88,7 @@ function Tick(dt)
     PlayerEvents.BeginFrame(currentPlayerContext)
     PlayerAction.Update(currentPlayerContext, dt)
     PlayerProjectile.Update(currentPlayerContext, dt)
+    PlayerFeedback.Update(currentPlayerContext, dt)
 
     local events = PlayerEvents.Drain(currentPlayerContext)
     CombatContext.ProcessPlayerEvents(currentPlayerContext, events)

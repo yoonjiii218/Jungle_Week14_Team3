@@ -11,7 +11,27 @@
 #include "Object/Reflection/ObjectFactory.h"
 #include "Object/Reflection/UClass.h"
 #include <algorithm>
+#include <cmath>
 #include "Object/GarbageCollection.h"
+
+namespace
+{
+	float NormalizeAngleDeltaDegrees(float Delta)
+	{
+		Delta = std::fmod(Delta + 180.0f, 360.0f);
+		if (Delta < 0.0f)
+		{
+			Delta += 360.0f;
+		}
+		return Delta - 180.0f;
+	}
+
+	float LerpAngleShortestDegrees(float From, float To, float Alpha)
+	{
+		return From + NormalizeAngleDeltaDegrees(To - From) * Alpha;
+	}
+}
+
 
 void APlayerCameraManager::AddReferencedObjects(FReferenceCollector& Collector)
 {
@@ -457,17 +477,301 @@ void APlayerCameraManager::SetManualCameraFade(float InFadeAmount, FLinearColor 
 // ─────────────────────────────────────────────────────────────────
 void APlayerCameraManager::SetCameraVignette(float Intensity, float Radius, float Softness, FLinearColor Color)
 {
-	bEnableVignette = true;
-	VignetteIntensity = Intensity;
-	VignetteRadius = Radius;
-	VignetteSoftness = Softness;
-	VignetteColor = Color;
+	SetVignetteLayer("__ManualCameraVignette", Intensity, Radius, Softness, Color);
 }
 
 void APlayerCameraManager::ClearCameraVignette()
 {
-	bEnableVignette = false;
-	VignetteIntensity = 0.0f;
+	StopVignetteLayer("__ManualCameraVignette", 0.0f);
+}
+
+void APlayerCameraManager::SetVignetteLayer(
+	const FString& Name,
+	float Intensity,
+	float Radius,
+	float Softness,
+	FLinearColor Color)
+{
+	if (Name.empty())
+	{
+		return;
+	}
+
+	if (Intensity <= 0.0f)
+	{
+		StopVignetteLayer(Name, 0.0f);
+		return;
+	}
+
+	Intensity = std::max(0.0f, Intensity);
+	Radius = std::clamp(Radius, 0.0f, 2.0f);
+	Softness = std::max(0.001f, Softness);
+
+	for (FVignetteLayer& Layer : VignetteLayers)
+	{
+		if (Layer.Name == Name)
+		{
+			Layer.Intensity = Intensity;
+			Layer.Radius = Radius;
+			Layer.Softness = Softness;
+			Layer.Color = Color;
+			Layer.Duration = 0.0f;
+			Layer.ElapsedTime = 0.0f;
+			Layer.BlendInTime = 0.0f;
+			Layer.BlendOutTime = 0.0f;
+			Layer.bPersistent = true;
+			Layer.bStopping = false;
+			Layer.StopElapsedTime = 0.0f;
+			Layer.StopDuration = 0.0f;
+			Layer.StopStartWeight = 0.0f;
+			ComposeVignetteLayers();
+			return;
+		}
+	}
+
+	FVignetteLayer NewLayer;
+	NewLayer.Name = Name;
+	NewLayer.Intensity = Intensity;
+	NewLayer.Radius = Radius;
+	NewLayer.Softness = Softness;
+	NewLayer.Color = Color;
+	NewLayer.bPersistent = true;
+	VignetteLayers.push_back(NewLayer);
+	ComposeVignetteLayers();
+}
+
+void APlayerCameraManager::StartVignettePulse(
+	const FString& Name,
+	float Intensity,
+	float Radius,
+	float Softness,
+	float Duration,
+	float BlendInTime,
+	float BlendOutTime,
+	FLinearColor Color)
+{
+	if (Name.empty() || Duration <= 0.0f || Intensity <= 0.0f)
+	{
+		return;
+	}
+
+	Intensity = std::max(0.0f, Intensity);
+	Radius = std::clamp(Radius, 0.0f, 2.0f);
+	Softness = std::max(0.001f, Softness);
+	BlendInTime = std::max(0.0f, BlendInTime);
+	BlendOutTime = std::max(0.0f, BlendOutTime);
+
+	const float BlendTotal = BlendInTime + BlendOutTime;
+	if (BlendTotal > Duration && BlendTotal > 0.0f)
+	{
+		const float Scale = Duration / BlendTotal;
+		BlendInTime *= Scale;
+		BlendOutTime *= Scale;
+	}
+
+	for (FVignetteLayer& Layer : VignetteLayers)
+	{
+		if (Layer.Name == Name)
+		{
+			Layer.Intensity = Intensity;
+			Layer.Radius = Radius;
+			Layer.Softness = Softness;
+			Layer.Color = Color;
+			Layer.Duration = Duration;
+			Layer.ElapsedTime = 0.0f;
+			Layer.BlendInTime = BlendInTime;
+			Layer.BlendOutTime = BlendOutTime;
+			Layer.bPersistent = false;
+			Layer.bStopping = false;
+			Layer.StopElapsedTime = 0.0f;
+			Layer.StopDuration = 0.0f;
+			Layer.StopStartWeight = 0.0f;
+			ComposeVignetteLayers();
+			return;
+		}
+	}
+
+	FVignetteLayer NewLayer;
+	NewLayer.Name = Name;
+	NewLayer.Intensity = Intensity;
+	NewLayer.Radius = Radius;
+	NewLayer.Softness = Softness;
+	NewLayer.Color = Color;
+	NewLayer.Duration = Duration;
+	NewLayer.BlendInTime = BlendInTime;
+	NewLayer.BlendOutTime = BlendOutTime;
+	NewLayer.bPersistent = false;
+	VignetteLayers.push_back(NewLayer);
+	ComposeVignetteLayers();
+}
+
+void APlayerCameraManager::StopVignetteLayer(const FString& Name, float BlendOutTime)
+{
+	if (Name.empty())
+	{
+		return;
+	}
+
+	BlendOutTime = std::max(0.0f, BlendOutTime);
+	for (auto It = VignetteLayers.begin(); It != VignetteLayers.end();)
+	{
+		if (It->Name != Name)
+		{
+			++It;
+			continue;
+		}
+
+		if (BlendOutTime <= 0.0f)
+		{
+			It = VignetteLayers.erase(It);
+			continue;
+		}
+
+		It->StopStartWeight = EvaluateVignetteLayer(*It);
+		It->StopDuration = BlendOutTime;
+		It->StopElapsedTime = 0.0f;
+		It->bStopping = true;
+		++It;
+	}
+
+	ComposeVignetteLayers();
+}
+
+void APlayerCameraManager::ClearVignetteLayers()
+{
+	VignetteLayers.clear();
+	ComposeVignetteLayers();
+}
+
+float APlayerCameraManager::EvaluateVignetteLayer(const FVignetteLayer& Layer) const
+{
+	if (Layer.Intensity <= 0.0f)
+	{
+		return 0.0f;
+	}
+
+	float Weight = 1.0f;
+	if (Layer.bStopping)
+	{
+		if (Layer.StopDuration <= 0.0f)
+		{
+			return 0.0f;
+		}
+
+		Weight = 1.0f - std::clamp(Layer.StopElapsedTime / Layer.StopDuration, 0.0f, 1.0f);
+		Weight = Weight * Weight * (3.0f - 2.0f * Weight);
+		return Layer.StopStartWeight * Weight;
+	}
+
+	if (!Layer.bPersistent)
+	{
+		if (Layer.Duration <= 0.0f)
+		{
+			return 0.0f;
+		}
+
+		if (Layer.BlendInTime > 0.0f && Layer.ElapsedTime < Layer.BlendInTime)
+		{
+			Weight = std::min(Weight, Layer.ElapsedTime / Layer.BlendInTime);
+		}
+
+		if (Layer.BlendOutTime > 0.0f)
+		{
+			const float BlendOutStart = Layer.Duration - Layer.BlendOutTime;
+			if (Layer.ElapsedTime > BlendOutStart)
+			{
+				Weight = std::min(Weight, (Layer.Duration - Layer.ElapsedTime) / Layer.BlendOutTime);
+			}
+		}
+
+		Weight = std::clamp(Weight, 0.0f, 1.0f);
+		Weight = Weight * Weight * (3.0f - 2.0f * Weight);
+	}
+
+	return Layer.Intensity * Weight;
+}
+
+void APlayerCameraManager::UpdateVignetteLayers(float DeltaTime)
+{
+	const float SafeDeltaTime = std::max(0.0f, DeltaTime);
+	bool bChanged = false;
+
+	for (auto It = VignetteLayers.begin(); It != VignetteLayers.end();)
+	{
+		if (It->bStopping)
+		{
+			It->StopElapsedTime += SafeDeltaTime;
+			if (It->StopElapsedTime >= It->StopDuration)
+			{
+				It = VignetteLayers.erase(It);
+				bChanged = true;
+				continue;
+			}
+		}
+		else if (!It->bPersistent)
+		{
+			It->ElapsedTime += SafeDeltaTime;
+			if (It->ElapsedTime >= It->Duration)
+			{
+				It = VignetteLayers.erase(It);
+				bChanged = true;
+				continue;
+			}
+		}
+
+		++It;
+	}
+
+	if (bChanged || !VignetteLayers.empty() || bEnableVignette)
+	{
+		ComposeVignetteLayers();
+	}
+}
+
+void APlayerCameraManager::ComposeVignetteLayers()
+{
+	float TotalIntensity = 0.0f;
+	float WeightedRadius = 0.0f;
+	float WeightedSoftness = 0.0f;
+	float WeightedR = 0.0f;
+	float WeightedG = 0.0f;
+	float WeightedB = 0.0f;
+	float WeightedA = 0.0f;
+
+	for (const FVignetteLayer& Layer : VignetteLayers)
+	{
+		const float LayerIntensity = EvaluateVignetteLayer(Layer);
+		if (LayerIntensity <= 0.0001f)
+		{
+			continue;
+		}
+
+		TotalIntensity += LayerIntensity;
+		WeightedRadius += Layer.Radius * LayerIntensity;
+		WeightedSoftness += Layer.Softness * LayerIntensity;
+		WeightedR += Layer.Color.R * LayerIntensity;
+		WeightedG += Layer.Color.G * LayerIntensity;
+		WeightedB += Layer.Color.B * LayerIntensity;
+		WeightedA += Layer.Color.A * LayerIntensity;
+	}
+
+	if (TotalIntensity <= 0.0001f)
+	{
+		bEnableVignette = false;
+		VignetteIntensity = 0.0f;
+		return;
+	}
+
+	const float InvTotal = 1.0f / TotalIntensity;
+	bEnableVignette = true;
+	VignetteIntensity = std::clamp(TotalIntensity, 0.0f, 1.5f);
+	VignetteRadius = WeightedRadius * InvTotal;
+	VignetteSoftness = std::max(0.001f, WeightedSoftness * InvTotal);
+	VignetteColor = FLinearColor(
+		WeightedR * InvTotal,
+		WeightedG * InvTotal,
+		WeightedB * InvTotal,
+		WeightedA * InvTotal);
 }
 
 void APlayerCameraManager::StartPerfectDodgePostProcess(float Duration, float Intensity, float FocusHighlightStrength)
@@ -491,6 +795,144 @@ void APlayerCameraManager::StartPerfectDodgePostProcess(float Duration, float In
 void APlayerCameraManager::StopPerfectDodgePostProcess()
 {
 	PerfectDodgePostProcess = FPerfectDodgePostProcessState();
+}
+
+void APlayerCameraManager::StartFOVPulse(
+	const FString& Name,
+	float DeltaFOV,
+	float Duration,
+	float BlendInTime,
+	float BlendOutTime)
+{
+	if (Name.empty() || Duration <= 0.0f || DeltaFOV == 0.0f)
+	{
+		return;
+	}
+
+	BlendInTime = std::max(0.0f, BlendInTime);
+	BlendOutTime = std::max(0.0f, BlendOutTime);
+
+	const float BlendTotal = BlendInTime + BlendOutTime;
+	if (BlendTotal > Duration && BlendTotal > 0.0f)
+	{
+		const float Scale = Duration / BlendTotal;
+		BlendInTime *= Scale;
+		BlendOutTime *= Scale;
+	}
+
+	for (FFOVPulse& Pulse : FOVPulses)
+	{
+		if (Pulse.Name == Name)
+		{
+			Pulse.DeltaFOV = DeltaFOV;
+			Pulse.Duration = Duration;
+			Pulse.ElapsedTime = 0.0f;
+			Pulse.BlendInTime = BlendInTime;
+			Pulse.BlendOutTime = BlendOutTime;
+			return;
+		}
+	}
+
+	FFOVPulse NewPulse;
+	NewPulse.Name = Name;
+	NewPulse.DeltaFOV = DeltaFOV;
+	NewPulse.Duration = Duration;
+	NewPulse.ElapsedTime = 0.0f;
+	NewPulse.BlendInTime = BlendInTime;
+	NewPulse.BlendOutTime = BlendOutTime;
+	FOVPulses.push_back(NewPulse);
+}
+
+void APlayerCameraManager::StopFOVPulse(const FString& Name)
+{
+	for (auto It = FOVPulses.begin(); It != FOVPulses.end();)
+	{
+		if (It->Name != Name)
+		{
+			++It;
+			continue;
+		}
+
+		if (It->BlendOutTime <= 0.0f)
+		{
+			It = FOVPulses.erase(It);
+			continue;
+		}
+
+		It->ElapsedTime = std::max(It->ElapsedTime, It->Duration - It->BlendOutTime);
+		++It;
+	}
+}
+
+void APlayerCameraManager::ClearFOVPulses()
+{
+	FOVPulses.clear();
+}
+
+void APlayerCameraManager::UpdateFOVPulses(float DeltaTime)
+{
+	const float SafeDeltaTime = std::max(0.0f, DeltaTime);
+	for (auto It = FOVPulses.begin(); It != FOVPulses.end();)
+	{
+		It->ElapsedTime += SafeDeltaTime;
+		if (It->ElapsedTime >= It->Duration)
+		{
+			It = FOVPulses.erase(It);
+		}
+		else
+		{
+			++It;
+		}
+	}
+}
+
+float APlayerCameraManager::EvaluateFOVPulse(const FFOVPulse& Pulse) const
+{
+	if (Pulse.Duration <= 0.0f)
+	{
+		return 0.0f;
+	}
+
+	float Weight = 1.0f;
+	if (Pulse.BlendInTime > 0.0f && Pulse.ElapsedTime < Pulse.BlendInTime)
+	{
+		Weight = std::min(Weight, Pulse.ElapsedTime / Pulse.BlendInTime);
+	}
+
+	if (Pulse.BlendOutTime > 0.0f)
+	{
+		const float BlendOutStart = Pulse.Duration - Pulse.BlendOutTime;
+		if (Pulse.ElapsedTime > BlendOutStart)
+		{
+			Weight = std::min(Weight, (Pulse.Duration - Pulse.ElapsedTime) / Pulse.BlendOutTime);
+		}
+	}
+
+	Weight = std::clamp(Weight, 0.0f, 1.0f);
+	Weight = Weight * Weight * (3.0f - 2.0f * Weight);
+	return Pulse.DeltaFOV * Weight;
+}
+
+float APlayerCameraManager::GetFOVPulseOffset() const
+{
+	float TotalOffset = 0.0f;
+	for (const FFOVPulse& Pulse : FOVPulses)
+	{
+		TotalOffset += EvaluateFOVPulse(Pulse);
+	}
+	return TotalOffset;
+}
+
+void APlayerCameraManager::ApplyFOVPulses(FMinimalViewInfo& InOutPOV) const
+{
+	if (InOutPOV.bIsOrtho || FOVPulses.empty())
+	{
+		return;
+	}
+
+	constexpr float MinFOV = 0.1f;
+	constexpr float MaxFOV = 3.14f;
+	InOutPOV.FOV = std::clamp(InOutPOV.FOV + GetFOVPulseOffset(), MinFOV, MaxFOV);
 }
 
 void APlayerCameraManager::UpdatePerfectDodgePostProcess(float DeltaTime)
@@ -622,15 +1064,19 @@ void APlayerCameraManager::UpdateCamera(float DeltaTime)
 
 	// (2) base+blend POV — GetCameraView 가 ViewTarget/PendingViewTarget 보간된 raw POV 산출.
 	//     실패(둘 다 없음) 시 캐시 무효 표시 후 fade/shake timer 만 진행.
+	UpdateFOVPulses(DeltaTime);
+	UpdateVignetteLayers(DeltaTime);
+
 	FMinimalViewInfo NewPOV;
 	const bool bHasBasePOV = GetCameraView(NewPOV);
 
-	// (3) Modifier list 적용 — 기본 ShakeModifier + 추후 게임이 추가할 효과들.
-	//     Priority 오름차순으로 ModifyCamera 호출 → POV in-place 변형. shake 의 PlaySpace
-	//     변환 / IsFinished 정리도 ShakeModifier 가 자체 처리.
+	// (3) Modifier list + FOV pulse 적용.
+	//     Shake/기타 modifier 를 먼저 적용한 뒤, 액션 FOV pulse 를 마지막에 더해
+	//     작은 FOV shake 등에 묻히지 않게 한다.
 	if (bHasBasePOV)
 	{
 		ApplyCameraModifiers(DeltaTime, NewPOV);
+		ApplyFOVPulses(NewPOV);
 	}
 
 	// (4) Fade 진행 — 시각적 합성은 PostProcess 측, 여기선 알파 시간 누적만.
@@ -692,9 +1138,9 @@ FMinimalViewInfo APlayerCameraManager::LerpPOV(const FMinimalViewInfo& From, con
 {
 	FMinimalViewInfo Result;
 	Result.Location = From.Location + (To.Location - From.Location) * Alpha;
-	Result.Rotation.Pitch = From.Rotation.Pitch + (To.Rotation.Pitch - From.Rotation.Pitch) * Alpha;
-	Result.Rotation.Yaw = From.Rotation.Yaw + (To.Rotation.Yaw - From.Rotation.Yaw) * Alpha;
-	Result.Rotation.Roll = From.Rotation.Roll + (To.Rotation.Roll - From.Rotation.Roll) * Alpha;
+	Result.Rotation.Pitch = LerpAngleShortestDegrees(From.Rotation.Pitch, To.Rotation.Pitch, Alpha);
+	Result.Rotation.Yaw = LerpAngleShortestDegrees(From.Rotation.Yaw, To.Rotation.Yaw, Alpha);
+	Result.Rotation.Roll = LerpAngleShortestDegrees(From.Rotation.Roll, To.Rotation.Roll, Alpha);
 	Result.FOV = From.FOV + (To.FOV - From.FOV) * Alpha;
 	Result.AspectRatio = From.AspectRatio + (To.AspectRatio - From.AspectRatio) * Alpha;
 	Result.OrthoWidth = From.OrthoWidth + (To.OrthoWidth - From.OrthoWidth) * Alpha;

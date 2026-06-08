@@ -894,6 +894,101 @@ function CombatContext.ApplyHitToMob(mobContext, hitRequest)
     return HitTypes.CreateResult({ Applied = true, Target = "Mob", Damage = damage, HP = mobContext.Combat.HP, MaxHP = maxHP })
 end
 
+---@param playerContext PlayerContext
+---@param centerLocation Vector|nil
+---@param forcedTarget any|nil
+---@return number
+function CombatContext.ApplyPlayerUltimateDamage(playerContext, centerLocation, forcedTarget)
+    PlayerContext.Assert(playerContext, "CombatContext.ApplyPlayerUltimateDamage")
+
+    local owner = playerContext.Owner
+    if owner == nil then
+        return 0
+    end
+
+    local combatConfig = playerContext.Config.Combat or {}
+    local range = combatConfig.UltimateRange or 0.0
+    local damage = combatConfig.UltimateDamage or 0.0
+    if damage <= 0.0 then
+        return 0
+    end
+
+    local center = centerLocation
+    if center == nil and forcedTarget ~= nil then
+        center = GetActorLocation2DByCall(forcedTarget)
+    end
+    if center == nil then
+        center = GetActorLocation2DByCall(owner)
+    end
+    if center == nil then
+        return 0
+    end
+
+    local function IsInRange(actor)
+        if not IsValidActor(actor) then
+            return false
+        end
+        if range <= 0.0 then
+            return true
+        end
+        local location = GetActorLocation2DByCall(actor)
+        if location == nil then
+            return false
+        end
+        local delta = location - center
+        delta.Z = 0.0
+        return delta:Length() <= range
+    end
+
+    local attackInstanceId = playerContext.Action.UltimateAttackInstanceId
+        or ("PlayerUltimate_" .. tostring(Now()))
+    playerContext.Action.UltimateAttackInstanceId = attackInstanceId
+
+    local hit = {
+        SourceActor = owner,
+        SourceTeam = "Player",
+        TargetTeam = "Enemy",
+        AttackId = "PlayerUltimate",
+        AttackInstanceId = attackInstanceId,
+        Damage = damage,
+        GaugeDelta = 0,
+        DuplicateHitLifetime = combatConfig.UltimateDuplicateHitLifetime or combatConfig.DuplicateHitLifetime,
+        HitStopDuration = combatConfig.UltimateHitStopDuration or combatConfig.HitStopDuration,
+    }
+
+    local appliedCount = 0
+    local visited = {}
+
+    local function TryApply(actor)
+        local key = GetOwnerKey(actor) or tostring(actor)
+        if visited[key] == true or not IsInRange(actor) then
+            return
+        end
+        visited[key] = true
+        hit.TargetActor = actor
+        local result = CombatContext.ApplyHit(hit)
+        if result ~= nil and result.Applied == true then
+            appliedCount = appliedCount + 1
+        end
+    end
+
+    if forcedTarget ~= nil then
+        TryApply(forcedTarget)
+    end
+
+    if bossRef ~= nil then
+        TryApply(bossRef)
+    end
+
+    for _, mobContext in pairs(mobsByOwner) do
+        if mobContext ~= nil then
+            TryApply(mobContext.Owner)
+        end
+    end
+
+    return appliedCount
+end
+
 -- [플레이어팀 호출] 플레이어가 보스를 때렸을 때
 function CombatContext.ApplyDamageToBoss(amount)
     return CombatContext.ApplyHit({

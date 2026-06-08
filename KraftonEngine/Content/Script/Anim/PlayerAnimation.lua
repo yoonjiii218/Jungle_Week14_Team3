@@ -120,6 +120,22 @@ local function EndDashChargeAttack(self)
     PlayerAction.EndDashChargeAttack(playerContext)
 end
 
+local function BeginUltimateCinematic(self)
+    ResetAttack(self, false)
+    local playerContext = self.PlayerContext
+    PlayerContext.Assert(playerContext, "PlayerAnimation.BeginUltimateCinematic")
+    PlayerAction.CancelDashActions(playerContext, false)
+    PlayerAction.StopMovementImmediately(playerContext)
+end
+
+local function BeginUltimateAttack(self)
+    ResetAttack(self, false)
+    local playerContext = self.PlayerContext
+    PlayerContext.Assert(playerContext, "PlayerAnimation.BeginUltimateAttack")
+    PlayerAction.CancelDashActions(playerContext, false)
+    PlayerAction.StopMovementImmediately(playerContext)
+end
+
 local function BeginHitReactionAnim(self, direction)
     local playerContext = self.PlayerContext
     PlayerContext.Assert(playerContext, "PlayerAnimation.BeginHitReactionAnim")
@@ -142,6 +158,7 @@ local function ShouldEnterHitReaction(self, direction)
     return self.PlayerContext.Action.HitReactPending == true
         and self.PlayerContext.Action.HitReactDirection == direction
         and self.PlayerContext.Action.IsUltimateRunning ~= true
+        and self.PlayerContext.Action.IsUltimateCinematic ~= true
         and self.PlayerContext.Action.IsInUltimateMode ~= true
 end
 
@@ -229,7 +246,8 @@ function init(self)
                 and not self.PlayerContext.Action.HitReactActive
                 and (self.PlayerContext.Action.AttackIndex or 0) == 0
                 and not Anim.is_owner_falling()
-                and not self.PlayerContext.Action.IsUltimateRunning then
+                and not self.PlayerContext.Action.IsUltimateRunning
+                and self.PlayerContext.Action.IsUltimateCinematic ~= true then
                 BeginDashCharging(self)
                 return true
             end
@@ -247,7 +265,8 @@ function init(self)
                 and not self.PlayerContext.Action.DashChargeAttackActive
                 and not self.PlayerContext.Action.HitReactActive
                 and not Anim.is_owner_falling()
-                and not self.PlayerContext.Action.IsUltimateRunning then
+                and not self.PlayerContext.Action.IsUltimateRunning
+                and self.PlayerContext.Action.IsUltimateCinematic ~= true then
                 BeginDash(self)
                 return true
             end
@@ -280,7 +299,8 @@ function init(self)
                 and not self.PlayerContext.Input.DashChargingReleased
                 and not self.PlayerContext.Action.HitReactActive
                 and not Anim.is_owner_falling()
-                and not self.PlayerContext.Action.IsUltimateRunning then
+                and not self.PlayerContext.Action.IsUltimateRunning
+                and self.PlayerContext.Action.IsUltimateCinematic ~= true then
                 PlayerAction.ConsumeDashChargingInput(self.PlayerContext)
                 EndDash(self, false)
                 BeginDashCharging(self)
@@ -317,13 +337,54 @@ function init(self)
         samuraiConfig.DashChargeAttackBlendOut
     )
 
+    Anim.sm_add_state(top, "UltimateCharge", Anim.create_sequence_player(samuraiConfig.DashChargingPath, samuraiConfig.UltimateChargePlayRate or samuraiConfig.DashChargingPlayRate, false))
     Anim.sm_add_state(top, "UltimateAttack", Anim.create_sequence_player(samuraiConfig.UltimateAttackPath, samuraiConfig.UltimateAttackPlayRate, false))
+
+    Anim.sm_add_transition(top, "AnyState", "UltimateCharge",
+        function()
+            if self.PlayerContext == nil then return false end
+            if self.PlayerContext.Action.IsUltimateCinematic == true
+                and self.PlayerContext.Action.IsInUltimateMode ~= true then
+                BeginUltimateCinematic(self)
+                return true
+            end
+            return false
+        end,
+        samuraiConfig.UltimateChargeBlendIn or samuraiConfig.DashChargingBlendIn
+    )
+
+    Anim.sm_add_transition(top, "UltimateCharge", "UltimateAttack",
+        function()
+            if self.PlayerContext == nil then return false end
+            if self.PlayerContext.Action.IsUltimateCinematic ~= true
+                and self.PlayerContext.Action.IsInUltimateMode == true then
+                BeginUltimateAttack(self)
+                return true
+            end
+            return false
+        end,
+        samuraiConfig.UltimateAttackBlendIn
+    )
+
+    Anim.sm_add_transition(top, "UltimateCharge", "Locomotion",
+        function()
+            if self.PlayerContext == nil then return false end
+            if self.PlayerContext.Action.IsUltimateCinematic ~= true
+                and self.PlayerContext.Action.IsInUltimateMode ~= true then
+                ResetAttack(self)
+                return true
+            end
+            return false
+        end,
+        samuraiConfig.UltimateChargeBlendOut or samuraiConfig.DashChargingBlendOut or samuraiConfig.UltimateAttackBlendOut
+    )
 
     Anim.sm_add_transition(top, "AnyState", "UltimateAttack",
         function()
             if self.PlayerContext == nil then return false end
-            if self.PlayerContext.Action.IsInUltimateMode == true then
-                PlayerAction.CancelDashActions(self.PlayerContext, false)
+            if self.PlayerContext.Action.IsInUltimateMode == true
+                and self.PlayerContext.Action.IsUltimateCinematic ~= true then
+                BeginUltimateAttack(self)
                 return true
             end
             return false
@@ -364,6 +425,7 @@ function init(self)
                 and PlayerAction.ShouldStartPostDashAttackVariant(self.PlayerContext, 1)
                 and self.PlayerContext.Action.HitReactActive ~= true
                 and self.PlayerContext.Action.IsUltimateRunning ~= true
+                and self.PlayerContext.Action.IsUltimateCinematic ~= true
                 and self.PlayerContext.Action.IsInUltimateMode ~= true then
                 BeginPostDashAttack(self, 1)
                 return true
@@ -380,6 +442,7 @@ function init(self)
                 and PlayerAction.ShouldStartPostDashAttackVariant(self.PlayerContext, 2)
                 and self.PlayerContext.Action.HitReactActive ~= true
                 and self.PlayerContext.Action.IsUltimateRunning ~= true
+                and self.PlayerContext.Action.IsUltimateCinematic ~= true
                 and self.PlayerContext.Action.IsInUltimateMode ~= true then
                 BeginPostDashAttack(self, 2)
                 return true
@@ -446,6 +509,7 @@ function init(self)
                 and PlayerAction.CanStartPostDashAttack(self.PlayerContext) ~= true
                 and self.PlayerContext.Action.HitReactActive ~= true
                 and self.PlayerContext.Action.IsUltimateRunning ~= true
+                and self.PlayerContext.Action.IsUltimateCinematic ~= true
                 and self.PlayerContext.Action.IsInUltimateMode ~= true then
                 BeginAttack(self, 1)
                 return true
