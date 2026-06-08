@@ -90,6 +90,7 @@ local PlayerContext = {}
 ---@field StepForwardDistance number
 ---@field StepForwardAppliedDistance number
 ---@field StepForwardDirection any
+---@field StepForwardUseAttackRangeControl boolean
 ---@field TargetAssistMode string|nil
 ---@field TargetAssistTarget any
 ---@field TargetAssistDirection any
@@ -206,6 +207,7 @@ local function CreateRuntimeState()
         StepForwardDistance = 0.0,
         StepForwardAppliedDistance = 0.0,
         StepForwardDirection = nil,
+        StepForwardUseAttackRangeControl = false,
         TargetAssistMode = nil,
         TargetAssistTarget = nil,
         TargetAssistDirection = nil,

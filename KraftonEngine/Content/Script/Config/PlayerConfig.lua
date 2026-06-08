@@ -44,6 +44,18 @@ PlayerConfig.Default = {
 
         AttackStepForwardDistance = 1.5,
         AttackStepForwardDuration = 0.12,
+        -- Keep normal/basic attack step-forward from tunneling into the target origin.
+        -- DashChargeAttack intentionally bypasses this so it can still pierce through.
+        AttackStepForwardControl = {
+            Enabled = true,
+            MinDistance = 3.6,
+            ScaleStartDistance = 7.0,
+            ForwardDotMin = 0.15,
+            PushoutEnabled = true,
+            PushoutDistance = 3.6,
+            PushoutStrength = 0.35,
+            MaxPushoutPerFrame = 0.45,
+        },
         AttackStepForwardDistances = {
             3,
             3,
