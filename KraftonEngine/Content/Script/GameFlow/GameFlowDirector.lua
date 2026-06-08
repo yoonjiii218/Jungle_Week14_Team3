@@ -9,6 +9,7 @@ local TEST_PLAYER_DAMAGE = 10.0
 local TEST_BOSS_DAMAGE = 10.0
 local TEST_ULTIMATE_DELTA = 25.0
 local START_MENU_BOOT_REPLAY_KEY_NAME = "F9"
+local KEY_ENTER = 13
 local START_MENU_BOOT_DURATION = 1.50
 local START_MENU_BOOT_BASE_WIDTH = 1280.0
 local START_MENU_BOOT_BASE_HEIGHT = 720.0
@@ -566,6 +567,70 @@ local function applyStartMenuHotkeys()
     end
 end
 
+local function isTrainingTutorialActive()
+    if currentScreen ~= "HUD" then
+        return false
+    end
+    if TutorialDirector.IsRunning ~= nil and TutorialDirector.IsRunning() == true then
+        return true
+    end
+    return TutorialDirector.IsFreePlay ~= nil and TutorialDirector.IsFreePlay() == true
+end
+
+local function showTrainingExitConfirm()
+    if isTrainingTutorialActive() ~= true or TutorialDirector.ShowExitConfirm == nil then
+        return false
+    end
+    return TutorialDirector.ShowExitConfirm()
+end
+
+local function cancelTrainingExitConfirm()
+    if TutorialDirector.HideExitConfirm == nil then
+        return false
+    end
+    return TutorialDirector.HideExitConfirm()
+end
+
+local function leaveTrainingForMainMenu()
+    local d = getDirector()
+    if d == nil then
+        return
+    end
+
+    if TutorialDirector.EndSession ~= nil then
+        TutorialDirector.EndSession()
+    else
+        TutorialDirector.End()
+    end
+
+    removeWidget("TutorialHUD")
+    d:ResumeGame()
+    d:RequestMainMenu()
+end
+
+local function handleTrainingEscape()
+    if TutorialDirector.IsExitConfirmVisible ~= nil and TutorialDirector.IsExitConfirmVisible() == true then
+        cancelTrainingExitConfirm()
+        return true
+    end
+
+    return showTrainingExitConfirm()
+end
+
+local function applyTrainingExitConfirmHotkeys()
+    if TutorialDirector.IsExitConfirmVisible == nil or TutorialDirector.IsExitConfirmVisible() ~= true then
+        return false
+    end
+    if Input == nil or Input.GetKeyDown == nil then
+        return true
+    end
+
+    if Input.GetKeyDown(KEY_ENTER) then
+        leaveTrainingForMainMenu()
+    end
+    return true
+end
+
 local function hidePauseMenu()
     local d = getDirector()
     removeWidget("Pause")
@@ -773,7 +838,9 @@ function BeginPlay()
     end
 
     Engine.SetOnEscape(function()
-        togglePauseMenu()
+        if handleTrainingEscape() ~= true then
+            togglePauseMenu()
+        end
     end)
 
     local startup = d:GetStartupScreen()
@@ -801,6 +868,10 @@ end
 
 function Tick(dt)
     if currentScreen == "HUD" then
+        if applyTrainingExitConfirmHotkeys() == true then
+            TutorialDirector.Tick(dt, widgets.TutorialHUD)
+            return
+        end
         applyTestHotkeys()
         updateHud()
         TutorialDirector.Tick(dt, widgets.TutorialHUD)

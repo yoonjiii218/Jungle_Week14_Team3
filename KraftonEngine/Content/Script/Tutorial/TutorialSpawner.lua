@@ -6,6 +6,8 @@
 -- actor settings from MobTest.Scene and BossTest.Scene, then run BeginPlay only
 -- after the mesh/script/capsule/action components have been initialized.
 
+local CombatContext = require("Combat/CombatContext")
+
 local TutorialSpawner = {}
 
 local spawnedMobs = {}
@@ -21,6 +23,18 @@ local BOSS_Z_OFFSET = 5.513673
 local DEFAULT_MOB_FORWARD_DISTANCE = 9.0
 local DEFAULT_BOSS_FORWARD_DISTANCE = 12.0
 local DEFAULT_SIDE_OFFSET = 0.0
+local DEFAULT_TUTORIAL_MOB_HP = 10000.0
+local TUTORIAL_MOB_HP_BY_LABEL = {
+    BasicAttack = 10000.0,
+    Combo = 10000.0,
+    Dash = 10000.0,
+    DashCharge = 10000.0,
+    PerfectDodge = 10000.0,
+    UltimateMob = 10000.0,
+    UltimateMobLeft = 10000.0,
+    UltimateMobCenter = 10000.0,
+    UltimateMobRight = 10000.0,
+}
 
 local function IsValidActor(actor)
     return actor ~= nil and actor.IsValid ~= nil and actor:IsValid()
@@ -96,6 +110,29 @@ local function DestroyActorsByTag(tag)
     end
 end
 
+local function GetTutorialMobHP(label)
+    return TUTORIAL_MOB_HP_BY_LABEL[tostring(label or "")] or DEFAULT_TUTORIAL_MOB_HP
+end
+
+local function ApplyTutorialMobHP(mob, label)
+    if CombatContext == nil or CombatContext.GetMobByOwner == nil then
+        print("[TutorialSpawner] CombatContext mob API unavailable")
+        return
+    end
+
+    local mobContext = CombatContext.GetMobByOwner(mob)
+    if mobContext == nil or mobContext.Combat == nil then
+        print("[TutorialSpawner] mob context unavailable for hp label=" .. tostring(label or "Mob"))
+        return
+    end
+
+    local hp = GetTutorialMobHP(label)
+    mobContext.Combat.MaxHP = hp
+    mobContext.Combat.HP = hp
+    mobContext.Combat.IsDead = false
+    print("[TutorialSpawner] set mob hp label=" .. tostring(label or "Mob") .. " hp=" .. tostring(hp))
+end
+
 function TutorialSpawner.ClearMobs()
     DestroyActorList(spawnedMobs, "mob")
     spawnedMobs = {}
@@ -133,6 +170,7 @@ function TutorialSpawner.SpawnMob(label, forwardDistance, sideOffset)
         mob:AddTag("TutorialStep_" .. tostring(label or "Mob"))
         mob:AddTag("TutorialSpawn_" .. tostring(spawnSerial))
         table.insert(spawnedMobs, mob)
+        ApplyTutorialMobHP(mob, label)
         print("[TutorialSpawner] spawned mob label=" .. tostring(label or "Mob")
             .. " loc=(" .. string.format("%.2f,%.2f,%.2f", loc.X, loc.Y, loc.Z) .. ") yaw=" .. tostring(yaw))
     else
@@ -157,6 +195,7 @@ function TutorialSpawner.EnsureMob(label, forwardDistance, sideOffset)
     local existing = World.FindFirstActorByTag("TutorialMob")
     if IsValidActor(existing) then
         table.insert(spawnedMobs, existing)
+        ApplyTutorialMobHP(existing, label)
         return existing
     end
 
@@ -209,17 +248,21 @@ end
 
 function TutorialSpawner.PreparePerfectDodgeEnemy()
     TutorialSpawner.ClearMobs()
-    return TutorialSpawner.EnsureBoss("PerfectDodge", 12.0, 0.0)
+    return TutorialSpawner.SpawnFreshMob("PerfectDodge", 9.0, 0.0)
 end
 
 function TutorialSpawner.PrepareUltimateTargets()
     TutorialSpawner.ClearMobs()
-    TutorialSpawner.EnsureBoss("UltimateBoss", 13.0, 0.0)
-    TutorialSpawner.SpawnMob("UltimateMobLeft", 8.0, -4.0)
-    TutorialSpawner.SpawnMob("UltimateMobRight", 8.0, 4.0)
+    TutorialSpawner.SpawnMob("UltimateMob", 10.0, 0.0)
 end
 
-function TutorialSpawner.EndSession()
+function TutorialSpawner.EndSession(clearEnemies)
+    if clearEnemies == true then
+        TutorialSpawner.ClearMobs()
+        print("[TutorialSpawner] session ended; spawned tutorial enemies cleared")
+        return
+    end
+
     -- Do not destroy the boss here. BossCharacter.EndPlay currently clears the
     -- shared CombatContext, which is fine during scene teardown but surprising
     -- in the middle of TrainingMap free play. Leave spawned actors for practice.

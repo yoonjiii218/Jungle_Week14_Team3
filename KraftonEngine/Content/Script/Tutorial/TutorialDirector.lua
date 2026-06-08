@@ -26,9 +26,13 @@ local messageTitle = ""
 local messageBody = ""
 local messageStatus = ""
 local lastHud = nil
+local exitConfirmVisible = false
 
 local COMPLETE_ADVANCE_DELAY = 1.20
 local AUTO_COMPLETE_DELAY = 0.80
+local EXIT_CONFIRM_TITLE = "훈련장을 나가시겠습니까?"
+local EXIT_CONFIRM_BODY = "진행 중인 튜토리얼이 중단되고 시작 메뉴로 돌아갑니다."
+local EXIT_CONFIRM_PROMPT = "Enter: 나가기 / Esc: 취소"
 
 local function SafeText(value)
     if value == nil then
@@ -50,6 +54,13 @@ local function ApplyHudText(hud)
 
     -- TutorialHUD is intentionally separate from BossHUD. A custom tutorial HUD
     -- only needs to expose these three element ids.
+    if exitConfirmVisible == true then
+        SetHudText(hud, "tutorial-title", EXIT_CONFIRM_TITLE)
+        SetHudText(hud, "tutorial-body", EXIT_CONFIRM_BODY)
+        SetHudText(hud, "tutorial-status", EXIT_CONFIRM_PROMPT)
+        return
+    end
+
     SetHudText(hud, "tutorial-title", messageTitle)
     SetHudText(hud, "tutorial-body", messageBody)
     SetHudText(hud, "tutorial-status", messageStatus)
@@ -243,7 +254,7 @@ local TutorialSteps = {
 
         OnEnter = function()
             TutorialSpawner.PreparePerfectDodgeEnemy()
-            SetMessage("튜토리얼 6 - 퍼펙트 회피", "보스가 소환됩니다. 적 공격 타이밍에 맞춰 대시해서 퍼펙트 회피를 발동하세요.", "DODGE")
+            SetMessage("튜토리얼 6 - 퍼펙트 회피", "적 공격 타이밍에 맞춰 대시해서 퍼펙트 회피를 발동하세요.", "DODGE")
         end,
 
         BindEvents = function()
@@ -378,6 +389,7 @@ function TutorialDirector.Begin(label, hud)
     lastHud = hud
     active = true
     freePlay = false
+    exitConfirmVisible = false
     activeLabel = label or queuedTrainingSceneName or "TrainingMap"
     queuedTrainingSceneName = nil
 
@@ -420,10 +432,65 @@ function TutorialDirector.Tick(dt, hud)
         return
     end
 
+    if exitConfirmVisible == true then
+        return
+    end
+
     advanceDelay = advanceDelay - (dt or 0.0)
     if advanceDelay <= 0.0 then
         StartStep(currentStepIndex + 1)
     end
+end
+
+---@return boolean
+function TutorialDirector.ShowExitConfirm()
+    if active ~= true and freePlay ~= true then
+        return false
+    end
+
+    exitConfirmVisible = true
+    ApplyHudText(lastHud)
+    print("[Tutorial] exit confirm shown")
+    return true
+end
+
+---@return boolean
+function TutorialDirector.HideExitConfirm()
+    if exitConfirmVisible ~= true then
+        return false
+    end
+
+    exitConfirmVisible = false
+    ApplyHudText(lastHud)
+    print("[Tutorial] exit confirm hidden")
+    return true
+end
+
+---@return boolean
+function TutorialDirector.IsExitConfirmVisible()
+    return exitConfirmVisible == true
+end
+
+---@return nil
+function TutorialDirector.EndSession()
+    if active == true or freePlay == true then
+        print("[Tutorial] end session label=" .. tostring(activeLabel))
+    end
+
+    ClearStepSubscriptions()
+    TutorialSpawner.EndSession(true)
+    active = false
+    freePlay = false
+    exitConfirmVisible = false
+    currentStepIndex = 0
+    currentStep = nil
+    stepCompleted = false
+    stepState = {}
+    advanceDelay = 0.0
+    lastHud = nil
+    messageTitle = ""
+    messageBody = ""
+    messageStatus = ""
 end
 
 ---@return nil
@@ -435,6 +502,7 @@ function TutorialDirector.End()
     ClearStepSubscriptions()
     active = false
     freePlay = false
+    exitConfirmVisible = false
     currentStepIndex = 0
     currentStep = nil
     stepCompleted = false
