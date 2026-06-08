@@ -117,6 +117,7 @@ function Tick(dt)
 
     local brain = mobContext.Brain
     local scaledDt = dt * brain.TimeScale
+    mobContext.Runtime.ElapsedTime = (mobContext.Runtime.ElapsedTime or 0.0) + scaledDt
     brain.PatternCooldown = math.max(0.0, brain.PatternCooldown - scaledDt)
 
     local targetActor = brain.TargetActor
@@ -159,25 +160,85 @@ function Tick(dt)
             end
 
             local screenPos = Vector(0.0, 0.0, 0.0)
-            local headWorldPos = obj.Location + Vector(0.0, 0.0, 1.85)
-            local isProjected = camera:ProjectWorldToScreen(headWorldPos, screenPos, width, height)
+            -- 몹의 실제 캡슐 높이(CAPSULE_HALF_HEIGHT)와 액터 스케일을 고려하여 정확한 발바닥 지면 높이를 계산한 뒤 0.15m 위에 띄움.
+            local halfHeight = mobContext.Config.CAPSULE_HALF_HEIGHT or 5.0
+            local feetWorldPos = obj.Location + Vector(0.0, 0.0, -halfHeight * obj.Scale.Z + 0.15)
+            local isProjected = camera:ProjectWorldToScreen(feetWorldPos, screenPos, width, height)
 
             if isProjected then
-                widget:SetProperty("hp-bar", "display", "block")
-                widget:SetProperty("hp-bar", "left", string.format("%.0fpx", screenPos.X - 32.0))
-                widget:SetProperty("hp-bar", "top", string.format("%.0fpx", screenPos.Y))
+                widget:SetProperty("hp-container", "display", "block")
+                widget:SetProperty("hp-container", "left", string.format("%.0fpx", screenPos.X - 40.0))
+                widget:SetProperty("hp-container", "top", string.format("%.0fpx", screenPos.Y))
                 
                 local combat = mobContext.Combat
                 local hpRatio = 0.0
                 if combat.MaxHP > 0 then
                     hpRatio = combat.HP / combat.MaxHP
                 end
-                widget:SetProperty("hp-fill", "width", string.format("%.1f%%", hpRatio * 100.0))
+                local fillWidth = math.max(0.0, hpRatio * 76.0)
+                widget:SetProperty("hp-fill", "width", string.format("%.0fpx", fillWidth))
+
+                -- 주목표(TargetActor) 식별 및 강렬한 시각적 점멸 강조 연출 (글자 없이 강조 효과만)
+                local targetActor = mobContext.Brain.TargetActor
+                local isTargetingPlayer = false
+                if targetActor and targetActor:IsValid() then
+                    local actorName = targetActor.Name or "UNKNOWN"
+                    if string.find(string.lower(actorName), "player") then
+                        isTargetingPlayer = true
+                    end
+                end
+
+                if isTargetingPlayer then
+                    -- 몹이 플레이어(나)를 노릴 때, 빠른 사인파 점멸로 테두리(2px)/바/느낌표 마크를 매우 티나게 경고 점멸시킴
+                    local pulseSpeed = 16.0
+                    local pulse = math.abs(math.sin((mobContext.Runtime.ElapsedTime or 0.0) * pulseSpeed))
+                    local alpha = 0.10 + 0.90 * pulse
+                    local glowColor = string.format("rgba(255, 0, 85, %.2f)", alpha)
+                    
+                    widget:SetProperty("hp-bg", "border-color", glowColor)
+                    widget:SetProperty("hp-bg", "border-width", "2px")
+                    widget:SetProperty("hp-fill", "background-color", glowColor)
+                    widget:SetProperty("warning-marker", "display", "block")
+                    widget:SetProperty("warning-marker", "opacity", string.format("%.2f", alpha))
+                else
+                    -- 평상시에는 기본 차분한 시안 컬러 테마
+                    widget:SetProperty("hp-bg", "border-color", "#00eaff44")
+                    widget:SetProperty("hp-bg", "border-width", "1px")
+                    widget:SetProperty("hp-fill", "background-color", "#00eaff")
+                    widget:SetProperty("warning-marker", "display", "none")
+                    widget:SetProperty("warning-marker", "opacity", "1.0")
+                end
+
+                -- 내가(플레이어가) 이 몹을 타겟팅하고 있는지 체크 및 락온 마커 업데이트
+                local isTargetedByPlayer = false
+                local playerActor = World.FindFirstActorByTag("Player")
+                if playerActor and playerActor:IsValid() then
+                    local playerContext = CombatContext.GetPlayerByOwner(playerActor)
+                    if playerContext ~= nil and playerContext.Runtime ~= nil then
+                        if playerContext.Runtime.TargetAssistTarget == obj or playerContext.Runtime.CurrentTarget == obj then
+                            isTargetedByPlayer = true
+                        end
+                    end
+                end
+
+                if isTargetedByPlayer then
+                    widget:SetProperty("player-lock-marker", "display", "block")
+                    local time = mobContext.Runtime.ElapsedTime or 0.0
+                    local hover = math.sin(time * 12.0) * 2.0
+                    widget:SetProperty("player-lock-marker", "top", string.format("%.0fpx", -6.0 + hover))
+                    
+                    -- 조준 마커에 은은한 알파 점멸 펄스를 넣어 타게팅 효과 극대화
+                    local pulse = 0.70 + 0.30 * math.abs(math.sin(time * 16.0))
+                    widget:SetProperty("player-lock-marker", "opacity", string.format("%.2f", pulse))
+                else
+                    widget:SetProperty("player-lock-marker", "display", "none")
+                    widget:SetProperty("player-lock-marker", "opacity", "1.0")
+                end
             else
-                widget:SetProperty("hp-bar", "display", "none")
+                widget:SetProperty("hp-container", "display", "none")
             end
         else
-            widget:SetProperty("hp-bar", "display", "none")
+            widget:SetProperty("hp-container", "display", "none")
         end
     end
 end

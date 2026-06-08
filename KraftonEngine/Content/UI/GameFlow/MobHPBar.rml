@@ -3,28 +3,80 @@
     <title>Mob HP Bar</title>
     <style>
         body { width: 100%; height: 100%; margin: 0; font-family: Maplestory; color: #ffffff; pointer-events: none; }
-        #hp-bar {
+        #hp-container {
             position: absolute;
-            width: 64px;
+            width: 80px;
+            height: 18px;
+        }
+        #hp-bg {
+            position: absolute;
+            left: 0px;
+            top: 6px;
+            width: 78px;
             height: 6px;
-            background-color: #0c1524e0;
+            background-color: #030811ee;
             border-width: 1px;
-            border-color: #ff2bd680;
-            overflow: hidden;
+            border-color: #00eaff44;
         }
         #hp-fill {
             position: absolute;
-            left: 0px;
-            top: 0px;
-            width: 100%;
-            height: 100%;
+            left: 1px;
+            top: 1px;
+            width: 76px;
+            height: 4px;
+            background-color: #00eaff;
+        }
+        .decor-line {
+            position: absolute;
+            left: 2px;
+            bottom: 2px;
+            width: 12px;
+            height: 1px;
             background-color: #ff2bd6;
+        }
+        .decor-dot {
+            position: absolute;
+            right: 2px;
+            top: 2px;
+            width: 2px;
+            height: 2px;
+            background-color: #00eaff;
+        }
+        /* 플레이어 타겟팅 시 깜빡이며 경고를 주는 강렬한 네온 레드 다이아몬드 마크 (글자 없이 순수 시각 효과) */
+        #warning-marker {
+            position: absolute;
+            left: -12px;
+            top: 5px;
+            width: 6px;
+            height: 6px;
+            background-color: #ff0055;
+            border: 1px solid #ff00ff;
+            transform: rotate(45deg);
+            display: none;
+        }
+        /* 내가(플레이어가) 몹을 타겟팅하고 있을 때 체력바 상단에 둥둥 뜨는 네온 시안 조준 화살표 */
+        #player-lock-marker {
+            position: absolute;
+            left: 35px;
+            top: -6px;
+            width: 0px;
+            height: 0px;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 8px solid #00eaff;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div id="hp-bar">
-        <div id="hp-fill"></div>
+    <div id="hp-container">
+        <div id="hp-bg">
+            <div id="hp-fill"></div>
+        </div>
+        <div class="decor-line"></div>
+        <div class="decor-dot"></div>
+        <div id="warning-marker"></div>
+        <div id="player-lock-marker"></div>
     </div>
 </body>
 </rml>
