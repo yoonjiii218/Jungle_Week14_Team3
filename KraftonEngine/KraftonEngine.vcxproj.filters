@@ -684,7 +684,13 @@
     <FxCompile Include="Shaders\PostProcess\FXAA.hlsl">
       <Filter>Shaders\PostProcess</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\PostProcess\PerfectDodgePostProcess.hlsl">
+      <Filter>Shaders\PostProcess</Filter>
+    </FxCompile>
     <FxCompile Include="Shaders\PostProcess\GammaCorrection.hlsl">
+      <Filter>Shaders\PostProcess</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\PostProcess\BloomExtract.hlsl">
       <Filter>Shaders\PostProcess</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\PostProcess\HeightFog.hlsl">
@@ -990,6 +996,12 @@
       <Filter>Source\Engine\Animation\Notify</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Animation\Notify\AnimNotify_PlaySound.cpp">
+      <Filter>Source\Engine\Animation\Notify</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Animation\Notify\AnimNotify_SpawnFlyingSlash.cpp">
+      <Filter>Source\Engine\Animation\Notify</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Animation\Notify\AnimNotify_SpawnSubUV.cpp">
       <Filter>Source\Engine\Animation\Notify</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Animation\Sequence\AnimDataModel.cpp">
@@ -1751,6 +1763,9 @@
     <ClCompile Include="Source\Engine\Render\RenderPass\GammaCorrectionPass.cpp">
       <Filter>Source\Engine\Render\RenderPass</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\Render\RenderPass\BloomExtractPass.cpp">
+      <Filter>Source\Engine\Render\RenderPass</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Engine\Render\RenderPass\GizmoInnerPass.cpp">
       <Filter>Source\Engine\Render\RenderPass</Filter>
     </ClCompile>
@@ -1767,6 +1782,9 @@
       <Filter>Source\Engine\Render\RenderPass</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Render\RenderPass\PassRenderStateTable.cpp">
+      <Filter>Source\Engine\Render\RenderPass</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Render\RenderPass\PerfectDodgePostProcessPass.cpp">
       <Filter>Source\Engine\Render\RenderPass</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Render\RenderPass\PostProcessPass.cpp">
@@ -2268,6 +2286,12 @@
       <Filter>Source\Engine\Animation\Notify</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Animation\Notify\AnimNotify_PlaySound.h">
+      <Filter>Source\Engine\Animation\Notify</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Animation\Notify\AnimNotify_SpawnFlyingSlash.h">
+      <Filter>Source\Engine\Animation\Notify</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Animation\Notify\AnimNotify_SpawnSubUV.h">
       <Filter>Source\Engine\Animation\Notify</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Animation\Sequence\AnimDataModel.h">
@@ -3203,6 +3227,9 @@
     <ClInclude Include="Source\Engine\Render\RenderPass\GammaCorrectionPass.h">
       <Filter>Source\Engine\Render\RenderPass</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\Render\RenderPass\BloomExtractPass.h">
+      <Filter>Source\Engine\Render\RenderPass</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Engine\Render\RenderPass\GizmoInnerPass.h">
       <Filter>Source\Engine\Render\RenderPass</Filter>
     </ClInclude>
@@ -3219,6 +3246,9 @@
       <Filter>Source\Engine\Render\RenderPass</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Render\RenderPass\PassRenderStateTable.h">
+      <Filter>Source\Engine\Render\RenderPass</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Render\RenderPass\PerfectDodgePostProcessPass.h">
       <Filter>Source\Engine\Render\RenderPass</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Render\RenderPass\PostProcessPass.h">

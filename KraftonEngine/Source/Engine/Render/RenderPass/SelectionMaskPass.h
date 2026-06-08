@@ -7,3 +7,9 @@ class FSelectionMaskPass final : public FRenderPassBase
 public:
 	FSelectionMaskPass();
 };
+
+class FGameplayFocusMaskPass final : public FRenderPassBase
+{
+public:
+	FGameplayFocusMaskPass();
+};

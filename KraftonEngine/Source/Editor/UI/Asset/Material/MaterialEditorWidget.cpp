@@ -364,7 +364,7 @@ void FMaterialEditorWidget::Open(UObject* Object)
 	UMaterial* Material = static_cast<UMaterial*>(Object);
 	if (!Material->GetGraph().HasOutputNode())
 	{
-		Material->GetGraph().InitializeDefault(Material->GetDomain());
+		Material->GetGraph().InitializeDefault(Material->GetDomain(), Material->GetShadingModel());
 	}
 }
 
@@ -489,6 +489,10 @@ void FMaterialEditorWidget::RenderToolbar(UMaterial* Material)
 
 				Material->SetDomain(Candidate);
 				Domain = Candidate;
+				if (Candidate != EMaterialDomain::Surface && Material->GetShadingModel() == EMaterialShadingModel::Toon)
+				{
+					Material->SetShadingModel(EMaterialShadingModel::DefaultLit);
+				}
 
 				RebuildOutputPinsForDomain(Material);
 
@@ -511,6 +515,10 @@ void FMaterialEditorWidget::RenderToolbar(UMaterial* Material)
 	{
 		Domain = EMaterialDomain::Surface;
 		Material->SetDomain(Domain);
+		if (Material->GetShadingModel() == EMaterialShadingModel::Toon && Domain != EMaterialDomain::Surface)
+		{
+			Material->SetShadingModel(EMaterialShadingModel::DefaultLit);
+		}
 		RebuildOutputPinsForDomain(Material);
 		ApplyDefaultBlendModeForDomain(Material, Domain);
 		MarkDirty();
@@ -526,7 +534,7 @@ void FMaterialEditorWidget::RenderToolbar(UMaterial* Material)
 	}
 
 	ImGui::SetNextItemWidth(130.0f);
-	if (ImGui::BeginCombo("Mode", ToString(BlendMode)))
+	if (ImGui::BeginCombo("Blend", ToString(BlendMode)))
 	{
 		const EMaterialEditorBlendMode Modes[] =
 		{
@@ -552,6 +560,57 @@ void FMaterialEditorWidget::RenderToolbar(UMaterial* Material)
 		ImGui::EndCombo();
 	}
 
+
+	ImGui::SameLine();
+	EMaterialShadingModel ShadingModel = Material->GetShadingModel();
+	if (ShadingModel == EMaterialShadingModel::Toon && Domain != EMaterialDomain::Surface)
+	{
+		ShadingModel = EMaterialShadingModel::DefaultLit;
+		Material->SetShadingModel(ShadingModel);
+		MarkDirty();
+	}
+
+	ImGui::SetNextItemWidth(140.0f);
+	if (ImGui::BeginCombo("Shading", ToString(ShadingModel)))
+	{
+		const EMaterialShadingModel Models[] =
+		{
+			EMaterialShadingModel::DefaultLit,
+			EMaterialShadingModel::UnLit,
+			EMaterialShadingModel::Toon
+		};
+		for (EMaterialShadingModel Candidate : Models)
+		{
+			const bool bAllowed = Candidate != EMaterialShadingModel::Toon || Domain == EMaterialDomain::Surface;
+			if (!bAllowed) ImGui::BeginDisabled();
+
+			const bool bSelected = ShadingModel == Candidate;
+			if (ImGui::Selectable(ToString(Candidate), bSelected) && bAllowed)
+			{
+				Material->SetShadingModel(Candidate);
+				ShadingModel = Candidate;
+
+				if (Candidate == EMaterialShadingModel::Toon)
+				{
+					Material->SetDomain(EMaterialDomain::Surface);
+					Domain = EMaterialDomain::Surface;
+					ApplyMaterialEditorBlendMode(Material, EMaterialEditorBlendMode::Opaque);
+					Material->GetGraph().ApplyToonSurfacePreset();
+					bPositionsPushed = false;
+				}
+				else
+				{
+					Material->GetGraph().EnsureOutputPinsForDomain(Material->GetDomain(), Candidate);
+				}
+
+				MarkDirty();
+			}
+			if (bSelected) ImGui::SetItemDefaultFocus();
+			if (!bAllowed) ImGui::EndDisabled();
+		}
+		ImGui::EndCombo();
+	}
+
 	ImGui::SameLine();
 	if (ImGui::Button("Presets"))
 	{
@@ -563,7 +622,7 @@ void FMaterialEditorWidget::RenderToolbar(UMaterial* Material)
 		ImGui::Separator();
         if (ImGui::MenuItem("Particle Color only (default)"))
         {
-            Material->GetGraph().InitializeDefault(Material->GetDomain());
+            Material->GetGraph().InitializeDefault(Material->GetDomain(), Material->GetShadingModel());
             ApplyDefaultBlendModeForDomain(Material, Material->GetDomain());
 
             bPositionsPushed = false;
@@ -574,6 +633,17 @@ void FMaterialEditorWidget::RenderToolbar(UMaterial* Material)
         {
             Material->GetGraph().ApplyTexturedParticlePreset(Material->GetDomain());
             ApplyDefaultBlendModeForDomain(Material, Material->GetDomain());
+
+            bPositionsPushed = false;
+            MarkDirty();
+        }
+
+        if (ImGui::MenuItem("Surface Toon defaults"))
+        {
+            Material->SetDomain(EMaterialDomain::Surface);
+            Material->SetShadingModel(EMaterialShadingModel::Toon);
+            ApplyMaterialEditorBlendMode(Material, EMaterialEditorBlendMode::Opaque);
+            Material->GetGraph().ApplyToonSurfacePreset();
 
             bPositionsPushed = false;
             MarkDirty();
@@ -692,7 +762,7 @@ void FMaterialEditorWidget::RenderNodeBody(FMaterialGraphNode& Node)
 	}
 }
 
-void FMaterialEditorWidget::RenderAddNodeMenu(FMaterialGraph& Graph, EMaterialDomain Domain)
+void FMaterialEditorWidget::RenderAddNodeMenu(FMaterialGraph& Graph, EMaterialDomain Domain, EMaterialShadingModel ShadingModel)
 {
 	ImGui::TextDisabled("Add Node");
 	ImGui::Separator();
@@ -712,6 +782,13 @@ void FMaterialEditorWidget::RenderAddNodeMenu(FMaterialGraph& Graph, EMaterialDo
 			FMaterialGraphNode* NewNode = Graph.AddNodeOfType(Type, PendingNewNodePosition.x, PendingNewNodePosition.y, Domain);
 			if (NewNode)
 			{
+				// Output node creation only receives Domain, so it initially builds DefaultLit Surface pins.
+				// Rebuild it with the current Material ShadingModel so Toon parameter pins can be linked manually.
+				if (Type == EMaterialGraphNodeType::Output)
+				{
+					Graph.RebuildOutputPinsForDomain(Domain, ShadingModel);
+				}
+
 				ed::SetNodePosition(ToNodeId(NewNode->NodeId), PendingNewNodePosition);
 				MarkDirty();
 			}
@@ -794,6 +871,13 @@ void FMaterialEditorWidget::RenderAddNodeMenu(FMaterialGraph& Graph, EMaterialDo
 void FMaterialEditorWidget::RenderGraphCanvas(UMaterial* Material, float Width, uint32& OutSelectedNodeId)
 {
 	FMaterialGraph& Graph = Material->GetGraph();
+
+	// ShadingModel is stored on UMaterial, while output pins are stored in the graph JSON.
+	// Keep them in sync when an existing material is opened or a stale output node remains.
+	if (Graph.EnsureOutputPinsForDomain(Material->GetDomain(), Material->GetShadingModel()))
+	{
+		MarkDirty();
+	}
 
 	ImGui::BeginChild("##MaterialGraphCanvasChild", ImVec2(Width, 0), ImGuiChildFlags_None);
 
@@ -949,7 +1033,7 @@ void FMaterialEditorWidget::RenderGraphCanvas(UMaterial* Material, float Width, 
 
 	if (ImGui::BeginPopup("MaterialGraphBackgroundMenu"))
 	{
-		RenderAddNodeMenu(Graph, Material->GetDomain());
+		RenderAddNodeMenu(Graph, Material->GetDomain(), Material->GetShadingModel());
 		ImGui::EndPopup();
 	}
 	ed::Resume();
@@ -1187,7 +1271,7 @@ void FMaterialEditorWidget::RebuildOutputPinsForDomain(UMaterial* Material)
 		ed::SetCurrentEditor(nullptr);
 	}
 
-	Material->GetGraph().RebuildOutputPinsForDomain(Material->GetDomain());
+	Material->GetGraph().RebuildOutputPinsForDomain(Material->GetDomain(), Material->GetShadingModel());
 	bPositionsPushed = false;
 	MarkDirty();
 }

@@ -1,25 +1,189 @@
--- BossFeedback.lua
--- 장판(텔레그래프) / 이펙트 / 연출 담당
--- BossAttacks 코루틴이 호출한다.
---
--- zone 구조: { decals = { 데칼1, 데칼2, ... }, locked = bool }
---   직사각형(P3) = 데칼 1개, 부채꼴(P1) = 데칼 N개
+-- Boss/BossFeedback.lua
+-- Owns boss visual/audio feedback only.
+-- BossAttacks owns attack zone policy and hit request data.
 
 local BossFeedback = {}
 
-local ctx_ref = nil   -- BossCharacter.lua 에서 Init 으로 주입
+local BossContext = require("Boss/BossContext")
+local BossEvents = require("Boss/BossEvents")
+local Strict = require("Core/Strict")
 
--- ────────────────────────────────────────────
-function BossFeedback.Init(ctx)
-    ctx_ref = ctx
+local COLLISION_QUERY_AND_PHYSICS = 3
+
+local KATANA_MESH_PATH = "Content/Data/scifi-katana_extracted/source/KatanaSwordSketch_StaticMesh.uasset"
+local KATANA_SOCKET_NAME = "pinky_01_r_socket"
+local KATANA_LOCATION = Vector(0.0, 0.0, 0.0)
+local KATANA_ROTATION = Vector(0.0, 0.0, 0.0)
+local KATANA_SCALE = Vector(1.0, 1.0, 1.0)
+
+local function AttachKatanaToBoss(bossContext)
+    local ownerActor = bossContext.Owner
+    if ownerActor == nil then return end
+
+    if bossContext.Feedback.KatanaComponent ~= nil
+        and bossContext.Feedback.KatanaComponent:IsValid() then
+        return
+    end
+
+    local meshComp = bossContext.Runtime.SkeletalMeshComp
+    if meshComp == nil then
+        print("[BossFeedback] SkeletalMeshComponent not found")
+        return
+    end
+
+    local katana = ownerActor:AddStaticMeshComponent()
+    if katana == nil then
+        print("[BossFeedback] Failed to create katana component")
+        return
+    end
+
+    katana:SetMeshPath(KATANA_MESH_PATH)
+    katana:AttachToComponentWithSocket(meshComp, KATANA_SOCKET_NAME)
+    katana.RelativeLocation = KATANA_LOCATION
+    katana:SetRotation(KATANA_ROTATION)
+    katana:SetRelativeScale(KATANA_SCALE)
+
+    bossContext.Feedback.KatanaComponent = katana
 end
 
--- 보스 → 타겟 방향 단위벡터 + yaw(도) 반환
--- 타겟 없으면 보스 forward 사용
-local function ResolveDirection(bossPos, target)
-    if target and target:IsValid() then
-        local toTarget = Vector(target.Location.X - bossPos.X,
-                                target.Location.Y - bossPos.Y, 0.0)
+local function GetOrAddActionComponent(ownerActor)
+    if ownerActor == nil or ownerActor:IsValid() ~= true then
+        return nil
+    end
+
+    if ownerActor.GetActionComponent ~= nil then
+        local action = ownerActor:GetActionComponent()
+        if action ~= nil then
+            return action
+        end
+    end
+
+    if ownerActor.AddActionComponent ~= nil then
+        return ownerActor:AddActionComponent()
+    end
+
+    return nil
+end
+
+local function ResolveBossMeshComponent(bossContext)
+    local ownerActor = bossContext.Owner
+    if ownerActor == nil or ownerActor:IsValid() ~= true then
+        return nil
+    end
+
+    local meshComp = bossContext.Runtime.SkeletalMeshComp
+    if meshComp == nil and ownerActor.GetSkeletalMeshComponent ~= nil then
+        meshComp = ownerActor:GetSkeletalMeshComponent()
+    end
+    return meshComp
+end
+
+local function PlayHitSquash(bossContext, event)
+    local feedbackConfig = bossContext.Config.FEEDBACK
+    if feedbackConfig.HIT_SQUASH_ENABLED == false then
+        return
+    end
+
+    local ownerActor = bossContext.Owner
+    local meshComp = ResolveBossMeshComponent(bossContext)
+    if meshComp == nil then
+        if bossContext.Config.DEBUG then
+            print("[BossFeedback] Hit squash skipped: SkeletalMeshComponent not found")
+        end
+        return
+    end
+
+    local action = GetOrAddActionComponent(ownerActor)
+    if action == nil or action.HitSquashComponentByMultiplier == nil then
+        if bossContext.Config.DEBUG then
+            print("[BossFeedback] Hit squash skipped: ActionComponent.HitSquashComponentByMultiplier not available")
+        end
+        return
+    end
+
+    local ok, err = pcall(function()
+        action:HitSquashComponentByMultiplier(
+            meshComp,
+            feedbackConfig.HIT_SQUASH_SCALE,
+            feedbackConfig.HIT_SQUASH_IN_DURATION,
+            feedbackConfig.HIT_SQUASH_RECOVER_DURATION
+        )
+    end)
+
+    if not ok and bossContext.Config.DEBUG then
+        print("[BossFeedback] Hit squash failed: " .. tostring(err))
+    end
+end
+
+local function PlayHitShake(bossContext, event)
+    local feedbackConfig = bossContext.Config.FEEDBACK
+    if feedbackConfig.HIT_SHAKE_ENABLED == false then
+        return
+    end
+
+    local ownerActor = bossContext.Owner
+    local meshComp = ResolveBossMeshComponent(bossContext)
+    if meshComp == nil then
+        if bossContext.Config.DEBUG then
+            print("[BossFeedback] Hit shake skipped: SkeletalMeshComponent not found")
+        end
+        return
+    end
+
+    local action = GetOrAddActionComponent(ownerActor)
+    if action == nil or action.HitShakeComponent == nil then
+        if bossContext.Config.DEBUG then
+            print("[BossFeedback] Hit shake skipped: ActionComponent.HitShakeComponent not available")
+        end
+        return
+    end
+
+    local ok, err = pcall(function()
+        action:HitShakeComponent(
+            meshComp,
+            feedbackConfig.HIT_SHAKE_AMPLITUDE or 3.0,
+            feedbackConfig.HIT_SHAKE_DURATION or 0.08,
+            feedbackConfig.HIT_SHAKE_FREQUENCY or 70.0
+        )
+    end)
+
+    if not ok and bossContext.Config.DEBUG then
+        print("[BossFeedback] Hit shake failed: " .. tostring(err))
+    end
+end
+
+local function StartDeathRagdoll(bossContext)
+    local movementComp = bossContext.Runtime.MovementComp
+    if movementComp ~= nil then
+        Reflection.Call(movementComp, "StopMovementImmediately")
+        Reflection.Call(movementComp, "SetMovementInputEnabled", false)
+    end
+
+    local meshComp = bossContext.Runtime.SkeletalMeshComp
+    if meshComp == nil then
+        local ownerActor = bossContext.Owner
+        meshComp = ownerActor.GetSkeletalMeshComponent and ownerActor:GetSkeletalMeshComponent() or nil
+    end
+
+    if meshComp == nil then
+        return
+    end
+
+    local ok, err = pcall(function()
+        meshComp:SetCollisionEnabled(COLLISION_QUERY_AND_PHYSICS)
+        meshComp:SetEnableGravity(true)
+        meshComp:StartRagdoll()
+    end)
+
+    if not ok then
+        print("[BossFeedback] StartDeathRagdoll failed: " .. tostring(err))
+    end
+end
+
+local function ResolveDirection(bossContext, targetActor)
+    local bossPos = bossContext.Owner.Location
+    if targetActor and targetActor:IsValid() then
+        local toTarget = Vector(targetActor.Location.X - bossPos.X, targetActor.Location.Y - bossPos.Y, 0.0)
         if toTarget:Length() > 0.001 then
             local dir = toTarget:Normalized()
             local yaw = math.atan2(dir.Y, dir.X) * 180.0 / math.pi
@@ -27,181 +191,243 @@ local function ResolveDirection(bossPos, target)
         end
     end
 
-    local f = ctx_ref.obj.Forward
-    local yaw = math.atan2(f.Y, f.X) * 180.0 / math.pi
-    return f, yaw
+    local forward = bossContext.Owner.Forward
+    local yaw = math.atan2(forward.Y, forward.X) * 180.0 / math.pi
+    return forward, yaw
 end
 
--- 데칼 한 조각 스폰 (중심, 회전yaw, 길이, 폭)
-local function SpawnPiece(F, centerX, centerY, centerZ, yaw, length, width)
+local function SpawnPiece(feedbackConfig, centerX, centerY, centerZ, yaw, length, width)
     local decal = VFX.SpawnGroundCrackDecal(
-        F.DECAL_MATERIAL,
+        feedbackConfig.DECAL_MATERIAL,
         Vector(centerX, centerY, centerZ),
-        Vector(length, width, F.ZONE_HEIGHT),
-        F.NO_FADE_DELAY,   -- 자동 페이드 막기 (HideZone 에서 직접 제거)
+        Vector(length, width, feedbackConfig.ZONE_HEIGHT),
+        feedbackConfig.NO_FADE_DELAY,
         0.2
     )
     if decal then
         decal:SetRotation(Vector(0.0, 0.0, yaw))
-        local c = F.ZONE_COLOR_IDLE
-        decal:SetColorRGBA(c[1], c[2], c[3], c[4])
+        local color = feedbackConfig.ZONE_COLOR_IDLE
+        decal:SetColorRGBA(color[1], color[2], color[3], color[4])
     end
     return decal
 end
 
--- ════════════════════════════════════════════
--- P3: 직사각형 장판 (보스 앞으로 뻗고, 타겟 방향 정렬)
--- ════════════════════════════════════════════
-function BossFeedback.ShowRectZone(target)
-    local F = ctx_ref.BB.FEEDBACK
-    local bossPos = ctx_ref.obj.Location
-    local dir, yaw = ResolveDirection(bossPos, target)
+local function ShowRectZone(bossContext, args)
+    local feedbackConfig = bossContext.Config.FEEDBACK
+    local bossPos = bossContext.Owner.Location
+    local dir, yaw = ResolveDirection(bossContext, bossContext.Brain.TargetActor)
+    local length = args.Length or feedbackConfig.ZONE_LENGTH
+    local width = args.Width or feedbackConfig.ZONE_WIDTH
+    local spawnZ = bossPos.Z + feedbackConfig.ZONE_Z_OFFSET
 
-    local decal = SpawnPiece(F,
-        bossPos.X + dir.X * (F.ZONE_LENGTH * 0.5),
-        bossPos.Y + dir.Y * (F.ZONE_LENGTH * 0.5),
-        bossPos.Z + F.ZONE_Z_OFFSET,
-        yaw, F.ZONE_LENGTH, F.ZONE_WIDTH)
+    local decal = SpawnPiece(
+        feedbackConfig,
+        bossPos.X + dir.X * (length * 0.5),
+        bossPos.Y + dir.Y * (length * 0.5),
+        spawnZ,
+        yaw,
+        length,
+        width
+    )
 
     local decals = {}
+    local decalZ = spawnZ
     if decal then
         table.insert(decals, decal)
-    elseif ctx_ref.BB.DEBUG then
-        print("[BossFeedback] ShowRectZone - 데칼 스폰 실패 (머티리얼 경로 확인)")
+        decalZ = decal.Location.Z
+    elseif bossContext.Config.DEBUG then
+        print("[BossFeedback] ShowRectZone decal spawn failed")
     end
 
-    -- 판정용 영역 메타 (히트박스가 그대로 참조 → 보이는 대로 맞음)
     return {
         decals = decals,
-        kind   = "rect",
+        kind = "rect",
         origin = Vector(bossPos.X, bossPos.Y, bossPos.Z),
-        yaw    = yaw,
+        yaw = yaw,
+        length = length,
+        width = width,
+        decalZ = decalZ,
     }
 end
 
--- ════════════════════════════════════════════
--- P1: 부채꼴 장판 (가는 조각 N개를 방사형으로 펼침)
--- ════════════════════════════════════════════
-function BossFeedback.ShowFanZone(target)
-    local F = ctx_ref.BB.FEEDBACK
-    local bossPos = ctx_ref.obj.Location
-    local _, baseYaw = ResolveDirection(bossPos, target)
-
+local function ShowFanZone(bossContext)
+    local feedbackConfig = bossContext.Config.FEEDBACK
+    local bossPos = bossContext.Owner.Location
+    local _, baseYaw = ResolveDirection(bossContext, bossContext.Brain.TargetActor)
     local decals = {}
-    local n    = F.FAN_SEGMENTS
-    local half = F.FAN_ANGLE * 0.5
+    local segmentCount = feedbackConfig.FAN_SEGMENTS
+    local halfAngle = feedbackConfig.FAN_ANGLE * 0.5
 
-    for i = 0, n - 1 do
-        -- 조각 중앙 각도 offset: -half ~ +half 를 n등분, 각 칸의 중앙
-        local offset = -half + F.FAN_ANGLE * ((i + 0.5) / n)
-        local segYaw = baseYaw + offset
-        local rad    = segYaw * math.pi / 180.0
+    for i = 0, segmentCount - 1 do
+        local offset = -halfAngle + feedbackConfig.FAN_ANGLE * ((i + 0.5) / segmentCount)
+        local segmentYaw = baseYaw + offset
+        local rad = segmentYaw * math.pi / 180.0
         local dx, dy = math.cos(rad), math.sin(rad)
-
-        -- 조각 중심 = 보스에서 반지름의 절반 거리 (조각이 보스→바깥으로 뻗음)
-        local decal = SpawnPiece(F,
-            bossPos.X + dx * (F.FAN_RADIUS * 0.5),
-            bossPos.Y + dy * (F.FAN_RADIUS * 0.5),
-            bossPos.Z + F.ZONE_Z_OFFSET,
-            segYaw, F.FAN_RADIUS, F.FAN_SEG_WIDTH)
-
+        local decal = SpawnPiece(
+            feedbackConfig,
+            bossPos.X + dx * (feedbackConfig.FAN_RADIUS * 0.5),
+            bossPos.Y + dy * (feedbackConfig.FAN_RADIUS * 0.5),
+            bossPos.Z + feedbackConfig.ZONE_Z_OFFSET,
+            segmentYaw,
+            feedbackConfig.FAN_RADIUS,
+            feedbackConfig.FAN_SEG_WIDTH
+        )
         if decal then
             table.insert(decals, decal)
         end
     end
 
-    if #decals == 0 and ctx_ref.BB.DEBUG then
-        print("[BossFeedback] ShowFanZone - 데칼 스폰 실패 (머티리얼 경로 확인)")
+    if #decals == 0 and bossContext.Config.DEBUG then
+        print("[BossFeedback] ShowFanZone decal spawn failed")
     end
 
-    -- 판정용 영역 메타 (부채꼴: 중심 방향 = baseYaw)
     return {
         decals = decals,
-        kind   = "fan",
+        kind = "fan",
         origin = Vector(bossPos.X, bossPos.Y, bossPos.Z),
-        yaw    = baseYaw,
+        yaw = baseYaw,
     }
 end
 
--- ════════════════════════════════════════════
--- P2: 가로 베기 예고선 (보스 앞에 좌우로 긴 직사각형)
---   방향 = 보스→플레이어에 수직(90°) → 가로로 베는 궤적
--- ════════════════════════════════════════════
-function BossFeedback.ShowSlashLine(target)
-    local F = ctx_ref.BB.FEEDBACK
-    local bossPos = ctx_ref.obj.Location
-    local dir, baseYaw = ResolveDirection(bossPos, target)
+-- =========================================================
+-- Public API
+-- =========================================================
 
-    -- 직사각형 중심 = 보스 앞쪽 P2_DIST 거리
-    local cx = bossPos.X + dir.X * F.P2_DIST
-    local cy = bossPos.Y + dir.Y * F.P2_DIST
-    local cz = bossPos.Z + F.ZONE_Z_OFFSET
-
-    -- 가로 방향: 보스→플레이어에 수직 (데칼 길이축이 좌우를 향함)
-    local lineYaw = baseYaw + 90.0
-
-    local decal = SpawnPiece(F, cx, cy, cz, lineYaw, F.P2_LENGTH, F.P2_WIDTH)
-
-    local decals = {}
-    if decal then
-        table.insert(decals, decal)
-    elseif ctx_ref.BB.DEBUG then
-        print("[BossFeedback] ShowSlashLine - 데칼 스폰 실패 (머티리얼 경로 확인)")
-    end
-
-    -- 판정용 메타 (중심 기준 박스)
-    return {
-        decals = decals,
-        kind   = "box",
-        center = Vector(cx, cy, cz),
-        yaw    = lineYaw,
-    }
-end
-
--- ════════════════════════════════════════════
--- 차오름(fill-up): 직사각형 장판 길이를 0→full 로 늘림
---   ratio 0.0~1.0. 보스쪽 끝(origin) 고정, 플레이어쪽으로 늘어남.
---   ※ 시각 연출만. 판정(Hitbox)은 가득 찬 full 영역 기준(HIT 시점).
--- ════════════════════════════════════════════
-function BossFeedback.FillZone(zone, ratio)
-    if zone == nil or zone.decals == nil or #zone.decals == 0 then return end
-    if zone.kind ~= "rect" then return end   -- 직사각형만
-
-    local d = zone.decals[1]
-    if d == nil then return end
-
-    local F = ctx_ref.BB.FEEDBACK
-    local len = math.max(0.01, F.ZONE_LENGTH * ratio)   -- 0 방지
-
-    -- 방향 단위벡터 (zone.yaw 기준)
-    local rad = zone.yaw * math.pi / 180.0
-    local dx, dy = math.cos(rad), math.sin(rad)
-
-    -- 중심 = origin(보스쪽 끝)에서 dir 방향으로 len/2
-    local cx = zone.origin.X + dx * (len * 0.5)
-    local cy = zone.origin.Y + dy * (len * 0.5)
-    local cz = zone.origin.Z + F.ZONE_Z_OFFSET
-
-    d:SetLocation(Vector(cx, cy, cz))
-    d:SetRelativeScale(Vector(len, F.ZONE_WIDTH, F.ZONE_HEIGHT))
-end
-
--- 번쩍임 (모든 조각 색 진해짐)
-function BossFeedback.FlashZone(zone)
-    if zone == nil or zone.decals == nil then return end
-    local c = ctx_ref.BB.FEEDBACK.ZONE_COLOR_FLASH
-    for _, d in ipairs(zone.decals) do
-        d:SetColorRGBA(c[1], c[2], c[3], c[4])
+---@param bossContext BossContext
+---@return nil
+function BossFeedback.Init(bossContext)
+    BossContext.Assert(bossContext, "BossFeedback.Init")
+    local ok, err = pcall(function()
+        AttachKatanaToBoss(bossContext)
+    end)
+    if not ok then
+        print("[BossFeedback] AttachKatanaToBoss failed: " .. tostring(err))
     end
 end
 
--- 제거 (모든 조각 즉시 페이드아웃 → 자동파괴)
-function BossFeedback.HideZone(zone)
+---@param bossContext BossContext
+---@param events BossEvent[]
+---@return nil
+function BossFeedback.ProcessEvents(bossContext, events)
+    BossContext.Assert(bossContext, "BossFeedback.ProcessEvents")
+    Strict.AssertTable(events, "events", "BossFeedback.ProcessEvents")
+
+    for _, event in ipairs(events) do
+        if BossEvents.Is(event, BossEvents.Type.Hit) then
+            PlayHitSquash(bossContext, event)
+            PlayHitShake(bossContext, event)
+        elseif BossEvents.Is(event, BossEvents.Type.Dead) then
+            StartDeathRagdoll(bossContext)
+        end
+    end
+end
+
+---@param bossContext BossContext
+---@param args table
+---@return table
+function BossFeedback.ShowAttackZone(bossContext, args)
+    BossContext.Assert(bossContext, "BossFeedback.ShowAttackZone")
+    Strict.AssertTable(args, "args", "BossFeedback.ShowAttackZone")
+
+    local shape = args.Shape or "Rect"
+    local zone
+    if shape == "Fan" then
+        zone = ShowFanZone(bossContext)
+    elseif shape == "P1" then
+        zone = ShowRectZone(bossContext, {
+            Length = bossContext.Config.FEEDBACK.P1_LENGTH,
+            Width = bossContext.Config.FEEDBACK.P1_WIDTH,
+        })
+    else
+        zone = ShowRectZone(bossContext, args)
+    end
+
+    bossContext.Feedback.CurrentTelegraph = zone
+    return zone
+end
+
+---@param bossContext BossContext
+---@param args table
+---@return nil
+function BossFeedback.HideAttackZone(bossContext, args)
+    BossContext.Assert(bossContext, "BossFeedback.HideAttackZone")
+    Strict.AssertTable(args, "args", "BossFeedback.HideAttackZone")
+    local zone = args.Zone
     if zone == nil or zone.decals == nil then return end
-    for _, d in ipairs(zone.decals) do
-        d:SetFadeOut(0.0, 0.15)
+    for _, decal in ipairs(zone.decals) do
+        decal:SetFadeOut(0.0, 0.15)
     end
     zone.decals = {}
+    if bossContext.Feedback.CurrentTelegraph == zone then
+        bossContext.Feedback.CurrentTelegraph = nil
+    end
+end
+
+local function FillRectZone(bossContext, zone, ratio)
+    local decal = zone.decals[1]
+    if decal == nil then return end
+
+    local feedbackConfig = bossContext.Config.FEEDBACK
+    local full = zone.length or feedbackConfig.ZONE_LENGTH
+    local width = zone.width or feedbackConfig.ZONE_WIDTH
+    local length = math.max(0.01, full * ratio)
+    local rad = zone.yaw * math.pi / 180.0
+    local dx, dy = math.cos(rad), math.sin(rad)
+    local cx = zone.origin.X + dx * (length * 0.5)
+    local cy = zone.origin.Y + dy * (length * 0.5)
+    local cz = zone.decalZ or decal.Location.Z or (zone.origin.Z + feedbackConfig.ZONE_Z_OFFSET)
+
+    decal:SetLocation(Vector(cx, cy, cz))
+    decal:SetRelativeScale(Vector(length, width, feedbackConfig.ZONE_HEIGHT))
+end
+
+local function FillFanZone(bossContext, zone, ratio)
+    local feedbackConfig = bossContext.Config.FEEDBACK
+    local segmentCount = feedbackConfig.FAN_SEGMENTS
+    local halfAngle = feedbackConfig.FAN_ANGLE * 0.5
+    local radius = math.max(0.01, feedbackConfig.FAN_RADIUS * ratio)
+    local fallbackZ = zone.origin.Z + feedbackConfig.ZONE_Z_OFFSET
+
+    for i, decal in ipairs(zone.decals) do
+        local offset = -halfAngle + feedbackConfig.FAN_ANGLE * ((i - 1 + 0.5) / segmentCount)
+        local segmentYaw = zone.yaw + offset
+        local rad = segmentYaw * math.pi / 180.0
+        local dx, dy = math.cos(rad), math.sin(rad)
+        local cx = zone.origin.X + dx * (radius * 0.5)
+        local cy = zone.origin.Y + dy * (radius * 0.5)
+        local cz = decal.Location.Z or fallbackZ
+
+        decal:SetLocation(Vector(cx, cy, cz))
+        decal:SetRelativeScale(Vector(radius, feedbackConfig.FAN_SEG_WIDTH, feedbackConfig.ZONE_HEIGHT))
+    end
+end
+
+---@param bossContext BossContext
+---@param zone table
+---@param ratio number
+---@return nil
+function BossFeedback.FillZone(bossContext, zone, ratio)
+    BossContext.Assert(bossContext, "BossFeedback.FillZone")
+    Strict.AssertNumber(ratio, "ratio", "BossFeedback.FillZone")
+    if zone == nil or zone.decals == nil or #zone.decals == 0 then return end
+
+    if zone.kind == "rect" then
+        FillRectZone(bossContext, zone, ratio)
+    elseif zone.kind == "fan" then
+        FillFanZone(bossContext, zone, ratio)
+    end
+end
+
+---@param bossContext BossContext
+---@param zone table
+---@return nil
+function BossFeedback.FlashZone(bossContext, zone)
+    BossContext.Assert(bossContext, "BossFeedback.FlashZone")
+    if zone == nil or zone.decals == nil then return end
+    local color = bossContext.Config.FEEDBACK.ZONE_COLOR_FLASH
+    for _, decal in ipairs(zone.decals) do
+        decal:SetColorRGBA(color[1], color[2], color[3], color[4])
+    end
 end
 
 return BossFeedback

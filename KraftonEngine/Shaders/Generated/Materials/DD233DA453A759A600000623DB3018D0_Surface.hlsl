@@ -10,7 +10,15 @@
 
 Texture2D Tex_Diffuse : register(t0);
 
-FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)
+struct FMaterialEvalResult
+{
+    FMaterialResult Material;
+    float2 RefractionOffset;
+    float RefractionEnabled;
+    float _Pad;
+};
+
+FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
     float2 n_32 = Input.UV0;
     float4 n_17 = Tex_Diffuse.Sample(LinearWrapSampler, n_32);
@@ -23,7 +31,17 @@ FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)
     Result.Opacity = 1.0f;
     Result.OpacityMask = 1.0f;
     Result.NormalConnected = 0.0f;
-    return Result;
+    FMaterialEvalResult Eval;
+    Eval.Material = Result;
+    Eval.RefractionOffset = float2(0, 0);
+    Eval.RefractionEnabled = 0.0f;
+    Eval._Pad = 0.0f;
+    return Eval;
+}
+
+FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)
+{
+    return EvaluateMaterialWithRefraction(Input).Material;
 }
 
 

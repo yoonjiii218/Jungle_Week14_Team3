@@ -22,23 +22,35 @@ public:
 	void HitStop(float Duration, float TimeDilation);
 	void LocalHitStop(float Duration);
 	void HitSquash(const FVector& SquashedScale, float SquashInDuration, float RecoverDuration);
+	void HitSquashComponent(USceneComponent* TargetComponent, const FVector& SquashedScale, float SquashInDuration, float RecoverDuration);
+	void HitSquashComponentByMultiplier(USceneComponent* TargetComponent, const FVector& ScaleMultiplier, float SquashInDuration, float RecoverDuration);
+	void HitShakeComponent(USceneComponent* TargetComponent, float Amplitude, float Duration, float Frequency);
 	void Knockback(const FVector& Direction, float Distance, float Duration);
 	void Slomo(float Duration, float TimeDilation);
+	void TimeRush(float Duration, float WorldTimeDilation, float PlayerSpeedScale);
 
 	void StopHitStop();
 	void StopLocalHitStop();
 	void StopHitSquash();
+	void StopHitShake();
 	void StopKnockback();
 	void StopSlomo();
+	void StopTimeRush();
 	void StopAllActions();
+
+	// 넉백 면역. true 면 Knockback() 호출이 무시된다. (예: 보스는 넉백을 받지 않음)
+	void SetKnockbackImmune(bool bImmune) { bKnockbackImmune = bImmune; }
+	bool IsKnockbackImmune() const { return bKnockbackImmune; }
 
 private:
 	float GetRawDeltaTime(float FallbackDeltaTime) const;
 	USceneComponent* GetTargetSceneComponent() const;
-	void UpdateTimeDilationRegistration();
-	void RegisterTimeDilationComponent();
-	void UnregisterTimeDilationComponent();
-	static void RefreshGlobalTimeDilation();
+	float GetDesiredGlobalTimeDilation() const;
+	void RequestDesiredGlobalTimeDilation() const;
+	void CaptureOwnerCustomTimeDilationBase();
+	void RebuildOwnerCustomTimeDilation();
+	float GetTimeRushOwnerCustomTimeDilationScale() const;
+	bool HasActiveOwnerCustomTimeDilationLayer() const;
 
 	struct FTimedDilationAction
 	{
@@ -56,6 +68,18 @@ private:
 		float ElapsedTime = 0.0f;
 		FVector StartScale = FVector::OneVector;
 		FVector SquashedScale = FVector::OneVector;
+		USceneComponent* TargetComponent = nullptr;
+	};
+
+	struct FHitShakeAction
+	{
+		bool bActive = false;
+		float Duration = 0.0f;
+		float ElapsedTime = 0.0f;
+		float Amplitude = 0.0f;
+		float Frequency = 45.0f;
+		FVector BaseRelativeLocation = FVector::ZeroVector;
+		USceneComponent* TargetComponent = nullptr;
 	};
 
 	struct FLocalHitStopAction
@@ -63,8 +87,7 @@ private:
 		bool bActive = false;
 		float Duration = 0.0f;
 		float RemainingTime = 0.0f;
-		bool bActorTickWasEnabled = true;
-		TArray<TPair<UActorComponent*, bool>> ComponentTickStates;
+		float PreviousCustomTimeDilation = 1.0f;
 	};
 
 	struct FKnockbackAction
@@ -80,11 +103,14 @@ private:
 
 	FTimedDilationAction HitStopAction;
 	FTimedDilationAction SlomoAction;
+	FTimedDilationAction TimeRushAction;
+	float TimeRushPlayerSpeedScale = 1.0f;
+	float OwnerCustomTimeDilationBase = 1.0f;
+	bool bHasOwnerCustomTimeDilationBase = false;
 	FHitSquashAction HitSquashAction;
+	FHitShakeAction HitShakeAction;
 	FLocalHitStopAction LocalHitStopAction;
 	FKnockbackAction KnockbackAction;
 
-	static TArray<UActionComponent*> TimeDilationComponents;
-	static bool bHasCapturedGlobalBaseTimeDilation;
-	static float GlobalBaseTimeDilation;
+	bool bKnockbackImmune = false;
 };

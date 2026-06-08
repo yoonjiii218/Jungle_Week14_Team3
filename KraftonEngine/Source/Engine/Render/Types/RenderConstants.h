@@ -62,7 +62,7 @@ namespace ELightCullingSRVSlot
 namespace ESystemTexSlot
 {
 	constexpr uint32 SceneDepth = 16;          // t16: CopyResource된 Depth (R24_UNORM)
-	constexpr uint32 SceneColor = 17;          // t17: CopyResource된 SceneColor (R8G8B8A8_UNORM)
+	constexpr uint32 SceneColor = 17;          // t17: CopyResource된 HDR SceneColor (R16G16B16A16_FLOAT)
 	constexpr uint32 GBufferNormal = 18;       // t18: GBuffer World Normal (R16G16B16A16_FLOAT)
 	constexpr uint32 Stencil     = 19;         // t19: CopyResource된 Stencil (X24_G8_UINT)
 	constexpr uint32 CullingHeatmap = 20;      // t20: Tile Culling Heatmap (R8G8B8A8_UNORM)
@@ -73,6 +73,7 @@ namespace ESystemTexSlot
 	constexpr uint32 PointShadowDatas   = 25;  // t25: StructuredBuffer<FPointShadowDataGPU>
 	constexpr uint32 DOFCoC            = 26;  // t26: DOF CoC texture
 	constexpr uint32 DOFBlur           = 27;  // t27: DOF blur texture
+	constexpr uint32 Bloom             = 28;  // t28: Half-resolution HDR bloom texture
 
 	// 하위 호환용 별칭
 	constexpr uint32 ShadowMap = ShadowMapCSM;
@@ -269,7 +270,16 @@ struct FFXAAConstants
 struct FGammaCorrectionConstants
 {
 	float Gamma;
-	float _pad[3];
+	float BloomIntensity;
+	float Exposure;
+	float BloomRadius;
+};
+
+struct FBloomExtractConstants
+{
+	float BloomThreshold;
+	float BloomRadius;
+	float _pad[2];
 };
 
 struct FDOFConstants
@@ -310,6 +320,44 @@ struct FCameraLetterboxConstants
 	float LetterboxThickness; // 4B
 	float _pad[2];            // 8B - 16B boundary
 };
+
+// Perfect Dodge / TimeRush PP CB (b2) - HLSL PerfectDodgePostProcessCB와 1:1 대응
+struct FPerfectDodgePostProcessConstants
+{
+	FVector4 BlueTintColor;
+	FVector4 GridColor;
+
+	float EffectAmount;
+	float EnterAmount;
+	float SustainAmount;
+	float ExitAmount;
+
+	float RadialBlurStrength;
+	float FocusFlashStrength;
+	float BlueTintStrength;
+	float GridIntensity;
+
+	float GlitchIntensity;
+	float VignetteIntensity;
+	float ElapsedTime;
+	float Duration;
+
+	float WorldGridIntensity;
+	float WorldGridScale;
+	float WorldGridThickness;
+	float WorldGridDepthFadeDistance;
+
+	float SceneDarkening;
+	float GammaPower;
+	float WorldGridSurfaceBias;
+	float ScreenGridIntensity;
+
+	float FocusHighlightStrength;
+	float _FocusHighlightPad0;
+	float _FocusHighlightPad1;
+	float _FocusHighlightPad2;
+};
+static_assert(sizeof(FPerfectDodgePostProcessConstants) % 16 == 0, "FPerfectDodgePostProcessConstants must be 16-byte aligned");
 
 // ============================================================
 // 타입별 CB 바인딩 디스크립터 — GPU CB에 업로드할 데이터를 인라인 보관

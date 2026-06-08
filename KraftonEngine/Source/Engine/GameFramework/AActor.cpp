@@ -383,6 +383,11 @@ ULevel* AActor::GetLevel() const
 	return GetTypedOuter<ULevel>();
 }
 
+void AActor::SetCustomTimeDilation(float InTimeDilation)
+{
+	CustomTimeDilation = (std::max)(0.0f, InTimeDilation);
+}
+
 void AActor::SetVisible(bool Visible)
 {
 	if (bVisible == Visible)

@@ -1,0 +1,213 @@
+// Generated from Content/Material/VFX/M_Slash_Aura.mat
+// Domain: ParticleSprite
+// ShadingModel: UnLit
+
+#include "Common/ConstantBuffers.hlsli"
+#include "Common/VertexLayouts.hlsli"
+#include "Common/Functions.hlsli"
+#include "Common/SystemSamplers.hlsli"
+#define USE_FOG 1
+#include "Common/Fog.hlsli"
+cbuffer ParticleFrameBuffer : register(b2)
+{
+    float3 ParticleFrameRight;
+    float ParticleFramePad0;
+    float3 ParticleFrameUp;
+    float ParticleFramePad1;
+};
+
+Texture2D GeneratedSceneColorTexture : register(t17);
+
+struct FMaterialPixelInput
+{
+    float2 UV0;
+    float2 UV1;
+    float2 UV2;
+    float4 ParticleColor;
+    float4 VertexColor;
+    float  Time;
+    float  SubImageIndex;
+    float4 DynamicParam;
+};
+
+struct FMaterialResult
+{
+    float3 Color;
+    float3 Emissive;
+    float Opacity;
+    float2 UVOffset;
+};
+
+Texture2D Tex_Diffuse : register(t0);
+Texture2D Tex_Blur : register(t6);
+
+cbuffer PerMaterial : register(b3)
+{
+    float Param_AuraIntensity;
+    float3 _Pad0;
+    float Param_DistortionIntensity;
+    float3 _Pad1;
+};
+
+struct FMaterialEvalResult
+{
+    FMaterialResult Material;
+    float2 RefractionOffset;
+    float RefractionEnabled;
+    float _Pad;
+};
+
+FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
+{
+    float n_43 = Param_AuraIntensity;
+    float2 n_52 = ((float2(fmod(floor(saturate(Input.SubImageIndex) * (16 - 0.0001f)), 4), floor(floor(saturate(Input.SubImageIndex) * (16 - 0.0001f)) / 4)) + Input.UV0) * float2(1.0f/4, 1.0f/4));
+    float n_102 = 0.000000f;
+    float n_94 = Param_DistortionIntensity;
+    float2 n_55 = Input.UV0;
+    float2 n_57 = float2(5.000000f, 1.000000f);
+    float2 n_59 = (n_55 * n_57);
+    float n_65 = Input.Time;
+    float2 n_67 = (n_59 + float2(1.000000f, 1.000000f) * n_65);
+    float4 n_75 = Tex_Blur.Sample(LinearWrapSampler, n_67);
+    float n_86 = 0.500000f;
+    float n_88 = ((n_75).r - n_86);
+    float n_96 = (n_94 * n_88);
+    float n_167 = (float4(n_55, 0.0f, 0.0f)).g;
+    float n_170 = 0.500000f;
+    float n_172 = (n_167 - n_170);
+    float n_176 = 100.000000f;
+    float n_178 = (n_172 * n_176);
+    float n_182 = saturate(n_178);
+    float n_185 = (n_96 * n_182);
+    float2 n_104 = float2(n_102, n_185);
+    float2 n_110 = (n_52 + n_104);
+    float4 n_20 = Tex_Diffuse.Sample(LinearWrapSampler, n_110);
+    float3 n_31 = ((n_20).rgb * float3((n_20).a, (n_20).a, (n_20).a));
+    float4 n_1 = Input.ParticleColor;
+    float3 n_37 = (n_31 * (n_1).rgb);
+    float3 n_45 = (float3(n_43, n_43, n_43) * n_37);
+    FMaterialResult Result;
+    Result.Color = float3(0, 0, 0);
+    Result.Emissive = n_45;
+    Result.Opacity = 1.0f;
+    Result.UVOffset = float2(0, 0);
+    FMaterialEvalResult Eval;
+    Eval.Material = Result;
+    Eval.RefractionOffset = float2(0, 0);
+    Eval.RefractionEnabled = 0.0f;
+    Eval._Pad = 0.0f;
+    return Eval;
+}
+
+FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)
+{
+    return EvaluateMaterialWithRefraction(Input).Material;
+}
+
+
+struct PS_Input_MaterialParticle
+{
+    float4 position       : SV_POSITION;
+    float2 texcoord       : TEXCOORD0;
+    float4 color          : COLOR;
+    float  subImageIndex  : TEXCOORD1;
+    float4 dynamicParam   : TEXCOORD2;
+    float3 worldPos       : TEXCOORD3;
+    float2 texcoord2      : TEXCOORD4;
+    float2 texcoord3      : TEXCOORD5;
+};
+
+PS_Input_MaterialParticle VS(VS_Input_ParticleQuad quad, VS_Input_ParticleInstance inst)
+{
+    float sinR = sin(inst.rotation);
+    float cosR = cos(inst.rotation);
+
+    float2 rotUV = float2(
+        quad.cornerUV.x * cosR - quad.cornerUV.y * sinR,
+        quad.cornerUV.x * sinR + quad.cornerUV.y * cosR
+    );
+
+	float3 worldPos = inst.position
+                    + ParticleFrameRight * rotUV.x * inst.size.x
+                    + ParticleFrameUp * rotUV.y * inst.size.y;
+
+    PS_Input_MaterialParticle output;
+    output.position       = mul(float4(worldPos, 1.0f), mul(View, Projection));
+    output.texcoord       = quad.cornerUV + 0.5f;
+    output.color          = inst.color;
+    output.subImageIndex  = inst.subImageIndex;
+    output.dynamicParam   = inst.dynamicParam;
+    output.worldPos       = worldPos;
+    output.texcoord2      = float2(0, 0);
+    output.texcoord3      = float2(0, 0);
+    return output;
+}
+
+struct VS_Input_GeneratedParticleBeamTrail
+{
+    float3 position       : POSITION;
+    float  relativeTime   : RELATIVE_TIME;
+    float3 oldPosition    : OLD_POSITION;
+    float  particleId     : PARTICLE_ID;
+    float2 size           : SIZE;
+    float  rotation       : ROTATION;
+    float  subImageIndex  : SUBIMAGE_INDEX;
+    float4 color          : COLOR;
+    float2 texcoord       : TEXCOORD0;
+    float2 texcoord2      : TEXCOORD1;
+};
+
+PS_Input_MaterialParticle VS_BeamTrail(VS_Input_GeneratedParticleBeamTrail input)
+{
+    float4 worldPos = float4(input.position, 1.0f);
+
+    PS_Input_MaterialParticle output;
+    output.position       = mul(worldPos, mul(View, Projection));
+    output.texcoord       = input.texcoord;
+    output.color          = input.color;
+    output.subImageIndex  = input.subImageIndex;
+    output.dynamicParam   = float4(input.relativeTime, input.particleId, input.size.x + input.size.y, input.rotation);
+    output.worldPos       = worldPos.xyz;
+    output.texcoord2      = input.texcoord2;
+    output.texcoord3      = input.oldPosition.xy;
+    return output;
+}
+
+float4 PS(PS_Input_MaterialParticle input) : SV_TARGET
+{
+    FMaterialPixelInput MaterialInput;
+    MaterialInput.UV0           = input.texcoord;
+    MaterialInput.UV1           = input.texcoord2;
+    MaterialInput.UV2           = input.texcoord3;
+    MaterialInput.ParticleColor = input.color;
+    MaterialInput.VertexColor   = input.color;
+    MaterialInput.Time          = Time;
+    MaterialInput.SubImageIndex = input.subImageIndex;
+    MaterialInput.DynamicParam  = input.dynamicParam;
+
+    FMaterialEvalResult Eval = EvaluateMaterialWithRefraction(MaterialInput);
+    FMaterialResult Result = Eval.Material;
+    float4 FinalColor = float4(Result.Color + Result.Emissive, Result.Opacity);
+    float ClipThreshold = Eval.RefractionEnabled >= 0.5f ? 0.0001f : 0.01f;
+    clip(FinalColor.a - ClipThreshold);
+
+    float4 ForegroundColor = ApplyFogTranslucent(FinalColor, input.worldPos, CameraWorldPos);
+    if (Eval.RefractionEnabled < 0.5f)
+    {
+        return ForegroundColor;
+    }
+
+    // ParticleSprite refraction uses the same opaque SceneColor copy as Surface translucent refraction.
+    // The material output is manually composited to avoid sampling the active render target directly.
+    uint SceneWidth = 1;
+    uint SceneHeight = 1;
+    GeneratedSceneColorTexture.GetDimensions(SceneWidth, SceneHeight);
+    float2 SceneSize = max(float2((float)SceneWidth, (float)SceneHeight), float2(1.0f, 1.0f));
+    float2 ScreenUV = input.position.xy / SceneSize;
+    float2 RefractedUV = saturate(ScreenUV + Eval.RefractionOffset);
+    float4 BackgroundColor = GeneratedSceneColorTexture.Sample(LinearClampSampler, RefractedUV);
+
+    float Alpha = saturate(ForegroundColor.a);
+    float3 OutColor = ForegroundColor.rgb * Alpha + BackgroundColor.rgb * (1.0f - Alpha);
+    return float4(OutColor, 1.0f);
+}

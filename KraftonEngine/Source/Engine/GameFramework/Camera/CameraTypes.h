@@ -76,4 +76,74 @@ struct FCameraLetterboxState
 	float Amount = 1.0f;
 	float Thickness = 0.12f;
 	FLinearColor Color = FLinearColor::Black();
-};;
+};
+
+namespace PerfectDodgePostProcessDebug
+{
+	// Editor console debug toggle. Kept inline intentionally so render/editor code can read the
+	// same process-local flag without adding another subsystem for a game-jam effect.
+	inline bool bPostProcessEnabled = true;
+	inline float DefaultFocusHighlightStrength = 1.25f;
+
+	inline bool IsPostProcessEnabled()
+	{
+		return bPostProcessEnabled;
+	}
+
+	inline void SetPostProcessEnabled(bool bEnabled)
+	{
+		bPostProcessEnabled = bEnabled;
+	}
+
+	inline bool TogglePostProcessEnabled()
+	{
+		bPostProcessEnabled = !bPostProcessEnabled;
+		return bPostProcessEnabled;
+	}
+
+	inline float GetDefaultFocusHighlightStrength()
+	{
+		return DefaultFocusHighlightStrength;
+	}
+
+	inline void SetDefaultFocusHighlightStrength(float Strength)
+	{
+		DefaultFocusHighlightStrength = Strength;
+	}
+}
+
+struct FPerfectDodgePostProcessState
+{
+	bool bEnabled = false;
+	float Duration = 0.0f;
+	float ElapsedTime = 0.0f;
+	float Intensity = 0.0f;
+
+	float EnterDuration = 0.16f;
+	float ExitDuration = 0.25f;
+	float RadialBlurStrength = 0.045f;
+	float FocusFlashStrength = 0.35f;
+
+	float BlueTintStrength = 0.28f;
+	// Stencil mask로 찍힌 Player / HitTarget 계열 액터를 월드 darkening 이후 다시 밝게 올리는 비율.
+	float FocusHighlightStrength = 1.25f;
+	float GridIntensity = 0.0f;
+	float GlitchIntensity = 0.42f;
+	float VignetteIntensity = 0.72f;
+
+	// Grid generation is disabled in the shader for now. Keep these legacy fields
+	// so the constant buffer layout stays compatible with existing patches.
+	float WorldGridIntensity = 0.0f;
+	float WorldGridScale = 1.15f;
+	float WorldGridThickness = 0.035f;
+	float WorldGridDepthFadeDistance = 80.0f;
+
+	// Time-rush 진입 시 세상이 어두워지는 느낌. GammaPower > 1이면 중간톤이 내려간다.
+	float SceneDarkening = 0.42f;
+	float GammaPower = 1.28f;
+	float WorldGridSurfaceBias = 0.0f;
+	float ScreenGridIntensity = 0.0f;
+
+	FLinearColor BlueTintColor = FLinearColor(0.12f, 0.48f, 0.95f, 1.0f);
+	FLinearColor GridColor = FLinearColor(0.2f, 0.95f, 1.0f, 1.0f); // Legacy; currently unused.
+};

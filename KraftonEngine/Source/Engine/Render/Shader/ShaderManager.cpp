@@ -93,6 +93,8 @@ namespace
 			return &ParticleSpriteLayoutDesc;
 		case EShaderVertexFactory::ParticleMesh:
 			return &ParticleMeshLayoutDesc;
+		case EShaderVertexFactory::ParticleBeamTrail:
+			return &ParticleBeamTrailLayoutDesc;
 		default:
 			break;
 		}
@@ -154,6 +156,7 @@ void FShaderManager::Initialize(ID3D11Device* InDevice)
 	GetOrCreate(EShaderPath::Billboard, StartupError);
 	GetOrCreate(EShaderPath::HeightFog, StartupError);
 	GetOrCreate(EShaderPath::GammaCorrection, StartupError);
+	GetOrCreate(EShaderPath::BloomExtract, StartupError);
 	GetOrCreate(EShaderPath::DOFSetup, StartupError);
 	GetOrCreate(EShaderPath::DOFGather, StartupError);
 	GetOrCreate(EShaderPath::DOFRecombine, StartupError);
@@ -164,6 +167,7 @@ void FShaderManager::Initialize(ID3D11Device* InDevice)
 	GetOrCreate(EShaderPath::CameraFade, StartupError);
 	GetOrCreate(EShaderPath::CameraVignette, StartupError);
 	GetOrCreate(EShaderPath::CameraLetterbox, StartupError);
+	GetOrCreate(EShaderPath::PerfectDodgePostProcess, StartupError);
 
 	// UberLit 기본은 StaticMesh VS + Phong으로 컴파일한다. 나머지 ViewMode/VertexFactory 조합은 lazy compile.
 	GetOrCreate(EShaderPath::UberLit, StartupError);

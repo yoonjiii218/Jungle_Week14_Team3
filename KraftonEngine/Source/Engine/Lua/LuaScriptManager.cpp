@@ -133,10 +133,6 @@ namespace
 		{
 			return IsPadButtonDown(Snapshot, EGamepadButton::B);
 		}
-		if (ActionName == "Jump")
-		{
-			return Snapshot.KeyDown[VK_SPACE] || IsPadButtonDown(Snapshot, EGamepadButton::A);
-		}
 
 		return false;
 	}
@@ -469,7 +465,18 @@ void FLuaScriptManager::FireWorldReset()
 		Coro.as<sol::table>()["coroutines"] = Lua->create_table();
 	}
 
-	// 2) ObjRegistry — 액터 핸들 캐시. 새 월드의 BeginPlay 가 다시 등록해줄 때까지 nil 로.
+	// 2) CombatContext — bossRef / bossBB / playersByOwner 등 액터 참조 전체를 Clear() 로 비운다.
+	//    DestroyWorldContext 전에 호출되므로 EndPlay 콜백보다 먼저 정리된다.
+	if (sol::object CC = Loaded["Combat/CombatContext"]; CC.valid() && CC.get_type() == sol::type::table)
+	{
+		sol::object ClearFn = CC.as<sol::table>()["Clear"];
+		if (ClearFn.valid() && ClearFn.get_type() == sol::type::function)
+		{
+			ClearFn.as<sol::protected_function>()();
+		}
+	}
+
+	// 3) ObjRegistry — 액터 핸들 캐시. 새 월드의 BeginPlay 가 다시 등록해줄 때까지 nil 로.
 	if (sol::object Reg = Loaded["ObjRegistry"]; Reg.valid() && Reg.get_type() == sol::type::table)
 	{
 		sol::table T = Reg.as<sol::table>();
@@ -1477,6 +1484,12 @@ namespace
 		)
 	{
 		sol::state_view Lua(State);
+		if (Instance && !IsValid(Instance))
+		{
+			UE_LOG("[LuaReflection] Reflection.CallSignature failed: target object is invalid: %s", Signature.c_str());
+			return sol::make_object(Lua, sol::nil);
+		}
+
 		UStruct*        TargetStruct = Instance ? Instance->GetClass() : StaticClass;
 		if (!TargetStruct)
 		{
@@ -1558,7 +1571,7 @@ namespace
 		sol::protected_function Callback
 		)
 	{
-		if (!Object || !Object->GetClass() || !Callback.valid())
+		if (!IsValid(Object) || !Object->GetClass() || !Callback.valid())
 		{
 			return false;
 		}
@@ -1580,7 +1593,7 @@ namespace
 
 	bool LuaUnbindReflectedEventOverride(UObject* Object, const FString& FunctionNameOrSignature)
 	{
-		if (!Object || !Object->GetClass())
+		if (!IsValid(Object) || !Object->GetClass())
 		{
 			return false;
 		}
@@ -1596,7 +1609,7 @@ namespace
 
 	bool LuaHasReflectedEventOverride(UObject* Object, const FString& FunctionNameOrSignature)
 	{
-		if (!Object || !Object->GetClass())
+		if (!IsValid(Object) || !Object->GetClass())
 		{
 			return false;
 		}
@@ -1621,6 +1634,12 @@ namespace
 		)
 	{
 		sol::state_view Lua(State);
+		if (Instance && !IsValid(Instance))
+		{
+			UE_LOG("[LuaReflection] Reflection.Call failed: target object is invalid: %s", FunctionName.c_str());
+			return sol::make_object(Lua, sol::nil);
+		}
+
 		UStruct*        TargetStruct = Instance ? Instance->GetClass() : StaticClass;
 		if (!TargetStruct)
 		{
@@ -2123,6 +2142,29 @@ void FLuaScriptManager::RegisterCoreBindings(sol::state& Lua)
 			Manager->ClearCameraVignette();
 		}
 	});
+	CameraManager.set_function("StartPerfectDodgeEffect", [](sol::optional<float> Duration, sol::optional<float> Intensity, sol::optional<float> FocusHighlightStrength)
+	{
+		if (!GEngine || !GEngine->GetWorld()) return;
+		APlayerController* PC = GEngine->GetWorld()->GetFirstPlayerController();
+		APlayerCameraManager* Manager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		if (Manager)
+		{
+			Manager->StartPerfectDodgePostProcess(
+				Duration.value_or(1.5f),
+				Intensity.value_or(1.0f),
+				FocusHighlightStrength.value_or(-1.0f));
+		}
+	});
+	CameraManager.set_function("StopPerfectDodgeEffect", []()
+	{
+		if (!GEngine || !GEngine->GetWorld()) return;
+		APlayerController* PC = GEngine->GetWorld()->GetFirstPlayerController();
+		APlayerCameraManager* Manager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		if (Manager)
+		{
+			Manager->StopPerfectDodgePostProcess();
+		}
+	});
 	CameraManager.set_function("SetViewTargetWithBlend", [](AActor* Target, float BlendTime)
 	{
 		if (!GEngine || !GEngine->GetWorld() || !IsValid(Target)) return;
@@ -2551,14 +2593,24 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		sol::base_classes,
 		sol::bases<UActorComponent, UObject>(),
 		"HitStop", &UActionComponent::HitStop,
+		"LocalHitStop", &UActionComponent::LocalHitStop,
 		"HitSquash", &UActionComponent::HitSquash,
+		"HitSquashComponent", &UActionComponent::HitSquashComponent,
+		"HitSquashComponentByMultiplier", &UActionComponent::HitSquashComponentByMultiplier,
+		"HitShakeComponent", &UActionComponent::HitShakeComponent,
 		"Knockback", &UActionComponent::Knockback,
 		"Slomo", &UActionComponent::Slomo,
+		"TimeRush", &UActionComponent::TimeRush,
 		"StopHitStop", &UActionComponent::StopHitStop,
+		"StopLocalHitStop", &UActionComponent::StopLocalHitStop,
 		"StopHitSquash", &UActionComponent::StopHitSquash,
+		"StopHitShake", &UActionComponent::StopHitShake,
 		"StopKnockback", &UActionComponent::StopKnockback,
 		"StopSlomo", &UActionComponent::StopSlomo,
-		"StopAllActions", &UActionComponent::StopAllActions);
+		"StopTimeRush", &UActionComponent::StopTimeRush,
+		"StopAllActions", &UActionComponent::StopAllActions,
+		"SetKnockbackImmune", &UActionComponent::SetKnockbackImmune,
+		"IsKnockbackImmune", &UActionComponent::IsKnockbackImmune);
 
 	Lua.new_usertype<UFloatingPawnMovementComponent>("FloatingPawnMovementComponent",
 		sol::base_classes,
@@ -2634,7 +2686,6 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 	{
 		Component.AttachToComponentWithSocket(Parent, SocketName);
 	},
-
 		// 부모 기준 상대 위치 — 동일한 메시를 4개 깐 바퀴 같은 케이스에서 앞/뒤 구분 등
 		// 위치 기반 필터링에 쓰인다. 월드 위치는 위 "Location" 프로퍼티 참고.
 		"RelativeLocation", sol::property(
@@ -2645,6 +2696,12 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 	Lua.new_usertype<UPrimitiveComponent>("PrimitiveComponent",
 		sol::base_classes,
 		sol::bases<USceneComponent, UActorComponent, UObject>(),
+		"SetCollisionEnabled", [](UPrimitiveComponent& Component, int32 Enabled)
+		{
+			Component.SetCollisionEnabled(static_cast<ECollisionEnabled>(Enabled));
+		},
+		"SetVisibility", &UPrimitiveComponent::SetVisibility,
+		"IsVisible", &UPrimitiveComponent::IsVisible,
 		"SetSimulatePhysics", &UPrimitiveComponent::SetSimulatePhysics,
 		"GetSimulatePhysics", &UPrimitiveComponent::GetSimulatePhysics,
 		"AddForce", &UPrimitiveComponent::AddForce,
@@ -2656,7 +2713,15 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		"SetAngularVelocity", &UPrimitiveComponent::SetAngularVelocity,
 		"GetMass", &UPrimitiveComponent::GetMass,
 		"SetMass", &UPrimitiveComponent::SetMass,
+		"SetEnableGravity", &UPrimitiveComponent::SetEnableGravity,
+		"GetEnableGravity", &UPrimitiveComponent::GetEnableGravity,
 		"GetGenerateOverlapEvents", &UPrimitiveComponent::GetGenerateOverlapEvents);
+
+	Lua.new_usertype<USkeletalMeshComponent>("SkeletalMeshComponent",
+		sol::base_classes,
+		sol::bases<UPrimitiveComponent, USceneComponent, UActorComponent, UObject>(),
+		"StartRagdoll", &USkeletalMeshComponent::StartRagdoll,
+		"EndRagdoll", &USkeletalMeshComponent::EndRagdoll);
 
 	Lua.new_usertype<UDecalComponent>("DecalComponent",
 		sol::base_classes,
@@ -2728,6 +2793,8 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		"SetMaterialPath", &UParticleSystemComponent::SetMaterialPath,
 		"SetAutoDestroyOwnerAfter", &UParticleSystemComponent::SetAutoDestroyOwnerAfter,
 		"ClearAutoDestroyOwnerAfter", &UParticleSystemComponent::ClearAutoDestroyOwnerAfter,
+		"SetParticleSizeScale", &UParticleSystemComponent::SetParticleSizeScale,
+		"GetParticleSizeScale", &UParticleSystemComponent::GetParticleSizeScale,
 		"SetBeamSourcePoint", &UParticleSystemComponent::SetBeamSourcePoint,
 		"SetBeamTargetPoint", &UParticleSystemComponent::SetBeamTargetPoint,
 		"SetBeamEndPoint", &UParticleSystemComponent::SetBeamEndPoint,
@@ -2854,6 +2921,10 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		"GetActionComponent", [](AActor& Actor)
 	{
 		return Actor.GetComponentByClass<UActionComponent>();
+	},
+		"AddActionComponent", [](AActor& Actor) -> UActionComponent*
+	{
+		return Actor.AddComponent<UActionComponent>();
 	},
 
 		"GetSkeletalMeshComponent", [](AActor& Actor)
@@ -3245,6 +3316,26 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		AActor* Actor = W->SpawnActorByClass(ActorClass);
 		if (!Actor) return nullptr;
 
+		FVector DecalLocation = Location;
+		{
+			FHitResult GroundHit;
+			const FVector Start = Location + FVector(0.0f, 0.0f, 50.0f);
+			const FVector Dir(0.0f, 0.0f, -1.0f);
+			constexpr float MaxGroundSnapDistance = 200.0f;
+			constexpr float SurfaceOffset = 0.03f;
+
+			if (W->PhysicsRaycastByObjectTypes(
+				Start,
+				Dir,
+				MaxGroundSnapDistance,
+				GroundHit,
+				ObjectTypeBit(ECollisionChannel::WorldStatic),
+				Actor))
+			{
+				DecalLocation.Z = GroundHit.WorldHitLocation.Z + SurfaceOffset;
+			}
+		}
+
 		UDecalComponent* Decal = Actor->AddComponent<UDecalComponent>();
 		if (!Decal)
 		{
@@ -3253,7 +3344,7 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		}
 
 		Actor->SetRootComponent(Decal);
-		Decal->SetWorldLocation(Location);
+		Decal->SetWorldLocation(DecalLocation);
 		Decal->SetRelativeScale(Scale);
 		Decal->SetMaterialPath(MaterialPath);
 		Decal->SetFadeOut(FadeOutDelay.value_or(0.35f), FadeOutDuration.value_or(0.45f));

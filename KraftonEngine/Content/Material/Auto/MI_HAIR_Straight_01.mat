@@ -3,14 +3,15 @@
   "Compiled" : {
     "BlendState" : "AlphaBlend",
     "Domain" : "Surface",
-    "GeneratorVersion" : "GeneratedMaterialPass_v5_InstancedStaticMesh",
-    "GraphHash" : "C5B8A7196D6CAE9A",
+    "GeneratorVersion" : "GeneratedMaterialPass_v9_SurfaceToonShading_InstancedStaticMesh",
+    "GraphHash" : "F73EC51B78C2E53F",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
 
     },
     "ReceiveLighting" : false,
     "RenderPass" : "AlphaBlend",
+    "ShadingModel" : "DefaultLit",
     "Textures" : {
       "DiffuseTexture" : {
         "Path" : "Content/Texture/T_HAIR_STRAIGHT_albedo.PNG",
@@ -20,7 +21,7 @@
   },
   "DepthStencilState" : "DepthReadOnly",
   "Domain" : "Surface",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/_5B5FF3FB6334490B_Surface.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/_5B5FF3FB6334490B_Surface_DefaultLit.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 2,
@@ -75,7 +76,7 @@
         "LinkId" : 85,
         "ToPinId" : 64
       }],
-    "NextId" : 86,
+    "NextId" : 87,
     "Nodes" : [{
         "DisplayName" : "Texture Object",
         "Mask" : "RGBA",
@@ -321,6 +322,12 @@
             "OwningNodeId" : 31,
             "PinId" : 38,
             "Type" : "Float"
+          }, {
+            "DisplayName" : "RefractionOffset",
+            "Kind" : "Input",
+            "OwningNodeId" : 31,
+            "PinId" : 86,
+            "Type" : "Float2"
           }],
         "PosX" : 296.000000,
         "PosY" : 54.000000,
@@ -468,6 +475,7 @@
   "RasterizerState" : "SolidNoCull",
   "ReceiveLighting" : false,
   "RenderPass" : "AlphaBlend",
-  "ShaderPath" : "Shaders/Generated/Materials/_5B5FF3FB6334490B_Surface.hlsl",
+  "ShaderPath" : "Shaders/Generated/Materials/_5B5FF3FB6334490B_Surface_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Version" : 2
 }

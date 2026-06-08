@@ -20,6 +20,14 @@
 
 #include "Object/GarbageCollection.h"
 
+namespace
+{
+	float ClampTimeDilation(float InTimeDilation)
+	{
+		return (std::max)(0.0f, InTimeDilation);
+	}
+}
+
 UWorld::~UWorld()
 {
 	if (PersistentLevel && !PersistentLevel->GetActors().empty())
@@ -412,16 +420,39 @@ void UWorld::BeginPlay()
 	// E.2/3: AutoPossessDefaultCamera 는 PC 의 BeginPlay 가 처리.
 }
 
+float UWorld::GetGlobalTimeDilation() const
+{
+	return BaseGlobalTimeDilation * ActiveGlobalTimeDilationRequest;
+}
+
+void UWorld::SetGlobalTimeDilation(float InTimeDilation)
+{
+	BaseGlobalTimeDilation = ClampTimeDilation(InTimeDilation);
+}
+
+void UWorld::RequestGlobalTimeDilation(float InTimeDilation)
+{
+	const float RequestedDilation = ClampTimeDilation(InTimeDilation);
+	if (bCollectingGlobalTimeDilationRequests)
+	{
+		FrameGlobalTimeDilationRequest = (std::min)(FrameGlobalTimeDilationRequest, RequestedDilation);
+		return;
+	}
+
+	ActiveGlobalTimeDilationRequest = (std::min)(ActiveGlobalTimeDilationRequest, RequestedDilation);
+}
+
 void UWorld::Tick(float DeltaTime, ELevelTick TickType)
 {
 	PHYSICS_STATS_RESET_FRAME();
+	const float WorldDeltaTime = DeltaTime * GetGlobalTimeDilation();
 
 	{
 		SCOPE_STAT_CAT("FlushPrimitive", "1_WorldTick");
 		Partition.FlushPrimitive();
 	}
 
-	Scene.GetDebugDrawQueue().Tick(DeltaTime);
+	Scene.GetDebugDrawQueue().Tick(WorldDeltaTime);
 
 	// bPaused 동안 PhysicsScene + TickManager skip — GameMode 타이머, Lua Tick, 차량
 	// 이동, PhysX 시뮬레이션 모두 정지. Render / UI / Input poll 은 호출자 (UEngine::Tick)
@@ -432,19 +463,25 @@ void UWorld::Tick(float DeltaTime, ELevelTick TickType)
 		return;
 	}
 
+	bCollectingGlobalTimeDilationRequests = true;
+	FrameGlobalTimeDilationRequest = 1.0f;
+
 	if (bHasBegunPlay)
 	{
-		GameTimeSeconds += DeltaTime;
+		GameTimeSeconds += WorldDeltaTime;
 	}
 
 	// Gameplay/vehicle 입력은 물리 적분 전에 반영 (이전: Physics → TickManager 이면 입력이 1프레임 늦음).
-	TickManager.Tick(this, DeltaTime, TickType);
+	TickManager.Tick(this, WorldDeltaTime, TickType);
 
 	if (bHasBegunPlay && PhysicsScene)
 	{
 		SCOPE_STAT_CAT("PhysicsScene", "1_WorldTick");
-		PhysicsScene->Tick(DeltaTime);
+		PhysicsScene->Tick(WorldDeltaTime);
 	}
+
+	bCollectingGlobalTimeDilationRequests = false;
+	ActiveGlobalTimeDilationRequest = FrameGlobalTimeDilationRequest;
 
 	// 카메라는 물리/액터 Tick 이후 갱신 — 차량 1인칭처럼 physics body 에 붙은 카메라가
 	// 같은 프레임의 최신 transform 으로 POV cache 를 채운다.
@@ -476,6 +513,9 @@ void UWorld::EndPlay()
 
 	bHasBegunPlay = false;
 	TickManager.Reset();
+	ActiveGlobalTimeDilationRequest = 1.0f;
+	FrameGlobalTimeDilationRequest = 1.0f;
+	bCollectingGlobalTimeDilationRequests = false;
 
 	if (PersistentLevel)
 	{

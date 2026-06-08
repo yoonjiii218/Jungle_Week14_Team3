@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cmath>
+
 void ACharacter::InitDefaultComponents(const FString& SkeletalMeshFileName)
 {
 	// 1) Capsule — Root. CharacterMovement 의 UpdatedComponent 가 이걸 가리킴.
@@ -77,7 +78,9 @@ void ACharacter::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	if (!bAutoInputWASD || !InputComponent) return;
+	if (!InputComponent) return;
+
+	if (!bAutoInputWASD) return;
 
 	// Capsule (RootComponent) 기준 — yaw 회전이 곧 캐릭터 facing. mouse look 이 yaw 만
 	// 변경 → forward/right vector 가 자동 회전 → WASD 가 "카메라 보는 방향" 으로 이동.

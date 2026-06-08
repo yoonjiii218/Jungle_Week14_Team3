@@ -1,4 +1,4 @@
-local CombatContext = require("CombatContext")
+local CombatContext = require("Combat/CombatContext")
 
 local widgets = {}
 local director = nil

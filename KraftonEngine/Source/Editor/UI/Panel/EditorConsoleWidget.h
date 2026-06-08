@@ -110,6 +110,8 @@ private:
 	void HandleStatParticle(const TArray<FString>& Args);
 	void HandleStatPhysics(const TArray<FString>& Args);
 	void HandleStatNone(const TArray<FString>& Args);
+	void HandleShowDebugPlayer(const TArray<FString>& Args);
+	void HandleShowDebugNone(const TArray<FString>& Args);
 	void HandleCauseCrash(const TArray<FString>& Args);
 	void HandleCSMResolution(const TArray<FString>& Args);
 	void HandleCSMSplit(const TArray<FString>& Args);
@@ -120,6 +122,7 @@ private:
 	void HandleShadowBias(const TArray<FString>& Args);
 	void HandleShadowFilter(const TArray<FString>& Args);
 	void HandleSkinningMode(const TArray<FString>& Args);
+	void HandlePerfectDodgePostProcessDebug(const TArray<FString>& Args);
 	void HandleExecReflection(const TArray<FString>& Args);
 	bool TryExecReflectedShortcut(const FString& CommandLine);
 	void PrintCSMCascadeRanges();

@@ -1,0 +1,20 @@
+{
+  "BlendState" : "",
+  "DepthStencilState" : "",
+  "GraphShaderMode" : "Generated",
+  "Origin" : "FbxImport",
+  "Parameters" : {
+    "HasDiffuseTexture" : 1.000000,
+    "HasNormalMap" : 0.000000,
+    "SectionColor" : [1.000000, 1.000000, 1.000000, 1.000000],
+    "_pad" : null
+  },
+  "PathFileName" : "Content/Material/Auto/SwordBase.001.mat",
+  "RasterizerState" : "",
+  "RenderPass" : "Opaque",
+  "ShaderPath" : "Shaders/Geometry/UberLit.hlsl",
+  "ShadingModel" : "DefaultLit",
+  "Textures" : {
+    "DiffuseTexture" : "Content/Texture/Auto/KatanaSwordSketchfab/katana sword_SwordBase_BaseColor.png"
+  }
+}

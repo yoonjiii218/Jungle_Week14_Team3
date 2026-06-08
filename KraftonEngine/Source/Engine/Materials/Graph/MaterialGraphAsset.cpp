@@ -460,7 +460,7 @@ const FMaterialGraphNode* FMaterialGraph::FindFirstNodeOfType(EMaterialGraphNode
 	return nullptr;
 }
 
-void FMaterialGraph::InitializeDefault(EMaterialDomain Domain)
+void FMaterialGraph::InitializeDefault(EMaterialDomain Domain, EMaterialShadingModel ShadingModel)
 {
 	Nodes.clear();
 	Links.clear();
@@ -539,6 +539,10 @@ void FMaterialGraph::InitializeDefault(EMaterialDomain Domain)
 	}
 
 	FMaterialGraphNode* Out = AddNodeOfType(EMaterialGraphNodeType::Output, 260.0f, 80.0f, Domain);
+	if (Out)
+	{
+		RebuildOutputPinsForDomain(Domain, ShadingModel);
+	}
 
 	AddLink(TexOut, SampleTexIn);
 	AddLink(UVOut, SampleUVIn);
@@ -636,7 +640,123 @@ void FMaterialGraph::ApplyTexturedParticlePreset(EMaterialDomain Domain)
 	}
 }
 
-void FMaterialGraph::RebuildOutputPinsForDomain(EMaterialDomain Domain)
+
+void FMaterialGraph::ApplyToonSurfacePreset()
+{
+	Nodes.clear();
+	Links.clear();
+	NextId = 1;
+
+	constexpr EMaterialDomain Domain = EMaterialDomain::Surface;
+
+	auto FindInputPin = [](const FMaterialGraphNode* Node, const char* Name) -> uint32
+	{
+		if (!Node) return 0;
+		for (const FMaterialGraphPin& Pin : Node->Pins)
+		{
+			if (Pin.Kind == EMaterialGraphPinKind::Input && Pin.DisplayName.ToString() == Name)
+			{
+				return Pin.PinId;
+			}
+		}
+		return 0;
+	};
+	auto FindOutputPin = [](const FMaterialGraphNode* Node, const char* Name) -> uint32
+	{
+		if (!Node) return 0;
+		for (const FMaterialGraphPin& Pin : Node->Pins)
+		{
+			if (Pin.Kind == EMaterialGraphPinKind::Output && Pin.DisplayName.ToString() == Name)
+			{
+				return Pin.PinId;
+			}
+		}
+		return 0;
+	};
+
+	uint32 TexOut = 0;
+	if (FMaterialGraphNode* N = AddNodeOfType(EMaterialGraphNodeType::TextureObject, -760.0f, -120.0f, Domain))
+	{
+		N->ParameterName = "Diffuse";
+		N->TextureSlot = EMaterialTextureSlot::Diffuse;
+		TexOut = FindOutputPin(N, "Texture");
+	}
+
+	uint32 UVOut = 0;
+	if (FMaterialGraphNode* N = AddNodeOfType(EMaterialGraphNodeType::TexCoord, -760.0f, 90.0f, Domain))
+	{
+		UVOut = FindOutputPin(N, "UV");
+	}
+
+	uint32 SampleTexIn = 0, SampleUVIn = 0, SampleRGB = 0, SampleA = 0;
+	if (FMaterialGraphNode* N = AddNodeOfType(EMaterialGraphNodeType::TextureSample, -520.0f, -40.0f, Domain))
+	{
+		SampleTexIn = FindInputPin(N, "Texture");
+		SampleUVIn = FindInputPin(N, "UV");
+		SampleRGB = FindOutputPin(N, "RGB");
+		SampleA = FindOutputPin(N, "A");
+	}
+
+	FMaterialGraphNode* Threshold = AddNodeOfType(EMaterialGraphNodeType::ScalarParameter, -520.0f, 220.0f, Domain);
+	if (Threshold)
+	{
+		Threshold->ParameterName = "ToonThreshold";
+		Threshold->Value = FVector4(0.50f, 0.0f, 0.0f, 0.0f);
+	}
+	FMaterialGraphNode* Softness = AddNodeOfType(EMaterialGraphNodeType::ScalarParameter, -520.0f, 330.0f, Domain);
+	if (Softness)
+	{
+		Softness->ParameterName = "ToonSoftness";
+		Softness->Value = FVector4(0.025f, 0.0f, 0.0f, 0.0f);
+	}
+	FMaterialGraphNode* ShadowStrength = AddNodeOfType(EMaterialGraphNodeType::ScalarParameter, -520.0f, 440.0f, Domain);
+	if (ShadowStrength)
+	{
+		ShadowStrength->ParameterName = "ToonShadowStrength";
+		ShadowStrength->Value = FVector4(0.38f, 0.0f, 0.0f, 0.0f);
+	}
+	FMaterialGraphNode* ShadowTint = AddNodeOfType(EMaterialGraphNodeType::ColorParameter, -520.0f, 550.0f, Domain);
+	if (ShadowTint)
+	{
+		ShadowTint->ParameterName = "ToonShadowTint";
+		ShadowTint->Value = FVector4(0.45f, 0.50f, 0.75f, 1.0f);
+	}
+	FMaterialGraphNode* RimColor = AddNodeOfType(EMaterialGraphNodeType::ColorParameter, -520.0f, 680.0f, Domain);
+	if (RimColor)
+	{
+		RimColor->ParameterName = "ToonRimColor";
+		RimColor->Value = FVector4(0.0f, 0.80f, 1.0f, 1.0f);
+	}
+	FMaterialGraphNode* RimStrength = AddNodeOfType(EMaterialGraphNodeType::ScalarParameter, -520.0f, 810.0f, Domain);
+	if (RimStrength)
+	{
+		RimStrength->ParameterName = "ToonRimStrength";
+		RimStrength->Value = FVector4(0.25f, 0.0f, 0.0f, 0.0f);
+	}
+
+	FMaterialGraphNode* Out = AddNodeOfType(EMaterialGraphNodeType::Output, -160.0f, 140.0f, Domain);
+	if (Out)
+	{
+		RebuildOutputPinsForDomain(Domain, EMaterialShadingModel::Toon);
+	}
+
+	AddLink(TexOut, SampleTexIn);
+	AddLink(UVOut, SampleUVIn);
+
+	if (Out)
+	{
+		AddLink(SampleRGB, FindInputPin(Out, "BaseColor"));
+		AddLink(SampleA, FindInputPin(Out, "Opacity"));
+		AddLink(FindOutputPin(Threshold, "Value"), FindInputPin(Out, "ToonThreshold"));
+		AddLink(FindOutputPin(Softness, "Value"), FindInputPin(Out, "ToonSoftness"));
+		AddLink(FindOutputPin(ShadowStrength, "Value"), FindInputPin(Out, "ToonShadowStrength"));
+		AddLink(FindOutputPin(ShadowTint, "Color"), FindInputPin(Out, "ToonShadowTint"));
+		AddLink(FindOutputPin(RimColor, "Color"), FindInputPin(Out, "ToonRimColor"));
+		AddLink(FindOutputPin(RimStrength, "Value"), FindInputPin(Out, "ToonRimStrength"));
+	}
+}
+
+void FMaterialGraph::RebuildOutputPinsForDomain(EMaterialDomain Domain, EMaterialShadingModel ShadingModel)
 {
 	FMaterialGraphNode* Output = FindFirstNodeOfType(EMaterialGraphNodeType::Output);
 	if (!Output)
@@ -669,6 +789,12 @@ void FMaterialGraph::RebuildOutputPinsForDomain(EMaterialDomain Domain)
 	switch (Domain)
 	{
 	case EMaterialDomain::ParticleSprite:
+		AddOutPin("Color", EMaterialGraphPinType::Float3);
+		AddOutPin("Emissive", EMaterialGraphPinType::Float3);
+		AddOutPin("Opacity", EMaterialGraphPinType::Float);
+		AddOutPin("UVOffset", EMaterialGraphPinType::Float2);
+		AddOutPin("RefractionOffset", EMaterialGraphPinType::Float2);
+		break;
 	case EMaterialDomain::ParticleMesh:
 		AddOutPin("Color", EMaterialGraphPinType::Float3);
 		AddOutPin("Emissive", EMaterialGraphPinType::Float3);
@@ -695,8 +821,98 @@ void FMaterialGraph::RebuildOutputPinsForDomain(EMaterialDomain Domain)
 		AddOutPin("Emissive", EMaterialGraphPinType::Float3);
 		AddOutPin("Opacity", EMaterialGraphPinType::Float);
 		AddOutPin("OpacityMask", EMaterialGraphPinType::Float);
+		AddOutPin("RefractionOffset", EMaterialGraphPinType::Float2);
+		if (ShadingModel == EMaterialShadingModel::Toon)
+		{
+			AddOutPin("ToonThreshold", EMaterialGraphPinType::Float);
+			AddOutPin("ToonSoftness", EMaterialGraphPinType::Float);
+			AddOutPin("ToonShadowStrength", EMaterialGraphPinType::Float);
+			AddOutPin("ToonShadowTint", EMaterialGraphPinType::Float3);
+			AddOutPin("ToonRimColor", EMaterialGraphPinType::Float3);
+			AddOutPin("ToonRimStrength", EMaterialGraphPinType::Float);
+		}
 		break;
 	}
+}
+
+bool FMaterialGraph::EnsureOutputPinsForDomain(EMaterialDomain Domain, EMaterialShadingModel ShadingModel)
+{
+	FMaterialGraphNode* Output = FindFirstNodeOfType(EMaterialGraphNodeType::Output);
+	if (!Output)
+	{
+		return false;
+	}
+
+	bool bChanged = false;
+	auto HasPin = [Output](const char* Name)
+	{
+		for (const FMaterialGraphPin& Pin : Output->Pins)
+		{
+			if (Pin.Kind == EMaterialGraphPinKind::Input && Pin.DisplayName.ToString() == Name)
+			{
+				return true;
+			}
+		}
+		return false;
+	};
+	auto AddMissingPin = [this, Output, &HasPin, &bChanged](const char* Name, EMaterialGraphPinType Type)
+	{
+		if (!HasPin(Name))
+		{
+			AddPin(*Output, EMaterialGraphPinKind::Input, Type, FName(Name));
+			bChanged = true;
+		}
+	};
+
+	switch (Domain)
+	{
+	case EMaterialDomain::ParticleSprite:
+		AddMissingPin("Color", EMaterialGraphPinType::Float3);
+		AddMissingPin("Emissive", EMaterialGraphPinType::Float3);
+		AddMissingPin("Opacity", EMaterialGraphPinType::Float);
+		AddMissingPin("UVOffset", EMaterialGraphPinType::Float2);
+		AddMissingPin("RefractionOffset", EMaterialGraphPinType::Float2);
+		break;
+	case EMaterialDomain::ParticleMesh:
+		AddMissingPin("Color", EMaterialGraphPinType::Float3);
+		AddMissingPin("Emissive", EMaterialGraphPinType::Float3);
+		AddMissingPin("Opacity", EMaterialGraphPinType::Float);
+		AddMissingPin("UVOffset", EMaterialGraphPinType::Float2);
+		break;
+	case EMaterialDomain::Decal:
+		AddMissingPin("BaseColor", EMaterialGraphPinType::Float3);
+		AddMissingPin("Normal", EMaterialGraphPinType::Float3);
+		AddMissingPin("Roughness", EMaterialGraphPinType::Float);
+		AddMissingPin("Metallic", EMaterialGraphPinType::Float);
+		AddMissingPin("Opacity", EMaterialGraphPinType::Float);
+		break;
+	case EMaterialDomain::PostProcess:
+		AddMissingPin("Color", EMaterialGraphPinType::Float3);
+		AddMissingPin("Opacity", EMaterialGraphPinType::Float);
+		break;
+	case EMaterialDomain::Surface:
+	default:
+		AddMissingPin("BaseColor", EMaterialGraphPinType::Float3);
+		AddMissingPin("Normal", EMaterialGraphPinType::Float3);
+		AddMissingPin("Roughness", EMaterialGraphPinType::Float);
+		AddMissingPin("Metallic", EMaterialGraphPinType::Float);
+		AddMissingPin("Emissive", EMaterialGraphPinType::Float3);
+		AddMissingPin("Opacity", EMaterialGraphPinType::Float);
+		AddMissingPin("OpacityMask", EMaterialGraphPinType::Float);
+		AddMissingPin("RefractionOffset", EMaterialGraphPinType::Float2);
+		if (ShadingModel == EMaterialShadingModel::Toon)
+		{
+			AddMissingPin("ToonThreshold", EMaterialGraphPinType::Float);
+			AddMissingPin("ToonSoftness", EMaterialGraphPinType::Float);
+			AddMissingPin("ToonShadowStrength", EMaterialGraphPinType::Float);
+			AddMissingPin("ToonShadowTint", EMaterialGraphPinType::Float3);
+			AddMissingPin("ToonRimColor", EMaterialGraphPinType::Float3);
+			AddMissingPin("ToonRimStrength", EMaterialGraphPinType::Float);
+		}
+		break;
+	}
+
+	return bChanged;
 }
 
 const char* ToString(EMaterialDomain Domain)
@@ -718,6 +934,17 @@ const char* ToString(EMaterialGraphShaderMode Mode)
 	{
 	case EMaterialGraphShaderMode::Generated:
 	default: return "Generated";
+	}
+}
+
+const char* ToString(EMaterialShadingModel Model)
+{
+	switch (Model)
+	{
+	case EMaterialShadingModel::UnLit: return "UnLit";
+	case EMaterialShadingModel::Toon: return "Toon";
+	case EMaterialShadingModel::DefaultLit:
+	default: return "DefaultLit";
 	}
 }
 
@@ -808,6 +1035,14 @@ EMaterialDomain MaterialDomainFromString(const FString& Str, EMaterialDomain Def
 EMaterialGraphShaderMode MaterialGraphShaderModeFromString(const FString& Str, EMaterialGraphShaderMode Default)
 {
 	if (Str == "Generated") return EMaterialGraphShaderMode::Generated;
+	return Default;
+}
+
+EMaterialShadingModel MaterialShadingModelFromString(const FString& Str, EMaterialShadingModel Default)
+{
+	if (Str == "DefaultLit") return EMaterialShadingModel::DefaultLit;
+	if (Str == "UnLit" || Str == "Unlit") return EMaterialShadingModel::UnLit;
+	if (Str == "Toon") return EMaterialShadingModel::Toon;
 	return Default;
 }
 
@@ -989,6 +1224,7 @@ json::JSON MaterialGraphAsset::MakeDefaultMaterialJson(const FString& ProjectRel
 	Root["MaterialGuid"] = MaterialGuid;
 	Root["PathFileName"] = ProjectRelativePath;
 	Root["Domain"] = "ParticleSprite";
+	Root["ShadingModel"] = ToString(EMaterialShadingModel::DefaultLit);
 	Root["RenderPass"] = "AlphaBlend";
 	Root["BlendState"] = "AlphaBlend";
 	Root["DepthStencilState"] = "DepthReadOnly";

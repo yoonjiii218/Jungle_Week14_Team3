@@ -3,21 +3,22 @@
   "Compiled" : {
     "BlendState" : "Opaque",
     "Domain" : "Surface",
-    "GeneratorVersion" : "GeneratedMaterialPass_v5_InstancedStaticMesh",
-    "GraphHash" : "E99BF54C87424FFA",
+    "GeneratorVersion" : "GeneratedMaterialPass_v9_SurfaceToonShading_InstancedStaticMesh",
+    "GraphHash" : "20C445C63E688CCE",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
 
     },
     "ReceiveLighting" : false,
     "RenderPass" : "Opaque",
+    "ShadingModel" : "DefaultLit",
     "Textures" : {
 
     }
   },
   "DepthStencilState" : "Default",
   "Domain" : "Surface",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/CCE0A28865D142F8_Surface.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/CCE0A28865D142F8_Surface_DefaultLit.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 48,
@@ -28,7 +29,7 @@
         "LinkId" : 154,
         "ToPinId" : 143
       }],
-    "NextId" : 155,
+    "NextId" : 156,
     "Nodes" : [{
         "DisplayName" : "Material Output",
         "Mask" : "RGBA",
@@ -76,6 +77,12 @@
             "OwningNodeId" : 31,
             "PinId" : 149,
             "Type" : "Float"
+          }, {
+            "DisplayName" : "RefractionOffset",
+            "Kind" : "Input",
+            "OwningNodeId" : 31,
+            "PinId" : 155,
+            "Type" : "Float2"
           }],
         "PosX" : 328.000000,
         "PosY" : 102.000000,
@@ -133,6 +140,7 @@
   "RasterizerState" : "SolidBackCull",
   "ReceiveLighting" : false,
   "RenderPass" : "Opaque",
-  "ShaderPath" : "Shaders/Generated/Materials/CCE0A28865D142F8_Surface.hlsl",
+  "ShaderPath" : "Shaders/Generated/Materials/CCE0A28865D142F8_Surface_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Version" : 2
 }

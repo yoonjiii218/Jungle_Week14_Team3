@@ -1217,7 +1217,7 @@
           "ClassName": "ULuaScriptComponent",
           "ObjectId": 21,
           "Properties": {
-            "ScriptFile": "ULevel_54_ALuaCharacter_1.lua",
+            "ScriptFile": "Player/PlayerCharacter.lua",
             "bAutoActivate": true,
             "bEditorOnly": false,
             "bHiddenInComponentTree": false,

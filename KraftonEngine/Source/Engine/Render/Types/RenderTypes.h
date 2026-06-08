@@ -42,18 +42,21 @@ enum class ERenderPass : uint32
 	Fog,			// Fullscreen HeightFog (불투명 이후, AlphaBlend 이전)
 	AlphaBlend,		// 반투명 지오메트리 (Font, SubUV, Billboard, Translucent)
 	SelectionMask,	// 선택 스텐실 마스크
+	GameplayFocusMask, // Perfect Dodge 중 Player / HitTarget 계열 강조용 스텐실 마스크
 	PostProcess,	// SceneDepth, WorldNormal, LightCulling 등 scene 기반 post-process
 	DOFSetup,		// Depth of Field setup — CoC 생성
 	DOFGather,		// Depth of Field gather — blur 생성
 	DOFRecombine,	// Depth of Field recombine — 원본과 blur 합성
 	PostProcessOverlay, // Outline, Fade, Vignette, Letterbox 등 DOF 뒤 overlay 계열
+	PerfectDodge,	// Perfect Dodge / TimeRush fullscreen distortion and color grading
 	EditorLines,	// 디버그 라인 + 그리드 (LINELIST)
 	FXAA,			// FXAA 안티앨리어싱 (SceneColor 복사 후 실행)
 	GizmoOuter,		// 기즈모 외곽 (깊이 테스트 O)
 	GizmoInner,		// 기즈모 내부 (깊이 무시)
-	OverlayFont,	// 스크린 공간 텍스트 (깊이 무시)
-	UI,				// RmlUi 기반 게임 UI
-	GammaCorrection,// 최종 선형 SceneColor를 디스플레이용 감마 공간으로 변환
+	BloomExtract,	// HDR SceneColor 밝은 영역 추출 + 반해상도 가로 블러
+	GammaCorrection,// Bloom 합성 + 톤매핑 + 디스플레이 감마 변환
+	OverlayFont,	// 톤매핑 뒤 스크린 공간 LDR 텍스트
+	UI,				// 톤매핑 뒤 RmlUi 기반 LDR 게임 UI
 	MAX
 };
 
@@ -69,18 +72,21 @@ inline const char* GetRenderPassName(ERenderPass Pass)
 		"RenderPass::Fog",
 		"RenderPass::AlphaBlend",
 		"RenderPass::SelectionMask",
+		"RenderPass::GameplayFocusMask",
 		"RenderPass::PostProcess",
 		"RenderPass::DOFSetup",
 		"RenderPass::DOFGather",
 		"RenderPass::DOFRecombine",
 		"RenderPass::PostProcessOverlay",
+		"RenderPass::PerfectDodge",
 		"RenderPass::EditorLines",
 		"RenderPass::FXAA",
 		"RenderPass::GizmoOuter",
 		"RenderPass::GizmoInner",
+		"RenderPass::BloomExtract",
+		"RenderPass::GammaCorrection",
 		"RenderPass::OverlayFont",
 		"RenderPass::UI",
-		"RenderPass::GammaCorrection",
 	};
 	static_assert(ARRAYSIZE(Names) == (uint32)ERenderPass::MAX, "Names must match ERenderPass entries");
 	return Names[(uint32)Pass];
@@ -99,18 +105,21 @@ namespace RenderStateStrings
 		{ "Fog",           (int)ERenderPass::Fog },
 		{ "AlphaBlend",    (int)ERenderPass::AlphaBlend },
 		{ "SelectionMask", (int)ERenderPass::SelectionMask },
+		{ "GameplayFocusMask", (int)ERenderPass::GameplayFocusMask },
 		{ "PostProcess",   (int)ERenderPass::PostProcess },
 		{ "DOFSetup",      (int)ERenderPass::DOFSetup },
 		{ "DOFGather",     (int)ERenderPass::DOFGather },
 		{ "DOFRecombine",  (int)ERenderPass::DOFRecombine },
 		{ "PostProcessOverlay", (int)ERenderPass::PostProcessOverlay },
+		{ "PerfectDodge",  (int)ERenderPass::PerfectDodge },
 		{ "EditorLines",   (int)ERenderPass::EditorLines },
 		{ "FXAA",          (int)ERenderPass::FXAA },
 		{ "GizmoOuter",    (int)ERenderPass::GizmoOuter },
 		{ "GizmoInner",    (int)ERenderPass::GizmoInner },
+		{ "BloomExtract",   (int)ERenderPass::BloomExtract },
+		{ "GammaCorrection",(int)ERenderPass::GammaCorrection },
 		{ "OverlayFont",   (int)ERenderPass::OverlayFont },
 		{ "UI",            (int)ERenderPass::UI },
-		{ "GammaCorrection",(int)ERenderPass::GammaCorrection },
 	};
 
 	static_assert(ARRAYSIZE(RenderPassMap) == (int)ERenderPass::MAX, "RenderPassMap must match ERenderPass entries");

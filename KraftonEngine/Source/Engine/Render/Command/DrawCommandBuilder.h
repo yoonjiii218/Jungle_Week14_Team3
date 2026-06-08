@@ -46,6 +46,8 @@ private:
 	void BuildDecalCommands(FScene& Scene, FPrimitiveSceneProxy* Proxy, const FFrameContext& Frame, const FCollectOutput& Output);
 	void BuildMeshCommands(FScene& Scene, const FPrimitiveSceneProxy* Proxy);
 	void BuildSelectionCommands(FPrimitiveSceneProxy* Proxy, bool bShowBoundingVolume, FScene& Scene);
+	void BuildGameplayFocusMaskCommands(FPrimitiveSceneProxy* Proxy, FScene& Scene);
+	bool ShouldBuildGameplayFocusMask(const FPrimitiveSceneProxy* Proxy) const;
 
 	// Scene 경량 데이터 → 동적 지오메트리 → FDrawCommand
 	void BuildDynamicCommands(const FFrameContext& Frame, const FScene* Scene, UWorld* World);
@@ -92,9 +94,11 @@ private:
 	FConstantBuffer SceneDepthCB;
 	FConstantBuffer FXAACB;
 	FConstantBuffer GammaCorrectionCB;
+	FConstantBuffer BloomExtractCB;
 	FConstantBuffer CameraFadeCB;
 	FConstantBuffer CameraVignetteCB;
 	FConstantBuffer CameraLetterboxCB;
+	FConstantBuffer PerfectDodgePostProcessCB;
 	FConstantBuffer DOFCB;
 	FConstantBuffer BoneHeatMapCB;
 

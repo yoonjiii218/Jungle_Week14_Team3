@@ -3,14 +3,15 @@
   "Compiled" : {
     "BlendState" : "Opaque",
     "Domain" : "Surface",
-    "GeneratorVersion" : "GeneratedMaterialPass_v5_InstancedStaticMesh",
-    "GraphHash" : "1A4B330C7E5EEBD1",
+    "GeneratorVersion" : "GeneratedMaterialPass_v9_SurfaceToonShading_InstancedStaticMesh",
+    "GraphHash" : "3AF95B7A33EAC38D",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
 
     },
     "ReceiveLighting" : false,
     "RenderPass" : "Opaque",
+    "ShadingModel" : "DefaultLit",
     "Textures" : {
       "DiffuseTexture" : {
         "Path" : "",
@@ -20,7 +21,7 @@
   },
   "DepthStencilState" : "Default",
   "Domain" : "Surface",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/_3C0711B939F96606_Surface.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/_3C0711B939F96606_Surface_DefaultLit.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 2,
@@ -55,7 +56,7 @@
         "LinkId" : 49,
         "ToPinId" : 32
       }],
-    "NextId" : 50,
+    "NextId" : 51,
     "Nodes" : [{
         "DisplayName" : "Texture Object",
         "Mask" : "RGBA",
@@ -325,6 +326,12 @@
             "OwningNodeId" : 31,
             "PinId" : 38,
             "Type" : "Float"
+          }, {
+            "DisplayName" : "RefractionOffset",
+            "Kind" : "Input",
+            "OwningNodeId" : 31,
+            "PinId" : 50,
+            "Type" : "Float2"
           }],
         "PosX" : 280.000000,
         "PosY" : 114.000000,
@@ -352,7 +359,7 @@
         "Value" : [1.000000, 0.000000, 0.000000, 1.000000]
       }]
   },
-  "GraphShaderMode" : "UberLit",
+  "GraphShaderMode" : "Generated",
   "MaterialGuid" : "3C0711B939F96606",
   "Origin" : "FbxImport",
   "Parameters" : {
@@ -364,7 +371,8 @@
   "RasterizerState" : "SolidBackCull",
   "ReceiveLighting" : false,
   "RenderPass" : "Opaque",
-  "ShaderPath" : "Shaders/Generated/Materials/_3C0711B939F96606_Surface.hlsl",
+  "ShaderPath" : "Shaders/Generated/Materials/_3C0711B939F96606_Surface_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Textures" : {
     "DiffuseTexture" : "Content/Data/Samba Dancing/textures/b0.png"
   },

@@ -100,7 +100,7 @@ void FParticleSystemManager::RefreshAvailableParticleSystems()
 {
     AvailableParticleSystemFiles.clear();
     
-    const std::filesystem::path ContentRoot = std::filesystem::path(FPaths::RootDir()) / L"Content" / L"Particle";
+    const std::filesystem::path ContentRoot = std::filesystem::path(FPaths::RootDir()) / L"Content";
 
     if (!std::filesystem::exists(ContentRoot)) return;
 
@@ -128,4 +128,12 @@ void FParticleSystemManager::RefreshAvailableParticleSystems()
 
         AvailableParticleSystemFiles.push_back(std::move(Item));
     }
+
+    std::sort(
+        AvailableParticleSystemFiles.begin(),
+        AvailableParticleSystemFiles.end(),
+        [](const FAssetListItem& A, const FAssetListItem& B)
+        {
+            return A.FullPath < B.FullPath;
+        });
 }

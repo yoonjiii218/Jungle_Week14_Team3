@@ -3,14 +3,15 @@
   "Compiled" : {
     "BlendState" : "AlphaBlend",
     "Domain" : "ParticleSprite",
-    "GeneratorVersion" : "GeneratedMaterialPass_v4_Decal",
-    "GraphHash" : "93F7235238BA74AB",
+    "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
+    "GraphHash" : "AD08981BF940348E",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
 
     },
     "ReceiveLighting" : false,
     "RenderPass" : "AlphaBlend",
+    "ShadingModel" : "DefaultLit",
     "Textures" : {
       "DiffuseTexture" : {
         "Path" : "Content/Texture/T_Lightning.png",
@@ -20,7 +21,7 @@
   },
   "DepthStencilState" : "DepthReadOnly",
   "Domain" : "ParticleSprite",
-  "GeneratedShaderPath" : "Shaders/Generated/Materials/_4EBAB227C225B08A00000D21F84CE768_ParticleSprite.hlsl",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/_4EBAB227C225B08A00000D21F84CE768_ParticleSprite_DefaultLit.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 2,
@@ -43,7 +44,7 @@
         "LinkId" : 39,
         "ToPinId" : 30
       }],
-    "NextId" : 43,
+    "NextId" : 44,
     "Nodes" : [{
         "DisplayName" : "Texture Object",
         "Mask" : "RGBA",
@@ -229,6 +230,12 @@
             "OwningNodeId" : 27,
             "PinId" : 31,
             "Type" : "Float2"
+          }, {
+            "DisplayName" : "RefractionOffset",
+            "Kind" : "Input",
+            "OwningNodeId" : 27,
+            "PinId" : 43,
+            "Type" : "Float2"
           }],
         "PosX" : 80.000000,
         "PosY" : 80.000000,
@@ -244,6 +251,7 @@
   "RasterizerState" : "SolidNoCull",
   "ReceiveLighting" : false,
   "RenderPass" : "AlphaBlend",
-  "ShaderPath" : "Shaders/Generated/Materials/_4EBAB227C225B08A00000D21F84CE768_ParticleSprite.hlsl",
+  "ShaderPath" : "Shaders/Generated/Materials/_4EBAB227C225B08A00000D21F84CE768_ParticleSprite_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Version" : 2
 }

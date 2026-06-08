@@ -2,6 +2,7 @@
 
 #include "Component/Primitive/BillboardComponent.h"
 #include "Core/Types/ResourceTypes.h"
+#include "Math/Vector.h"
 #include "Object/FName.h"
 #include "Object/Ptr/ObjectPtr.h"
 #include "Materials/Material.h"
@@ -31,11 +32,13 @@ public:
 	void SetFrameIndex(uint32 InIndex) { FrameIndex = static_cast<int32>(InIndex); }
 	uint32 GetFrameIndex() const { return static_cast<uint32>(FrameIndex); }
 
-	// Billboard plane-space roll in degrees. This is intentionally separate from
+	// Billboard-local sprite rotation in degrees. This is intentionally separate from
 	// component rotation because camera-facing billboards rebuild their world basis
 	// every view. Use this for SubUV slash/streak orientation.
 	void SetSpriteRoll(float InDegrees);
-	float GetSpriteRoll() const { return SpriteRoll; }
+	float GetSpriteRoll() const;
+	void SetSpriteRotation(const FVector& InDegrees);
+	FVector GetSpriteRotation() const;
 
 	// --- Playback ---
 	void SetFrameRate(float InFPS) { PlayRate = InFPS; }
@@ -72,8 +75,10 @@ private:
 	float  PlayRate = 30.0f; // 초당 프레임 수
 	float  TimeAccumulator = 0.0f;
 
-	UPROPERTY(Edit, Save, Category="Particle", DisplayName="Sprite Roll", Min=-360.0f, Max=360.0f, Speed=1.0f)
+	UPROPERTY(Save, Category="Particle", DisplayName="Legacy Sprite Roll")
 	float SpriteRoll = 0.0f;
+	UPROPERTY(Edit, Save, Category="Particle", DisplayName="Sprite Roll", Min=-360.0f, Max=360.0f, Speed=1.0f)
+	FVector SpriteRotation = FVector::ZeroVector;
 
 	UPROPERTY(Edit, Save, Category="Particle", DisplayName="bLoop")
 	bool bLoop = true;

@@ -1215,7 +1215,7 @@ void FMeshEditorWidget::RenderAnimationLayout(float TotalHeight)
 
 		if (bShowNotifyDetails)
 		{
-			FAnimationTimelinePanel::RenderNotifyDetails(Seq, AnimTabState.SelectedNotifyIndex);
+			FAnimationTimelinePanel::RenderNotifyDetails(Seq, SkeletalMesh, AnimTabState.SelectedNotifyIndex);
 		}
 		else if (bShowMorphDetails)
 		{
@@ -1244,9 +1244,14 @@ void FMeshEditorWidget::RenderAnimationLayout(float TotalHeight)
 				ImGui::TextWrapped("Path:\n%s", Path.c_str());
 			}
 
-			// AnimSequence property 패널 — root motion 등 편집 가능한 항목.
+			// AnimSequence property 패널 — pose/root offset, root motion 등 편집 가능한 항목.
 			ImGui::Dummy(ImVec2(0, 12));
+			const float PrevGroundZOffset = Seq->GetGroundZOffset();
 			FAnimSequencePropertyPanel::Render(Seq);
+			if (Seq->GetGroundZOffset() != PrevGroundZOffset)
+			{
+				RefreshAnimationPreviewPose();
+			}
 
 			USkeletalMeshComponent* PreviewMeshComponent = ViewportClient.GetPreviewMeshComponent();
 			USkeletalMesh* PreviewMesh = PreviewMeshComponent ? PreviewMeshComponent->GetSkeletalMesh() : SkeletalMesh;

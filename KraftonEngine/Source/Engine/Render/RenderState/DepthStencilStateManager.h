@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Render/Types/RenderTypes.h"
 #include "Render/Types/RenderStateTypes.h"
@@ -16,6 +16,8 @@ private:
 	ID3D11DepthStencilState* DepthGreaterEqual = nullptr;
 	ID3D11DepthStencilState* DepthReadOnly = nullptr;
 	ID3D11DepthStencilState* StencilWrite = nullptr;
+	ID3D11DepthStencilState* StencilWriteDepthTest = nullptr;
+	ID3D11DepthStencilState* StencilWriteDepthTestGameplayFocus = nullptr;
 	ID3D11DepthStencilState* StencilMaskEqual = nullptr;
 	ID3D11DepthStencilState* NoDepth = nullptr;
 	ID3D11DepthStencilState* GizmoInside = nullptr;

@@ -7,6 +7,7 @@ struct FMaterialCompileOptions
 	FString MaterialPath;
 	FString MaterialGuid;
 	EMaterialDomain Domain = EMaterialDomain::Surface;
+	EMaterialShadingModel ShadingModel = EMaterialShadingModel::DefaultLit;
 	ERenderPass RenderPass = ERenderPass::Opaque;
 	EBlendState BlendState = EBlendState::Opaque;
 	EDepthStencilState DepthStencilState = EDepthStencilState::Default;

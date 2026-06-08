@@ -9,6 +9,7 @@
 #include "Render/Proxy/BoneDebugSceneProxy.h"
 #include "Physics/CollisionDebugDraw.h"
 #include "GameFramework/World.h"
+#include "GameFramework/AActor.h"
 #include "Render/Proxy/SkeletalMeshSceneProxy.h"
 #include "Render/Proxy/ParticleSystemSceneProxy.h"
 #include "Render/Scene/FScene.h"
@@ -19,6 +20,7 @@
 #include "Texture/Texture2D.h"
 #include "Profiling/Stats/ParticleStats.h"
 #include "Core/Logging/Log.h"
+#include <algorithm>
 
 // UpdateProxyLOD defined in RenderCollector.cpp (shared)
 extern void UpdateProxyLOD(FPrimitiveSceneProxy* Proxy, const FLODUpdateContext& LODCtx);
@@ -42,11 +44,13 @@ void FDrawCommandBuilder::Create(ID3D11Device* InDevice, ID3D11DeviceContext* In
 	SceneDepthCB.Create(InDevice, sizeof(FSceneDepthPConstants), "SceneDepthCB");
 	FXAACB.Create(InDevice, sizeof(FFXAAConstants), "FXAACB");
 	GammaCorrectionCB.Create(InDevice, sizeof(FGammaCorrectionConstants), "GammaCorrectionCB");
+	BloomExtractCB.Create(InDevice, sizeof(FBloomExtractConstants), "BloomExtractCB");
 	DOFCB.Create(InDevice, sizeof(FDOFConstants), "DOFCB");
 
 	CameraFadeCB.Create(InDevice, sizeof(FCameraFadeConstants), "CameraFadeCB");
 	CameraVignetteCB.Create(InDevice, sizeof(FCameraVignetteConstants), "CameraVignetteCB");
 	CameraLetterboxCB.Create(InDevice, sizeof(FCameraLetterboxConstants), "CameraLetterboxCB");
+	PerfectDodgePostProcessCB.Create(InDevice, sizeof(FPerfectDodgePostProcessConstants), "PerfectDodgePostProcessCB");
 	BoneHeatMapCB.Create(InDevice, sizeof(FBoneHeatMapConstants), "BoneHeatMapCB");
 }
 
@@ -71,11 +75,13 @@ void FDrawCommandBuilder::Release()
 	SceneDepthCB.Release();
 	FXAACB.Release();
 	GammaCorrectionCB.Release();
+	BloomExtractCB.Release();
 	DOFCB.Release();
 
 	CameraFadeCB.Release();
 	CameraVignetteCB.Release();
 	CameraLetterboxCB.Release();
+	PerfectDodgePostProcessCB.Release();
 	BoneHeatMapCB.Release();
 }
 
@@ -201,7 +207,9 @@ void FDrawCommandBuilder::BuildCommandForProxy(FScene& Scene, const FPrimitiveSc
 	if (Pass == ERenderPass::SelectionMask)
 		bHasSelectionMaskCommands = true;
 
-	const bool bDepthOnly = (Pass == ERenderPass::PreDepth);
+	const bool bDepthOnly = (Pass == ERenderPass::PreDepth
+		|| Pass == ERenderPass::SelectionMask
+		|| Pass == ERenderPass::GameplayFocusMask);
 
 	// 섹션당 1개 커맨드 (per-section 셰이더)
  	for (const FMeshSectionDraw& Section : Proxy.GetSectionDraws())
@@ -469,6 +477,12 @@ void FDrawCommandBuilder::BuildProxyCommands(const FFrameContext& Frame, FScene&
 
 		if (Proxy->IsSelected())
 			BuildSelectionCommands(Proxy, bShowBoundingVolume, Scene);
+
+		if (Frame.PerfectDodgePostProcess.bEnabled && Frame.PerfectDodgePostProcess.Intensity > 0.0f
+			&& ShouldBuildGameplayFocusMask(Proxy))
+		{
+			BuildGameplayFocusMaskCommands(Proxy, Scene);
+		}
 	}
 }
 
@@ -553,6 +567,34 @@ void FDrawCommandBuilder::BuildSelectionCommands(FPrimitiveSceneProxy* Proxy, bo
 
 	if (bShowBoundingVolume && Proxy->HasProxyFlag(EPrimitiveProxyFlags::ShowAABB))
 		Scene.AddDebugAABB(Proxy->GetCachedBounds().Min, Proxy->GetCachedBounds().Max, FColor::White());
+}
+
+bool FDrawCommandBuilder::ShouldBuildGameplayFocusMask(const FPrimitiveSceneProxy* Proxy) const
+{
+	if (!Proxy || !Proxy->HasValidOwner())
+	{
+		return false;
+	}
+
+	// Lua gameplay already tags Boss/Mob with HitTarget. PlayerCharacter adds Player.
+	// Enemy/Boss/Mob are kept as fallbacks for hand-authored scene actors.
+	return Proxy->HasOwnerActorTag(FName("Player"))
+		|| Proxy->HasOwnerActorTag(FName("HitTarget"))
+		|| Proxy->HasOwnerActorTag(FName("Enemy"))
+		|| Proxy->HasOwnerActorTag(FName("Boss"))
+		|| Proxy->HasOwnerActorTag(FName("Mob"));
+}
+
+void FDrawCommandBuilder::BuildGameplayFocusMaskCommands(FPrimitiveSceneProxy* Proxy, FScene& Scene)
+{
+	if (!Proxy || !Proxy->HasValidOwner())
+	{
+		return;
+	}
+
+	// This writes stencil only. PerfectDodgePostProcess reads the copied stencil and
+	// raises only Player / enemy pixels after the rest of the scene is darkened.
+	BuildCommandForProxy(Scene, *Proxy, ERenderPass::GameplayFocusMask);
 }
 
 // ============================================================
@@ -885,6 +927,80 @@ void FDrawCommandBuilder::BuildPostProcessCommands(const FFrameContext& Frame, c
 		}
 	}
 
+	// PerfectDodge — SceneColor를 읽어 radial focus, color grading, glitch를 합성한다.
+	if (PerfectDodgePostProcessDebug::IsPostProcessEnabled()
+		&& Frame.PerfectDodgePostProcess.bEnabled
+		&& Frame.PerfectDodgePostProcess.Intensity > 0.0f)
+	{
+		FShader* PerfectDodgeShader = FShaderManager::Get().GetOrCreate(EShaderPath::PerfectDodgePostProcess);
+		if (PerfectDodgeShader)
+		{
+			const FPerfectDodgePostProcessState& Effect = Frame.PerfectDodgePostProcess;
+		auto ClampFloat = [](float V, float MinValue, float MaxValue)
+			{
+				return (std::max)(MinValue, (std::min)(MaxValue, V));
+			};
+			const float Duration = (std::max)(0.001f, Effect.Duration);
+			const float Elapsed = ClampFloat(Effect.ElapsedTime, 0.0f, Duration);
+			const float EnterDuration = (std::max)(0.001f, Effect.EnterDuration);
+			const float ExitDuration = (std::max)(0.001f, Effect.ExitDuration);
+			const float FadeIn = ClampFloat(Elapsed / EnterDuration, 0.0f, 1.0f);
+			const float FadeOut = ClampFloat((Duration - Elapsed) / ExitDuration, 0.0f, 1.0f);
+			const float Intensity = ClampFloat(Effect.Intensity, 0.0f, 4.0f);
+			const float EffectAmount = Intensity * (std::min)(FadeIn, FadeOut);
+
+			FPerfectDodgePostProcessConstants Data = {};
+			Data.BlueTintColor = Effect.BlueTintColor.ToVector4();
+			Data.GridColor = Effect.GridColor.ToVector4();
+			Data.EffectAmount = EffectAmount;
+			Data.EnterAmount = Intensity * (1.0f - FadeIn);
+			Data.SustainAmount = EffectAmount;
+			Data.ExitAmount = 1.0f - FadeOut;
+			Data.RadialBlurStrength = Effect.RadialBlurStrength;
+			Data.FocusFlashStrength = Effect.FocusFlashStrength;
+			Data.BlueTintStrength = Effect.BlueTintStrength;
+			Data.GridIntensity = Effect.GridIntensity;
+			Data.GlitchIntensity = Effect.GlitchIntensity;
+			Data.VignetteIntensity = Effect.VignetteIntensity;
+			Data.ElapsedTime = Elapsed;
+			Data.Duration = Duration;
+			Data.WorldGridIntensity = Effect.WorldGridIntensity;
+			Data.WorldGridScale = Effect.WorldGridScale;
+			Data.WorldGridThickness = Effect.WorldGridThickness;
+			Data.WorldGridDepthFadeDistance = Effect.WorldGridDepthFadeDistance;
+			Data.SceneDarkening = Effect.SceneDarkening;
+			Data.GammaPower = Effect.GammaPower;
+			Data.WorldGridSurfaceBias = Effect.WorldGridSurfaceBias;
+			Data.ScreenGridIntensity = Effect.ScreenGridIntensity;
+			Data.FocusHighlightStrength = ClampFloat(Effect.FocusHighlightStrength, 0.0f, 4.0f);
+			PerfectDodgePostProcessCB.Update(Ctx, &Data, sizeof(Data));
+
+			const FDrawCommandRenderState PerfectDodgeRS = PassRenderStateTable->ToDrawCommandState(ERenderPass::PerfectDodge, ViewMode);
+			FDrawCommand& Cmd = DrawCommandList.AddCommand();
+			Cmd.InitFullscreenTriangle(PerfectDodgeShader, ERenderPass::PerfectDodge, PerfectDodgeRS);
+			Cmd.Bindings.PerShaderCB[0] = &PerfectDodgePostProcessCB;
+			Cmd.BuildSortKey(0);
+		}
+	}
+
+	if (Frame.RenderOptions.ShowFlags.bBloom && Frame.RenderOptions.ShowFlags.bGammaCorrection)
+	{
+		FShader* BloomShader = FShaderManager::Get().GetOrCreate(EShaderPath::BloomExtract);
+		if (BloomShader)
+		{
+			FBloomExtractConstants BloomData = {};
+			BloomData.BloomThreshold = Frame.RenderOptions.BloomThreshold;
+			BloomData.BloomRadius = Frame.RenderOptions.BloomRadius;
+			BloomExtractCB.Update(Ctx, &BloomData, sizeof(FBloomExtractConstants));
+
+			FDrawCommand& Cmd = DrawCommandList.AddCommand();
+			Cmd.InitFullscreenTriangle(BloomShader, ERenderPass::BloomExtract,
+				PassRenderStateTable->ToDrawCommandState(ERenderPass::BloomExtract, ViewMode));
+			Cmd.Bindings.PerShaderCB[0] = &BloomExtractCB;
+			Cmd.BuildSortKey(0);
+		}
+	}
+
 	if (Frame.RenderOptions.ShowFlags.bGammaCorrection)
 	{
 		FShader* GammaShader = FShaderManager::Get().GetOrCreate(EShaderPath::GammaCorrection);
@@ -892,6 +1008,9 @@ void FDrawCommandBuilder::BuildPostProcessCommands(const FFrameContext& Frame, c
 		{
 			FGammaCorrectionConstants GammaData = {};
 			GammaData.Gamma = Frame.RenderOptions.Gamma;
+			GammaData.BloomIntensity = Frame.RenderOptions.ShowFlags.bBloom ? Frame.RenderOptions.BloomIntensity : 0.0f;
+			GammaData.Exposure = Frame.RenderOptions.Exposure;
+			GammaData.BloomRadius = Frame.RenderOptions.BloomRadius;
 			GammaCorrectionCB.Update(Ctx, &GammaData, sizeof(FGammaCorrectionConstants));
 
 			FDrawCommand& Cmd = DrawCommandList.AddCommand();

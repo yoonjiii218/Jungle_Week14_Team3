@@ -473,6 +473,19 @@ namespace
 
         Output.Pose[RootBoneIndex] = FAnimationRuntime::DecomposeMatrix(DesiredLocal);
     }
+
+    static void ApplyGroundZOffset(FPoseContext& Output, float GroundZOffset)
+    {
+        if (std::abs(GroundZOffset) <= 1.0e-6f || Output.Pose.empty())
+        {
+            return;
+        }
+
+        // Skeleton root local translation is component-space for normal skeletons.
+        // Offsetting it moves the whole evaluated pose without touching actor transform
+        // or root-motion extraction.
+        Output.Pose[0].Location.Z += GroundZOffset;
+    }
 }
 
 void UAnimSequence::AddReferencedObjects(FReferenceCollector& Collector)
@@ -501,8 +514,18 @@ void UAnimSequence::Serialize(FArchive& Ar)
         DataModel->EnsureNotifyTrackLayout();
     }
 
+    if (Ar.IsSaving())
+    {
+        DataModel->GroundZOffset = GroundZOffset;
+    }
+
     DataModel->Serialize(Ar);
     DataModel->EnsureNotifyTrackLayout();
+
+    if (Ar.IsLoading())
+    {
+        GroundZOffset = DataModel->GroundZOffset;
+    }
 
     PlayLength = DataModel->PlayLength;
     FrameRate  = DataModel->FrameRate;
@@ -516,6 +539,7 @@ void UAnimSequence::SetDataModel(UAnimDataModel* InModel)
     if (DataModel)
     {
         DataModel->EnsureNotifyTrackLayout();
+        GroundZOffset = DataModel->GroundZOffset;
         PlayLength = DataModel->PlayLength;
         FrameRate  = DataModel->FrameRate;
         Notifies   = DataModel->Notifies;
@@ -735,6 +759,7 @@ void UAnimSequence::GetBonePose(FPoseContext& Output, const FAnimExtractContext&
     const TArray<FBoneAnimationTrack>& Tracks = DataModel->BoneAnimationTracks;
     if (Tracks.empty())
     {
+        ApplyGroundZOffset(Output, GroundZOffset);
         return;
     }
 
@@ -743,6 +768,7 @@ void UAnimSequence::GetBonePose(FPoseContext& Output, const FAnimExtractContext&
 
     if (NumFrames <= 0 && !bCanEvaluateSourceCurves)
     {
+        ApplyGroundZOffset(Output, GroundZOffset);
         return;
     }
 
@@ -854,6 +880,7 @@ void UAnimSequence::GetBonePose(FPoseContext& Output, const FAnimExtractContext&
     }
 
     ApplyRootLockInComponentSpace(Output, Asset, RootMotionLockBoneIndex, bForceRootLock, bEnableRootMotion);
+    ApplyGroundZOffset(Output, GroundZOffset);
 }
 
 bool UAnimSequence::GetAnimationPose(float TimeSeconds, USkeletalMesh* InSkeletalMesh, TArray<FTransform>& OutLocalPose, bool bLooping) const

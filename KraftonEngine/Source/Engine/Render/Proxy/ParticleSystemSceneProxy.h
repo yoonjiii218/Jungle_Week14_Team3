@@ -48,6 +48,9 @@ private:
 		EDynamicEmitterType EmitterType         = EDynamicEmitterType::Sprite;
 		EParticleBlendMode  BlendMode           = EParticleBlendMode::AlphaBlend;
 		UMaterial*          Material            = nullptr;
+		bool                bUseBillboard       = true;
+		FVector             SpriteRightAxis     = FVector::RightVector;
+		FVector             SpriteUpAxis        = FVector::UpVector;
 		FMeshBuffer*        EmitterMeshBuffer   = nullptr;  // Mesh 에미터 전용
 		TArray<UMaterial*>  MeshSectionMaterials;
 		TArray<uint32>      MeshSectionFirstIndices;

@@ -12,5 +12,6 @@
   "PathFileName" : "Content/Material/Auto/Fbx Default Material.mat",
   "RasterizerState" : "",
   "RenderPass" : "Opaque",
-  "ShaderPath" : "Shaders/Geometry/UberLit.hlsl"
+  "ShaderPath" : "Shaders/Geometry/UberLit.hlsl",
+  "ShadingModel" : "DefaultLit"
 }

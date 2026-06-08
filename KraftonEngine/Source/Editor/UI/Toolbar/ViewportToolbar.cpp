@@ -81,6 +81,34 @@ static bool DrawToolbarIconButton(const char* Id, EToolbarIcon Icon, const char*
 	const ImVec2 IconSize = GetToolbarIconRenderSize(Icon, FallbackSize, MaxIconSize);
 	return ImGui::ImageButton(Id, reinterpret_cast<ImTextureID>(IconSRV), IconSize);
 }
+
+static float ClampToolbarFloat(float Value, float MinValue, float MaxValue)
+{
+	if (Value < MinValue) return MinValue;
+	if (Value > MaxValue) return MaxValue;
+	return Value;
+}
+
+static void DrawSliderInputFloat(const char* Label, float& Value, float MinValue, float MaxValue, const char* Format)
+{
+	ImGui::PushID(Label);
+
+	ImGui::SetNextItemWidth(96.0f);
+	ImGui::SliderFloat("##Slider", &Value, MinValue, MaxValue, Format);
+	Value = ClampToolbarFloat(Value, MinValue, MaxValue);
+
+	ImGui::SameLine(0.0f, 4.0f);
+	ImGui::SetNextItemWidth(58.0f);
+	if (ImGui::InputFloat("##Input", &Value, 0.0f, 0.0f, Format))
+	{
+		Value = ClampToolbarFloat(Value, MinValue, MaxValue);
+	}
+
+	ImGui::SameLine(0.0f, 4.0f);
+	ImGui::TextUnformatted(Label);
+
+	ImGui::PopID();
+}
 #pragma endregion
 
 #pragma region LeftRight Section Helper
@@ -602,7 +630,28 @@ void FViewportToolbar::RenderShowFlags(const FToolbarRenderState& State)
 		ImGui::Checkbox("Octree", &RenderOptions.ShowFlags.bOctree);
 		ImGui::Checkbox("Fog", &RenderOptions.ShowFlags.bFog);
 		ImGui::Checkbox("FXAA", &RenderOptions.ShowFlags.bFXAA);
-		ImGui::Checkbox("Gamma Correction", &RenderOptions.ShowFlags.bGammaCorrection);
+
+		if (ImGui::Checkbox("HDR Tone Mapping", &RenderOptions.ShowFlags.bGammaCorrection)
+			&& !RenderOptions.ShowFlags.bGammaCorrection)
+		{
+			RenderOptions.ShowFlags.bBloom = false;
+		}
+		ImGui::BeginDisabled(!RenderOptions.ShowFlags.bGammaCorrection);
+		ImGui::Checkbox("Bloom", &RenderOptions.ShowFlags.bBloom);
+		if (RenderOptions.ShowFlags.bBloom)
+		{
+			ImGui::Indent();
+			DrawSliderInputFloat("Bloom Threshold", RenderOptions.BloomThreshold, 0.0f, 10.0f, "%.2f");
+			DrawSliderInputFloat("Bloom Intensity", RenderOptions.BloomIntensity, 0.0f, 3.0f, "%.2f");
+			DrawSliderInputFloat("Bloom Radius", RenderOptions.BloomRadius, 0.0f, 8.0f, "%.2f");
+			ImGui::Unindent();
+		}
+		DrawSliderInputFloat("Exposure", RenderOptions.Exposure, 0.1f, 5.0f, "%.2f");
+		ImGui::EndDisabled();
+		if (!RenderOptions.ShowFlags.bGammaCorrection)
+		{
+			ImGui::TextDisabled("Bloom requires HDR Tone Mapping.");
+		}
 		ImGui::Checkbox("View Light Culling", &RenderOptions.ShowFlags.bViewLightCulling);
 		ImGui::Checkbox("Visualize 2.5D Culling", &RenderOptions.ShowFlags.bVisualize25DCulling);
 		ImGui::Checkbox("Show Shadow Frustum", &RenderOptions.ShowFlags.bShowShadowFrustum);

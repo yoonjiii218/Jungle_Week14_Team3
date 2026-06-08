@@ -68,8 +68,28 @@ void USubUVComponent::SetParticle(const FName& InParticleName)
 
 void USubUVComponent::SetSpriteRoll(float InDegrees)
 {
-	SpriteRoll = InDegrees;
+	SpriteRotation = FVector(0.0f, 0.0f, InDegrees);
+	SpriteRoll = 0.0f;
 	MarkProxyDirty(EDirtyFlag::Transform);
+}
+
+float USubUVComponent::GetSpriteRoll() const
+{
+	return GetSpriteRotation().Z;
+}
+
+void USubUVComponent::SetSpriteRotation(const FVector& InDegrees)
+{
+	SpriteRotation = InDegrees;
+	SpriteRoll = 0.0f;
+	MarkProxyDirty(EDirtyFlag::Transform);
+}
+
+FVector USubUVComponent::GetSpriteRotation() const
+{
+	FVector Result = SpriteRotation;
+	Result.Z += SpriteRoll;
+	return Result;
 }
 
 void USubUVComponent::RebuildSubUVMaterial()
@@ -108,7 +128,12 @@ void USubUVComponent::PostEditProperty(const char* PropertyName)
 		// 파티클 교체 시 UV 그리드/텍스처가 바뀌므로 Mesh 단계까지 dirty.
 		MarkProxyDirty(EDirtyFlag::Mesh);
 	}
-	if (strcmp(PropertyName, "SpriteRoll") == 0 || strcmp(PropertyName, "Sprite Roll") == 0)
+	if (strcmp(PropertyName, "SpriteRotation") == 0 || strcmp(PropertyName, "Sprite Roll") == 0)
+	{
+		SpriteRoll = 0.0f;
+		MarkProxyDirty(EDirtyFlag::Transform);
+	}
+	if (strcmp(PropertyName, "SpriteRoll") == 0 || strcmp(PropertyName, "Legacy Sprite Roll") == 0)
 	{
 		MarkProxyDirty(EDirtyFlag::Transform);
 	}

@@ -126,6 +126,11 @@ public:
 	void ClearAutoDestroyOwnerAfter();
 
 	UFUNCTION(Callable)
+	void SetParticleSizeScale(const FVector& InScale);
+	UFUNCTION(Pure)
+	FVector GetParticleSizeScale() const { return ParticleSizeScale; }
+
+	UFUNCTION(Callable)
 	bool SetBeamSourcePoint(int32 EmitterIndex, int32 BeamIndex, const FVector& Point);
 	UFUNCTION(Callable)
 	bool SetBeamTargetPoint(int32 EmitterIndex, int32 BeamIndex, const FVector& Point);
@@ -214,4 +219,6 @@ private:
 
 	bool  bDeactivatePendingAfterStopSpawning = false;
 	float DeactivateAfterStopSpawningRemaining = 0.0f;
+
+	FVector ParticleSizeScale = FVector::OneVector;
 };

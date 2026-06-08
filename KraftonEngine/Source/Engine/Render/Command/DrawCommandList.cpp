@@ -55,6 +55,7 @@ void FStateCache::Cleanup(ID3D11DeviceContext* Ctx)
 FDrawCommand& FDrawCommandList::AddCommand()
 {
 	Commands.emplace_back();
+	Commands.back().SubmissionOrder = NextSubmissionOrder++;
 	return Commands.back();
 }
 
@@ -65,7 +66,11 @@ void FDrawCommandList::Sort()
 		std::sort(Commands.begin(), Commands.end(),
 			[](const FDrawCommand& A, const FDrawCommand& B)
 			{
-				return A.SortKey < B.SortKey;
+				if (A.SortKey != B.SortKey)
+				{
+					return A.SortKey < B.SortKey;
+				}
+				return A.SubmissionOrder < B.SubmissionOrder;
 			});
 	}
 
@@ -89,7 +94,11 @@ void FDrawCommandList::Sort()
 		std::sort(Commands.begin() + ABStart, Commands.begin() + ABEnd,
 			[](const FDrawCommand& A, const FDrawCommand& B)
 			{
-				return A.SortDepth > B.SortDepth;
+				if (A.SortDepth != B.SortDepth)
+				{
+					return A.SortDepth > B.SortDepth;
+				}
+				return A.SubmissionOrder < B.SubmissionOrder;
 			});
 	}
 }
@@ -157,6 +166,7 @@ void FDrawCommandList::SubmitRange(uint32 StartIdx, uint32 EndIdx,
 void FDrawCommandList::Reset()
 {
 	Commands.clear();
+	NextSubmissionOrder = 0;
 	std::memset(PassOffsets, 0, sizeof(PassOffsets));
 }
 
@@ -208,7 +218,9 @@ void FDrawCommandList::SubmitCommand(const FDrawCommand& Cmd,
 	}
 
 	// PreDepth/SelectionMask: PS 언바인딩 — 깊이/스텐실만 기록, 셰이딩 스킵
-	if (Cmd.Pass == ERenderPass::PreDepth || Cmd.Pass == ERenderPass::SelectionMask)
+	if (Cmd.Pass == ERenderPass::PreDepth
+		|| Cmd.Pass == ERenderPass::SelectionMask
+		|| Cmd.Pass == ERenderPass::GameplayFocusMask)
 	{
 		Ctx->PSSetShader(nullptr, nullptr, 0);
 		Cache.Shader = nullptr;  // 다음 커맨드에서 PS 재바인딩 보장

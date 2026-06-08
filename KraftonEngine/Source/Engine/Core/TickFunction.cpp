@@ -60,12 +60,13 @@ void FTickManager::Tick(UWorld* World, float DeltaTime, ELevelTick TickType)
 				continue;
 			}
 
-			if (!TickFunction->ConsumeInterval(DeltaTime))
+			const float EffectiveDeltaTime = TickFunction->GetEffectiveDeltaTime(DeltaTime);
+			if (!TickFunction->ConsumeInterval(EffectiveDeltaTime))
 			{
 				continue;
 			}
 
-			TickFunction->ExecuteTick(DeltaTime, TickType);
+			TickFunction->ExecuteTick(EffectiveDeltaTime, TickType);
 		}
 	}
 }
@@ -123,6 +124,11 @@ void FActorTickFunction::ExecuteTick(float DeltaTime, ELevelTick TickType)
 	}
 }
 
+float FActorTickFunction::GetEffectiveDeltaTime(float DeltaTime) const
+{
+	return IsValid(Target) ? DeltaTime * Target->GetCustomTimeDilation() : DeltaTime;
+}
+
 const char* FActorTickFunction::GetDebugName() const
 {
 	return IsValid(Target) ? Target->GetClass()->GetName() : "FActorTickFunction";
@@ -134,6 +140,17 @@ void FActorComponentTickFunction::ExecuteTick(float DeltaTime, ELevelTick TickTy
 	{
 		Target->TickComponent(DeltaTime, TickType, *this);
 	}
+}
+
+float FActorComponentTickFunction::GetEffectiveDeltaTime(float DeltaTime) const
+{
+	if (!IsValid(Target))
+	{
+		return DeltaTime;
+	}
+
+	AActor* Owner = Target->GetOwner();
+	return IsValid(Owner) ? DeltaTime * Owner->GetCustomTimeDilation() : DeltaTime;
 }
 
 const char* FActorComponentTickFunction::GetDebugName() const

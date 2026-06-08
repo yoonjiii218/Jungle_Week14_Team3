@@ -70,6 +70,9 @@ struct FFrameContext
 	ID3D11RenderTargetView*   DOFBlurRTV            = nullptr;
 	ID3D11ShaderResourceView* DOFBlurSRV            = nullptr;
 
+	ID3D11RenderTargetView*   BloomRTV              = nullptr;
+	ID3D11ShaderResourceView* BloomSRV              = nullptr;
+
 	// Cursor position relative to viewport (for debug visualization)
 	uint32 CursorViewportX = UINT32_MAX;
 	uint32 CursorViewportY = UINT32_MAX;
@@ -92,6 +95,7 @@ struct FFrameContext
 	FCameraFadeState CameraFade;
 	FCameraVignetteState CameraVignette;
 	FCameraLetterboxState CameraLetterbox;
+	FPerfectDodgePostProcessState PerfectDodgePostProcess;
 	bool bDepthOfFieldEnabled = false;
 	float DepthOfFieldFocalLength = 50.0f;
 	float DepthOfFieldAperture = 2.8f;
@@ -142,5 +146,7 @@ struct FFrameContext
 		DOFCoCSRV               = nullptr;
 		DOFBlurRTV              = nullptr;
 		DOFBlurSRV              = nullptr;
+		BloomRTV                = nullptr;
+		BloomSRV                = nullptr;
 	}
 };
