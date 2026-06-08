@@ -48,7 +48,13 @@ public:
 	void PostDuplicate() override;
 
 	// --- Text ---
-	void SetText(const FString& InText) { Text = InText; }
+	void SetText(const FString& InText)
+	{
+		Text = InText;
+		MarkProxyDirty(EDirtyFlag::Mesh);
+		MarkProxyDirty(EDirtyFlag::Transform);
+		MarkWorldBoundsDirty();
+	}
 	const FString& GetText() const { return Text; }
 
 	// Owner의 UUID를 문자열로 반환
@@ -64,11 +70,28 @@ public:
 	const FName& GetFontName() const { return FontName; }
 
 	// --- Appearance ---
-	void SetColor(const FVector4& InColor) { Color = InColor; }
+	void SetColor(const FVector4& InColor)
+	{
+		Color = InColor;
+		MarkProxyDirty(EDirtyFlag::Material);
+	}
 	const FVector4& GetColor() const { return Color; }
 
-	void SetFontSize(float InSize) { FontSize = InSize; }
+	void SetFontSize(float InSize)
+	{
+		FontSize = InSize;
+		MarkProxyDirty(EDirtyFlag::Mesh);
+		MarkProxyDirty(EDirtyFlag::Transform);
+		MarkWorldBoundsDirty();
+	}
 	float GetFontSize() const { return FontSize; }
+
+	void SetDisableDepthTest(bool bInDisableDepthTest)
+	{
+		bDisableDepthTest = bInDisableDepthTest;
+		MarkProxyDirty(EDirtyFlag::Mesh);
+	}
+	bool GetDisableDepthTest() const { return bDisableDepthTest; }
 
 	// --- Space ---
 	void SetRenderSpace(ETextRenderSpace InSpace) { RenderSpace = InSpace; }
@@ -110,6 +133,8 @@ private:
 	FVector4 Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	UPROPERTY(Edit, Save, Category="Text", DisplayName="Font Size", Min=0.1f, Max=100.0f, Speed=0.1f)
 	float FontSize = 1.0f;
+	UPROPERTY(Edit, Save, Category="Text", DisplayName="Disable Depth Test")
+	bool bDisableDepthTest = false;
 	UPROPERTY(Edit, Save, Category="Text", DisplayName="Spacing", Min=0.0f, Max=100.0f, Speed=0.01f)
 	float Spacing = 0.1f;
 	UPROPERTY(Edit, Save, Category="Text", DisplayName="Char Width", Min=0.0f, Max=100.0f, Speed=0.01f)

@@ -29,7 +29,9 @@ public:
 		const FVector& CamRight,
 		const FVector& CamUp,
 		const FVector& WorldScale,
-		float Scale = 1.0f);
+		float Scale = 1.0f,
+		const FVector4& Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f),
+		bool bDisableDepthTest = false);
 
 	// 스크린 공간 오버레이 텍스트
 	void AddScreenText(const FString& Text,
@@ -42,20 +44,20 @@ public:
 
 	void EnsureCharInfoMap(const FFontResource* Resource);
 
-	bool UploadWorldBuffers(ID3D11DeviceContext* Context);
+	bool UploadWorldBuffers(ID3D11DeviceContext* Context, bool bDisableDepthTest = false);
 	bool UploadScreenBuffers(ID3D11DeviceContext* Context);
 
-	ID3D11Buffer* GetWorldVBBuffer() const { return WorldVB.GetBuffer(); }
-	uint32 GetWorldVBStride() const { return WorldVB.GetStride(); }
-	ID3D11Buffer* GetWorldIBBuffer() const { return WorldIB.GetBuffer(); }
-	uint32 GetWorldIndexCount() const { return static_cast<uint32>(WorldIndices.size()); }
+	ID3D11Buffer* GetWorldVBBuffer(bool bDisableDepthTest = false) const { return bDisableDepthTest ? NoDepthWorldVB.GetBuffer() : WorldVB.GetBuffer(); }
+	uint32 GetWorldVBStride(bool bDisableDepthTest = false) const { return bDisableDepthTest ? NoDepthWorldVB.GetStride() : WorldVB.GetStride(); }
+	ID3D11Buffer* GetWorldIBBuffer(bool bDisableDepthTest = false) const { return bDisableDepthTest ? NoDepthWorldIB.GetBuffer() : WorldIB.GetBuffer(); }
+	uint32 GetWorldIndexCount(bool bDisableDepthTest = false) const { return static_cast<uint32>((bDisableDepthTest ? NoDepthWorldIndices : WorldIndices).size()); }
 
 	ID3D11Buffer* GetScreenVBBuffer() const { return ScreenVB.GetBuffer(); }
 	uint32 GetScreenVBStride() const { return ScreenVB.GetStride(); }
 	ID3D11Buffer* GetScreenIBBuffer() const { return ScreenIB.GetBuffer(); }
 	uint32 GetScreenIndexCount() const { return static_cast<uint32>(ScreenIndices.size()); }
 
-	uint32 GetWorldQuadCount() const { return static_cast<uint32>(WorldVertices.size() / 4); }
+	uint32 GetWorldQuadCount(bool bDisableDepthTest = false) const { return static_cast<uint32>((bDisableDepthTest ? NoDepthWorldVertices : WorldVertices).size() / 4); }
 	uint32 GetScreenQuadCount() const { return static_cast<uint32>(ScreenVertices.size() / 4); }
 
 private:
@@ -65,12 +67,16 @@ private:
 	// CPU 누적 배열
 	TArray<FTextureVertex> WorldVertices;
 	TArray<uint32>         WorldIndices;
+	TArray<FTextureVertex> NoDepthWorldVertices;
+	TArray<uint32>         NoDepthWorldIndices;
 	TArray<FTextureVertex> ScreenVertices;
 	TArray<uint32>         ScreenIndices;
 
 	// GPU Dynamic Buffers
 	FDynamicVertexBuffer WorldVB;
 	FDynamicIndexBuffer  WorldIB;
+	FDynamicVertexBuffer NoDepthWorldVB;
+	FDynamicIndexBuffer  NoDepthWorldIB;
 	FDynamicVertexBuffer ScreenVB;
 	FDynamicIndexBuffer  ScreenIB;
 

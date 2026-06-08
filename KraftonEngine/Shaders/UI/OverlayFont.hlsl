@@ -7,6 +7,7 @@ PS_Input_Tex VS(VS_Input_PT input)
 {
     PS_Input_Tex output;
     output.position = float4(input.position, 1.0f);
+    output.color = input.color;
     output.texcoord = input.texcoord;
     return output;
 }
@@ -18,5 +19,5 @@ float4 PS(PS_Input_Tex input) : SV_TARGET
     if (col.r < 0.1f)
         discard;
 
-    return float4(0.6f, 1.0f, 1.0f, col.r);
+    return float4(input.color.rgb, input.color.a * col.r);
 }
