@@ -24,6 +24,8 @@ local CLEAR_TO_CREDITS_DELAY = 2.35
 local CREDITS_ROLL_DURATION = 18.0
 local CREDITS_ROLL_START_PADDING = 120.0
 local CREDITS_ROLL_END_OFFSET = 1080.0
+local BOSS_HP_PANEL_WIDGET_PATH = "Content/UI/GameFlow/BossHPPanel.uasset"
+local BOSS_DAMAGE_LAG_RATIO_PER_SECOND = 0.72
 local START_MENU_BOOT_ELEMENT_IDS = {
     "boot-black",
     "boot-shutter-top",
@@ -51,6 +53,10 @@ local startMenuBootTime = START_MENU_BOOT_DURATION + 1.0
 local filmCountdownTime = FILM_COUNTDOWN_DURATION + 1.0
 local clearToCreditsTime = 0.0
 local creditsRollTime = CREDITS_ROLL_DURATION + 1.0
+local bossHudWasVisible = false
+local bossHudHP = nil
+local bossDamageHP = nil
+local bossPanelCreateFailed = false
 local startHudFlow = nil
 local showCredits = nil
 
@@ -156,8 +162,73 @@ local function percent(current, maxValue)
     return math.floor(clamp((current or 0.0) / maxValue, 0.0, 1.0) * 100.0 + 0.5)
 end
 
+local function updateBossDamageBar(hud, hp, maxHP, dt)
+    local safeMax = math.max(maxHP or 0.0, 1.0)
+    local targetHP = clamp(hp or 0.0, 0.0, safeMax)
+    local frameDt = math.max(dt or 0.0, 0.0)
+
+    if bossHudWasVisible ~= true or bossHudHP == nil or bossDamageHP == nil then
+        bossHudHP = targetHP
+        bossDamageHP = targetHP
+    elseif targetHP < bossHudHP - 0.001 then
+        bossDamageHP = math.max(bossDamageHP, bossHudHP)
+    elseif targetHP > bossHudHP + 0.001 then
+        bossDamageHP = targetHP
+    end
+
+    bossHudHP = targetHP
+    if bossDamageHP > targetHP then
+        bossDamageHP = math.max(targetHP, bossDamageHP - safeMax * BOSS_DAMAGE_LAG_RATIO_PER_SECOND * frameDt)
+    else
+        bossDamageHP = targetHP
+    end
+
+    setBar(hud, "boss-hp-fill", targetHP, safeMax)
+    setBar(hud, "boss-hp-damage-fill", bossDamageHP, safeMax)
+    bossHudWasVisible = true
+end
+
 local function hasRegisteredPlayer()
     return CombatContext.HasPlayer ~= nil and CombatContext.HasPlayer() == true
+end
+
+local function hasRegisteredBoss()
+    return CombatContext.HasBoss ~= nil and CombatContext.HasBoss() == true
+end
+
+local function isValidActor(actor)
+    return actor ~= nil and (actor.IsValid == nil or actor:IsValid())
+end
+
+local function hasBossActor(d)
+    if d == nil or d.GetBossActor == nil then
+        return false
+    end
+    return isValidActor(d:GetBossActor())
+end
+
+local function resetBossHudAnimation()
+    bossHudWasVisible = false
+    bossHudHP = nil
+    bossDamageHP = nil
+end
+
+local function ensureBossPanelWidget()
+    if widgets.BossPanel ~= nil then
+        return widgets.BossPanel
+    end
+    if bossPanelCreateFailed == true then
+        return nil
+    end
+
+    local panel = createWidget("BossPanel", BOSS_HP_PANEL_WIDGET_PATH, false, 1)
+    if panel == nil then
+        bossPanelCreateFailed = true
+        return nil
+    end
+
+    addToViewport(panel, 1)
+    return panel
 end
 
 local function getPlayerStats(d)
@@ -506,6 +577,9 @@ local function showHud()
     removeWidget("Credits")
     removeWidget("Countdown")
     removeWidget("TutorialHUD")
+    removeWidget("BossPanel")
+    bossPanelCreateFailed = false
+    resetBossHudAnimation()
 
     local hud = createWidget("HUD", d:GetHudWidgetPath(), false, 0)
     addToViewport(hud, 0)
@@ -1121,17 +1195,21 @@ showCredits = function()
     updateCreditsRoll(0.0)
 end
 
-local function updateHud()
+local function updateHud(dt)
     local d = getDirector()
     local hud = widgets.HUD
     if d == nil or hud == nil then
         return
     end
 
-    local bossHP, bossMaxHP = CombatContext.GetBossHP()
-    if bossMaxHP ~= nil and bossMaxHP > 0.0 then
+    local hasBossInContext = hasRegisteredBoss()
+    local hasBoss = hasBossInContext or hasBossActor(d)
+    local bossHP = 0.0
+    local bossMaxHP = 0.0
+    if hasBossInContext then
+        bossHP, bossMaxHP = CombatContext.GetBossHP()
         d:SetBossHP(bossHP, bossMaxHP)
-    else
+    elseif hasBoss then
         bossHP = d:GetBossHP()
         bossMaxHP = d:GetBossMaxHP()
     end
@@ -1153,16 +1231,14 @@ local function updateHud()
 
     local playerHP = d:GetPlayerHP()
     local playerMaxHP = d:GetPlayerMaxHP()
-    local syncedBossHP = d:GetBossHP()
-    local syncedBossMaxHP = d:GetBossMaxHP()
+    local syncedBossHP = hasBoss and d:GetBossHP() or 0.0
+    local syncedBossMaxHP = hasBoss and d:GetBossMaxHP() or 0.0
     local ultimate = d:GetUltimateGauge()
     local ultimateMax = d:GetUltimateMaxGauge()
     local combo = d:GetComboCount()
 
     setText(hud, "player-hp-text", "HP " .. whole(playerHP) .. "/" .. whole(playerMaxHP))
     setText(hud, "player-state", percent(playerHP, playerMaxHP) .. "% STRUCT")
-    setText(hud, "boss-hp-text", "CORE " .. whole(syncedBossHP) .. "/" .. whole(syncedBossMaxHP))
-    setText(hud, "boss-sub", syncedBossHP <= 0.0 and "CORE LOST" or "HOSTILE CORE")
     setText(hud, "ultimate-text", "BURST " .. percent(ultimate, ultimateMax) .. "%")
     setText(hud, "ultimate-sub", ultimate >= ultimateMax and "READY" or "CHARGE")
     local comboText = string.format("%02d CHAIN", combo)
@@ -1172,7 +1248,21 @@ local function updateHud()
     setText(hud, "combo-readout", combo > 0 and ("x" .. tostring(combo)) or "FLOW")
 
     setBar(hud, "player-hp-fill", playerHP, playerMaxHP)
-    setBar(hud, "boss-hp-fill", syncedBossHP, syncedBossMaxHP)
+    if hasBoss and syncedBossMaxHP > 0.0 then
+        local bossPanel = ensureBossPanelWidget()
+        if bossPanel ~= nil then
+            setText(bossPanel, "boss-title-cyan", "ASCENDANT")
+            setText(bossPanel, "boss-title-pink", "ASCENDANT")
+            setText(bossPanel, "boss-title-main", "ASCENDANT")
+            setText(bossPanel, "boss-hp-text", "CORE " .. whole(syncedBossHP) .. "/" .. whole(syncedBossMaxHP))
+            setText(bossPanel, "boss-sub", syncedBossHP <= 0.0 and "CORE LOST" or "HOSTILE CORE")
+            updateBossDamageBar(bossPanel, syncedBossHP, syncedBossMaxHP, dt)
+        end
+    else
+        removeWidget("BossPanel")
+        bossPanelCreateFailed = false
+        resetBossHudAnimation()
+    end
     setBar(hud, "ultimate-fill", ultimate, ultimateMax)
     setBar(hud, "combo-fill", combo, 12.0)
 end
@@ -1249,7 +1339,7 @@ function Tick(dt)
             return
         end
         applyTestHotkeys()
-        updateHud()
+        updateHud(dt)
         TutorialDirector.Tick(dt, widgets.TutorialHUD)
         updateTerminalFlow()
     elseif currentScreen == "StartMenu" then

@@ -64,7 +64,6 @@
         <img id="backdrop" src="Images/menu_graffiti_backdrop.png" />
         <div id="shade"></div>
         <div id="title-panel" data-ue-anchors="0 0 0 0" data-ue-offsets="60 52 560 116" data-ue-alignment="0 0">
-            <div class="eyebrow">DATA SPACE ROUTE</div>
             <div class="title-stack">
                 <div class="title-layer title-cyan">Boss Prototype</div>
                 <div class="title-layer title-pink">Boss Prototype</div>
@@ -73,7 +72,6 @@
             <p>Select deployment vector.</p>
         </div>
         <img id="sign" src="Images/menu_neon_backboard.png" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="34 20 720 461" data-ue-alignment="0 0.5" />
-        <div id="tag" data-ue-anchors="1 1 1 1" data-ue-offsets="-466 -152 330 64" data-ue-alignment="0 1">BOSS//RUN</div>
         <div id="readout" data-ue-anchors="1 0 1 0" data-ue-offsets="-116 116 330 210" data-ue-alignment="1 0">
             <div class="readout-head">M.I.N.D. TERMINAL</div>
             <div class="widget-scan-a"></div>
@@ -87,7 +85,7 @@
         </div>
         <div id="panel" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="100 20 390 260" data-ue-alignment="0 0.5">
             <img id="bg-story-boss" class="button-bg" src="Images/button_story_boss.png" />
-            <button id="btn-story-boss">Story Boss</button>
+            <button id="btn-story-boss">Start Game</button>
             <img id="bg-training" class="button-bg" src="Images/button_training.png" />
             <button id="btn-training">Training Map</button>
             <img id="bg-credits" class="button-bg" src="Images/button_credits.png" />

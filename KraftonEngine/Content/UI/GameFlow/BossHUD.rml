@@ -37,21 +37,6 @@
         #player-chip-b { left: 256px; top: 27px; width: 8px; height: 8px; }
         #player-chip-c { left: 268px; top: 27px; width: 8px; height: 8px; }
 
-        #boss-plate { left: 334px; top: 8px; width: 612px; height: 62px; }
-        #boss-shell { left: 334px; top: 8px; width: 612px; height: 62px; }
-        #boss-bracket-left { left: 18px; top: 12px; width: 58px; }
-        #boss-bracket-right { left: 536px; top: 12px; width: 58px; }
-        #boss-title-cyan { left: 240px; top: 7px; width: 140px; height: 16px; color: #00eaff; }
-        #boss-title-pink { left: 244px; top: 7px; width: 140px; height: 16px; color: #ff2bd6; }
-        #boss-title-main { left: 242px; top: 7px; width: 140px; height: 16px; font-size: 12px; color: #ffffff; }
-        #boss-hp-text { left: 30px; top: 26px; width: 170px; height: 14px; font-size: 11px; color: #ffffff; }
-        #boss-sub { left: 452px; top: 26px; width: 116px; height: 12px; }
-        #boss-bar { left: 30px; top: 43px; width: 552px; height: 8px; }
-        #boss-accent-a { left: 30px; top: 55px; width: 138px; }
-        #boss-accent-b { left: 470px; top: 55px; width: 112px; }
-        #boss-grid-a { left: 14px; top: 13px; height: 38px; }
-        #boss-grid-b { left: 596px; top: 13px; height: 38px; }
-
         #combo-plate { left: 24px; top: 294px; width: 196px; height: 88px; }
         #combo-shell { left: 26px; top: 296px; width: 184px; height: 78px; }
         #combo-cyan { left: 17px; top: 10px; width: 104px; height: 22px; font-size: 19px; color: #00eaff; }
@@ -86,26 +71,6 @@
         <div id="player-chip-a" class="chip chip-on"></div>
         <div id="player-chip-b" class="chip chip-cyan"></div>
         <div id="player-chip-c" class="chip"></div>
-    </div>
-
-    <img id="boss-plate" class="plate" src="Images/hud_data_plate.png" data-ue-anchors="0.5 0 0.5 0" data-ue-offsets="0 8 612 62" data-ue-alignment="0.5 0" />
-    <div id="boss-shell" class="panel" data-ue-anchors="0.5 0 0.5 0" data-ue-offsets="0 8 612 62" data-ue-alignment="0.5 0">
-        <div id="boss-grid-a" class="scan-v"></div>
-        <div id="boss-grid-b" class="scan-v"></div>
-        <div id="boss-bracket-left" class="line-white"></div>
-        <div id="boss-bracket-right" class="line-white"></div>
-        <div id="boss-title-cyan" class="label-cyan">ASCENDANT</div>
-        <div id="boss-title-pink" class="label-pink">ASCENDANT</div>
-        <div id="boss-title-main" class="label">ASCENDANT</div>
-        <div id="boss-hp-text" class="label">TARGET INTEGRITY</div>
-        <div id="boss-sub" class="readout">HOSTILE CORE</div>
-        <div id="boss-bar" class="bar">
-            <div id="boss-hp-fill" class="bar-fill"></div>
-            <div class="bar-hotline"></div>
-            <div class="bar-tick" style="left: 8%;"></div><div class="bar-tick" style="left: 16%;"></div><div class="bar-tick" style="left: 24%;"></div><div class="bar-tick" style="left: 32%;"></div><div class="bar-tick" style="left: 40%;"></div><div class="bar-tick" style="left: 48%;"></div><div class="bar-tick" style="left: 56%;"></div><div class="bar-tick" style="left: 64%;"></div><div class="bar-tick" style="left: 72%;"></div><div class="bar-tick" style="left: 80%;"></div><div class="bar-tick" style="left: 88%;"></div><div class="bar-tick" style="left: 96%;"></div>
-        </div>
-        <div id="boss-accent-a" class="line-pink"></div>
-        <div id="boss-accent-b" class="line-cyan"></div>
     </div>
 
     <img id="combo-plate" class="plate" src="Images/hud_data_plate.png" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="24 -66 196 88" data-ue-alignment="0 0.5" />

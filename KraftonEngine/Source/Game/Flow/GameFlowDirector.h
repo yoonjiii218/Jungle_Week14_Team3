@@ -166,9 +166,9 @@ private:
 	UPROPERTY(Edit, Save, Category="GameFlow|Scenes", DisplayName="Training Scene")
 	FString TrainingSceneName = "TrainingMap";
 	UPROPERTY(Edit, Save, Category="GameFlow|Scenes", DisplayName="Story Boss Scene")
-	FString StoryBossSceneName = "StoryBoss";
+	FString StoryBossSceneName = "Tokyo_Current";
 	UPROPERTY(Edit, Save, Category="GameFlow|Scenes", DisplayName="Retry Scene")
-	FString RetrySceneName = "StoryBoss";
+	FString RetrySceneName = "Tokyo_Current";
 	UPROPERTY(Edit, Save, Category="GameFlow|Scenes", DisplayName="Game Over Scene")
 	FString GameOverSceneName = "GameOver";
 	UPROPERTY(Edit, Save, Category="GameFlow|Scenes", DisplayName="Clear Scene")

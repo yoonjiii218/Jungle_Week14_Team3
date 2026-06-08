@@ -888,6 +888,35 @@ namespace
 		return Count;
 	}
 
+	const char* SourceOnlyDesignerStateHeader = "RMLUI_SOURCE_ONLY";
+	const char* SourceOnlyDesignerStateText = "RMLUI_SOURCE_ONLY\t1\n";
+
+	bool IsSourceOnlyDesignerState(const FString& State)
+	{
+		return State.rfind(SourceOnlyDesignerStateHeader, 0) == 0;
+	}
+
+	bool IsSourceAuthoredRmlDocument(const std::string& Source, const FString& DesignerState)
+	{
+		if (IsSourceOnlyDesignerState(DesignerState))
+		{
+			return true;
+		}
+
+		if (!DesignerState.empty())
+		{
+			return false;
+		}
+
+		const bool bHasAuthoredLayout =
+			Source.find("<style") != std::string::npos &&
+			(Source.find("data-ue-anchors") != std::string::npos ||
+			 Source.find("position: absolute") != std::string::npos ||
+			 Source.find("src=\"Images/") != std::string::npos);
+
+		return bHasAuthoredLayout && CountEditableSourceTags(Source) > 8;
+	}
+
 	FString StateString(const TArray<FString>& Fields, size_t Index)
 	{
 		return Index < Fields.size() ? UnescapeStateString(Fields[Index]) : FString();
@@ -989,6 +1018,7 @@ void FRmlUiEditorWidget::Close()
 	RedoStack.clear();
 	LastError.clear();
 	StatusMessage.clear();
+	bSourceOnlyDocument = false;
 	bLoaded = false;
 	bAnalysisDirty = true;
 	bDesignerDirty = true;
@@ -1140,29 +1170,42 @@ bool FRmlUiEditorWidget::LoadFromDisk(bool bForceReload)
 	bLoaded = true;
 	bAnalysisDirty = true;
 	bDesignerDirty = true;
-	const bool bLoadedDesignerState = !Asset->GetDesignerState().empty() && DeserializeDesignerState(Asset->GetDesignerState());
-	int32 DesignerElementCount = 0;
-	for (const FDesignerNode& Node : DesignerNodes)
+	const FString DesignerState = Asset->GetDesignerState();
+	bSourceOnlyDocument = IsSourceAuthoredRmlDocument(SourceBuffer, DesignerState);
+	if (bSourceOnlyDocument)
 	{
-		if (Node.Type != EWidgetType::Canvas)
-		{
-			++DesignerElementCount;
-		}
-	}
-	const int32 SourceElementCount = CountEditableSourceTags(SourceBuffer);
-	const bool bDesignerStateLooksStale = bLoadedDesignerState && DesignerElementCount <= 1 && SourceElementCount > DesignerElementCount;
-	if (!bLoadedDesignerState || bDesignerStateLooksStale)
-	{
-		RebuildDesignerFromSource();
+		ClearDesignerModel();
+		EnsureDesignerModel();
+		bDesignerDirty = false;
 	}
 	else
 	{
-		bDesignerDirty = false;
+		const bool bLoadedDesignerState = !DesignerState.empty() && DeserializeDesignerState(DesignerState);
+		int32 DesignerElementCount = 0;
+		for (const FDesignerNode& Node : DesignerNodes)
+		{
+			if (Node.Type != EWidgetType::Canvas)
+			{
+				++DesignerElementCount;
+			}
+		}
+		const int32 SourceElementCount = CountEditableSourceTags(SourceBuffer);
+		const bool bDesignerStateLooksStale = bLoadedDesignerState && DesignerElementCount <= 1 && SourceElementCount > DesignerElementCount;
+		if (!bLoadedDesignerState || bDesignerStateLooksStale)
+		{
+			RebuildDesignerFromSource();
+		}
+		else
+		{
+			bDesignerDirty = false;
+		}
 	}
 	ClearDirty();
 	UndoStack.clear();
 	RedoStack.clear();
-	StatusMessage = "Loaded.";
+	StatusMessage = bSourceOnlyDocument
+		? "Loaded source-authored RML. Designer generation is disabled."
+		: "Loaded.";
 	return true;
 }
 
@@ -1174,12 +1217,15 @@ bool FRmlUiEditorWidget::SaveToDisk()
 		return false;
 	}
 
-	SyncSourceFromDesigner();
+	if (!bSourceOnlyDocument)
+	{
+		SyncSourceFromDesigner();
+	}
 	LastError.clear();
 	StatusMessage.clear();
 
 	Asset->SetDocumentSource(SourceBuffer);
-	Asset->SetDesignerState(SerializeDesignerState());
+	Asset->SetDesignerState(bSourceOnlyDocument ? FString(SourceOnlyDesignerStateText) : SerializeDesignerState());
 	if (!FRmlUiDocumentManager::Get().Save(Asset))
 	{
 		LastError = "Failed while writing RmlUi widget asset.";
@@ -1187,7 +1233,7 @@ bool FRmlUiEditorWidget::SaveToDisk()
 	}
 
 	ClearDirty();
-	StatusMessage = "Saved.";
+	StatusMessage = bSourceOnlyDocument ? "Saved source-authored RML." : "Saved.";
 	return true;
 }
 
@@ -1230,11 +1276,23 @@ void FRmlUiEditorWidget::RenderMenuBar()
 	{
 		ImGui::MenuItem("Show Grid", nullptr, &bShowGrid);
 		ImGui::MenuItem("Snap To Grid", nullptr, &bSnapToGrid);
+		if (bSourceOnlyDocument)
+		{
+			ImGui::BeginDisabled();
+		}
 		if (ImGui::MenuItem("Import Source To Designer"))
 		{
 			PushUndoSnapshot();
 			RebuildDesignerFromSource();
 			MarkDesignerChanged();
+		}
+		if (bSourceOnlyDocument)
+		{
+			ImGui::EndDisabled();
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+			{
+				ImGui::SetTooltip("Source-authored RML is protected from lossy designer import.");
+			}
 		}
 		ImGui::EndMenu();
 	}
@@ -1281,6 +1339,11 @@ void FRmlUiEditorWidget::RenderToolbar()
 	}
 	ImGui::SameLine();
 	ImGui::TextDisabled("%zu bytes", SourceBuffer.size());
+	if (bSourceOnlyDocument)
+	{
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(0.55f, 0.78f, 1.0f, 1.0f), "Source-authored RML");
+	}
 }
 
 void FRmlUiEditorWidget::RenderDesigner()
@@ -1525,6 +1588,22 @@ void FRmlUiEditorWidget::RenderDesignerSurface()
 		{
 			DrawList->AddLine(ImVec2(Origin.x, Y), ImVec2(Origin.x + CanvasSize.x, Y), IM_COL32(45, 48, 54, 120));
 		}
+	}
+
+	if (bSourceOnlyDocument)
+	{
+		const char* Message = "Source-authored RML: use the Source tab. Designer conversion is disabled.";
+		const ImVec2 TextSize = ImGui::CalcTextSize(Message);
+		DrawList->AddText(
+			ImVec2(Origin.x + 24.0f, Origin.y + 24.0f),
+			IM_COL32(150, 200, 255, 230),
+			Message);
+		DrawList->AddRect(
+			ImVec2(Origin.x + 18.0f, Origin.y + 18.0f),
+			ImVec2(Origin.x + 30.0f + TextSize.x, Origin.y + 36.0f + TextSize.y),
+			IM_COL32(100, 170, 230, 180));
+		ImGui::EndChild();
+		return;
 	}
 
 	if (bCanvasHovered && ImGui::BeginDragDropTarget())
@@ -1845,6 +1924,12 @@ void FRmlUiEditorWidget::RenderSourceEditor()
 		return;
 	}
 
+	if (bSourceOnlyDocument)
+	{
+		ImGui::TextColored(ImVec4(0.55f, 0.78f, 1.0f, 1.0f), "Source-authored RML. Edit source directly; designer import/export is disabled to prevent layout loss.");
+		ImGui::BeginDisabled();
+	}
+
 	if (ImGui::Button("Generate From Designer"))
 	{
 		SyncSourceFromDesigner();
@@ -1855,6 +1940,10 @@ void FRmlUiEditorWidget::RenderSourceEditor()
 		PushUndoSnapshot();
 		RebuildDesignerFromSource();
 		MarkDesignerChanged();
+	}
+	if (bSourceOnlyDocument)
+	{
+		ImGui::EndDisabled();
 	}
 	ImGui::Separator();
 
@@ -2850,6 +2939,12 @@ void FRmlUiEditorWidget::Redo()
 
 void FRmlUiEditorWidget::MarkDesignerChanged()
 {
+	if (bSourceOnlyDocument)
+	{
+		StatusMessage = "Source-authored RML cannot be regenerated from designer.";
+		return;
+	}
+
 	bDesignerDirty = true;
 	SyncSourceFromDesigner();
 	MarkDirty();
