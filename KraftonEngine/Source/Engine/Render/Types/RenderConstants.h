@@ -351,6 +351,11 @@ struct FPerfectDodgePostProcessConstants
 	float GammaPower;
 	float WorldGridSurfaceBias;
 	float ScreenGridIntensity;
+
+	float FocusHighlightStrength;
+	float _FocusHighlightPad0;
+	float _FocusHighlightPad1;
+	float _FocusHighlightPad2;
 };
 static_assert(sizeof(FPerfectDodgePostProcessConstants) % 16 == 0, "FPerfectDodgePostProcessConstants must be 16-byte aligned");
 

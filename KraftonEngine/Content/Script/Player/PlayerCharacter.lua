@@ -34,6 +34,10 @@ function PlayerCharacter.SetKatanaTrailActive(active)
 end
 
 function BeginPlay()
+    if obj ~= nil and obj.HasTag ~= nil and obj.AddTag ~= nil and not obj:HasTag("Player") then
+        obj:AddTag("Player")
+    end
+
     playerContext = CombatContext.GetPlayerByOwner(obj)
     if playerContext == nil then
         playerContext = PlayerContext.Create(obj, this)

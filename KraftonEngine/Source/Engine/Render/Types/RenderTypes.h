@@ -42,6 +42,7 @@ enum class ERenderPass : uint32
 	Fog,			// Fullscreen HeightFog (불투명 이후, AlphaBlend 이전)
 	AlphaBlend,		// 반투명 지오메트리 (Font, SubUV, Billboard, Translucent)
 	SelectionMask,	// 선택 스텐실 마스크
+	GameplayFocusMask, // Perfect Dodge 중 Player / HitTarget 계열 강조용 스텐실 마스크
 	PostProcess,	// SceneDepth, WorldNormal, LightCulling 등 scene 기반 post-process
 	DOFSetup,		// Depth of Field setup — CoC 생성
 	DOFGather,		// Depth of Field gather — blur 생성
@@ -71,6 +72,7 @@ inline const char* GetRenderPassName(ERenderPass Pass)
 		"RenderPass::Fog",
 		"RenderPass::AlphaBlend",
 		"RenderPass::SelectionMask",
+		"RenderPass::GameplayFocusMask",
 		"RenderPass::PostProcess",
 		"RenderPass::DOFSetup",
 		"RenderPass::DOFGather",
@@ -103,6 +105,7 @@ namespace RenderStateStrings
 		{ "Fog",           (int)ERenderPass::Fog },
 		{ "AlphaBlend",    (int)ERenderPass::AlphaBlend },
 		{ "SelectionMask", (int)ERenderPass::SelectionMask },
+		{ "GameplayFocusMask", (int)ERenderPass::GameplayFocusMask },
 		{ "PostProcess",   (int)ERenderPass::PostProcess },
 		{ "DOFSetup",      (int)ERenderPass::DOFSetup },
 		{ "DOFGather",     (int)ERenderPass::DOFGather },

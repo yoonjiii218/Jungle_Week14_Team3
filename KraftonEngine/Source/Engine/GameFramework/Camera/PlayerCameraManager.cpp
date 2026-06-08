@@ -470,7 +470,7 @@ void APlayerCameraManager::ClearCameraVignette()
 	VignetteIntensity = 0.0f;
 }
 
-void APlayerCameraManager::StartPerfectDodgePostProcess(float Duration, float Intensity)
+void APlayerCameraManager::StartPerfectDodgePostProcess(float Duration, float Intensity, float FocusHighlightStrength)
 {
 	if (Duration <= 0.0f)
 	{
@@ -483,6 +483,9 @@ void APlayerCameraManager::StartPerfectDodgePostProcess(float Duration, float In
 	PerfectDodgePostProcess.Duration = Duration;
 	PerfectDodgePostProcess.ElapsedTime = 0.0f;
 	PerfectDodgePostProcess.Intensity = std::max(0.0f, Intensity);
+	PerfectDodgePostProcess.FocusHighlightStrength = FocusHighlightStrength >= 0.0f
+		? std::max(0.0f, FocusHighlightStrength)
+		: std::max(0.0f, PerfectDodgePostProcessDebug::GetDefaultFocusHighlightStrength());
 }
 
 void APlayerCameraManager::StopPerfectDodgePostProcess()

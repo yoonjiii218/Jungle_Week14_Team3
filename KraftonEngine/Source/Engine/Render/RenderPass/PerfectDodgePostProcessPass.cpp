@@ -33,6 +33,7 @@ bool FPerfectDodgePostProcessPass::BeginPass(const FPassContext& Ctx)
 	DC->PSSetShaderResources(ESystemTexSlot::SceneColor, 1, &NullSRV);
 	DC->PSSetShaderResources(ESystemTexSlot::SceneDepth, 1, &NullSRV);
 	DC->PSSetShaderResources(ESystemTexSlot::GBufferNormal, 1, &NullSRV);
+	DC->PSSetShaderResources(ESystemTexSlot::Stencil, 1, &NullSRV);
 
 	DC->OMSetRenderTargets(0, nullptr, nullptr);
 	DC->CopyResource(Frame.SceneColorCopyTexture, Frame.ViewportRenderTexture);
@@ -43,6 +44,12 @@ bool FPerfectDodgePostProcessPass::BeginPass(const FPassContext& Ctx)
 	ID3D11ShaderResourceView* DepthSRV = Frame.DepthCopySRV;
 	DC->PSSetShaderResources(ESystemTexSlot::SceneColor, 1, &SceneColorSRV);
 	DC->PSSetShaderResources(ESystemTexSlot::SceneDepth, 1, &DepthSRV);
+
+	if (Frame.StencilCopySRV)
+	{
+		ID3D11ShaderResourceView* StencilSRV = Frame.StencilCopySRV;
+		DC->PSSetShaderResources(ESystemTexSlot::Stencil, 1, &StencilSRV);
+	}
 
 	if (Frame.NormalSRV)
 	{
@@ -61,4 +68,5 @@ void FPerfectDodgePostProcessPass::EndPass(const FPassContext& Ctx)
 	DC->PSSetShaderResources(ESystemTexSlot::SceneColor, 1, &NullSRV);
 	DC->PSSetShaderResources(ESystemTexSlot::SceneDepth, 1, &NullSRV);
 	DC->PSSetShaderResources(ESystemTexSlot::GBufferNormal, 1, &NullSRV);
+	DC->PSSetShaderResources(ESystemTexSlot::Stencil, 1, &NullSRV);
 }

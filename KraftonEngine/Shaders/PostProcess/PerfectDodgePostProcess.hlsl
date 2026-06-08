@@ -1,6 +1,7 @@
 Texture2D SceneDepthTexture : register(t16);
 Texture2D SceneColorTexture : register(t17);
 Texture2D GBufferNormalTexture : register(t18);
+Texture2D<uint> StencilMaskTexture : register(t19);
 
 SamplerState LinearClampSampler : register(s0);
 SamplerState PointClampSampler : register(s2);
@@ -51,6 +52,11 @@ cbuffer PerfectDodgePostProcessCB : register(b2)
 	float GammaPower;
 	float WorldGridSurfaceBias;
 	float ScreenGridIntensity;
+
+	float FocusHighlightStrength;
+	float _FocusHighlightPad0;
+	float _FocusHighlightPad1;
+	float _FocusHighlightPad2;
 };
 
 struct VSOut
@@ -134,6 +140,39 @@ float GridSurfaceAtPoint(float3 P, float Scale, float Width)
 	return saturate(max(max(X, Y), Z));
 }
 
+
+float ReadFocusMaskAt(int2 Pixel)
+{
+	uint Stencil = StencilMaskTexture.Load(int3(Pixel, 0));
+	return step(0.5, (float)(Stencil & 0x02));
+}
+
+void ComputeFocusMask(int2 Pixel, out float FocusMask, out float FocusRim)
+{
+	uint Width = 0;
+	uint Height = 0;
+	StencilMaskTexture.GetDimensions(Width, Height);
+	int2 MaxPixel = int2(max((int)Width - 1, 0), max((int)Height - 1, 0));
+
+	FocusMask = ReadFocusMaskAt(clamp(Pixel, int2(0, 0), MaxPixel));
+
+	float Dilated = FocusMask;
+	Dilated = max(Dilated, ReadFocusMaskAt(clamp(Pixel + int2( 1,  0), int2(0, 0), MaxPixel)));
+	Dilated = max(Dilated, ReadFocusMaskAt(clamp(Pixel + int2(-1,  0), int2(0, 0), MaxPixel)));
+	Dilated = max(Dilated, ReadFocusMaskAt(clamp(Pixel + int2( 0,  1), int2(0, 0), MaxPixel)));
+	Dilated = max(Dilated, ReadFocusMaskAt(clamp(Pixel + int2( 0, -1), int2(0, 0), MaxPixel)));
+	Dilated = max(Dilated, ReadFocusMaskAt(clamp(Pixel + int2( 2,  0), int2(0, 0), MaxPixel)));
+	Dilated = max(Dilated, ReadFocusMaskAt(clamp(Pixel + int2(-2,  0), int2(0, 0), MaxPixel)));
+	Dilated = max(Dilated, ReadFocusMaskAt(clamp(Pixel + int2( 0,  2), int2(0, 0), MaxPixel)));
+	Dilated = max(Dilated, ReadFocusMaskAt(clamp(Pixel + int2( 0, -2), int2(0, 0), MaxPixel)));
+	Dilated = max(Dilated, ReadFocusMaskAt(clamp(Pixel + int2( 2,  2), int2(0, 0), MaxPixel)));
+	Dilated = max(Dilated, ReadFocusMaskAt(clamp(Pixel + int2(-2,  2), int2(0, 0), MaxPixel)));
+	Dilated = max(Dilated, ReadFocusMaskAt(clamp(Pixel + int2( 2, -2), int2(0, 0), MaxPixel)));
+	Dilated = max(Dilated, ReadFocusMaskAt(clamp(Pixel + int2(-2, -2), int2(0, 0), MaxPixel)));
+
+	FocusRim = saturate(Dilated - FocusMask);
+}
+
 float VolumetricWorldGrid(float2 UV, float DeviceDepth, float TimeValue, float Glitch)
 {
 	float MaxDistance = max(WorldGridDepthFadeDistance, 1.0);
@@ -201,6 +240,7 @@ float4 PS(VSOut In) : SV_Target
 	Color += SceneColorTexture.Sample(LinearClampSampler, UV - Dir * Radial * 0.45).rgb;
 	Color += SceneColorTexture.Sample(LinearClampSampler, UV - Dir * Radial * 0.90).rgb;
 	Color /= 3.0;
+	float3 PreGradeColor = Color;
 
 	float CA = (EnterAmount * 0.006 + Glitch * 0.006) * saturate(Dist * 1.8);
 	float R = SceneColorTexture.Sample(LinearClampSampler, UV + Dir * CA).r;
@@ -222,6 +262,22 @@ float4 PS(VSOut In) : SV_Target
 
 	float Vignette = smoothstep(0.20, 0.92, Dist) * VignetteIntensity * EffectAmount;
 	Color *= (1.0 - Vignette * 0.60);
+
+	float FocusMask = 0.0;
+	float FocusRim = 0.0;
+	ComputeFocusMask(int2(In.Position.xy), FocusMask, FocusRim);
+
+	// Apply after darkening/vignette so Player and enemies read as deliberately emphasized,
+	// not just slightly less affected by the grade. FocusHighlightStrength drives both fill
+	// brightness and the cyber rim, so values around 1.0~2.0 are intentionally visible.
+	float FocusStrength = saturate(FocusHighlightStrength * EffectAmount);
+	float3 FocusFillTarget = max(Color, PreGradeColor * (1.0 + FocusHighlightStrength * 0.75));
+	FocusFillTarget += BlueTintColor.rgb * (0.22 * FocusHighlightStrength);
+	Color = lerp(Color, FocusFillTarget, saturate(FocusMask * FocusStrength));
+	Color += BlueTintColor.rgb * (FocusMask * EffectAmount * FocusHighlightStrength * 0.22);
+
+	float RimAmount = saturate(FocusRim * EffectAmount * (0.45 + FocusHighlightStrength * 0.75));
+	Color += float3(0.45, 0.95, 1.0) * RimAmount;
 
 	float Flash = FocusFlashStrength * EnterAmount * smoothstep(0.85, 0.0, Dist);
 	Color += float3(Flash, Flash, Flash);

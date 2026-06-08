@@ -143,7 +143,7 @@ public:
 	FLinearColor GetVignetteColor() const { return VignetteColor; }
 
 	// ─── Perfect Dodge PostProcess ─────────────────────────────────
-	virtual void StartPerfectDodgePostProcess(float Duration, float Intensity = 1.0f);
+	virtual void StartPerfectDodgePostProcess(float Duration, float Intensity = 1.0f, float FocusHighlightStrength = -1.0f);
 	virtual void StopPerfectDodgePostProcess();
 	const FPerfectDodgePostProcessState& GetPerfectDodgePostProcessState() const { return PerfectDodgePostProcess; }
 	bool IsPerfectDodgePostProcessEnabled() const { return PerfectDodgePostProcess.bEnabled; }

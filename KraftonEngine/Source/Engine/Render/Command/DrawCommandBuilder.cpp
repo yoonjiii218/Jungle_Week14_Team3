@@ -9,6 +9,7 @@
 #include "Render/Proxy/BoneDebugSceneProxy.h"
 #include "Physics/CollisionDebugDraw.h"
 #include "GameFramework/World.h"
+#include "GameFramework/AActor.h"
 #include "Render/Proxy/SkeletalMeshSceneProxy.h"
 #include "Render/Proxy/ParticleSystemSceneProxy.h"
 #include "Render/Scene/FScene.h"
@@ -198,7 +199,9 @@ void FDrawCommandBuilder::BuildCommandForProxy(FScene& Scene, const FPrimitiveSc
 	if (Pass == ERenderPass::SelectionMask)
 		bHasSelectionMaskCommands = true;
 
-	const bool bDepthOnly = (Pass == ERenderPass::PreDepth);
+	const bool bDepthOnly = (Pass == ERenderPass::PreDepth
+		|| Pass == ERenderPass::SelectionMask
+		|| Pass == ERenderPass::GameplayFocusMask);
 
 	// 섹션당 1개 커맨드 (per-section 셰이더)
  	for (const FMeshSectionDraw& Section : Proxy.GetSectionDraws())
@@ -440,6 +443,12 @@ void FDrawCommandBuilder::BuildProxyCommands(const FFrameContext& Frame, FScene&
 
 		if (Proxy->IsSelected())
 			BuildSelectionCommands(Proxy, bShowBoundingVolume, Scene);
+
+		if (Frame.PerfectDodgePostProcess.bEnabled && Frame.PerfectDodgePostProcess.Intensity > 0.0f
+			&& ShouldBuildGameplayFocusMask(Proxy))
+		{
+			BuildGameplayFocusMaskCommands(Proxy, Scene);
+		}
 	}
 }
 
@@ -524,6 +533,34 @@ void FDrawCommandBuilder::BuildSelectionCommands(FPrimitiveSceneProxy* Proxy, bo
 
 	if (bShowBoundingVolume && Proxy->HasProxyFlag(EPrimitiveProxyFlags::ShowAABB))
 		Scene.AddDebugAABB(Proxy->GetCachedBounds().Min, Proxy->GetCachedBounds().Max, FColor::White());
+}
+
+bool FDrawCommandBuilder::ShouldBuildGameplayFocusMask(const FPrimitiveSceneProxy* Proxy) const
+{
+	if (!Proxy || !Proxy->HasValidOwner())
+	{
+		return false;
+	}
+
+	// Lua gameplay already tags Boss/Mob with HitTarget. PlayerCharacter adds Player.
+	// Enemy/Boss/Mob are kept as fallbacks for hand-authored scene actors.
+	return Proxy->HasOwnerActorTag(FName("Player"))
+		|| Proxy->HasOwnerActorTag(FName("HitTarget"))
+		|| Proxy->HasOwnerActorTag(FName("Enemy"))
+		|| Proxy->HasOwnerActorTag(FName("Boss"))
+		|| Proxy->HasOwnerActorTag(FName("Mob"));
+}
+
+void FDrawCommandBuilder::BuildGameplayFocusMaskCommands(FPrimitiveSceneProxy* Proxy, FScene& Scene)
+{
+	if (!Proxy || !Proxy->HasValidOwner())
+	{
+		return;
+	}
+
+	// This writes stencil only. PerfectDodgePostProcess reads the copied stencil and
+	// raises only Player / enemy pixels after the rest of the scene is darkened.
+	BuildCommandForProxy(Scene, *Proxy, ERenderPass::GameplayFocusMask);
 }
 
 // ============================================================
@@ -901,6 +938,7 @@ void FDrawCommandBuilder::BuildPostProcessCommands(const FFrameContext& Frame, c
 			Data.GammaPower = Effect.GammaPower;
 			Data.WorldGridSurfaceBias = Effect.WorldGridSurfaceBias;
 			Data.ScreenGridIntensity = Effect.ScreenGridIntensity;
+			Data.FocusHighlightStrength = ClampFloat(Effect.FocusHighlightStrength, 0.0f, 4.0f);
 			PerfectDodgePostProcessCB.Update(Ctx, &Data, sizeof(Data));
 
 			const FDrawCommandRenderState PerfectDodgeRS = PassRenderStateTable->ToDrawCommandState(ERenderPass::PerfectDodge, ViewMode);

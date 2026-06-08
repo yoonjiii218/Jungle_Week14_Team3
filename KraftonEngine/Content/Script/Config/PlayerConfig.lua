@@ -184,6 +184,7 @@ PlayerConfig.Default = {
         PerfectDodge = {
             CameraShakeScale = 0.5,
             PostProcessIntensity = 1.0,
+            FocusHighlightStrength = 1.25,
         },
 
         AttackHit = {

@@ -633,9 +633,9 @@ void FEditorConsoleWidget::RegisterRenderCommands()
 	RegisterCommand("skinning", [this](const TArray<FString>& Args) { HandleSkinningMode(Args); },
 		"Render", "skinning cpu|gpu", "Sets skeletal mesh skinning mode.");
 	RegisterCommand("perfectdodge pp", [this](const TArray<FString>& Args) { HandlePerfectDodgePostProcessDebug(Args); },
-		"Render", "perfectdodge pp on|off|toggle|status|test [duration] [intensity]", "Toggles or previews the Perfect Dodge post-process effect.");
+		"Render", "perfectdodge pp on|off|toggle|status|highlight [amount]|test [duration] [intensity] [highlight]", "Toggles or previews the Perfect Dodge post-process effect.");
 	RegisterCommand("pd pp", [this](const TArray<FString>& Args) { HandlePerfectDodgePostProcessDebug(Args); },
-		"Render", "pd pp on|off|toggle|status|test [duration] [intensity]", "Alias for perfectdodge pp.");
+		"Render", "pd pp on|off|toggle|status|highlight [amount]|test [duration] [intensity] [highlight]", "Alias for perfectdodge pp.");
 }
 
 void FEditorConsoleWidget::Shutdown()
@@ -1923,7 +1923,8 @@ void FEditorConsoleWidget::HandlePerfectDodgePostProcessDebug(const TArray<FStri
 	{
 		AddLog("PerfectDodge post-process: %s\n",
 			PerfectDodgePostProcessDebug::IsPostProcessEnabled() ? "enabled" : "disabled");
-		AddLog("Usage: perfectdodge pp on|off|toggle|status|test [duration] [intensity]\n");
+		AddLog("focus highlight strength: %.2f\n", PerfectDodgePostProcessDebug::GetDefaultFocusHighlightStrength());
+		AddLog("Usage: perfectdodge pp on|off|toggle|status|highlight [amount]|test [duration] [intensity] [highlight]\n");
 		return;
 	}
 
@@ -1946,12 +1947,28 @@ void FEditorConsoleWidget::HandlePerfectDodgePostProcessDebug(const TArray<FStri
 		AddLog("PerfectDodge post-process %s.\n", bEnabled ? "enabled" : "disabled");
 		return;
 	}
+	if (Mode == "highlight")
+	{
+		if (Args.size() <= 1)
+		{
+			AddLog("PerfectDodge focus highlight strength: %.2f\n", PerfectDodgePostProcessDebug::GetDefaultFocusHighlightStrength());
+			AddLog("Usage: perfectdodge pp highlight [amount]\n");
+			return;
+		}
+
+		const float Strength = (std::max)(0.0f, static_cast<float>(std::atof(Args[1].c_str())));
+		PerfectDodgePostProcessDebug::SetDefaultFocusHighlightStrength(Strength);
+		AddLog("PerfectDodge focus highlight strength set to %.2f.\n", Strength);
+		return;
+	}
+
 	if (Mode == "test")
 	{
 		PerfectDodgePostProcessDebug::SetPostProcessEnabled(true);
 
 		float Duration = 1.5f;
 		float Intensity = 1.0f;
+		float FocusHighlightStrength = PerfectDodgePostProcessDebug::GetDefaultFocusHighlightStrength();
 		if (Args.size() > 1)
 		{
 			Duration = static_cast<float>(std::atof(Args[1].c_str()));
@@ -1959,6 +1976,10 @@ void FEditorConsoleWidget::HandlePerfectDodgePostProcessDebug(const TArray<FStri
 		if (Args.size() > 2)
 		{
 			Intensity = static_cast<float>(std::atof(Args[2].c_str()));
+		}
+		if (Args.size() > 3)
+		{
+			FocusHighlightStrength = (std::max)(0.0f, static_cast<float>(std::atof(Args[3].c_str())));
 		}
 
 		UWorld* World = nullptr;
@@ -1979,13 +2000,13 @@ void FEditorConsoleWidget::HandlePerfectDodgePostProcessDebug(const TArray<FStri
 			return;
 		}
 
-		CameraManager->StartPerfectDodgePostProcess(Duration, Intensity);
-		AddLog("PerfectDodge post-process test started. duration=%.2f intensity=%.2f\n", Duration, Intensity);
+		CameraManager->StartPerfectDodgePostProcess(Duration, Intensity, FocusHighlightStrength);
+		AddLog("PerfectDodge post-process test started. duration=%.2f intensity=%.2f highlight=%.2f\n", Duration, Intensity, FocusHighlightStrength);
 		return;
 	}
 
 	AddLog("[ERROR] Unknown perfectdodge pp mode: '%s'\n", Args[0].c_str());
-	AddLog("Usage: perfectdodge pp on|off|toggle|status|test [duration] [intensity]\n");
+	AddLog("Usage: perfectdodge pp on|off|toggle|status|highlight [amount]|test [duration] [intensity] [highlight]\n");
 }
 
 // History & Tab-Completion Callback____________________________________________________________

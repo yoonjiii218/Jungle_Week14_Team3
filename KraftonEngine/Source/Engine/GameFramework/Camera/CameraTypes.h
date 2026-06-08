@@ -83,6 +83,7 @@ namespace PerfectDodgePostProcessDebug
 	// Editor console debug toggle. Kept inline intentionally so render/editor code can read the
 	// same process-local flag without adding another subsystem for a game-jam effect.
 	inline bool bPostProcessEnabled = true;
+	inline float DefaultFocusHighlightStrength = 1.25f;
 
 	inline bool IsPostProcessEnabled()
 	{
@@ -99,6 +100,16 @@ namespace PerfectDodgePostProcessDebug
 		bPostProcessEnabled = !bPostProcessEnabled;
 		return bPostProcessEnabled;
 	}
+
+	inline float GetDefaultFocusHighlightStrength()
+	{
+		return DefaultFocusHighlightStrength;
+	}
+
+	inline void SetDefaultFocusHighlightStrength(float Strength)
+	{
+		DefaultFocusHighlightStrength = Strength;
+	}
 }
 
 struct FPerfectDodgePostProcessState
@@ -114,6 +125,8 @@ struct FPerfectDodgePostProcessState
 	float FocusFlashStrength = 0.35f;
 
 	float BlueTintStrength = 0.28f;
+	// Stencil mask로 찍힌 Player / HitTarget 계열 액터를 월드 darkening 이후 다시 밝게 올리는 비율.
+	float FocusHighlightStrength = 1.25f;
 	float GridIntensity = 0.0f;
 	float GlitchIntensity = 0.42f;
 	float VignetteIntensity = 0.72f;

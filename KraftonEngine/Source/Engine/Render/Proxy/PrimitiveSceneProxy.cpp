@@ -41,6 +41,13 @@ bool FPrimitiveSceneProxy::HasValidOwner() const
 	return GetOwner() != nullptr;
 }
 
+bool FPrimitiveSceneProxy::HasOwnerActorTag(const FName& Tag) const
+{
+	const UPrimitiveComponent* OwnerComponent = GetOwner();
+	AActor* OwnerActor = OwnerComponent ? OwnerComponent->GetOwner() : nullptr;
+	return IsValid(OwnerActor) && OwnerActor->HasTag(Tag);
+}
+
 ERenderPass FPrimitiveSceneProxy::GetRenderPass() const
 {
 	if (!SectionDraws.empty() && IsValid(SectionDraws[0].Material))
