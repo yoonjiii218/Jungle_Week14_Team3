@@ -530,8 +530,8 @@ PlayerConfig.Default = {
         },
 
         UltimateCamera = {
-            BackDistance = 50.0,
-            Height = 13.0,
+            BackDistance = 70.0,
+            Height = 23.0,
             SlashCameraDistance = 30.0,
             SlashCameraRightOffset = 15,
             SlashCameraHeightOffset = -5.0,

@@ -4,7 +4,7 @@
     "BlendState" : "AlphaBlend",
     "Domain" : "Surface",
     "GeneratorVersion" : "GeneratedMaterialPass_v10_SurfacePinSwizzle_InstancedStaticMesh",
-    "GraphHash" : "F73EC51B78C2E53F",
+    "GraphHash" : "A37621A76F547794",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
 
@@ -44,10 +44,6 @@
         "LinkId" : 43,
         "ToPinId" : 26
       }, {
-        "FromPinId" : 12,
-        "LinkId" : 50,
-        "ToPinId" : 37
-      }, {
         "FromPinId" : 79,
         "LinkId" : 68,
         "ToPinId" : 65
@@ -75,8 +71,12 @@
         "FromPinId" : 27,
         "LinkId" : 85,
         "ToPinId" : 64
+      }, {
+        "FromPinId" : 9,
+        "LinkId" : 87,
+        "ToPinId" : 37
       }],
-    "NextId" : 87,
+    "NextId" : 88,
     "Nodes" : [{
         "DisplayName" : "Texture Object",
         "Mask" : "RGBA",
@@ -89,8 +89,8 @@
             "PinId" : 2,
             "Type" : "Texture2D"
           }],
-        "PosX" : -720.000000,
-        "PosY" : -80.000000,
+        "PosX" : -757.000000,
+        "PosY" : -82.000000,
         "TexturePath" : "Content/Texture/T_HAIR_STRAIGHT_albedo.PNG",
         "TextureSlot" : "Diffuse",
         "Type" : "TextureObject",
