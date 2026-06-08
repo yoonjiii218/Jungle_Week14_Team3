@@ -203,6 +203,88 @@ PlayerConfig.Default = {
             CameraShakeScale = 0.25,
         },
 
+        -- Transient FOV pulses. DeltaDegrees > 0 widens the view; < 0 pulls in.
+        -- These are camera-manager modifiers, so the active camera component's base FOV is not overwritten.
+        FOV = {
+            Enabled = true,
+            Dash = {
+                DeltaDegrees = 5.0,
+                Duration = 0.80,
+                BlendIn = 0.2,
+                BlendOut = 0.28,
+            },
+
+            DashCharging = {
+                DeltaDegrees = 0.0,
+                Duration = 30.0,
+                BlendIn = 0.10,
+                BlendOut = 0.22,
+            },
+
+            DashChargeAttack = {
+                DeltaDegrees = 0.0,
+                Duration = 0.50,
+                BlendIn = 0.04,
+                BlendOut = 0.34,
+            },
+
+            AttackStart = {
+                DeltaDegrees = 0,
+                Duration = 0.24,
+                BlendIn = 0.03,
+                BlendOut = 0.17,
+            },
+
+            PostDashAttack = {
+                DeltaDegrees = 0.0,
+                Duration = 0.38,
+                BlendIn = 0.04,
+                BlendOut = 0.28,
+            },
+
+            AttackHit = {
+                DeltaDegrees = 0,
+                Duration = 0.20,
+                BlendIn = 0.02,
+                BlendOut = 0.15,
+            },
+
+            HitReact = {
+                DeltaDegrees = 0,
+                Duration = 0.24,
+                BlendIn = 0.02,
+                BlendOut = 0.18,
+            },
+
+            PerfectDodge = {
+                DeltaDegrees = 0,
+                Duration = 0.70,
+                BlendIn = 0.06,
+                BlendOut = 0.45,
+            },
+
+            UltimateStart = {
+                DeltaDegrees = 0,
+                Duration = 0.65,
+                BlendIn = 0.08,
+                BlendOut = 0.42,
+            },
+
+            UltimateImpact = {
+                DeltaDegrees = 0,
+                Duration = 0.48,
+                BlendIn = 0.03,
+                BlendOut = 0.34,
+            },
+
+            UltimateRecover = {
+                DeltaDegrees = 0,
+                Duration = 0.50,
+                BlendIn = 0.04,
+                BlendOut = 0.34,
+            },
+        },
+
         HitReact = {
             CameraShakeScale = 0.35,
             SquashEnabled = true,

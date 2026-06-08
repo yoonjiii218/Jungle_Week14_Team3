@@ -20,6 +20,51 @@ local function EaseOutCubic(t)
     return 1.0 - u * u * u
 end
 
+local function CanUseFOVPulse(playerContext)
+    local feedbackConfig = playerContext.Config.Feedback or {}
+    local fovConfig = feedbackConfig.FOV
+    return fovConfig ~= nil
+        and fovConfig.Enabled ~= false
+        and CameraManager ~= nil
+        and CameraManager.StartFOVPulse ~= nil
+end
+
+local function StartFOVPulse(playerContext, name, pulseConfig)
+    if CanUseFOVPulse(playerContext) ~= true then
+        return
+    end
+
+    if pulseConfig == nil or pulseConfig.Enabled == false then
+        return
+    end
+
+    local deltaDegrees = pulseConfig.DeltaDegrees or pulseConfig.Delta or 0.0
+    local duration = pulseConfig.Duration or 0.0
+    if deltaDegrees == 0.0 or duration <= 0.0 then
+        return
+    end
+
+    CameraManager.StartFOVPulse(
+        name,
+        deltaDegrees,
+        duration,
+        pulseConfig.BlendIn or 0.0,
+        pulseConfig.BlendOut or 0.0
+    )
+end
+
+local function StopFOVPulse(name)
+    if CameraManager ~= nil and CameraManager.StopFOVPulse ~= nil then
+        CameraManager.StopFOVPulse(name)
+    end
+end
+
+local function GetFOVConfig(playerContext, key)
+    local feedbackConfig = playerContext.Config.Feedback or {}
+    local fovConfig = feedbackConfig.FOV or {}
+    return fovConfig[key]
+end
+
 local function Bezier2(a, b, c, t)
     local u = 1.0 - t
     return a * (u * u) + b * (2.0 * u * t) + c * (t * t)
@@ -60,6 +105,8 @@ local function PlayPerfectDodgeFeedback(playerContext, event)
         CameraManager.StartPerfectDodgeEffect(duration, intensity, focusHighlightStrength)
     end
 
+    StartFOVPulse(playerContext, "Player.PerfectDodgeFOV", GetFOVConfig(playerContext, "PerfectDodge"))
+
     print("Perfect Dodge")
 end
 
@@ -71,6 +118,43 @@ local function PlayAttackHitFeedback(playerContext, event)
     if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil and shakeScale > 0.0 then
         CameraManager.StartWaveShake(shakeScale)
     end
+
+    StartFOVPulse(playerContext, "Player.AttackHitFOV", GetFOVConfig(playerContext, "AttackHit"))
+end
+
+local function PlayDashStartedFeedback(playerContext, event)
+    StartFOVPulse(playerContext, "Player.DashFOV", GetFOVConfig(playerContext, "Dash"))
+end
+
+local function PlayDashEndedFeedback(playerContext, event)
+    StopFOVPulse("Player.DashFOV")
+end
+
+local function PlayDashChargingStartedFeedback(playerContext, event)
+    StopFOVPulse("Player.DashFOV")
+    StartFOVPulse(playerContext, "Player.DashChargingFOV", GetFOVConfig(playerContext, "DashCharging"))
+end
+
+local function PlayDashChargingEndedFeedback(playerContext, event)
+    StopFOVPulse("Player.DashChargingFOV")
+end
+
+local function PlayDashChargeAttackStartedFeedback(playerContext, event)
+    StopFOVPulse("Player.DashChargingFOV")
+    StartFOVPulse(playerContext, "Player.DashChargeAttackFOV", GetFOVConfig(playerContext, "DashChargeAttack"))
+end
+
+local function PlayDashChargeAttackEndedFeedback(playerContext, event)
+    StopFOVPulse("Player.DashChargeAttackFOV")
+end
+
+local function PlayAttackStartedFeedback(playerContext, event)
+    if event ~= nil and event.IsPostDashAttack == true then
+        StartFOVPulse(playerContext, "Player.PostDashAttackFOV", GetFOVConfig(playerContext, "PostDashAttack"))
+        return
+    end
+
+    StartFOVPulse(playerContext, "Player.AttackStartFOV", GetFOVConfig(playerContext, "AttackStart"))
 end
 
 local function GetOrAddActionComponent(ownerActor)
@@ -109,6 +193,8 @@ local function PlayHitReactFeedback(playerContext, event)
     if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil and shakeScale > 0.0 then
         CameraManager.StartWaveShake(shakeScale)
     end
+
+    StartFOVPulse(playerContext, "Player.HitReactFOV", GetFOVConfig(playerContext, "HitReact"))
 
     local owner = playerContext.Owner
     local meshComp = ResolvePlayerMeshComponent(playerContext)
@@ -450,6 +536,7 @@ function PlayerFeedback.BeginUltimate(playerContext)
     local cameraConfig = playerContext.Config.Feedback.UltimateCamera
     local moveConfig = playerContext.Config.Feedback.UltimateMove
     local vfxConfig = playerContext.Config.Feedback.UltimateVfx
+    local fovConfig = playerContext.Config.Feedback.FOV or {}
     local cameraLocation =
         actorLocation
         - actorForward * (cameraConfig.BackDistance)
@@ -468,6 +555,7 @@ function PlayerFeedback.BeginUltimate(playerContext)
     Reflection.Call(ultimateCamera, "SetActorRotation", GetUltimateCameraRotation(cameraConfig, baseCameraRotation, 0.0))
 
     CameraManager.ToggleOwnerCamera(ultimateCamera, 0)
+    StartFOVPulse(playerContext, "Player.UltimateStartFOV", fovConfig.UltimateStart)
     Reflection.Call(movementComp, "StopMovementImmediately")
     Reflection.Call(movementComp, "SetMovementInputEnabled", false)
 
@@ -595,10 +683,12 @@ function PlayerFeedback.BeginUltimate(playerContext)
 
     Reflection.Call(owner, "SetActorLocation", cinematicEndPos)
     CameraManager.StartWaveShake(1.0)
+    StartFOVPulse(playerContext, "Player.UltimateImpactFOV", fovConfig.UltimateImpact)
 
     Wait(0.4)
 
     Reflection.Call(movementComp, "SetMovementInputEnabled", true)
+    StartFOVPulse(playerContext, "Player.UltimateRecoverFOV", fovConfig.UltimateRecover)
     CameraManager.ToggleOwnerCamera(owner, 0.4)
 
     if PrimComp ~= nil then
@@ -618,7 +708,21 @@ end
 function PlayerFeedback.ProcessEvents(playerContext, events)
     PlayerContext.Assert(playerContext, "PlayerFeedback.ProcessEvents")
     for _, event in ipairs(events) do
-        if PlayerEvents.Is(event, PlayerEvents.Type.PerfectDodge) then
+        if PlayerEvents.Is(event, PlayerEvents.Type.DashStarted) then
+            PlayDashStartedFeedback(playerContext, event)
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.DashEnded) then
+            PlayDashEndedFeedback(playerContext, event)
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.DashChargingStarted) then
+            PlayDashChargingStartedFeedback(playerContext, event)
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.DashChargingEnded) then
+            PlayDashChargingEndedFeedback(playerContext, event)
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.DashChargeAttackStarted) then
+            PlayDashChargeAttackStartedFeedback(playerContext, event)
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.DashChargeAttackEnded) then
+            PlayDashChargeAttackEndedFeedback(playerContext, event)
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.AttackStarted) then
+            PlayAttackStartedFeedback(playerContext, event)
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.PerfectDodge) then
             PlayPerfectDodgeFeedback(playerContext, event)
         elseif PlayerEvents.Is(event, PlayerEvents.Type.Hit) then
             PlayHitReactFeedback(playerContext, event)

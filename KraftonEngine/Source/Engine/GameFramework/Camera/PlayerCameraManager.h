@@ -148,6 +148,19 @@ public:
 	const FPerfectDodgePostProcessState& GetPerfectDodgePostProcessState() const { return PerfectDodgePostProcess; }
 	bool IsPerfectDodgePostProcessEnabled() const { return PerfectDodgePostProcess.bEnabled; }
 
+	// ─── Transient FOV Pulse ───────────────────────────────────────
+	// DeltaFOV is in radians. Lua binding exposes degrees for easier tuning.
+	virtual void StartFOVPulse(
+		const FString& Name,
+		float DeltaFOV,
+		float Duration,
+		float BlendInTime = 0.0f,
+		float BlendOutTime = 0.0f);
+	virtual void StopFOVPulse(const FString& Name);
+	virtual void ClearFOVPulses();
+	float GetFOVPulseOffset() const;
+	int32 GetActiveFOVPulseCount() const { return static_cast<int32>(FOVPulses.size()); }
+
 	// ─── Camera Blend ──────────────────────────────────────────────
 	bool GetCameraView(FMinimalViewInfo& OutPOV) const;
 
@@ -173,6 +186,20 @@ private:
 	// POV 산출 후 1회 호출.
 	void ApplyCameraModifiers(float DeltaTime, FMinimalViewInfo& InOutPOV);
 	void UpdatePerfectDodgePostProcess(float DeltaTime);
+
+	struct FFOVPulse
+	{
+		FString Name;
+		float DeltaFOV = 0.0f;
+		float Duration = 0.0f;
+		float ElapsedTime = 0.0f;
+		float BlendInTime = 0.0f;
+		float BlendOutTime = 0.0f;
+	};
+
+	void UpdateFOVPulses(float DeltaTime);
+	void ApplyFOVPulses(FMinimalViewInfo& InOutPOV) const;
+	float EvaluateFOVPulse(const FFOVPulse& Pulse) const;
 
 private:
 	TSet<UCameraComponent*> RegisteredCameras;
@@ -222,6 +249,9 @@ private:
 
 	// Perfect dodge / TimeRush postprocess state. Updated with raw camera delta.
 	FPerfectDodgePostProcessState PerfectDodgePostProcess;
+
+	// Named transient FOV pulses. Updated with raw camera delta so slomo does not stretch them.
+	TArray<FFOVPulse> FOVPulses;
 
 	// POV cache — UpdateCamera 가 채우고, 외부는 GetCameraCachePOV 로 read.
 	// ActiveCamera 가 한 번도 없었으면 bCameraCacheValid=false → caller 가 fallback 처리.

@@ -493,6 +493,144 @@ void APlayerCameraManager::StopPerfectDodgePostProcess()
 	PerfectDodgePostProcess = FPerfectDodgePostProcessState();
 }
 
+void APlayerCameraManager::StartFOVPulse(
+	const FString& Name,
+	float DeltaFOV,
+	float Duration,
+	float BlendInTime,
+	float BlendOutTime)
+{
+	if (Name.empty() || Duration <= 0.0f || DeltaFOV == 0.0f)
+	{
+		return;
+	}
+
+	BlendInTime = std::max(0.0f, BlendInTime);
+	BlendOutTime = std::max(0.0f, BlendOutTime);
+
+	const float BlendTotal = BlendInTime + BlendOutTime;
+	if (BlendTotal > Duration && BlendTotal > 0.0f)
+	{
+		const float Scale = Duration / BlendTotal;
+		BlendInTime *= Scale;
+		BlendOutTime *= Scale;
+	}
+
+	for (FFOVPulse& Pulse : FOVPulses)
+	{
+		if (Pulse.Name == Name)
+		{
+			Pulse.DeltaFOV = DeltaFOV;
+			Pulse.Duration = Duration;
+			Pulse.ElapsedTime = 0.0f;
+			Pulse.BlendInTime = BlendInTime;
+			Pulse.BlendOutTime = BlendOutTime;
+			return;
+		}
+	}
+
+	FFOVPulse NewPulse;
+	NewPulse.Name = Name;
+	NewPulse.DeltaFOV = DeltaFOV;
+	NewPulse.Duration = Duration;
+	NewPulse.ElapsedTime = 0.0f;
+	NewPulse.BlendInTime = BlendInTime;
+	NewPulse.BlendOutTime = BlendOutTime;
+	FOVPulses.push_back(NewPulse);
+}
+
+void APlayerCameraManager::StopFOVPulse(const FString& Name)
+{
+	for (auto It = FOVPulses.begin(); It != FOVPulses.end();)
+	{
+		if (It->Name != Name)
+		{
+			++It;
+			continue;
+		}
+
+		if (It->BlendOutTime <= 0.0f)
+		{
+			It = FOVPulses.erase(It);
+			continue;
+		}
+
+		It->ElapsedTime = std::max(It->ElapsedTime, It->Duration - It->BlendOutTime);
+		++It;
+	}
+}
+
+void APlayerCameraManager::ClearFOVPulses()
+{
+	FOVPulses.clear();
+}
+
+void APlayerCameraManager::UpdateFOVPulses(float DeltaTime)
+{
+	const float SafeDeltaTime = std::max(0.0f, DeltaTime);
+	for (auto It = FOVPulses.begin(); It != FOVPulses.end();)
+	{
+		It->ElapsedTime += SafeDeltaTime;
+		if (It->ElapsedTime >= It->Duration)
+		{
+			It = FOVPulses.erase(It);
+		}
+		else
+		{
+			++It;
+		}
+	}
+}
+
+float APlayerCameraManager::EvaluateFOVPulse(const FFOVPulse& Pulse) const
+{
+	if (Pulse.Duration <= 0.0f)
+	{
+		return 0.0f;
+	}
+
+	float Weight = 1.0f;
+	if (Pulse.BlendInTime > 0.0f && Pulse.ElapsedTime < Pulse.BlendInTime)
+	{
+		Weight = std::min(Weight, Pulse.ElapsedTime / Pulse.BlendInTime);
+	}
+
+	if (Pulse.BlendOutTime > 0.0f)
+	{
+		const float BlendOutStart = Pulse.Duration - Pulse.BlendOutTime;
+		if (Pulse.ElapsedTime > BlendOutStart)
+		{
+			Weight = std::min(Weight, (Pulse.Duration - Pulse.ElapsedTime) / Pulse.BlendOutTime);
+		}
+	}
+
+	Weight = std::clamp(Weight, 0.0f, 1.0f);
+	Weight = Weight * Weight * (3.0f - 2.0f * Weight);
+	return Pulse.DeltaFOV * Weight;
+}
+
+float APlayerCameraManager::GetFOVPulseOffset() const
+{
+	float TotalOffset = 0.0f;
+	for (const FFOVPulse& Pulse : FOVPulses)
+	{
+		TotalOffset += EvaluateFOVPulse(Pulse);
+	}
+	return TotalOffset;
+}
+
+void APlayerCameraManager::ApplyFOVPulses(FMinimalViewInfo& InOutPOV) const
+{
+	if (InOutPOV.bIsOrtho || FOVPulses.empty())
+	{
+		return;
+	}
+
+	constexpr float MinFOV = 0.1f;
+	constexpr float MaxFOV = 3.14f;
+	InOutPOV.FOV = std::clamp(InOutPOV.FOV + GetFOVPulseOffset(), MinFOV, MaxFOV);
+}
+
 void APlayerCameraManager::UpdatePerfectDodgePostProcess(float DeltaTime)
 {
 	if (!PerfectDodgePostProcess.bEnabled)
@@ -622,15 +760,18 @@ void APlayerCameraManager::UpdateCamera(float DeltaTime)
 
 	// (2) base+blend POV — GetCameraView 가 ViewTarget/PendingViewTarget 보간된 raw POV 산출.
 	//     실패(둘 다 없음) 시 캐시 무효 표시 후 fade/shake timer 만 진행.
+	UpdateFOVPulses(DeltaTime);
+
 	FMinimalViewInfo NewPOV;
 	const bool bHasBasePOV = GetCameraView(NewPOV);
 
-	// (3) Modifier list 적용 — 기본 ShakeModifier + 추후 게임이 추가할 효과들.
-	//     Priority 오름차순으로 ModifyCamera 호출 → POV in-place 변형. shake 의 PlaySpace
-	//     변환 / IsFinished 정리도 ShakeModifier 가 자체 처리.
+	// (3) Modifier list + FOV pulse 적용.
+	//     Shake/기타 modifier 를 먼저 적용한 뒤, 액션 FOV pulse 를 마지막에 더해
+	//     작은 FOV shake 등에 묻히지 않게 한다.
 	if (bHasBasePOV)
 	{
 		ApplyCameraModifiers(DeltaTime, NewPOV);
+		ApplyFOVPulses(NewPOV);
 	}
 
 	// (4) Fade 진행 — 시각적 합성은 PostProcess 측, 여기선 알파 시간 누적만.

@@ -2160,6 +2160,70 @@ void FLuaScriptManager::RegisterCoreBindings(sol::state& Lua)
 			Manager->StopPerfectDodgePostProcess();
 		}
 	});
+	CameraManager.set_function("StartFOVPulse", [](const FString& Name, float DeltaDegrees, float Duration, sol::optional<float> BlendInTime, sol::optional<float> BlendOutTime)
+	{
+		if (!GEngine || !GEngine->GetWorld()) return;
+		APlayerController* PC = GEngine->GetWorld()->GetFirstPlayerController();
+		APlayerCameraManager* Manager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		if (Manager)
+		{
+			constexpr float DegToRad = 3.14159265358979f / 180.0f;
+			Manager->StartFOVPulse(
+				Name,
+				DeltaDegrees * DegToRad,
+				Duration,
+				BlendInTime.value_or(0.0f),
+				BlendOutTime.value_or(0.0f));
+		}
+	});
+	CameraManager.set_function("StopFOVPulse", [](const FString& Name)
+	{
+		if (!GEngine || !GEngine->GetWorld()) return;
+		APlayerController* PC = GEngine->GetWorld()->GetFirstPlayerController();
+		APlayerCameraManager* Manager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		if (Manager)
+		{
+			Manager->StopFOVPulse(Name);
+		}
+	});
+	CameraManager.set_function("ClearFOVPulses", []()
+	{
+		if (!GEngine || !GEngine->GetWorld()) return;
+		APlayerController* PC = GEngine->GetWorld()->GetFirstPlayerController();
+		APlayerCameraManager* Manager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		if (Manager)
+		{
+			Manager->ClearFOVPulses();
+		}
+	});
+	CameraManager.set_function("GetCurrentFOVDegrees", []()
+	{
+		constexpr float RadToDeg = 180.0f / 3.14159265358979f;
+		if (!GEngine || !GEngine->GetWorld()) return 0.0f;
+		APlayerController* PC = GEngine->GetWorld()->GetFirstPlayerController();
+		APlayerCameraManager* Manager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		FMinimalViewInfo POV;
+		if (Manager && Manager->GetCameraCachePOV(POV))
+		{
+			return POV.FOV * RadToDeg;
+		}
+		return 0.0f;
+	});
+	CameraManager.set_function("GetFOVPulseOffsetDegrees", []()
+	{
+		constexpr float RadToDeg = 180.0f / 3.14159265358979f;
+		if (!GEngine || !GEngine->GetWorld()) return 0.0f;
+		APlayerController* PC = GEngine->GetWorld()->GetFirstPlayerController();
+		APlayerCameraManager* Manager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		return Manager ? Manager->GetFOVPulseOffset() * RadToDeg : 0.0f;
+	});
+	CameraManager.set_function("GetActiveFOVPulseCount", []()
+	{
+		if (!GEngine || !GEngine->GetWorld()) return 0;
+		APlayerController* PC = GEngine->GetWorld()->GetFirstPlayerController();
+		APlayerCameraManager* Manager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		return Manager ? Manager->GetActiveFOVPulseCount() : 0;
+	});
 	CameraManager.set_function("SetViewTargetWithBlend", [](AActor* Target, float BlendTime)
 	{
 		if (!GEngine || !GEngine->GetWorld() || !IsValid(Target)) return;
