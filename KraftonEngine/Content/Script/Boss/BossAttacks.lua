@@ -38,26 +38,56 @@ local function WaitForNotify(bossContext, flag, timeout)
     end
 end
 
--- 직전에 같은 공격이 실측한 ZoneShow~ZoneFlash 간격이 있으면 그 값을 차오름 속도 기준으로 쓴다.
--- (없으면 BossBlackboard 의 기본 FILL_DURATION 사용)
-local function GetFillDuration(bossContext, attackId)
-    local measured = bossContext.Feedback.MeasuredFillDuration[attackId]
-    return measured or bossContext.Config.FEEDBACK.FILL_DURATION
+-- 공격별 ZoneShow~ZoneFlash 노티파이 실측 간격(초). PLAY_RATE = 1.0 기준 실측값이며,
+-- 장판이 그 타이밍에 맞춰 차오르도록 고정값으로 사용한다.
+local FILL_DURATION = {
+    P1 = 0.207,
+    ["P2-1"] = 0.310,
+    ["P2-2"] = 0.901,
+    P3 = 0.952,
+}
+
+-- ZoneShow ~ ZoneFlash 실제 간격을 로그로만 확인하기 위한 디버그 출력 (FILL_DURATION 보정에는 더 이상 사용하지 않음)
+local function LogZoneFillSpan(bossContext, attackId, zoneShowAt)
+    if not bossContext.Config.DEBUG then return end
+    local elapsed = (World.GetGameTime() or 0.0) - zoneShowAt
+    print("[BossAttacks] ZoneShow~ZoneFlash: " .. attackId
+        .. " = " .. string.format("%.3f", elapsed) .. "s")
 end
 
--- ZoneFlash 노티파이가 들어온 시점의 실제 ZoneShow~ZoneFlash 간격을 기록해서
--- 다음 재생 때는 장판이 정확히 그 타이밍에 다 차오르도록 보정한다.
-local function RecordFillDuration(bossContext, attackId, zoneShowAt)
-    local elapsed = (World.GetGameTime() or 0.0) - zoneShowAt
-    if elapsed > 0.05 then
-        bossContext.Feedback.MeasuredFillDuration[attackId] = elapsed
+-- 위 실측값을 만든 콤보 단(애니 클립). BossBlackboard.ANIM 의 play rate 가 바뀌면
+-- 노티파이가 실제로 불리는 시점도 그만큼(1 / playRate) 늦춰지므로, 차오름 연출도 같이 보정해야
+-- "장판이 다 찬 뒤에야 ZoneFlash 가 도착" 하는 불일치가 생기지 않는다.
+local FILL_DURATION_STAGE = {
+    P1        = { kind = "heavy", index = 1 },
+    ["P2-1"]  = { kind = "heavy", index = 2 },
+    ["P2-2"]  = { kind = "heavy", index = 3 },
+    P3        = { kind = "light", index = 3 },
+}
+
+-- attackId 의 실측 FILL_DURATION 을 현재 BossBlackboard.ANIM play rate 기준으로 보정한다.
+-- (실측 당시 play rate 가 1.0 이었다고 가정: 실제 간격 = 실측값 / 현재 play rate)
+local function GetFillDuration(bossContext, attackId)
+    local base = FILL_DURATION[attackId]
+    if base == nil then return nil end
+
+    local animConfig = bossContext.Config.ANIM or {}
+    local rate = animConfig.DEFAULT_PLAY_RATE or 1.0
+    local stage = FILL_DURATION_STAGE[attackId]
+    if stage then
+        local rates = (stage.kind == "heavy") and animConfig.HEAVY_PLAY_RATES or animConfig.LIGHT_PLAY_RATES
+        if rates and rates[stage.index] ~= nil then
+            rate = rates[stage.index]
+        end
     end
+
+    if rate == nil or rate <= 0 then return base end
+    return base / rate
 end
 
 local function RunZoneFill(bossContext, zone, fillDuration)
-    local config = bossContext.Config
     local attackState = bossContext.Attack
-    local duration = fillDuration or config.FEEDBACK.FILL_DURATION
+    local duration = fillDuration
     StartCoroutine(function()
         local t = 0.0
         while attackState.ActiveZone == zone do
@@ -182,9 +212,8 @@ local function Pattern1(bossContext)
     RunZoneFill(bossContext, zone, GetFillDuration(bossContext, "P1"))
 
     WaitForNotify(bossContext, "ZoneFlash", 3.0)
-    RecordFillDuration(bossContext, "P1", zoneShowAt)
+    LogZoneFillSpan(bossContext, "P1", zoneShowAt)
     BossFeedback.FillZone(bossContext, zone, 1.0)
-    BossFeedback.FlashZone(bossContext, zone)
 
     WaitForNotify(bossContext, "ZoneHide", 3.0)
     BossFeedback.HideAttackZone(bossContext, { Zone = zone })
@@ -220,9 +249,8 @@ local function Pattern2(bossContext)
     RunZoneFill(bossContext, zone1, GetFillDuration(bossContext, "P2-1"))
 
     WaitForNotify(bossContext, "ZoneFlash", 3.0)
-    RecordFillDuration(bossContext, "P2-1", zone1ShowAt)
+    LogZoneFillSpan(bossContext, "P2-1", zone1ShowAt)
     BossFeedback.FillZone(bossContext, zone1, 1.0)
-    BossFeedback.FlashZone(bossContext, zone1)
 
     WaitForNotify(bossContext, "ZoneHide", 3.0)
     BossFeedback.HideAttackZone(bossContext, { Zone = zone1 })
@@ -238,6 +266,10 @@ local function Pattern2(bossContext)
     end
     BossAttacks.CloseHitWindow(bossContext, { AttackId = "P2-1" })
 
+    if (config.P2.HIT_GAP or 0) > 0 then
+        Wait(config.P2.HIT_GAP)
+    end
+
     local zone2ShowAt = World.GetGameTime() or 0.0
     local zone2 = BossFeedback.ShowAttackZone(bossContext, { AttackId = "P2-2", Shape = "Fan" })
     BossFeedback.FillZone(bossContext, zone2, 0.0)
@@ -246,9 +278,8 @@ local function Pattern2(bossContext)
     RunZoneFill(bossContext, zone2, GetFillDuration(bossContext, "P2-2"))
 
     WaitForNotify(bossContext, "ZoneFlash", 3.0)
-    RecordFillDuration(bossContext, "P2-2", zone2ShowAt)
+    LogZoneFillSpan(bossContext, "P2-2", zone2ShowAt)
     BossFeedback.FillZone(bossContext, zone2, 1.0)
-    BossFeedback.FlashZone(bossContext, zone2)
 
     WaitForNotify(bossContext, "ZoneHide", 3.0)
     BossFeedback.HideAttackZone(bossContext, { Zone = zone2 })
@@ -287,9 +318,8 @@ local function Pattern3(bossContext)
     bossContext.Brain.IsTracking = false
 
     WaitForNotify(bossContext, "ZoneFlash", 3.0)
-    RecordFillDuration(bossContext, "P3", zoneShowAt)
+    LogZoneFillSpan(bossContext, "P3", zoneShowAt)
     BossFeedback.FillZone(bossContext, zone, 1.0)
-    BossFeedback.FlashZone(bossContext, zone)
 
     WaitForNotify(bossContext, "ZoneHide", 3.0)
     BossFeedback.HideAttackZone(bossContext, { Zone = zone })

@@ -135,8 +135,6 @@ local function CreateFeedbackState()
         ActiveVfx = {},
         HitFlashUntil = 0.0,
         KatanaComponent = nil,
-        -- attackId → 직전 ZoneShow~ZoneFlash 실측 간격(초). 다음 재생 시 장판 차오름 속도를 여기에 맞춘다.
-        MeasuredFillDuration = {},
     }
 end
 

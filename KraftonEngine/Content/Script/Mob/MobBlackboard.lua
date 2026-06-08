@@ -57,6 +57,6 @@ MB.HIT_REACT = {
 }
 
 -- ── 디버그 ───────────────────────────────────
-MB.DEBUG = true   -- false 로 바꾸면 print 전부 꺼짐
+MB.DEBUG = false   -- false 로 바꾸면 print 전부 꺼짐
 
 return MB

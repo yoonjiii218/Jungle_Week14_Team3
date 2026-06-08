@@ -63,6 +63,10 @@ function Tick(dt)
         return
     end
 
+    -- 첫 활성화 시 로딩 hitch 로 dt 가 비정상적으로 커지면 WaitForNotify 타임아웃이
+    -- 한 프레임에 통째로 지나가버려 장판/공격 시퀀스가 애니메이션과 어긋난다. 클램프로 방지.
+    dt = math.min(dt, 0.1)
+
     -- Own coroutine pool: this boss's coroutines must only ever advance by
     -- this boss's scaledDt, never another actor's (see CoroutineManager.lua).
     CoroutineManager.Begin(obj.UUID)

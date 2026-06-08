@@ -228,54 +228,67 @@ local function ShowRectZone(bossContext, args)
     }
 end
 
+local function SpawnFanPiece(feedbackConfig, centerX, centerY, centerZ, yaw, length, width, color)
+    local decal = VFX.SpawnGroundCrackDecal(
+        feedbackConfig.FAN_DECAL_MATERIAL,
+        Vector(centerX, centerY, centerZ),
+        Vector(length, width, feedbackConfig.ZONE_HEIGHT),
+        feedbackConfig.NO_FADE_DELAY,
+        0.2
+    )
+    if decal then
+        decal:SetRotation(Vector(0.0, 0.0, yaw + (feedbackConfig.FAN_YAW_OFFSET or 0.0)))
+        local c = color or feedbackConfig.ZONE_COLOR_IDLE
+        decal:SetColorRGBA(c[1], c[2], c[3], c[4])
+    end
+    return decal
+end
+
+-- CircleZone.png decal: fixed translucent guide plus an opaque fill growing from the center.
 local function ShowFanZone(bossContext)
     local feedbackConfig = bossContext.Config.FEEDBACK
     local bossPos = bossContext.Owner.Location
     local _, baseYaw = ResolveDirection(bossContext, bossContext.Brain.TargetActor)
-    local decals = {}
+    local radius = feedbackConfig.FAN_RADIUS
+    local diameter = radius * 2.0
+    local spawnZ = bossPos.Z + feedbackConfig.ZONE_Z_OFFSET
+    local centerX = bossPos.X
+    local centerY = bossPos.Y
+
+    -- 전체 범위를 아주 흐릿하게 미리 보여주는 윤곽 데칼 (차오름과 무관하게 고정 크기)
     local outlineDecals = {}
-    local segmentCount = feedbackConfig.FAN_SEGMENTS
-    local halfAngle = feedbackConfig.FAN_ANGLE * 0.5
-
-    for i = 0, segmentCount - 1 do
-        local offset = -halfAngle + feedbackConfig.FAN_ANGLE * ((i + 0.5) / segmentCount)
-        local segmentYaw = baseYaw + offset
-        local rad = segmentYaw * math.pi / 180.0
-        local dx, dy = math.cos(rad), math.sin(rad)
-        local cx = bossPos.X + dx * (feedbackConfig.FAN_RADIUS * 0.5)
-        local cy = bossPos.Y + dy * (feedbackConfig.FAN_RADIUS * 0.5)
-        local cz = bossPos.Z + feedbackConfig.ZONE_Z_OFFSET
-
-        -- 전체 범위를 아주 흐릿하게 미리 보여주는 윤곽 데칼 (반지름 고정)
-        local outlineDecal = SpawnPiece(
-            feedbackConfig, cx, cy, cz, segmentYaw,
-            feedbackConfig.FAN_RADIUS, feedbackConfig.FAN_SEG_WIDTH,
-            feedbackConfig.ZONE_COLOR_OUTLINE
-        )
-        if outlineDecal then
-            table.insert(outlineDecals, outlineDecal)
-        end
-
-        local decal = SpawnPiece(
-            feedbackConfig, cx, cy, cz, segmentYaw,
-            feedbackConfig.FAN_RADIUS, feedbackConfig.FAN_SEG_WIDTH,
-            feedbackConfig.ZONE_COLOR_IDLE
-        )
-        if decal then
-            table.insert(decals, decal)
-        end
+    local outlineDecal = SpawnFanPiece(
+        feedbackConfig, centerX, centerY, spawnZ, baseYaw, diameter, diameter,
+        feedbackConfig.ZONE_COLOR_OUTLINE
+    )
+    if outlineDecal then
+        table.insert(outlineDecals, outlineDecal)
     end
 
-    if #decals == 0 and bossContext.Config.DEBUG then
+    local decal = SpawnFanPiece(
+        feedbackConfig, centerX, centerY, spawnZ, baseYaw, diameter, diameter,
+        feedbackConfig.ZONE_COLOR_IDLE
+    )
+
+    local decals = {}
+    local decalZ = spawnZ
+    if decal then
+        table.insert(decals, decal)
+        decalZ = decal.Location.Z
+    elseif bossContext.Config.DEBUG then
         print("[BossFeedback] ShowFanZone decal spawn failed")
     end
 
     return {
         decals = decals,
         outlineDecals = outlineDecals,
-        kind = "fan",
+        kind = "circle",
         origin = Vector(bossPos.X, bossPos.Y, bossPos.Z),
         yaw = baseYaw,
+        radius = radius,
+        length = diameter,
+        width = diameter,
+        decalZ = decalZ,
     }
 end
 
@@ -377,25 +390,21 @@ local function FillRectZone(bossContext, zone, ratio)
     decal:SetRelativeScale(Vector(length, width, feedbackConfig.ZONE_HEIGHT))
 end
 
+-- Grow the filled circle from the same center as the guide.
 local function FillFanZone(bossContext, zone, ratio)
+    local decal = zone.decals[1]
+    if decal == nil then return end
+
     local feedbackConfig = bossContext.Config.FEEDBACK
-    local segmentCount = feedbackConfig.FAN_SEGMENTS
-    local halfAngle = feedbackConfig.FAN_ANGLE * 0.5
-    local radius = math.max(0.01, feedbackConfig.FAN_RADIUS * ratio)
-    local fallbackZ = zone.origin.Z + feedbackConfig.ZONE_Z_OFFSET
+    local fullDiameter = (zone.radius or feedbackConfig.FAN_RADIUS) * 2.0
+    local fill = math.max(0.0, math.min(ratio, 1.0))
+    local diameter = math.max(0.01, fullDiameter * fill)
+    local cx = zone.origin.X
+    local cy = zone.origin.Y
+    local cz = zone.decalZ or decal.Location.Z or (zone.origin.Z + feedbackConfig.ZONE_Z_OFFSET)
 
-    for i, decal in ipairs(zone.decals) do
-        local offset = -halfAngle + feedbackConfig.FAN_ANGLE * ((i - 1 + 0.5) / segmentCount)
-        local segmentYaw = zone.yaw + offset
-        local rad = segmentYaw * math.pi / 180.0
-        local dx, dy = math.cos(rad), math.sin(rad)
-        local cx = zone.origin.X + dx * (radius * 0.5)
-        local cy = zone.origin.Y + dy * (radius * 0.5)
-        local cz = decal.Location.Z or fallbackZ
-
-        decal:SetLocation(Vector(cx, cy, cz))
-        decal:SetRelativeScale(Vector(radius, feedbackConfig.FAN_SEG_WIDTH, feedbackConfig.ZONE_HEIGHT))
-    end
+    decal:SetLocation(Vector(cx, cy, cz))
+    decal:SetRelativeScale(Vector(diameter, diameter, feedbackConfig.ZONE_HEIGHT))
 end
 
 ---@param bossContext BossContext
@@ -409,20 +418,8 @@ function BossFeedback.FillZone(bossContext, zone, ratio)
 
     if zone.kind == "rect" then
         FillRectZone(bossContext, zone, ratio)
-    elseif zone.kind == "fan" then
+    elseif zone.kind == "fan" or zone.kind == "circle" then
         FillFanZone(bossContext, zone, ratio)
-    end
-end
-
----@param bossContext BossContext
----@param zone table
----@return nil
-function BossFeedback.FlashZone(bossContext, zone)
-    BossContext.Assert(bossContext, "BossFeedback.FlashZone")
-    if zone == nil or zone.decals == nil then return end
-    local color = bossContext.Config.FEEDBACK.ZONE_COLOR_FLASH
-    for _, decal in ipairs(zone.decals) do
-        decal:SetColorRGBA(color[1], color[2], color[3], color[4])
     end
 end
 
