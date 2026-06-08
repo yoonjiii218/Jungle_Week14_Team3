@@ -242,6 +242,33 @@ local function ApplyLocalHitStop(actor, duration)
     end
 end
 
+local function RemoveActorTargetingTags(actor)
+    if not IsValidActor(actor) or actor.RemoveTag == nil then
+        return
+    end
+
+    actor:RemoveTag("HitTarget")
+    actor:RemoveTag("Enemy")
+    actor:RemoveTag("Mob")
+end
+
+local function ClearPlayerTargetAssistForActor(targetActor)
+    if targetActor == nil then
+        return
+    end
+
+    for _, playerContext in pairs(playersByOwner) do
+        if playerContext.Runtime ~= nil and playerContext.Runtime.TargetAssistTarget == targetActor then
+            playerContext.Runtime.TargetAssistTarget = nil
+            playerContext.Runtime.TargetAssistDirection = nil
+            playerContext.Runtime.TargetAssistDistance = nil
+            playerContext.Runtime.TargetAssistLockedDirection = nil
+            playerContext.Runtime.TargetAssistEndTime = 0.0
+            playerContext.Runtime.TargetAssistKeepUntil = 0.0
+        end
+    end
+end
+
 -- Perfect dodge is gameplay time control, not just visual feedback.
 -- TimeRush = world slomo + player custom time dilation compensation.
 local function ApplyCombatTimeRush(actor, duration, worldScale, playerSpeedScale, enemyBrainScale)
@@ -882,6 +909,11 @@ local function HandleMobDeath(mobContext, hit)
         mobContext.Runtime.MovementComp:StopMovementImmediately()
     end
 
+    -- Dead mobs must not be re-selected by attack assist / lock-on.
+    -- Do not disable collision here; corpse collision / death animation can be handled separately.
+    RemoveActorTargetingTags(mobContext.Owner)
+    ClearPlayerTargetAssistForActor(mobContext.Owner)
+
     print("[Mob] ☠ 사망!  attack=" .. tostring(hit and hit.AttackId or nil))
     -- TODO: 사망 애니메이션 / 디스폰 / 보상 (에셋·연출 단계)
 end
@@ -1041,7 +1073,7 @@ function CombatContext.ApplyPlayerUltimateDamage(playerContext, centerLocation, 
     end
 
     for _, mobContext in pairs(mobsByOwner) do
-        if mobContext ~= nil then
+        if mobContext ~= nil and (mobContext.Combat == nil or mobContext.Combat.IsDead ~= true) then
             TryApply(mobContext.Owner)
         end
     end
