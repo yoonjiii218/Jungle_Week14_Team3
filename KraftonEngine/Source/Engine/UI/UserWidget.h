@@ -16,14 +16,15 @@
 #include <RmlUi/Core.h>
 
 class APlayerController;
-class FWidgetClickEventListener;
+class FWidgetEventListener;
 namespace Rml { class ElementDocument; }
 
-class FWidgetClickEventListener final : public Rml::EventListener
+class FWidgetEventListener final : public Rml::EventListener
 {
 public:
-	FWidgetClickEventListener(FString InElementId, sol::protected_function InCallback)
+	FWidgetEventListener(FString InElementId, FString InEventName, sol::protected_function InCallback)
 		: ElementId(std::move(InElementId))
+		, EventName(std::move(InEventName))
 		, Callback(std::move(InCallback))
 	{
 	}
@@ -39,14 +40,16 @@ public:
 		if (!Result.valid())
 		{
 			sol::error Err = Result;
-			UE_LOG("[Lua] UI click callback error: %s", Err.what());
+			UE_LOG("[Lua] UI event callback error: %s", Err.what());
 		}
 	}
 
 	const FString& GetElementId() const { return ElementId; }
+	const FString& GetEventName() const { return EventName; }
 
 private:
 	FString ElementId;
+	FString EventName;
 	sol::protected_function Callback;
 };
 
@@ -65,6 +68,7 @@ public:
 	void AddToViewport(int32 InZOrder = 0);
 	void RemoveFromParent();
 	void BindClick(const FString& ElementId, sol::protected_function Callback);
+	void BindEvent(const FString& ElementId, const FString& EventName, sol::protected_function Callback);
 	void RegisterEventListeners();
 	void ClearEventListeners();
 	void SetText(const FString& ElementId, const FString& Text);
@@ -92,8 +96,14 @@ private:
 	TWeakObjectPtr<APlayerController> OwningPlayer;
 	Rml::ElementDocument* Document = nullptr;
 	FString DocumentPath;
-	TArray<std::pair<FString, sol::protected_function>> PendingClickBindings;
-	TArray<FWidgetClickEventListener*> ClickListeners;
+	struct FWidgetEventBinding
+	{
+		FString ElementId;
+		FString EventName;
+		sol::protected_function Callback;
+	};
+	TArray<FWidgetEventBinding> PendingEventBindings;
+	TArray<FWidgetEventListener*> EventListeners;
 	int32 ZOrder = 0;
 	bool bInViewport = false;
 	bool bDocumentLoaded = false;

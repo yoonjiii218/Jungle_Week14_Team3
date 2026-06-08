@@ -37,16 +37,18 @@
         #player-chip-b { left: 256px; top: 27px; width: 8px; height: 8px; }
         #player-chip-c { left: 268px; top: 27px; width: 8px; height: 8px; }
 
-        #combo-plate { left: 24px; top: 294px; width: 196px; height: 88px; }
-        #combo-shell { left: 26px; top: 296px; width: 184px; height: 78px; }
-        #combo-cyan { left: 17px; top: 10px; width: 104px; height: 22px; font-size: 19px; color: #00eaff; }
-        #combo-pink { left: 22px; top: 10px; width: 104px; height: 22px; font-size: 19px; color: #ff2bd6; }
-        #combo-text { left: 19px; top: 10px; width: 104px; height: 22px; font-size: 19px; color: #ffffff; }
-        #combo-readout { left: 124px; top: 18px; width: 42px; height: 12px; }
-        #combo-bar { left: 18px; top: 45px; width: 138px; height: 8px; }
-        #combo-accent { left: 18px; top: 62px; width: 54px; }
-        #combo-chip-a { left: 100px; top: 62px; width: 26px; height: 8px; }
-        #combo-chip-b { left: 132px; top: 62px; width: 26px; height: 8px; }
+        #combo-plate { left: 24px; top: 284px; width: 250px; height: 118px; }
+        #combo-shell { left: 26px; top: 286px; width: 238px; height: 106px; }
+        #combo-cyan { left: 18px; top: 12px; width: 150px; height: 34px; font-size: 28px; color: #00eaff; }
+        #combo-pink { left: 24px; top: 12px; width: 150px; height: 34px; font-size: 28px; color: #ff2bd6; }
+        #combo-text { left: 21px; top: 12px; width: 150px; height: 34px; font-size: 28px; color: #ffffff; }
+        #combo-readout { left: 170px; top: 24px; width: 48px; height: 14px; font-size: 12px; color: #d7ff33; text-align: right; }
+        #combo-bar { left: 18px; top: 62px; width: 188px; height: 10px; }
+        #combo-impact-flash { position: absolute; left: 18px; top: 56px; width: 188px; height: 22px; background-color: #ffffff; opacity: 0; display: none; }
+        #combo-impact { position: absolute; left: 146px; top: 16px; width: 74px; height: 52px; font-size: 38px; color: #d7ff33; text-align: right; opacity: 0; display: none; }
+        #combo-accent { left: 18px; top: 84px; width: 74px; }
+        #combo-chip-a { left: 132px; top: 84px; width: 34px; height: 9px; }
+        #combo-chip-b { left: 174px; top: 84px; width: 34px; height: 9px; }
 
         #ultimate-plate { left: 438px; top: 638px; width: 404px; height: 66px; }
         #ultimate-shell { left: 438px; top: 638px; width: 404px; height: 58px; }
@@ -73,17 +75,19 @@
         <div id="player-chip-c" class="chip"></div>
     </div>
 
-    <img id="combo-plate" class="plate" src="Images/hud_data_plate.png" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="24 -66 196 88" data-ue-alignment="0 0.5" />
-    <div id="combo-shell" class="panel" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="26 -64 184 78" data-ue-alignment="0 0.5">
+    <img id="combo-plate" class="plate" src="Images/hud_data_plate.png" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="24 -72 250 118" data-ue-alignment="0 0.5" />
+    <div id="combo-shell" class="panel" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="26 -70 238 106" data-ue-alignment="0 0.5">
         <div id="combo-cyan" class="label-cyan">CHAIN</div>
         <div id="combo-pink" class="label-pink">CHAIN</div>
         <div id="combo-text" class="label">CHAIN</div>
         <div id="combo-readout" class="readout">FLOW</div>
+        <div id="combo-impact-flash"></div>
         <div id="combo-bar" class="bar">
             <div id="combo-fill" class="bar-fill bar-fill-pink"></div>
             <div class="bar-hotline"></div>
             <div class="bar-tick" style="left: 16%;"></div><div class="bar-tick" style="left: 33%;"></div><div class="bar-tick" style="left: 50%;"></div><div class="bar-tick" style="left: 66%;"></div><div class="bar-tick" style="left: 83%;"></div>
         </div>
+        <div id="combo-impact">10</div>
         <div id="combo-accent" class="line-pink"></div>
         <div id="combo-chip-a" class="chip chip-cyan"></div>
         <div id="combo-chip-b" class="chip chip-pink"></div>
