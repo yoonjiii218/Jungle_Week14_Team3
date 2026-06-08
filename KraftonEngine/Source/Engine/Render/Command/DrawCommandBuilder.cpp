@@ -160,6 +160,10 @@ void FDrawCommandBuilder::BuildCommandForProxy(FScene& Scene, const FPrimitiveSc
 	// if (!Proxy.GetMeshBuffer() || !Proxy.GetMeshBuffer()->IsValid()) return;
 	ID3D11DeviceContext* Ctx = CachedContext;
 	const bool bMirroredTransform = Proxy.HasMirroredTransform();
+	// 카메라를 바라볼 수 있는 PerViewportUpdate, Particle 은 음수 스케일에 대해 Culling 처리 필요 X
+	const bool bCanFlipCullForMirroredTransform = bMirroredTransform
+		&& !Proxy.HasProxyFlag(EPrimitiveProxyFlags::PerViewportUpdate)
+		&& !Proxy.HasProxyFlag(EPrimitiveProxyFlags::Particle);
 
 	const bool bSkeletal = Proxy.HasProxyFlag(EPrimitiveProxyFlags::SkeletalMesh);
 	const bool bInstancedStaticMesh = Proxy.HasProxyFlag(EPrimitiveProxyFlags::InstancedStaticMesh);
@@ -318,7 +322,7 @@ void FDrawCommandBuilder::BuildCommandForProxy(FScene& Scene, const FPrimitiveSc
 				ApplyMaterialRenderState(Cmd.RenderState, Mat, BaseRenderState);
 		}
 
-		if (bMirroredTransform)
+		if (bCanFlipCullForMirroredTransform)
 		{
 			if (Cmd.RenderState.Rasterizer == ERasterizerState::SolidBackCull)
 				Cmd.RenderState.Rasterizer = ERasterizerState::SolidFrontCull;
