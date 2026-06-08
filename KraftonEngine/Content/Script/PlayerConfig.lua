@@ -41,6 +41,16 @@ PlayerConfig.Default = {
     Combat = {
         MaxHP = 100,
         MaxUltimateGauge = 100,
+        AttackDamage = 10,
+        AttackDamages = {
+            10,
+            10,
+            12,
+            12,
+            16,
+        },
+        AttackGaugeGain = 12,
+        AttackComboGain = 1,
     },
 
     Feedback = {

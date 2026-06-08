@@ -5,6 +5,9 @@ local CombatContext = {}
 local PlayerConfig = require("PlayerConfig")
 
 local playersByOwner = {}
+local bossRef      = nil   -- 보스 액터
+local bossBB       = nil   -- 보스 런타임 Blackboard
+local bossBBConfig = nil   -- 보스 수치 Blackboard
 
 local function GetOwnerKey(owner)
     if owner == nil then
@@ -71,6 +74,8 @@ function CombatContext.GetCurrentThreat(ctx)
     return ctx.CurrentThreat
 end
 
+local PushUltimateToGameFlow
+
 local function AddGauge(ctx, amount)
     if ctx == nil or amount == nil then
         return
@@ -83,12 +88,94 @@ local function AddGauge(ctx, amount)
     if gauge > maxGauge then gauge = maxGauge end
     ctx.UltimateGauge = gauge
     ctx.MaxUltimateGauge = maxGauge
+    PushUltimateToGameFlow(ctx)
 end
 
 local function Clamp(value, minValue, maxValue)
     if value < minValue then return minValue end
     if value > maxValue then return maxValue end
     return value
+end
+
+local function GetGameFlowDirector()
+    if GameFlow ~= nil and GameFlow.GetDirector ~= nil then
+        return GameFlow.GetDirector()
+    end
+    return nil
+end
+
+local function PushPlayerHPToGameFlow(player)
+    local director = GetGameFlowDirector()
+    if director == nil or player == nil then return end
+    local maxHP = player.MaxHP or GetCombatConfig(player).MaxHP or 100.0
+    director:SetPlayerHP(player.HP or maxHP, maxHP)
+end
+
+local function PushBossHPToGameFlow()
+    local director = GetGameFlowDirector()
+    if director == nil or bossBB == nil then return end
+    director:SetBossHP(bossBB.HP or 0.0, bossBB.MaxHP or 1.0)
+end
+
+PushUltimateToGameFlow = function(player)
+    local director = GetGameFlowDirector()
+    if director == nil or player == nil then return end
+    local maxGauge = player.MaxUltimateGauge or GetCombatConfig(player).MaxUltimateGauge or PlayerConfig.Default.Combat.MaxUltimateGauge
+    director:SetUltimateGauge(player.UltimateGauge or 0.0, maxGauge)
+end
+
+local function PushComboToGameFlow(player)
+    local director = GetGameFlowDirector()
+    if director == nil or player == nil then return end
+    director:SetComboCount(player.ComboCount or 0)
+end
+
+local function IsBossTarget(targetActor)
+    if targetActor == nil then
+        return false
+    end
+
+    if bossRef ~= nil and targetActor == bossRef then
+        return true
+    end
+
+    if targetActor.HasTag ~= nil and targetActor:HasTag("Boss") then
+        return true
+    end
+
+    return false
+end
+
+local function ResolveAttackDamage(ctx, event)
+    if event ~= nil and event.Damage ~= nil then
+        return event.Damage
+    end
+
+    local combatConfig = GetCombatConfig(ctx)
+    local attackIndex = event ~= nil and event.AttackIndex or nil
+    if attackIndex ~= nil and combatConfig.AttackDamages ~= nil and combatConfig.AttackDamages[attackIndex] ~= nil then
+        return combatConfig.AttackDamages[attackIndex]
+    end
+
+    return combatConfig.AttackDamage or PlayerConfig.Default.Combat.AttackDamage or 10.0
+end
+
+local function ResolveAttackGaugeDelta(ctx, event)
+    if event ~= nil and event.GaugeDelta ~= nil then
+        return event.GaugeDelta
+    end
+
+    local combatConfig = GetCombatConfig(ctx)
+    return combatConfig.AttackGaugeGain or PlayerConfig.Default.Combat.AttackGaugeGain or 0.0
+end
+
+local function ResolveAttackComboDelta(ctx, event)
+    if event ~= nil and event.ComboDelta ~= nil then
+        return event.ComboDelta
+    end
+
+    local combatConfig = GetCombatConfig(ctx)
+    return combatConfig.AttackComboGain or PlayerConfig.Default.Combat.AttackComboGain or 1
 end
 
 function CombatContext.HandlePlayerResult(ctx, result)
@@ -101,13 +188,24 @@ function CombatContext.HandlePlayerResult(ctx, result)
             CombatContext.SetCurrentThreat(ctx, event.Threat)
             AddGauge(ctx, event.GaugeDelta or 0)
         elseif event.Type == "AttackHit" then
-            AddGauge(ctx, event.GaugeDelta or 0)
+            if IsBossTarget(event.TargetActor) then
+                local damaged = CombatContext.ApplyDamageToBoss(ResolveAttackDamage(ctx, event))
+                if damaged == true then
+                    AddGauge(ctx, ResolveAttackGaugeDelta(ctx, event))
+                    ctx.ComboCount = math.max(0, (ctx.ComboCount or 0) + ResolveAttackComboDelta(ctx, event))
+                    PushComboToGameFlow(ctx)
+                end
+            elseif event.GaugeDelta ~= nil then
+                AddGauge(ctx, event.GaugeDelta)
+            end
         elseif event.Type == "UltimateStart" then
             ctx.UltimateGauge = 0
+            PushUltimateToGameFlow(ctx)
         elseif event.Type == "GaugeChanged" then
             ctx.UltimateGauge = event.Value
             local combatConfig = GetCombatConfig(ctx)
             ctx.MaxUltimateGauge = event.MaxValue or combatConfig.MaxUltimateGauge or ctx.MaxUltimateGauge
+            PushUltimateToGameFlow(ctx)
         end
     end
 end
@@ -115,10 +213,6 @@ end
 -- ════════════════════════════════════════════
 -- 보스 관련 (Boss/ 에서 호출)
 -- ════════════════════════════════════════════
-
-local bossRef      = nil   -- 보스 액터
-local bossBB       = nil   -- 보스 런타임 Blackboard
-local bossBBConfig = nil   -- 보스 수치 Blackboard
 
 -- ⑥ 재시작/레벨 언로드 시 BossCharacter.EndPlay 에서 호출
 function CombatContext.Clear()
@@ -181,12 +275,13 @@ end
 
 -- [플레이어팀 호출] 플레이어가 보스를 때렸을 때
 function CombatContext.ApplyDamageToBoss(amount)
-    if not bossBB or bossBB.HP == nil then return end
-    if bossBB.IsDead then return end   -- 이미 죽었으면 무시
+    if not bossBB or bossBB.HP == nil then return false end
+    if bossBB.IsDead then return false end   -- 이미 죽었으면 무시
     amount = amount or 0
-    if amount <= 0 then return end
+    if amount <= 0 then return false end
 
     bossBB.HP = math.max(0.0, bossBB.HP - amount)
+    PushBossHPToGameFlow()
 
     print(string.format("[Boss] 피격! -%.0f   HP: %.0f / %.0f",
           amount, bossBB.HP, bossBB.MaxHP or 0.0))
@@ -196,6 +291,8 @@ function CombatContext.ApplyDamageToBoss(amount)
     if bossBB.HP <= 0.0 then
         HandleBossDeath()
     end
+
+    return true
 end
 
 -- [플레이어팀 조회] HP 바 UI 용 (0.0 ~ 1.0)
@@ -222,6 +319,7 @@ function CombatContext.SetBossHP(current, maxHP)
 
     bossBB.MaxHP = resolvedMax
     bossBB.HP = Clamp(current or bossBB.HP or resolvedMax, 0.0, resolvedMax)
+    PushBossHPToGameFlow()
     if bossBB.HP > 0.0 then
         bossBB.IsDead = false
     else
@@ -251,6 +349,7 @@ function CombatContext.SetPlayerHP(current, maxHP)
 
     player.MaxHP = resolvedMax
     player.HP = Clamp(current or player.HP or resolvedMax, 0.0, resolvedMax)
+    PushPlayerHPToGameFlow(player)
     return true
 end
 
@@ -275,6 +374,7 @@ function CombatContext.SetPlayerUltimate(current, maxGauge)
 
     player.MaxUltimateGauge = resolvedMax
     player.UltimateGauge = Clamp(current or player.UltimateGauge or 0.0, 0.0, resolvedMax)
+    PushUltimateToGameFlow(player)
     return true
 end
 
@@ -293,6 +393,7 @@ function CombatContext.SetPlayerCombo(count)
     local player = CombatContext.GetFirstPlayer()
     if player == nil then return false end
     player.ComboCount = math.max(0, count or 0)
+    PushComboToGameFlow(player)
     return true
 end
 

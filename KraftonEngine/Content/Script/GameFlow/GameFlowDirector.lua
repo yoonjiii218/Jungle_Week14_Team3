@@ -127,6 +127,17 @@ local function scalar(value)
     return string.format("%.3f", clamp(value, 0.0, 1.0))
 end
 
+local function whole(value)
+    return string.format("%.0f", value or 0.0)
+end
+
+local function percent(current, maxValue)
+    if maxValue == nil or maxValue <= 0.0 then
+        return 0
+    end
+    return math.floor(clamp((current or 0.0) / maxValue, 0.0, 1.0) * 100.0 + 0.5)
+end
+
 local function hasRegisteredPlayer()
     return CombatContext.HasPlayer ~= nil and CombatContext.HasPlayer() == true
 end
@@ -658,18 +669,64 @@ local function updateHud()
         d:SetComboCount(combo)
     end
 
-    setText(hud, "player-hp-text", "VITAL FIELD")
-    setText(hud, "boss-hp-text", "TARGET INTEGRITY")
-    setText(hud, "ultimate-text", "SIGNAL BURST")
-    local comboText = "CHAIN"
+    local playerHP = d:GetPlayerHP()
+    local playerMaxHP = d:GetPlayerMaxHP()
+    local syncedBossHP = d:GetBossHP()
+    local syncedBossMaxHP = d:GetBossMaxHP()
+    local ultimate = d:GetUltimateGauge()
+    local ultimateMax = d:GetUltimateMaxGauge()
+    local combo = d:GetComboCount()
+
+    setText(hud, "player-hp-text", "HP " .. whole(playerHP) .. "/" .. whole(playerMaxHP))
+    setText(hud, "player-state", percent(playerHP, playerMaxHP) .. "% STRUCT")
+    setText(hud, "boss-hp-text", "CORE " .. whole(syncedBossHP) .. "/" .. whole(syncedBossMaxHP))
+    setText(hud, "boss-sub", syncedBossHP <= 0.0 and "CORE LOST" or "HOSTILE CORE")
+    setText(hud, "ultimate-text", "BURST " .. percent(ultimate, ultimateMax) .. "%")
+    setText(hud, "ultimate-sub", ultimate >= ultimateMax and "READY" or "CHARGE")
+    local comboText = string.format("%02d CHAIN", combo)
     setText(hud, "combo-cyan", comboText)
     setText(hud, "combo-pink", comboText)
     setText(hud, "combo-text", comboText)
+    setText(hud, "combo-readout", combo > 0 and ("x" .. tostring(combo)) or "FLOW")
 
-    setBar(hud, "player-hp-fill", d:GetPlayerHP(), d:GetPlayerMaxHP())
-    setBar(hud, "boss-hp-fill", d:GetBossHP(), d:GetBossMaxHP())
-    setBar(hud, "ultimate-fill", d:GetUltimateGauge(), d:GetUltimateMaxGauge())
-    setBar(hud, "combo-fill", d:GetComboCount(), 12.0)
+    setBar(hud, "player-hp-fill", playerHP, playerMaxHP)
+    setBar(hud, "boss-hp-fill", syncedBossHP, syncedBossMaxHP)
+    setBar(hud, "ultimate-fill", ultimate, ultimateMax)
+    setBar(hud, "combo-fill", combo, 12.0)
+end
+
+local function updateTerminalFlow()
+    if currentScreen ~= "HUD" then
+        return
+    end
+
+    local d = getDirector()
+    if d == nil then
+        return
+    end
+
+    if d.HasReachedTerminalState ~= nil and d:HasReachedTerminalState() then
+        local state = d:GetBossGameState()
+        local phase = state ~= nil and state:GetFlowPhase() or ""
+        if phase == "GameOver" then
+            showGameOver()
+        elseif phase == "Clear" then
+            showClear()
+        end
+        return
+    end
+
+    if d.IsCombatActive ~= nil and d:IsCombatActive() ~= true then
+        return
+    end
+
+    if d:GetPlayerHP() <= 0.0 then
+        d:RequestGameOver()
+        showGameOver()
+    elseif d:GetBossHP() <= 0.0 then
+        d:RequestClear()
+        showClear()
+    end
 end
 
 function BeginPlay()
@@ -704,6 +761,7 @@ function Tick(dt)
     if currentScreen == "HUD" then
         applyTestHotkeys()
         updateHud()
+        updateTerminalFlow()
     elseif currentScreen == "StartMenu" then
         applyStartMenuHotkeys()
         updateStartMenuBoot(dt)

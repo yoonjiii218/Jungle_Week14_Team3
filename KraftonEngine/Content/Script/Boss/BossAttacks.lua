@@ -17,7 +17,7 @@ function BossAttacks.Init(ctx)
     Hitbox        = require("Boss/BossHitbox")
 end
 
--- 공통 판정 + 로그 (1단계: print 만, 데미지 없음)
+-- 공통 판정 + 플레이어 데미지 적용
 -- 퍼펙트 회피 판정은 플레이어가 함 (회피 무적 중 피격 = 퍼펙트).
 -- 보스는 "맞았다"만 판단하고, 무적 여부/무효 처리는 플레이어 책임.
 local function ResolveHit(tag, zone)
@@ -28,6 +28,19 @@ local function ResolveHit(tag, zone)
     end
 
     if Hitbox.Check(zone, ctx_ref.playerRef) then
+        local damage = 0.0
+        if tag == "P1" then
+            damage = ctx_ref.BB.P1.DAMAGE or 0.0
+        elseif tag == "P2-1" or tag == "P2-2" then
+            damage = ctx_ref.BB.P2.DAMAGE or 0.0
+        elseif tag == "P3" then
+            damage = ctx_ref.BB.P3.DAMAGE or 0.0
+        end
+
+        if damage > 0.0 and CombatContext ~= nil and CombatContext.ApplyDamageToPlayer ~= nil then
+            CombatContext.ApplyDamageToPlayer(damage)
+        end
+
         if ctx_ref.BB.DEBUG then print("[" .. tag .. "] ★ HIT! 플레이어 맞음") end
         return true
     else
