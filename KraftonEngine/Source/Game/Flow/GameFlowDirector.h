@@ -96,6 +96,8 @@ public:
 	UFUNCTION(Pure, Category="GameFlow|UI")
 	FString GetHudWidgetPath() const { return HudWidgetPath; }
 	UFUNCTION(Pure, Category="GameFlow|UI")
+	FString GetTutorialHudWidgetPath() const { return TutorialHudWidgetPath; }
+	UFUNCTION(Pure, Category="GameFlow|UI")
 	FString GetPauseMenuWidgetPath() const { return PauseMenuWidgetPath; }
 	UFUNCTION(Pure, Category="GameFlow|UI")
 	FString GetGameOverWidgetPath() const { return GameOverWidgetPath; }
@@ -144,6 +146,8 @@ private:
 	FString StartMenuWidgetPath = "Content/UI/GameFlow/StartMenu.uasset";
 	UPROPERTY(Edit, Save, Category="GameFlow|UI", DisplayName="HUD Widget", AssetType="RmlUiDocument")
 	FString HudWidgetPath = "Content/UI/GameFlow/BossHUD.uasset";
+	UPROPERTY(Edit, Save, Category="GameFlow|UI", DisplayName="Tutorial HUD Widget", AssetType="RmlUiDocument")
+	FString TutorialHudWidgetPath = "Content/UI/GameFlow/TutorialHUD.uasset";
 	UPROPERTY(Edit, Save, Category="GameFlow|UI", DisplayName="Pause Menu Widget", AssetType="RmlUiDocument")
 	FString PauseMenuWidgetPath = "Content/UI/GameFlow/PauseMenu.uasset";
 	UPROPERTY(Edit, Save, Category="GameFlow|UI", DisplayName="Game Over Widget", AssetType="RmlUiDocument")

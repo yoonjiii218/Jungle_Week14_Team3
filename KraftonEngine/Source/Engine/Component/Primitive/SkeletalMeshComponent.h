@@ -76,6 +76,14 @@ public:
     UFUNCTION(Pure, Category="Animation")
     UClass* GetAnimInstanceClass() const { return AnimInstanceClass.Get(); }
 
+    // LuaAnimInstance 스크립트 파일은 에디터/직렬화 필드로 저장되지만,
+    // 런타임 튜토리얼 스포너도 scene template 기반 캐릭터를 만들 수 있어야 하므로
+    // 최소 setter/getter 를 공개한다.
+    UFUNCTION(Callable, Category="Animation|Lua")
+    void SetLuaAnimScriptFile(const FString& InScriptFile);
+    UFUNCTION(Pure, Category="Animation|Lua")
+    FString GetLuaAnimScriptFile() const { return LuaAnimScriptFile; }
+
     // 외부에서 직접 만든 인스턴스 주입 (테스트 / 특수 케이스). Mode 와 무관하게 즉시 교체.
     UFUNCTION(Callable, Category="Animation")
     void SetAnimInstance(UAnimInstance* InInstance);

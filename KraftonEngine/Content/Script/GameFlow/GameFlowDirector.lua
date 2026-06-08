@@ -1,4 +1,5 @@
 local CombatContext = require("Combat/CombatContext")
+local TutorialDirector = require("Tutorial/TutorialDirector")
 
 local widgets = {}
 local director = nil
@@ -8,6 +9,7 @@ local TEST_PLAYER_DAMAGE = 10.0
 local TEST_BOSS_DAMAGE = 10.0
 local TEST_ULTIMATE_DELTA = 25.0
 local START_MENU_BOOT_REPLAY_KEY_NAME = "F9"
+local KEY_ENTER = 13
 local START_MENU_BOOT_DURATION = 1.50
 local START_MENU_BOOT_BASE_WIDTH = 1280.0
 local START_MENU_BOOT_BASE_HEIGHT = 720.0
@@ -486,11 +488,37 @@ local function showHud()
     removeWidget("GameOver")
     removeWidget("Clear")
     removeWidget("Credits")
+    removeWidget("TutorialHUD")
 
     local hud = createWidget("HUD", d:GetHudWidgetPath(), false, 0)
     addToViewport(hud, 0)
     currentScreen = "HUD"
     printTestHotkeyHelp()
+end
+
+local function getTutorialHudWidgetPath(d)
+    if d ~= nil and d.GetTutorialHudWidgetPath ~= nil then
+        local path = d:GetTutorialHudWidgetPath()
+        if path ~= nil and path ~= "" then
+            return path
+        end
+    end
+
+    return "Content/UI/GameFlow/TutorialHUD.uasset"
+end
+
+local function showTutorialHud()
+    local d = getDirector()
+    if d == nil then return nil end
+
+    local tutorialHud = createWidget("TutorialHUD", getTutorialHudWidgetPath(d), false, 50)
+    addToViewport(tutorialHud, 50)
+    if tutorialHud ~= nil then
+        print("[GameFlow] Tutorial HUD created: " .. tostring(getTutorialHudWidgetPath(d)))
+    else
+        print("[GameFlow] Tutorial HUD unavailable. Tutorial will keep logging only.")
+    end
+    return tutorialHud
 end
 
 local function showStartMenu()
@@ -506,6 +534,12 @@ local function showStartMenu()
             d:StartStoryBoss()
         end)
         menu:bind_click("btn-training", function()
+            local sceneName = "TrainingMap"
+            if d.GetTrainingSceneName ~= nil then
+                sceneName = d:GetTrainingSceneName()
+            end
+            print("[GameFlow] Training button clicked -> " .. tostring(sceneName))
+            TutorialDirector.QueueTrainingSession(sceneName)
             d:StartTraining()
         end)
         menu:bind_click("btn-credits", function()
@@ -531,6 +565,70 @@ local function applyStartMenuHotkeys()
         print("[GameFlowTest] Replay start-menu TV boot")
         showStartMenu()
     end
+end
+
+local function isTrainingTutorialActive()
+    if currentScreen ~= "HUD" then
+        return false
+    end
+    if TutorialDirector.IsRunning ~= nil and TutorialDirector.IsRunning() == true then
+        return true
+    end
+    return TutorialDirector.IsFreePlay ~= nil and TutorialDirector.IsFreePlay() == true
+end
+
+local function showTrainingExitConfirm()
+    if isTrainingTutorialActive() ~= true or TutorialDirector.ShowExitConfirm == nil then
+        return false
+    end
+    return TutorialDirector.ShowExitConfirm()
+end
+
+local function cancelTrainingExitConfirm()
+    if TutorialDirector.HideExitConfirm == nil then
+        return false
+    end
+    return TutorialDirector.HideExitConfirm()
+end
+
+local function leaveTrainingForMainMenu()
+    local d = getDirector()
+    if d == nil then
+        return
+    end
+
+    if TutorialDirector.EndSession ~= nil then
+        TutorialDirector.EndSession()
+    else
+        TutorialDirector.End()
+    end
+
+    removeWidget("TutorialHUD")
+    d:ResumeGame()
+    d:RequestMainMenu()
+end
+
+local function handleTrainingEscape()
+    if TutorialDirector.IsExitConfirmVisible ~= nil and TutorialDirector.IsExitConfirmVisible() == true then
+        cancelTrainingExitConfirm()
+        return true
+    end
+
+    return showTrainingExitConfirm()
+end
+
+local function applyTrainingExitConfirmHotkeys()
+    if TutorialDirector.IsExitConfirmVisible == nil or TutorialDirector.IsExitConfirmVisible() ~= true then
+        return false
+    end
+    if Input == nil or Input.GetKeyDown == nil then
+        return true
+    end
+
+    if Input.GetKeyDown(KEY_ENTER) then
+        leaveTrainingForMainMenu()
+    end
+    return true
 end
 
 local function hidePauseMenu()
@@ -740,7 +838,9 @@ function BeginPlay()
     end
 
     Engine.SetOnEscape(function()
-        togglePauseMenu()
+        if handleTrainingEscape() ~= true then
+            togglePauseMenu()
+        end
     end)
 
     local startup = d:GetStartupScreen()
@@ -749,6 +849,12 @@ function BeginPlay()
     elseif startup == "HUD" then
         d:StartCombat()
         showHud()
+        if TutorialDirector.HasQueuedTrainingSession ~= nil and TutorialDirector.HasQueuedTrainingSession() == true then
+            showTutorialHud()
+        end
+        if TutorialDirector.BeginIfQueued("TrainingMap", widgets.TutorialHUD) == true then
+            print("[GameFlow] Training tutorial enabled after HUD startup")
+        end
     elseif startup == "GameOver" then
         showGameOver()
     elseif startup == "Clear" then
@@ -762,8 +868,13 @@ end
 
 function Tick(dt)
     if currentScreen == "HUD" then
+        if applyTrainingExitConfirmHotkeys() == true then
+            TutorialDirector.Tick(dt, widgets.TutorialHUD)
+            return
+        end
         applyTestHotkeys()
         updateHud()
+        TutorialDirector.Tick(dt, widgets.TutorialHUD)
         updateTerminalFlow()
     elseif currentScreen == "StartMenu" then
         applyStartMenuHotkeys()
@@ -772,6 +883,7 @@ function Tick(dt)
 end
 
 function EndPlay()
+    TutorialDirector.End()
     if Engine.ClearOnEscape ~= nil then
         Engine.ClearOnEscape()
     else

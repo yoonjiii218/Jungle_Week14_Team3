@@ -186,12 +186,21 @@ end
 local function AddGauge(playerContext, amount)
     local combatConfig = playerContext.Config.Combat
     local maxGauge = combatConfig.MaxUltimateGauge
-    local gauge = playerContext.Combat.UltimateGauge + amount
+    local oldGauge = playerContext.Combat.UltimateGauge or 0.0
+    local gauge = oldGauge + (amount or 0.0)
     if gauge < 0 then gauge = 0 end
     if gauge > maxGauge then gauge = maxGauge end
     playerContext.Combat.UltimateGauge = gauge
     playerContext.Combat.MaxUltimateGauge = maxGauge
     SyncPlayerToGameFlow(playerContext)
+
+    if math.abs(gauge - oldGauge) > 0.001 then
+        PlayerEvents.EmitGaugeChanged(playerContext, {
+            Value = gauge,
+            MaxValue = maxGauge,
+            Delta = gauge - oldGauge,
+        })
+    end
 end
 
 local function GetOrAddActionComponent(actor)
@@ -319,7 +328,15 @@ function CombatContext.ProcessPlayerEvents(playerContext, events)
             local comboDelta = event.ComboDelta or combatConfig.AttackComboGain or 1
             playerContext.Combat.ComboCount = math.max(0, (playerContext.Combat.ComboCount or 0) + comboDelta)
         elseif PlayerEvents.Is(event, PlayerEvents.Type.UltimateStarted) then
+            local oldGauge = playerContext.Combat.UltimateGauge or 0.0
             playerContext.Combat.UltimateGauge = 0
+            if oldGauge > 0.001 then
+                PlayerEvents.EmitGaugeChanged(playerContext, {
+                    Value = 0.0,
+                    MaxValue = playerContext.Combat.MaxUltimateGauge or combatConfig.MaxUltimateGauge,
+                    Delta = -oldGauge,
+                })
+            end
         elseif PlayerEvents.Is(event, PlayerEvents.Type.GaugeChanged) then
             playerContext.Combat.UltimateGauge = event.Value
             playerContext.Combat.MaxUltimateGauge = event.MaxValue or combatConfig.MaxUltimateGauge
@@ -1156,9 +1173,18 @@ function CombatContext.SetPlayerUltimate(current, maxGauge, playerContext)
 
     local resolvedMax = maxGauge or playerContext.Combat.MaxUltimateGauge or playerContext.Config.Combat.MaxUltimateGauge
     resolvedMax = math.max(1.0, resolvedMax)
+    local oldGauge = playerContext.Combat.UltimateGauge or 0.0
+    local newGauge = Clamp(current or 0.0, 0.0, resolvedMax)
     playerContext.Combat.MaxUltimateGauge = resolvedMax
-    playerContext.Combat.UltimateGauge = Clamp(current or 0.0, 0.0, resolvedMax)
+    playerContext.Combat.UltimateGauge = newGauge
     SyncPlayerToGameFlow(playerContext)
+    if math.abs(newGauge - oldGauge) > 0.001 then
+        PlayerEvents.EmitGaugeChanged(playerContext, {
+            Value = newGauge,
+            MaxValue = resolvedMax,
+            Delta = newGauge - oldGauge,
+        })
+    end
     return true
 end
 

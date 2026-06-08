@@ -1,0 +1,48 @@
+<rml>
+<head>
+    <title>Tutorial HUD</title>
+    <style>
+        body { width: 100%; height: 100%; margin: 0; font-family: Maplestory; color: #ffffff; pointer-events: none; }
+        #tutorial-root { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; }
+        #tutorial-plate { position: absolute; left: 0px; top: 0px; width: 780px; height: 118px; opacity: 0.24; }
+        #tutorial-shell { position: absolute; left: 0px; top: 0px; width: 780px; height: 118px; background-color: #02050bdc; border-width: 1px; border-color: #dceeff; overflow: hidden; }
+        #tutorial-scan-left { position: absolute; left: 15px; top: 15px; width: 1px; height: 88px; background-color: #23465a; }
+        #tutorial-scan-right { position: absolute; left: 762px; top: 15px; width: 1px; height: 88px; background-color: #23465a; }
+        #tutorial-accent-cyan { position: absolute; left: 28px; top: 22px; width: 122px; height: 2px; background-color: #00eaff; }
+        #tutorial-accent-pink { position: absolute; left: 620px; top: 22px; width: 112px; height: 2px; background-color: #ff2bd6; }
+        #tutorial-title-cyan { position: absolute; left: 31px; top: 32px; width: 330px; height: 24px; font-size: 20px; color: #00eaff; }
+        #tutorial-title-pink { position: absolute; left: 35px; top: 32px; width: 330px; height: 24px; font-size: 20px; color: #ff2bd6; }
+        #tutorial-title { position: absolute; left: 33px; top: 32px; width: 330px; height: 24px; font-size: 20px; color: #ffffff; }
+        #tutorial-status-box { position: absolute; left: 600px; top: 34px; width: 132px; height: 18px; border-width: 1px; border-color: #d7ff33; background-color: #07101b; }
+        #tutorial-status { position: absolute; left: 610px; top: 36px; width: 112px; height: 14px; font-size: 11px; color: #d7ff33; text-align: center; }
+        #tutorial-body { position: absolute; left: 33px; top: 68px; width: 700px; height: 24px; font-size: 15px; color: #d8f8ff; }
+        #tutorial-progress-line { position: absolute; left: 33px; top: 98px; width: 180px; height: 2px; background-color: #00eaff; }
+        #tutorial-progress-line-b { position: absolute; left: 228px; top: 98px; width: 82px; height: 2px; background-color: #ffffff; }
+        #tutorial-chip-a { position: absolute; left: 664px; top: 95px; width: 22px; height: 8px; background-color: #00eaff; border-width: 1px; border-color: #00eaff; }
+        #tutorial-chip-b { position: absolute; left: 694px; top: 95px; width: 22px; height: 8px; background-color: #ff2bd6; border-width: 1px; border-color: #ff2bd6; }
+        #tutorial-chip-c { position: absolute; left: 724px; top: 95px; width: 22px; height: 8px; background-color: #07101b; border-width: 1px; border-color: #3e7890; }
+    </style>
+</head>
+<body>
+    <div id="tutorial-root">
+        <img id="tutorial-plate" src="Images/hud_data_plate.png" data-ue-anchors="0.5 0 0.5 0" data-ue-offsets="0 86 780 118" data-ue-alignment="0.5 0" />
+        <div id="tutorial-shell" data-ue-anchors="0.5 0 0.5 0" data-ue-offsets="0 86 780 118" data-ue-alignment="0.5 0">
+            <div id="tutorial-scan-left"></div>
+            <div id="tutorial-scan-right"></div>
+            <div id="tutorial-accent-cyan"></div>
+            <div id="tutorial-accent-pink"></div>
+            <div id="tutorial-title-cyan">튜토리얼</div>
+            <div id="tutorial-title-pink">튜토리얼</div>
+            <div id="tutorial-title">튜토리얼</div>
+            <div id="tutorial-status-box"></div>
+            <div id="tutorial-status">READY</div>
+            <div id="tutorial-body">안내를 기다리는 중입니다.</div>
+            <div id="tutorial-progress-line"></div>
+            <div id="tutorial-progress-line-b"></div>
+            <div id="tutorial-chip-a"></div>
+            <div id="tutorial-chip-b"></div>
+            <div id="tutorial-chip-c"></div>
+        </div>
+    </div>
+</body>
+</rml>

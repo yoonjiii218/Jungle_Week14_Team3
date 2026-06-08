@@ -1205,6 +1205,54 @@ local function GetActionInputFrameTime()
     return nil
 end
 
+local function IsAxisInputActive(axis)
+    if axis == nil then
+        return false
+    end
+
+    local x = axis.X or 0.0
+    local y = axis.Y or 0.0
+    return math.abs(x) > 0.001 or math.abs(y) > 0.001
+end
+
+local function MakeAxisEventArgs(axis)
+    axis = axis or {}
+    return {
+        AxisX = axis.X or 0.0,
+        AxisY = axis.Y or 0.0,
+    }
+end
+
+local function UpdateAxisInputEvent(playerContext, axisName, activeFieldName, emitStarted, emitStopped)
+    local axis = Axis2D(playerContext, axisName)
+    local isActive = IsAxisInputActive(axis)
+    local wasActive = playerContext.Runtime[activeFieldName] == true
+
+    if isActive == true and wasActive ~= true then
+        emitStarted(playerContext, MakeAxisEventArgs(axis))
+    elseif isActive ~= true and wasActive == true then
+        emitStopped(playerContext, MakeAxisEventArgs(axis))
+    end
+
+    playerContext.Runtime[activeFieldName] = isActive
+end
+
+local function UpdateMovementAndLookInputEvents(playerContext)
+    UpdateAxisInputEvent(
+        playerContext,
+        "Move",
+        "MoveInputActive",
+        PlayerEvents.EmitMoveStarted,
+        PlayerEvents.EmitMoveStopped)
+
+    UpdateAxisInputEvent(
+        playerContext,
+        "Look",
+        "LookInputActive",
+        PlayerEvents.EmitLookStarted,
+        PlayerEvents.EmitLookStopped)
+end
+
 local function UpdateBufferedInputTimers(playerContext, dt)
     local input = playerContext.Input
     local deltaTime = dt or 0.0
@@ -1361,6 +1409,8 @@ function PlayerAction.UpdateActionInput(playerContext, dt)
     input.DashPressed = false
     input.DashChargingPressed = false
     input.DashChargingReleased = false
+
+    UpdateMovementAndLookInputEvents(playerContext)
 
     local attackDown = ActionDown(playerContext, "Attack")
     local attackStarted = ActionStarted(playerContext, "Attack")
