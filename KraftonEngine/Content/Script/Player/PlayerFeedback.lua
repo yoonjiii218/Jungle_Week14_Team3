@@ -69,6 +69,72 @@ local function SpawnParticleSystem(path, location, rotation, scale, life, materi
     )
 end
 
+local function GetConfiguredSoundKey(soundConfig)
+    if soundConfig == nil then
+        return nil
+    end
+
+    local key = soundConfig.Key or soundConfig.SoundName
+    if key == nil or key == "" or key == "None" then
+        key = soundConfig.Path
+    end
+
+    if key == nil or key == "" or key == "None" then
+        return nil
+    end
+
+    return key
+end
+
+local function GetLoadedFeedbackSounds(playerContext)
+    playerContext.Feedback.LoadedAudioKeys = playerContext.Feedback.LoadedAudioKeys or {}
+    return playerContext.Feedback.LoadedAudioKeys
+end
+
+local function EnsureConfiguredSoundLoaded(playerContext, soundConfig)
+    if soundConfig == nil or soundConfig.Enabled == false then
+        return nil
+    end
+
+    if AudioManager == nil or AudioManager.Play == nil then
+        return nil
+    end
+
+    local key = GetConfiguredSoundKey(soundConfig)
+    if key == nil then
+        return nil
+    end
+
+    local path = soundConfig.Path
+    if path == nil or path == "" or path == "None" then
+        return key
+    end
+
+    if AudioManager.Load == nil then
+        return key
+    end
+
+    local loaded = GetLoadedFeedbackSounds(playerContext)
+    if loaded[key] ~= path then
+        if AudioManager.Load(key, path, soundConfig.Loop == true) ~= true then
+            print("[PlayerFeedback] Failed to load sound: " .. tostring(path))
+            return nil
+        end
+        loaded[key] = path
+    end
+
+    return key
+end
+
+local function PlayConfiguredSound(playerContext, soundConfig)
+    local key = EnsureConfiguredSoundLoaded(playerContext, soundConfig)
+    if key == nil then
+        return
+    end
+
+    AudioManager.Play(key, soundConfig.Volume or 1.0, soundConfig.Pitch or 1.0)
+end
+
 local function ResetDashChargeFeedbackState(playerContext)
     playerContext.Feedback.DashChargeGroundPSC = nil
     playerContext.Feedback.DashChargeReadyBursted = false
@@ -459,6 +525,7 @@ local function PlayAttackHitFeedback(playerContext, event)
         CameraManager.StartWaveShake(shakeScale)
     end
 
+    PlayConfiguredSound(playerContext, attackHitConfig.Sound)
     SpawnDamageTextFeedback(playerContext, event)
 
     StartFOVPulse(playerContext, "Player.AttackHitFOV", GetFOVConfig(playerContext, "AttackHit"))
@@ -921,6 +988,10 @@ function PlayerFeedback.Init(playerContext)
     ResetDashChargeFeedbackState(playerContext)
     PlayerFeedback.AttachKatanaToWeaponSocket(playerContext)
     PlayerFeedback.AttachPSCToWeaponSocket(playerContext)
+
+    local feedbackConfig = playerContext.Config.Feedback or {}
+    local attackHitConfig = feedbackConfig.AttackHit or {}
+    EnsureConfiguredSoundLoaded(playerContext, attackHitConfig.Sound)
 end
 
 ---@param playerContext PlayerContext
@@ -939,6 +1010,7 @@ function PlayerFeedback.Shutdown(playerContext)
         end
     end
     ResetDashChargeFeedbackState(playerContext)
+    playerContext.Feedback.LoadedAudioKeys = nil
     playerContext.Feedback.KatanaComponent = nil
     playerContext.Feedback.KatanaPSC = nil
 end

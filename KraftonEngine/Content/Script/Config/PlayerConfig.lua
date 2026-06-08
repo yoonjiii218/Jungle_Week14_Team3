@@ -275,6 +275,13 @@ PlayerConfig.Default = {
 
         AttackHit = {
             CameraShakeScale = 0.25,
+            Sound = {
+                Enabled = true,
+                Key = "PlayerAttackHit",
+                Path = "Player Whoosh/whoosh_swish_high_fast_01.wav",
+                Volume = 1.0,
+                Pitch = 1.0,
+            },
         },
 
         DamageText = {
