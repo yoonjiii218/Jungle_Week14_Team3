@@ -1,93 +1,142 @@
 {
-  "Actors": [
-    {
-      "ClassName": "AGameFlowDirector",
-      "Name": "GameFlowDirector",
-      "ObjectId": 2,
-      "Properties": {
-        "PendingActorLocation": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "PendingActorRotation": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "PendingActorScale": [
-          1.0,
-          1.0,
-          1.0
-        ],
-        "PendingActorVisible": true,
-        "PendingTagsString": "GameDirector",
-        "bNeedsTick": true,
-        "StartMenuWidgetPath": "Content/UI/GameFlow/StartMenu.uasset",
-        "HudWidgetPath": "Content/UI/GameFlow/BossHUD.uasset",
-        "PauseMenuWidgetPath": "Content/UI/GameFlow/PauseMenu.uasset",
-        "GameOverWidgetPath": "Content/UI/GameFlow/GameOver.uasset",
-        "ClearWidgetPath": "Content/UI/GameFlow/Clear.uasset",
-        "CreditsWidgetPath": "Content/UI/GameFlow/Credits.uasset",
-        "MainMenuSceneName": "StartMenu",
-        "TrainingSceneName": "TrainingMap",
-        "StoryBossSceneName": "Default",
-        "RetrySceneName": "Default",
-        "GameOverSceneName": "GameOver",
-        "ClearSceneName": "Clear",
-        "CreditsSceneName": "Credits",
-        "PlayerActorTag": "Player",
-        "BossActorTag": "Boss",
-        "PlayerStartTag": "PlayerStart",
-        "BossStartTag": "BossStart",
-        "bApplyStartPositions": true,
-        "PlayerStartLocation": [
-          -5.0,
-          0.0,
-          1.0
-        ],
-        "BossStartLocation": [
-          5.0,
-          0.0,
-          1.0
-        ],
-        "bStartCombatOnBeginPlay": false,
-        "bAutoClearWhenBossDefeated": true,
-        "bAutoFailWhenPlayerDead": true,
-        "bEnableEscapePause": true,
-        "PlayerHP": 100.0,
-        "PlayerMaxHP": 100.0,
-        "BossHP": 100.0,
-        "BossMaxHP": 100.0,
-        "UltimateGauge": 0.0,
-        "UltimateMaxGauge": 100.0,
-        "ComboCount": 0,
-        "StartupScreen": "StartMenu"
-      },
-      "NonSceneComponents": [
-        {
-          "ClassName": "ULuaScriptComponent",
-          "ObjectId": 3,
-          "Properties": {
-            "ScriptFile": "GameFlow/GameFlowDirector.lua",
-            "bTickEnable": true,
-            "bEditorOnly": false,
-            "bIsActive": true,
-            "bAutoActivate": true,
-            "bHiddenInComponentTree": false
+  "Actors" : [{
+      "ClassName" : "AGameFlowDirector",
+      "Name" : "GameFlowDirector",
+      "NonSceneComponents" : [{
+          "ClassName" : "ULuaScriptComponent",
+          "ObjectId" : 3,
+          "Properties" : {
+            "ScriptFile" : "GameFlow/GameFlowDirector.lua",
+            "bAutoActivate" : true,
+            "bEditorOnly" : false,
+            "bHiddenInComponentTree" : false,
+            "bIsActive" : true,
+            "bTickEnable" : true
           }
+        }],
+      "ObjectId" : 2,
+      "Properties" : {
+        "BossActorTag" : "Boss",
+        "BossHP" : 100.000000,
+        "BossMaxHP" : 100.000000,
+        "BossStartLocation" : [5.000000, 0.000000, 1.000000],
+        "BossStartTag" : "BossStart",
+        "ClearSceneName" : "Clear",
+        "ClearWidgetPath" : "Content/UI/GameFlow/Clear.uasset",
+        "ComboCount" : 0,
+        "CreditsSceneName" : "Credits",
+        "CreditsWidgetPath" : "Content/UI/GameFlow/Credits.uasset",
+        "GameOverSceneName" : "GameOver",
+        "GameOverWidgetPath" : "Content/UI/GameFlow/GameOver.uasset",
+        "HudWidgetPath" : "Content/UI/GameFlow/BossHUD.uasset",
+        "MainMenuSceneName" : "StartMenu",
+        "PauseMenuWidgetPath" : "Content/UI/GameFlow/PauseMenu.uasset",
+        "PendingActorLocation" : [0.000000, 0.000000, 0.000000],
+        "PendingActorRotation" : [0.000000, 0.000000, 0.000000],
+        "PendingActorScale" : [1.000000, 1.000000, 1.000000],
+        "PendingActorVisible" : true,
+        "PendingTagsString" : "GameDirector",
+        "PlayerActorTag" : "Player",
+        "PlayerHP" : 100.000000,
+        "PlayerMaxHP" : 100.000000,
+        "PlayerStartLocation" : [-5.000000, 0.000000, 1.000000],
+        "PlayerStartTag" : "PlayerStart",
+        "RetrySceneName" : "Default",
+        "StartMenuWidgetPath" : "Content/UI/GameFlow/StartMenu.uasset",
+        "StartupScreen" : "StartMenu",
+        "StoryBossSceneName" : "Default",
+        "TrainingSceneName" : "TrainingMap",
+        "UltimateGauge" : 0.000000,
+        "UltimateMaxGauge" : 100.000000,
+        "bApplyStartPositions" : true,
+        "bAutoClearWhenBossDefeated" : true,
+        "bAutoFailWhenPlayerDead" : true,
+        "bEnableEscapePause" : true,
+        "bNeedsTick" : true,
+        "bStartCombatOnBeginPlay" : false
+      }
+    }, {
+      "ClassName" : "AStaticMeshActor",
+      "Name" : "AStaticMeshActor_20",
+      "NonSceneComponents" : [],
+      "ObjectId" : 4,
+      "Properties" : {
+        "PendingActorLocation" : [0.722485, -1.057739, 1.146800],
+        "PendingActorRotation" : [-0.000000, 0.000000, 0.000000],
+        "PendingActorScale" : [1.000000, 1.000000, 1.000000],
+        "PendingActorVisible" : true,
+        "PendingTagsString" : "",
+        "bNeedsTick" : true
+      },
+      "RootComponent" : {
+        "Children" : [{
+            "Children" : [],
+            "ClassName" : "UCameraComponent",
+            "ObjectId" : 6,
+            "Properties" : {
+              "CachedEditRotator" : [-0.000000, 0.000000, 0.000000],
+              "CameraState.FOV" : 1.047198,
+              "CameraState.FarZ" : 1000.000000,
+              "CameraState.NearZ" : 0.100000,
+              "CameraState.OrthoWidth" : 10.000000,
+              "CameraState.bIsOrthogonal" : false,
+              "RelativeTransform.Location" : [0.000000, 0.000000, 0.000000],
+              "RelativeTransform.Scale" : [1.000000, 1.000000, 1.000000],
+              "bAutoActivate" : false,
+              "bEditorOnly" : false,
+              "bHiddenInComponentTree" : false,
+              "bIsActive" : false,
+              "bTickEnable" : false
+            }
+          }],
+        "ClassName" : "UStaticMeshComponent",
+        "ObjectId" : 5,
+        "Properties" : {
+          "CachedEditRotator" : [-0.000000, 0.000000, 0.000000],
+          "CenterOfMassOffset" : [0.000000, 0.000000, 0.000000],
+          "CollisionEnabled" : [0, 0, 0, 0, 0, 0, 0, 0],
+          "Mass" : 1.000000,
+          "MaterialSlots" : ["Content/Material/Auto/BasicShapeMaterial.mat"],
+          "ObjectType" : [0, 0, 0, 0, 0, 0, 0, 0],
+          "RelativeTransform.Location" : [0.722485, -1.057739, 1.146800],
+          "RelativeTransform.Scale" : [1.000000, 1.000000, 1.000000],
+          "ResponseContainer" : {
+            "Responses[0]" : [2, 0, 0, 0, 0, 0, 0, 0],
+            "Responses[1]" : [2, 0, 0, 0, 0, 0, 0, 0],
+            "Responses[2]" : [2, 0, 0, 0, 0, 0, 0, 0],
+            "Responses[3]" : [2, 0, 0, 0, 0, 0, 0, 0],
+            "Responses[4]" : [2, 0, 0, 0, 0, 0, 0, 0]
+          },
+          "StaticMeshPath" : "Content/Data/BasicShape/Cube_StaticMesh.uasset",
+          "bAutoActivate" : true,
+          "bCastShadow" : true,
+          "bCastShadowAsTwoSided" : false,
+          "bEditorOnly" : false,
+          "bEnableGravity" : true,
+          "bGenerateOverlapEvents" : false,
+          "bHiddenInComponentTree" : false,
+          "bIsActive" : true,
+          "bIsVisible" : true,
+          "bSimulatePhysics" : false,
+          "bTickEnable" : true
         }
-      ]
-    }
-  ],
-  "ClassName": "UWorld",
-  "ContextHandle": "StartMenu",
-  "ContextName": "StartMenu",
-  "Name": "StartMenu",
-  "ObjectId": 1,
-  "Version": 2,
-  "WorldSettings": {
-    "GameMode": "ABossGameMode"
+      }
+    }],
+  "ClassName" : "UWorld",
+  "ContextHandle" : "StartMenu",
+  "ContextName" : "StartMenu",
+  "Name" : "StartMenu",
+  "ObjectId" : 1,
+  "PerspectiveCamera" : {
+    "FOV" : 1.047198,
+    "FarClip" : 1000.000000,
+    "Location" : [10.000000, 0.000000, 5.000000],
+    "NearClip" : 0.100000,
+    "Rotation" : [0.000000, 26.715050, 177.149994]
   },
-  "WorldType": "Editor"
+  "Version" : 2,
+  "WorldSettings" : {
+    "GameMode" : "ABossGameMode"
+  },
+  "WorldType" : "Editor"
 }

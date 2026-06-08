@@ -8,8 +8,6 @@ local BossContext = require("Boss/BossContext")
 local BossEvents = require("Boss/BossEvents")
 local Strict = require("Core/Strict")
 
-local COLLISION_QUERY_AND_PHYSICS = 3
-
 local KATANA_MESH_PATH = "Content/Data/scifi-katana_extracted/source/KatanaSwordSketch_StaticMesh.uasset"
 local KATANA_SOCKET_NAME = "pinky_01_r_socket"
 local KATANA_LOCATION = Vector(0.0, 0.0, 0.0)
@@ -152,34 +150,6 @@ local function PlayHitShake(bossContext, event)
     end
 end
 
-local function StartDeathRagdoll(bossContext)
-    local movementComp = bossContext.Runtime.MovementComp
-    if movementComp ~= nil then
-        Reflection.Call(movementComp, "StopMovementImmediately")
-        Reflection.Call(movementComp, "SetMovementInputEnabled", false)
-    end
-
-    local meshComp = bossContext.Runtime.SkeletalMeshComp
-    if meshComp == nil then
-        local ownerActor = bossContext.Owner
-        meshComp = ownerActor.GetSkeletalMeshComponent and ownerActor:GetSkeletalMeshComponent() or nil
-    end
-
-    if meshComp == nil then
-        return
-    end
-
-    local ok, err = pcall(function()
-        meshComp:SetCollisionEnabled(COLLISION_QUERY_AND_PHYSICS)
-        meshComp:SetEnableGravity(true)
-        meshComp:StartRagdoll()
-    end)
-
-    if not ok then
-        print("[BossFeedback] StartDeathRagdoll failed: " .. tostring(err))
-    end
-end
-
 local function ResolveDirection(bossContext, targetActor)
     local bossPos = bossContext.Owner.Location
     if targetActor and targetActor:IsValid() then
@@ -196,7 +166,7 @@ local function ResolveDirection(bossContext, targetActor)
     return forward, yaw
 end
 
-local function SpawnPiece(feedbackConfig, centerX, centerY, centerZ, yaw, length, width)
+local function SpawnPiece(feedbackConfig, centerX, centerY, centerZ, yaw, length, width, color)
     local decal = VFX.SpawnGroundCrackDecal(
         feedbackConfig.DECAL_MATERIAL,
         Vector(centerX, centerY, centerZ),
@@ -206,8 +176,8 @@ local function SpawnPiece(feedbackConfig, centerX, centerY, centerZ, yaw, length
     )
     if decal then
         decal:SetRotation(Vector(0.0, 0.0, yaw))
-        local color = feedbackConfig.ZONE_COLOR_IDLE
-        decal:SetColorRGBA(color[1], color[2], color[3], color[4])
+        local c = color or feedbackConfig.ZONE_COLOR_IDLE
+        decal:SetColorRGBA(c[1], c[2], c[3], c[4])
     end
     return decal
 end
@@ -219,15 +189,22 @@ local function ShowRectZone(bossContext, args)
     local length = args.Length or feedbackConfig.ZONE_LENGTH
     local width = args.Width or feedbackConfig.ZONE_WIDTH
     local spawnZ = bossPos.Z + feedbackConfig.ZONE_Z_OFFSET
+    local centerX = bossPos.X + dir.X * (length * 0.5)
+    local centerY = bossPos.Y + dir.Y * (length * 0.5)
+
+    -- 전체 범위를 아주 흐릿하게 미리 보여주는 윤곽 데칼 (차오름과 무관하게 고정 크기)
+    local outlineDecals = {}
+    local outlineDecal = SpawnPiece(
+        feedbackConfig, centerX, centerY, spawnZ, yaw, length, width,
+        feedbackConfig.ZONE_COLOR_OUTLINE
+    )
+    if outlineDecal then
+        table.insert(outlineDecals, outlineDecal)
+    end
 
     local decal = SpawnPiece(
-        feedbackConfig,
-        bossPos.X + dir.X * (length * 0.5),
-        bossPos.Y + dir.Y * (length * 0.5),
-        spawnZ,
-        yaw,
-        length,
-        width
+        feedbackConfig, centerX, centerY, spawnZ, yaw, length, width,
+        feedbackConfig.ZONE_COLOR_IDLE
     )
 
     local decals = {}
@@ -241,6 +218,7 @@ local function ShowRectZone(bossContext, args)
 
     return {
         decals = decals,
+        outlineDecals = outlineDecals,
         kind = "rect",
         origin = Vector(bossPos.X, bossPos.Y, bossPos.Z),
         yaw = yaw,
@@ -255,6 +233,7 @@ local function ShowFanZone(bossContext)
     local bossPos = bossContext.Owner.Location
     local _, baseYaw = ResolveDirection(bossContext, bossContext.Brain.TargetActor)
     local decals = {}
+    local outlineDecals = {}
     local segmentCount = feedbackConfig.FAN_SEGMENTS
     local halfAngle = feedbackConfig.FAN_ANGLE * 0.5
 
@@ -263,14 +242,24 @@ local function ShowFanZone(bossContext)
         local segmentYaw = baseYaw + offset
         local rad = segmentYaw * math.pi / 180.0
         local dx, dy = math.cos(rad), math.sin(rad)
+        local cx = bossPos.X + dx * (feedbackConfig.FAN_RADIUS * 0.5)
+        local cy = bossPos.Y + dy * (feedbackConfig.FAN_RADIUS * 0.5)
+        local cz = bossPos.Z + feedbackConfig.ZONE_Z_OFFSET
+
+        -- 전체 범위를 아주 흐릿하게 미리 보여주는 윤곽 데칼 (반지름 고정)
+        local outlineDecal = SpawnPiece(
+            feedbackConfig, cx, cy, cz, segmentYaw,
+            feedbackConfig.FAN_RADIUS, feedbackConfig.FAN_SEG_WIDTH,
+            feedbackConfig.ZONE_COLOR_OUTLINE
+        )
+        if outlineDecal then
+            table.insert(outlineDecals, outlineDecal)
+        end
+
         local decal = SpawnPiece(
-            feedbackConfig,
-            bossPos.X + dx * (feedbackConfig.FAN_RADIUS * 0.5),
-            bossPos.Y + dy * (feedbackConfig.FAN_RADIUS * 0.5),
-            bossPos.Z + feedbackConfig.ZONE_Z_OFFSET,
-            segmentYaw,
-            feedbackConfig.FAN_RADIUS,
-            feedbackConfig.FAN_SEG_WIDTH
+            feedbackConfig, cx, cy, cz, segmentYaw,
+            feedbackConfig.FAN_RADIUS, feedbackConfig.FAN_SEG_WIDTH,
+            feedbackConfig.ZONE_COLOR_IDLE
         )
         if decal then
             table.insert(decals, decal)
@@ -283,6 +272,7 @@ local function ShowFanZone(bossContext)
 
     return {
         decals = decals,
+        outlineDecals = outlineDecals,
         kind = "fan",
         origin = Vector(bossPos.X, bossPos.Y, bossPos.Z),
         yaw = baseYaw,
@@ -316,8 +306,6 @@ function BossFeedback.ProcessEvents(bossContext, events)
         if BossEvents.Is(event, BossEvents.Type.Hit) then
             PlayHitSquash(bossContext, event)
             PlayHitShake(bossContext, event)
-        elseif BossEvents.Is(event, BossEvents.Type.Dead) then
-            StartDeathRagdoll(bossContext)
         end
     end
 end
@@ -353,11 +341,19 @@ function BossFeedback.HideAttackZone(bossContext, args)
     BossContext.Assert(bossContext, "BossFeedback.HideAttackZone")
     Strict.AssertTable(args, "args", "BossFeedback.HideAttackZone")
     local zone = args.Zone
-    if zone == nil or zone.decals == nil then return end
-    for _, decal in ipairs(zone.decals) do
-        decal:SetFadeOut(0.0, 0.15)
+    if zone == nil then return end
+    if zone.decals ~= nil then
+        for _, decal in ipairs(zone.decals) do
+            decal:SetFadeOut(0.0, 0.15)
+        end
+        zone.decals = {}
     end
-    zone.decals = {}
+    if zone.outlineDecals ~= nil then
+        for _, decal in ipairs(zone.outlineDecals) do
+            decal:SetFadeOut(0.0, 0.15)
+        end
+        zone.outlineDecals = {}
+    end
     if bossContext.Feedback.CurrentTelegraph == zone then
         bossContext.Feedback.CurrentTelegraph = nil
     end

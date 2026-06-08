@@ -38,14 +38,31 @@ local function WaitForNotify(bossContext, flag, timeout)
     end
 end
 
-local function RunZoneFill(bossContext, zone)
+-- 직전에 같은 공격이 실측한 ZoneShow~ZoneFlash 간격이 있으면 그 값을 차오름 속도 기준으로 쓴다.
+-- (없으면 BossBlackboard 의 기본 FILL_DURATION 사용)
+local function GetFillDuration(bossContext, attackId)
+    local measured = bossContext.Feedback.MeasuredFillDuration[attackId]
+    return measured or bossContext.Config.FEEDBACK.FILL_DURATION
+end
+
+-- ZoneFlash 노티파이가 들어온 시점의 실제 ZoneShow~ZoneFlash 간격을 기록해서
+-- 다음 재생 때는 장판이 정확히 그 타이밍에 다 차오르도록 보정한다.
+local function RecordFillDuration(bossContext, attackId, zoneShowAt)
+    local elapsed = (World.GetGameTime() or 0.0) - zoneShowAt
+    if elapsed > 0.05 then
+        bossContext.Feedback.MeasuredFillDuration[attackId] = elapsed
+    end
+end
+
+local function RunZoneFill(bossContext, zone, fillDuration)
     local config = bossContext.Config
     local attackState = bossContext.Attack
+    local duration = fillDuration or config.FEEDBACK.FILL_DURATION
     StartCoroutine(function()
         local t = 0.0
         while attackState.ActiveZone == zone do
             t = t + WaitFrame()
-            BossFeedback.FillZone(bossContext, zone, math.min(t / config.FEEDBACK.FILL_DURATION, 0.99))
+            BossFeedback.FillZone(bossContext, zone, math.min(t / duration, 0.99))
         end
     end)
 end
@@ -157,13 +174,15 @@ local function Pattern1(bossContext)
     BeginPattern(bossContext, "P1")
 
     WaitForNotify(bossContext, "ZoneShow", 3.0)
+    local zoneShowAt = World.GetGameTime() or 0.0
     local zone = BossFeedback.ShowAttackZone(bossContext, { AttackId = "P1", Shape = "P1" })
     BossFeedback.FillZone(bossContext, zone, 0.0)
     attackState.ActiveZone = zone
     table.insert(attackState.ActiveZones, zone)
-    RunZoneFill(bossContext, zone)
+    RunZoneFill(bossContext, zone, GetFillDuration(bossContext, "P1"))
 
     WaitForNotify(bossContext, "ZoneFlash", 3.0)
+    RecordFillDuration(bossContext, "P1", zoneShowAt)
     BossFeedback.FillZone(bossContext, zone, 1.0)
     BossFeedback.FlashZone(bossContext, zone)
 
@@ -193,13 +212,15 @@ local function Pattern2(bossContext)
     BeginPattern(bossContext, "P2")
 
     WaitForNotify(bossContext, "ZoneShow", 3.0)
+    local zone1ShowAt = World.GetGameTime() or 0.0
     local zone1 = BossFeedback.ShowAttackZone(bossContext, { AttackId = "P2-1", Shape = "Fan" })
     BossFeedback.FillZone(bossContext, zone1, 0.0)
     attackState.ActiveZone = zone1
     table.insert(attackState.ActiveZones, zone1)
-    RunZoneFill(bossContext, zone1)
+    RunZoneFill(bossContext, zone1, GetFillDuration(bossContext, "P2-1"))
 
     WaitForNotify(bossContext, "ZoneFlash", 3.0)
+    RecordFillDuration(bossContext, "P2-1", zone1ShowAt)
     BossFeedback.FillZone(bossContext, zone1, 1.0)
     BossFeedback.FlashZone(bossContext, zone1)
 
@@ -217,13 +238,15 @@ local function Pattern2(bossContext)
     end
     BossAttacks.CloseHitWindow(bossContext, { AttackId = "P2-1" })
 
+    local zone2ShowAt = World.GetGameTime() or 0.0
     local zone2 = BossFeedback.ShowAttackZone(bossContext, { AttackId = "P2-2", Shape = "Fan" })
     BossFeedback.FillZone(bossContext, zone2, 0.0)
     attackState.ActiveZone = zone2
     table.insert(attackState.ActiveZones, zone2)
-    RunZoneFill(bossContext, zone2)
+    RunZoneFill(bossContext, zone2, GetFillDuration(bossContext, "P2-2"))
 
     WaitForNotify(bossContext, "ZoneFlash", 3.0)
+    RecordFillDuration(bossContext, "P2-2", zone2ShowAt)
     BossFeedback.FillZone(bossContext, zone2, 1.0)
     BossFeedback.FlashZone(bossContext, zone2)
 
@@ -253,16 +276,18 @@ local function Pattern3(bossContext)
     BeginPattern(bossContext, "P3")
 
     WaitForNotify(bossContext, "ZoneShow", 3.0)
+    local zoneShowAt = World.GetGameTime() or 0.0
     local zone = BossFeedback.ShowAttackZone(bossContext, { AttackId = "P3", Shape = "Rect" })
     BossFeedback.FillZone(bossContext, zone, 0.0)
     attackState.ActiveZone = zone
     table.insert(attackState.ActiveZones, zone)
-    RunZoneFill(bossContext, zone)
+    RunZoneFill(bossContext, zone, GetFillDuration(bossContext, "P3"))
 
     WaitForNotify(bossContext, "TrackEnd", 3.0)
     bossContext.Brain.IsTracking = false
 
     WaitForNotify(bossContext, "ZoneFlash", 3.0)
+    RecordFillDuration(bossContext, "P3", zoneShowAt)
     BossFeedback.FillZone(bossContext, zone, 1.0)
     BossFeedback.FlashZone(bossContext, zone)
 

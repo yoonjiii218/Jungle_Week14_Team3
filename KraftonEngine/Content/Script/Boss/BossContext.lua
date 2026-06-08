@@ -23,6 +23,7 @@ local BossContext = {}
 ---@field AnimAttackStart integer|nil
 ---@field AnimAttackHits integer|nil
 ---@field HitReactSignal string|nil
+---@field DeathSignal string|nil
 
 ---@class BossAttackState
 ---@field CurrentAttackId string|nil
@@ -91,6 +92,9 @@ local function CreateBrainState()
         -- 피격 방향 신호 (CombatContext.ApplyHitToBoss 가 1회성으로 써넣고
         --  BossAnimation 이 소비해 방향별 피격 모션을 트리거한다.) "Front"/"Back"/"Left"/"Right"
         HitReactSignal = nil,
+        -- 사망 모션 방향 신호 (CombatContext.HandleBossDeath 가 1회성으로 써넣고
+        --  BossAnimation 이 소비해 SamuraiDeath_Front/Back 을 트리거한다.) "Front"/"Back"
+        DeathSignal = nil,
     }
 end
 
@@ -131,6 +135,8 @@ local function CreateFeedbackState()
         ActiveVfx = {},
         HitFlashUntil = 0.0,
         KatanaComponent = nil,
+        -- attackId → 직전 ZoneShow~ZoneFlash 실측 간격(초). 다음 재생 시 장판 차오름 속도를 여기에 맞춘다.
+        MeasuredFillDuration = {},
     }
 end
 

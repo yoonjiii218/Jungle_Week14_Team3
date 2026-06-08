@@ -46,6 +46,11 @@ local HEAVY_COMBO_PATHS = {
 local DASH_START_PATH = ANIM_BASE .. "SamuraiAttack_DashStart.uasset"
 local DASH_SLASH_PATH = ANIM_BASE .. "SamuraiAttack_DashSlash.uasset"
 
+-- 사망 모션 (피격 방향에 따라 둘 중 하나만 재생, 좌/우 구분 없음)
+local DEATH_FRONT_PATH = ANIM_BASE .. "SamuraiDeath_Front.uasset"
+local DEATH_BACK_PATH  = ANIM_BASE .. "SamuraiDeath_Back.uasset"
+local DEATH_BLEND_IN   = 0.15
+
 -- 속도 임계값.
 -- get_owner_speed() 는 cm/s 가 아니라 ~10 스케일의 작은 값을 반환한다.
 -- (PlayerConfig: RunThreshold=8.0, RunSampleSpeed=10.0 와 동일 스케일)
@@ -126,6 +131,12 @@ local function ResetAttack(self)
     self.PendingAttackKind  = nil
     self.PendingAttackStart = nil
     self.PendingAttackHits  = nil
+
+    -- 슈퍼아머(IsBossAttacking) 가 풀리는 시점 = 여기.
+    -- 공격 중 들어와 보류돼 있던 피격 리액션 신호를 함께 비워서,
+    -- 슈퍼아머가 풀린 직후 뒤늦게 피격 모션이 재생되는 것을 막는다.
+    self.HitReactPending    = false
+    self.HitReactDirection  = nil
 end
 
 -- ──────────────────────────────────────────────────────────────────
@@ -419,6 +430,28 @@ function init(self)
     AddHitReactionTransitions("Right", "HitRight")
     AddHitReactionTransitions("Back",  "HitBack")
 
+    -- ── 사망 모션 ──────────────────────────────────────────────────
+    -- CombatContext.HandleBossDeath 가 bossContext.Brain.DeathSignal 에 "Front"/"Back" 을 써넣고,
+    -- update() 가 그걸 소비해 self.DeathPending/Direction 으로 변환하면 아래 전이가 발동한다.
+    -- 좌/우 구분 없이 치명타가 앞에서 들어왔으면 Front, 뒤에서 들어왔으면 Back 모션으로 죽는다.
+    -- 사망 후에는 다른 상태로 돌아가지 않는 종료 상태다.
+    Anim.sm_add_state(top, "DeathFront", Anim.create_sequence_player(DEATH_FRONT_PATH, PLAY_RATE, false))
+    Anim.sm_add_state(top, "DeathBack",  Anim.create_sequence_player(DEATH_BACK_PATH, PLAY_RATE, false))
+
+    local function AddDeathTransition(direction, stateName)
+        Anim.sm_add_transition(top, "AnyState", stateName,
+            function()
+                if not self.DeathPending or self.DeathDirection ~= direction then
+                    return false
+                end
+                self.DeathPending = false
+                return true
+            end, DEATH_BLEND_IN)
+    end
+
+    AddDeathTransition("Front", "DeathFront")
+    AddDeathTransition("Back",  "DeathBack")
+
     Anim.sm_set_initial_state(top, "Locomotion")
 
     local root = Anim.create_slot("DefaultSlot", top)
@@ -454,6 +487,14 @@ function update(self, dt)
         self.HitReactDirection = hitSignal
         self.HitReactEnd       = false
         self.HitReactElapsed   = 0.0
+    end
+
+    -- ── 사망 방향 신호 소비 (CombatContext.HandleBossDeath 가 써넣음) ──
+    local deathSignal = bossContext.Brain.DeathSignal
+    if deathSignal ~= nil then
+        bossContext.Brain.DeathSignal = nil
+        self.DeathPending   = true
+        self.DeathDirection = deathSignal
     end
 
     -- 피격 모션 재생 중이면 fallback 복귀용 경과 시간 누적

@@ -2,6 +2,7 @@
 -- ULuaScriptComponent entry point for the boss actor.
 -- Owns BossContext and wires explicit boss module calls.
 
+local CoroutineManager = require("CoroutineManager")
 local BossConfig    = require("Boss/BossBlackboard")
 local BossContext   = require("Boss/BossContext")
 local BossEvents    = require("Boss/BossEvents")
@@ -62,6 +63,10 @@ function Tick(dt)
         return
     end
 
+    -- Own coroutine pool: this boss's coroutines must only ever advance by
+    -- this boss's scaledDt, never another actor's (see CoroutineManager.lua).
+    CoroutineManager.Begin(obj.UUID)
+
     BossEvents.BeginFrame(bossContext)
 
     local brain = bossContext.Brain
@@ -95,9 +100,12 @@ function Tick(dt)
     local events = BossEvents.Drain(bossContext)
     CombatContext.ProcessBossEvents(bossContext, events)
     BossFeedback.ProcessEvents(bossContext, events)
+
+    CoroutineManager.End()
 end
 
 function EndPlay()
+    CoroutineManager.Destroy(obj.UUID)
     CombatContext.Clear()
     bossContext = nil
     if BossConfig.DEBUG then
