@@ -208541,6 +208541,64 @@
           "bTickEnable" : true
         }
       }
+    }, {
+      "ClassName" : "AGameFlowDirector",
+      "Name" : "GameFlowDirector",
+      "NonSceneComponents" : [{
+          "ClassName" : "ULuaScriptComponent",
+          "ObjectId" : 8874,
+          "Properties" : {
+            "ScriptFile" : "GameFlow/GameFlowDirector.lua",
+            "bAutoActivate" : true,
+            "bEditorOnly" : false,
+            "bHiddenInComponentTree" : false,
+            "bIsActive" : true,
+            "bTickEnable" : true
+          }
+        }],
+      "ObjectId" : 8873,
+      "Properties" : {
+        "BossActorTag" : "Boss",
+        "BossHP" : 100.000000,
+        "BossMaxHP" : 100.000000,
+        "BossStartLocation" : [5.000000, 0.000000, 1.000000],
+        "BossStartTag" : "BossStart",
+        "ClearSceneName" : "Clear",
+        "ClearWidgetPath" : "Content/UI/GameFlow/Clear.uasset",
+        "ComboCount" : 0,
+        "CountdownWidgetPath" : "Content/UI/GameFlow/FilmCountdown.uasset",
+        "CreditsSceneName" : "Credits",
+        "CreditsWidgetPath" : "Content/UI/GameFlow/Credits.uasset",
+        "GameOverSceneName" : "GameOver",
+        "GameOverWidgetPath" : "Content/UI/GameFlow/GameOver.uasset",
+        "HudWidgetPath" : "Content/UI/GameFlow/BossHUD.uasset",
+        "MainMenuSceneName" : "StartMenu",
+        "PauseMenuWidgetPath" : "Content/UI/GameFlow/PauseMenu.uasset",
+        "PendingActorLocation" : [0.000000, 0.000000, 0.000000],
+        "PendingActorRotation" : [0.000000, 0.000000, 0.000000],
+        "PendingActorScale" : [1.000000, 1.000000, 1.000000],
+        "PendingActorVisible" : true,
+        "PendingTagsString" : "GameDirector",
+        "PlayerActorTag" : "Player",
+        "PlayerHP" : 100.000000,
+        "PlayerMaxHP" : 100.000000,
+        "PlayerStartLocation" : [-5.000000, 0.000000, 1.000000],
+        "PlayerStartTag" : "PlayerStart",
+        "RetrySceneName" : "Tokyo_Current",
+        "StartMenuWidgetPath" : "Content/UI/GameFlow/StartMenu.uasset",
+        "StartupScreen" : "HUD",
+        "StoryBossSceneName" : "Tokyo_Current",
+        "TrainingSceneName" : "TrainingMap",
+        "TutorialHudWidgetPath" : "Content/UI/GameFlow/TutorialHUD.uasset",
+        "UltimateGauge" : 0.000000,
+        "UltimateMaxGauge" : 100.000000,
+        "bApplyStartPositions" : false,
+        "bAutoClearWhenBossDefeated" : true,
+        "bAutoFailWhenPlayerDead" : true,
+        "bEnableEscapePause" : true,
+        "bNeedsTick" : true,
+        "bStartCombatOnBeginPlay" : false
+      }
     }],
   "ClassName" : "UWorld",
   "ContextHandle" : "NewScene",
@@ -208556,7 +208614,7 @@
   },
   "Version" : 2,
   "WorldSettings" : {
-    "GameMode" : ""
+    "GameMode" : "ABossGameMode"
   },
   "WorldType" : "Editor"
 }
