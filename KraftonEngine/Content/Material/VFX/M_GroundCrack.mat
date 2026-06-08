@@ -4,7 +4,7 @@
     "BlendState" : "AlphaBlend",
     "Domain" : "Decal",
     "GeneratorVersion" : "GeneratedMaterialPass_v10_SurfacePinSwizzle_InstancedStaticMesh",
-    "GraphHash" : "EC0DAFD05D94D1DE",
+    "GraphHash" : "E3E5A00A6CD7550E",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
 
@@ -28,27 +28,19 @@
         "LinkId" : 33,
         "ToPinId" : 4
       }, {
-        "FromPinId" : 6,
-        "LinkId" : 34,
-        "ToPinId" : 20
-      }, {
-        "FromPinId" : 13,
-        "LinkId" : 35,
-        "ToPinId" : 21
-      }, {
-        "FromPinId" : 22,
-        "LinkId" : 38,
-        "ToPinId" : 28
-      }, {
         "FromPinId" : 42,
         "LinkId" : 43,
         "ToPinId" : 5
       }, {
-        "FromPinId" : 10,
-        "LinkId" : 44,
-        "ToPinId" : 32
+        "FromPinId" : 6,
+        "LinkId" : 59,
+        "ToPinId" : 54
+      }, {
+        "FromPinId" : 7,
+        "LinkId" : 60,
+        "ToPinId" : 58
       }],
-    "NextId" : 45,
+    "NextId" : 61,
     "Nodes" : [{
         "DisplayName" : "Texture Object",
         "Mask" : "RGBA",
@@ -121,89 +113,11 @@
             "PinId" : 11,
             "Type" : "Float4"
           }],
-        "PosX" : -480.000000,
-        "PosY" : 0.000000,
+        "PosX" : -470.000000,
+        "PosY" : -2.000000,
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "TextureSample",
-        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
-      }, {
-        "DisplayName" : "Particle Color",
-        "Mask" : "RGBA",
-        "NodeId" : 12,
-        "ParameterName" : "",
-        "Pins" : [{
-            "DisplayName" : "RGB",
-            "Kind" : "Output",
-            "OwningNodeId" : 12,
-            "PinId" : 13,
-            "Type" : "Float3"
-          }, {
-            "DisplayName" : "R",
-            "Kind" : "Output",
-            "OwningNodeId" : 12,
-            "PinId" : 14,
-            "Type" : "Float"
-          }, {
-            "DisplayName" : "G",
-            "Kind" : "Output",
-            "OwningNodeId" : 12,
-            "PinId" : 15,
-            "Type" : "Float"
-          }, {
-            "DisplayName" : "B",
-            "Kind" : "Output",
-            "OwningNodeId" : 12,
-            "PinId" : 16,
-            "Type" : "Float"
-          }, {
-            "DisplayName" : "A",
-            "Kind" : "Output",
-            "OwningNodeId" : 12,
-            "PinId" : 17,
-            "Type" : "Float"
-          }, {
-            "DisplayName" : "RGBA",
-            "Kind" : "Output",
-            "OwningNodeId" : 12,
-            "PinId" : 18,
-            "Type" : "Float4"
-          }],
-        "PosX" : -374.000000,
-        "PosY" : 198.000000,
-        "TexturePath" : "",
-        "TextureSlot" : "Diffuse",
-        "Type" : "ParticleColor",
-        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
-      }, {
-        "DisplayName" : "Multiply",
-        "Mask" : "RGBA",
-        "NodeId" : 19,
-        "ParameterName" : "",
-        "Pins" : [{
-            "DisplayName" : "A",
-            "Kind" : "Input",
-            "OwningNodeId" : 19,
-            "PinId" : 20,
-            "Type" : "Float4"
-          }, {
-            "DisplayName" : "B",
-            "Kind" : "Input",
-            "OwningNodeId" : 19,
-            "PinId" : 21,
-            "Type" : "Float4"
-          }, {
-            "DisplayName" : "Result",
-            "Kind" : "Output",
-            "OwningNodeId" : 19,
-            "PinId" : 22,
-            "Type" : "Float4"
-          }],
-        "PosX" : -200.000000,
-        "PosY" : 0.000000,
-        "TexturePath" : "",
-        "TextureSlot" : "Diffuse",
-        "Type" : "Multiply",
         "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
       }, {
         "DisplayName" : "Material Output",
@@ -214,35 +128,35 @@
             "DisplayName" : "BaseColor",
             "Kind" : "Input",
             "OwningNodeId" : 27,
-            "PinId" : 28,
+            "PinId" : 54,
             "Type" : "Float3"
           }, {
             "DisplayName" : "Normal",
             "Kind" : "Input",
             "OwningNodeId" : 27,
-            "PinId" : 29,
+            "PinId" : 55,
             "Type" : "Float3"
           }, {
             "DisplayName" : "Roughness",
             "Kind" : "Input",
             "OwningNodeId" : 27,
-            "PinId" : 30,
+            "PinId" : 56,
             "Type" : "Float"
           }, {
             "DisplayName" : "Metallic",
             "Kind" : "Input",
             "OwningNodeId" : 27,
-            "PinId" : 31,
+            "PinId" : 57,
             "Type" : "Float"
           }, {
             "DisplayName" : "Opacity",
             "Kind" : "Input",
             "OwningNodeId" : 27,
-            "PinId" : 32,
+            "PinId" : 58,
             "Type" : "Float"
           }],
-        "PosX" : 80.000000,
-        "PosY" : 80.000000,
+        "PosX" : 4.000000,
+        "PosY" : 2.000000,
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "Output",
