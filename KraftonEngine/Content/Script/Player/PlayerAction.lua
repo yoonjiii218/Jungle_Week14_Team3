@@ -190,6 +190,8 @@ function PlayerAction.Init(playerContext)
     playerContext.Action.DashChargeAttackActive = false
     playerContext.Action.DashChargeAttackElapsed = 0.0
     playerContext.Action.DashChargeAttackEnd = false
+    playerContext.Action.DashChargeRatio = 0.0
+    playerContext.Action.DashChargeDamageMultiplier = 1.0
 
     playerContext.Action.HitReactActive = false
     playerContext.Action.HitReactPending = false
@@ -1551,6 +1553,24 @@ function PlayerAction.UpdateDash(playerContext, dt)
     end
 end
 
+local function UpdateDashChargePower(playerContext)
+    local action = playerContext.Action
+    local damageConfig = ((playerContext.Config.Action or {}).DashChargeDamage or {})
+    local fullChargeTime = damageConfig.FullChargeTime or 1.25
+    if fullChargeTime <= 0.001 then
+        fullChargeTime = 0.001
+    end
+
+    local ratio = ClampNumber((action.DashChargingElapsed or 0.0) / fullChargeTime, 0.0, 1.0)
+    local maxMultiplier = damageConfig.MaxMultiplier or 1.0
+    if maxMultiplier < 1.0 then
+        maxMultiplier = 1.0
+    end
+
+    action.DashChargeRatio = ratio
+    action.DashChargeDamageMultiplier = 1.0 + (maxMultiplier - 1.0) * ratio
+end
+
 ---@param playerContext PlayerContext
 ---@return nil
 function PlayerAction.BeginDashCharging(playerContext)
@@ -1562,6 +1582,8 @@ function PlayerAction.BeginDashCharging(playerContext)
     playerContext.Action.DashChargingActive = true
     playerContext.Action.DashChargingElapsed = 0.0
     playerContext.Action.DashChargingEnd = false
+    playerContext.Action.DashChargeRatio = 0.0
+    playerContext.Action.DashChargeDamageMultiplier = 1.0
     playerContext.Input.DashChargingReleased = false
     playerContext.Runtime.DashChargingTurnTarget = "None"
 
@@ -1590,6 +1612,7 @@ end
 function PlayerAction.UpdateDashCharging(playerContext, dt)
     PlayerContext.Assert(playerContext, "PlayerAction.UpdateDashCharging")
     playerContext.Action.DashChargingElapsed = (playerContext.Action.DashChargingElapsed or 0.0) + (dt or 0.0)
+    UpdateDashChargePower(playerContext)
     StopMovementImmediately(playerContext)
 
     local actionConfig = playerContext.Config.Action
@@ -1624,6 +1647,7 @@ function PlayerAction.BeginDashChargeAttack(playerContext)
         PlayerAction.FaceOwnerToDirection(playerContext, assistedDir)
     end
 
+    UpdateDashChargePower(playerContext)
     PlayerAction.StepDashChargeAttackForward(playerContext)
 
     playerContext.Action.DashChargeAttackActive = true
@@ -1640,6 +1664,8 @@ function PlayerAction.EndDashChargeAttack(playerContext)
     playerContext.Action.DashChargeAttackActive = false
     playerContext.Action.DashChargeAttackElapsed = 0.0
     playerContext.Action.DashChargeAttackEnd = false
+    playerContext.Action.DashChargeRatio = 0.0
+    playerContext.Action.DashChargeDamageMultiplier = 1.0
     PlayerTargeting.ClearAssist(playerContext, false)
 
     SetMovementInputEnabled(playerContext, true)
@@ -1668,6 +1694,9 @@ function PlayerAction.CancelDashActions(playerContext, unlockMovement)
     playerContext.Action.DashChargingElapsed = 0.0
     playerContext.Action.DashChargingEnd = false
     playerContext.Runtime.DashChargingTurnTarget = "None"
+
+    playerContext.Action.DashChargeRatio = 0.0
+    playerContext.Action.DashChargeDamageMultiplier = 1.0
 
     playerContext.Action.DashChargeAttackActive = false
     playerContext.Action.DashChargeAttackElapsed = 0.0

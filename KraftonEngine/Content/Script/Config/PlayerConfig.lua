@@ -23,6 +23,10 @@ PlayerConfig.Default = {
         DashChargingHoldThreshold = 0.4,
         DashChargingTurnSpeed = 12.0,
         DashChargingTargetTurnSpeed = 12.0,
+        DashChargeDamage = {
+            FullChargeTime = 1.25,
+            MaxMultiplier = 2.0,
+        },
 
         -- PGR Crimson Weave style follow-up: after a normal dash, basic attack
         -- enters a short sword-wave stance and alternates two diagonal slash motions.
@@ -199,6 +203,34 @@ PlayerConfig.Default = {
         KatanaSocketName = "WeaponR",
         TrailParticlePath = "Content/Data/SwordTrail2.uasset",
 
+        DashCharge = {
+            CameraShakeEnabled = true,
+            CameraShakeInterval = 0.16,
+            CameraShakeMinScale = 0.08,
+            CameraShakeMaxScale = 0.16,
+
+            -- 플레이어 주변에 생긴 입자가 중앙으로 빨려 들어오는 레이어.
+            -- ParticlePath는 프로젝트에 맞는 sprite/mesh particle system으로 교체하면 된다.
+            InwardParticlePath = "Content/Data/PS_DashChargeInward.uasset",
+            InwardMaterialPath = "None",
+            InwardSpawnInterval = 0.055,
+            InwardMinRadius = 2.2,
+            InwardMaxRadius = 4.8,
+            InwardHeight = 0.75,
+            InwardTargetHeight = 1.05,
+            InwardLife = 0.32,
+            InwardMinScale = 0.35,
+            InwardMaxScale = 1.15,
+
+            -- 차징 시작/완료 상태를 읽기 쉽게 해주는 지속형 링/완료 버스트.
+            GroundRingPath = "Content/Data/PS_DashChargeGroundRing.uasset",
+            GroundRingMaterialPath = "None",
+            GroundRingScale = 1.25,
+            ReadyBurstPath = "Content/Data/PS_DashChargeReadyBurst.uasset",
+            ReadyBurstMaterialPath = "None",
+            ReadyBurstScale = 1.6,
+        },
+
         FlyingSlash = {
             ParticlePath = "Content/Data/PS_FlyingSlashMesh.uasset",
             MaterialPath = "Content/Material/VFX/M_SwordTrail_Color.mat",
@@ -260,7 +292,7 @@ PlayerConfig.Default = {
             },
 
             DashCharging = {
-                Intensity = 0.0,
+                Intensity = 0.25,
                 Radius = 0.68,
                 Softness = 0.38,
                 BlendOut = 0.20,

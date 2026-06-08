@@ -51,6 +51,8 @@ local PlayerContext = {}
 ---@field DashChargeAttackElapsed number
 ---@field DashChargeAttackEnd boolean
 ---@field DashChargeAttackInstanceId string|nil
+---@field DashChargeRatio number
+---@field DashChargeDamageMultiplier number
 ---@field HitReactActive boolean
 ---@field HitReactPending boolean
 ---@field HitReactDirection string|nil
@@ -75,6 +77,10 @@ local PlayerContext = {}
 ---@class PlayerFeedbackState
 ---@field KatanaComponent any
 ---@field KatanaPSC any
+---@field DashChargeGroundPSC any
+---@field DashChargeReadyBursted boolean
+---@field DashChargeVFXTimer number
+---@field DashChargeShakeTimer number
 
 ---@class PlayerRuntimeState
 ---@field MovementComp any
@@ -163,6 +169,8 @@ local function CreateActionState()
         DashChargeAttackElapsed = 0.0,
         DashChargeAttackEnd = false,
         DashChargeAttackInstanceId = nil,
+        DashChargeRatio = 0.0,
+        DashChargeDamageMultiplier = 1.0,
         HitReactActive = false,
         HitReactPending = false,
         HitReactDirection = nil,
