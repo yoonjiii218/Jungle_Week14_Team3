@@ -44,7 +44,7 @@
         "RetrySceneName" : "Default",
         "StartMenuWidgetPath" : "Content/UI/GameFlow/StartMenu.uasset",
         "StartupScreen" : "StartMenu",
-        "StoryBossSceneName" : "Default",
+        "StoryBossSceneName" : "Tokyo_Current",
         "TrainingSceneName" : "TrainingMap",
         "UltimateGauge" : 0.000000,
         "UltimateMaxGauge" : 100.000000,
