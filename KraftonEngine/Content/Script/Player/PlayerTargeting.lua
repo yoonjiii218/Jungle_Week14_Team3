@@ -97,6 +97,25 @@ local function GetProfile(config, mode)
     return config.Attack
 end
 
+local function HasAnyTargetTag(actor, config)
+    if actor == nil or actor.HasTag == nil then
+        return true
+    end
+
+    local tags = config.TargetTags or {}
+    if #tags == 0 then
+        return true
+    end
+
+    for _, tag in ipairs(tags) do
+        if actor:HasTag(tag) then
+            return true
+        end
+    end
+
+    return false
+end
+
 local function ForEachCandidateByTag(config, callback)
     if World == nil or World.FindActorsByTag == nil then
         return
@@ -119,8 +138,11 @@ local function ForEachCandidateByTag(config, callback)
     end
 end
 
-local function IsCandidateInProfile(owner, actor, aimDir, profile, rangeScale, extraConeDeg)
+local function IsCandidateInProfile(owner, actor, aimDir, profile, rangeScale, extraConeDeg, targetingConfig)
     if not IsValidActor(actor) or actor == owner then
+        return nil
+    end
+    if targetingConfig ~= nil and HasAnyTargetTag(actor, targetingConfig) ~= true then
         return nil
     end
 
@@ -159,7 +181,7 @@ local function IsStickyTargetUsable(playerContext, owner, aimDir, profile, now)
         return nil
     end
 
-    return IsCandidateInProfile(owner, target, aimDir, profile, 1.25, 30.0)
+    return IsCandidateInProfile(owner, target, aimDir, profile, 1.25, 30.0, playerContext.Config.Targeting)
 end
 
 ---@param playerContext PlayerContext
@@ -198,7 +220,7 @@ function PlayerTargeting.FindTarget(playerContext, mode, aimDirection)
 
     local best = sticky
     ForEachCandidateByTag(config, function(actor)
-        local candidate = IsCandidateInProfile(owner, actor, aimDir, profile, 1.0, 0.0)
+        local candidate = IsCandidateInProfile(owner, actor, aimDir, profile, 1.0, 0.0, config)
         if candidate == nil then
             return
         end

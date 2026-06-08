@@ -175,6 +175,7 @@ void UAnimNotifyState_AttackHitWindow::NotifyBegin(USkeletalMeshComponent* MeshC
 
 	FActiveHitWindow& Active = ActiveWindowsByMesh[MeshComp];
 	Active.HitActors.clear();
+	Active.WindowSerial = ++NextHitWindowSerial;
 
 	UpdateHitBoxTransform(MeshComp, HitBox);
     HitBox->SetBoxExtent(FVector(Radius, Radius, Radius));
@@ -389,7 +390,16 @@ void UAnimNotifyState_AttackHitWindow::ProcessHit(USkeletalMeshComponent* MeshCo
 	{
 		if (ULuaAnimInstance* LuaAnim = Cast<ULuaAnimInstance>(MeshComp->GetAnimInstance()))
 		{
-			LuaAnim->InvokeLuaFunction(HitFunctionName, OtherActor, HitBox, OtherComp, HitResult, HitStopDuration);
+			LuaAnim->InvokeLuaFunction(
+				HitFunctionName,
+				OtherActor,
+				HitBox,
+				OtherComp,
+				HitResult,
+				HitStopDuration,
+				FMath::Max(1, HitCount),
+				FMath::Max(0.0f, HitInterval),
+				ActiveWindow->WindowSerial);
 		}
 	}
 
@@ -412,10 +422,12 @@ void UAnimNotifyState_AttackHitWindow::ProcessHit(USkeletalMeshComponent* MeshCo
 	if (bLogHits)
 	{
 		const FVector Center = HitBox ? HitBox->GetWorldLocation() : FVector::ZeroVector;
-		UE_LOG("[AttackHitWindow] %s hit %s via %s (center=%.1f, %.1f, %.1f extent=%.1f, %.1f, %.1f)",
+		UE_LOG("[AttackHitWindow] %s hit %s via %s (hitCount=%d interval=%.3f center=%.1f, %.1f, %.1f extent=%.1f, %.1f, %.1f)",
 			Owner->GetName().c_str(),
 			OtherActor->GetName().c_str(),
 			OtherComp->GetName().c_str(),
+			FMath::Max(1, HitCount),
+			FMath::Max(0.0f, HitInterval),
 			Center.X,
 			Center.Y,
 			Center.Z,

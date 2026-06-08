@@ -297,6 +297,159 @@ local function PlayPerfectDodgeFeedback(playerContext, event)
     print("Perfect Dodge")
 end
 
+local function GetActorLocationSafe(actor)
+    if actor == nil then
+        return nil
+    end
+
+    if actor.Location ~= nil then
+        return actor.Location
+    end
+
+    if Reflection ~= nil and Reflection.Call ~= nil then
+        local ok, result = pcall(function()
+            return Reflection.Call(actor, "GetActorLocation")
+        end)
+        if ok then
+            return result
+        end
+    end
+
+    return nil
+end
+
+local function ResolveDamageTextLocation(event, config)
+    local hitLocation = event.HitLocation
+    if hitLocation == nil and event.HitResult ~= nil then
+        hitLocation = event.HitResult.WorldHitLocation
+    end
+
+    local location = hitLocation
+    if location == nil then
+        location = GetActorLocationSafe(event.TargetActor)
+    end
+    if location == nil then
+        return nil
+    end
+
+    local zOffset = config.ZOffset or 2.4
+    if hitLocation ~= nil then
+        zOffset = config.HitLocationZOffset or 1.0
+    end
+
+    local jitter = config.HorizontalJitter or 0.35
+    local jitterX = 0.0
+    local jitterY = 0.0
+    if jitter > 0.0 then
+        jitterX = (math.random() * 2.0 - 1.0) * jitter
+        jitterY = (math.random() * 2.0 - 1.0) * jitter
+    end
+
+    return Vector(location.X + jitterX, location.Y + jitterY, location.Z + zOffset)
+end
+
+local function FormatDamageText(damage, config)
+    if damage == nil then
+        return nil
+    end
+
+    local rounded = math.floor((damage or 0.0) + 0.5)
+    if rounded <= 0 then
+        return nil
+    end
+
+    local prefix = config.Prefix or ""
+    local suffix = config.Suffix or ""
+    return prefix .. tostring(rounded) .. suffix
+end
+
+local function SpawnDamageTextFeedback(playerContext, event)
+    local feedbackConfig = playerContext.Config.Feedback or {}
+    local config = feedbackConfig.DamageText or {}
+    if config.Enabled == false then
+        return
+    end
+    if VFX == nil or VFX.SpawnDamageText == nil then
+        return
+    end
+
+    local text = FormatDamageText(event.Damage, config)
+    if text == nil then
+        return
+    end
+
+    local spawnLocation = ResolveDamageTextLocation(event, config)
+    if spawnLocation == nil then
+        return
+    end
+
+    local color = config.Color or {}
+    local textComp = VFX.SpawnDamageText(
+        text,
+        spawnLocation,
+        config.FontSize or 1.25,
+        color.R or color[1] or 1.0,
+        color.G or color[2] or 0.84,
+        color.B or color[3] or 0.08,
+        color.A or color[4] or 1.0,
+        config.FontName or "Default"
+    )
+    if textComp == nil then
+        return
+    end
+    if textComp.SetDisableDepthTest ~= nil then
+        textComp:SetDisableDepthTest(config.DisableDepthTest ~= false)
+    end
+
+    local owner = nil
+    if textComp.GetOwner ~= nil then
+        owner = textComp:GetOwner()
+    end
+    if owner == nil then
+        return
+    end
+
+    StartCoroutine(function()
+        local duration = config.Duration or 0.65
+        local riseDistance = config.RiseDistance or 1.65
+        local drift = config.DriftDistance or 0.25
+        local driftX = 0.0
+        local driftY = 0.0
+        if drift > 0.0 then
+            driftX = (math.random() * 2.0 - 1.0) * drift
+            driftY = (math.random() * 2.0 - 1.0) * drift
+        end
+
+        local elapsed = 0.0
+        while elapsed < duration and IsValidObject(owner) do
+            local dt = WaitFrame() or 0.0
+            elapsed = elapsed + dt
+
+            local t = Clamp(elapsed / duration, 0.0, 1.0)
+            local ease = EaseOutCubic(t)
+            owner.Location = Vector(
+                spawnLocation.X + driftX * ease,
+                spawnLocation.Y + driftY * ease,
+                spawnLocation.Z + riseDistance * ease
+            )
+
+            if textComp.SetColorRGBA ~= nil then
+                local alpha = (color.A or color[4] or 1.0) * (1.0 - t)
+                textComp:SetColorRGBA(
+                    color.R or color[1] or 1.0,
+                    color.G or color[2] or 0.84,
+                    color.B or color[3] or 0.08,
+                    alpha
+                )
+            end
+        end
+
+        if IsValidObject(owner) then
+            owner:Destroy()
+        end
+    end)
+end
+
 local function PlayAttackHitFeedback(playerContext, event)
     local feedbackConfig = playerContext.Config.Feedback
     local attackHitConfig = feedbackConfig.AttackHit or {}
@@ -305,6 +458,8 @@ local function PlayAttackHitFeedback(playerContext, event)
     if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil and shakeScale > 0.0 then
         CameraManager.StartWaveShake(shakeScale)
     end
+
+    SpawnDamageTextFeedback(playerContext, event)
 
     StartFOVPulse(playerContext, "Player.AttackHitFOV", GetFOVConfig(playerContext, "AttackHit"))
     StartVignettePulse(playerContext, "Player.AttackHitVignette", GetVignetteConfig(playerContext, "AttackHit"))

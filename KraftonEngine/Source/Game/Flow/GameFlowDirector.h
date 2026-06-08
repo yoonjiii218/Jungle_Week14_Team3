@@ -31,6 +31,8 @@ public:
 
 	UFUNCTION(Callable, Category="GameFlow|Scene")
 	void RequestScene(const FString& SceneName);
+	UFUNCTION(Pure, Category="GameFlow|Scene")
+	FString GetCurrentSceneName() const;
 	UFUNCTION(Callable, Category="GameFlow|Scene")
 	void StartTraining();
 	UFUNCTION(Callable, Category="GameFlow|Scene")

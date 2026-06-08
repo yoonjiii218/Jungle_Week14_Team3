@@ -55,7 +55,8 @@ public:
 		const FVector& RotationOffset, const FVector& Scale, bool bFlattenDirection);
 	bool GetDebugSnapshotText(FString& OutText);
 	bool InvokeLuaFunction(const FString& FunctionName, AActor* OtherActor, UPrimitiveComponent* HitComponent,
-		UPrimitiveComponent* OtherComp, const FHitResult& HitResult, float HitStopDuration = 0.0f);
+		UPrimitiveComponent* OtherComp, const FHitResult& HitResult, float HitStopDuration = 0.0f,
+		int32 HitCount = 1, float HitInterval = 0.0f, int32 HitWindowSerial = 0);
 
 	void PostEditProperty(const char* PropertyName) override;
 	void Serialize(FArchive& Ar) override;

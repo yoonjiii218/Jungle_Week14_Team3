@@ -16,6 +16,7 @@ PlayerConfig.Default = {
     Action = {
         DashDistance = 8.0,
         DashDuration = 0.15,
+        DashCooldown = 0.5,
         -- Input buffer windows. Tune per animation feel.
         AttackInputBufferTime = 0.25,
         DashInputBufferTime = 0.20,
@@ -174,6 +175,32 @@ PlayerConfig.Default = {
         UltimateHitStopDuration = 0.08,
         UltimateDuplicateHitLifetime = 1.2,
 
+        -- Multi-hit policy for AttackHitWindow.
+        -- C++ notify-state Hit Count/Interval are edit-only hot overrides; keep
+        -- persistent defaults here to avoid changing existing AnimSequence binary payloads.
+        AttackHitCounts = {
+            2,
+            3,
+            2,
+            3,
+            4,
+            5,
+            3,
+        },
+        AttackHitIntervals = {
+            0.06,
+            0.06,
+            0.06,
+            0.06,
+            0.06,
+            0.06,
+            0.06,
+        },
+        DashChargeAttackHitCount = 1,
+        DashChargeAttackHitInterval = 0.06,
+        UltimateHitCount = 1,
+        UltimateHitInterval = 0.06,
+
         -- Gauge/anti-duplicate policy.
         AttackHitGaugeDelta = 10,
         AttackGaugeGain = 10,
@@ -248,6 +275,19 @@ PlayerConfig.Default = {
 
         AttackHit = {
             CameraShakeScale = 0.25,
+        },
+
+        DamageText = {
+            Enabled = true,
+            FontName = "Default",
+            FontSize = 2.0,
+            Duration = 0.65,
+            ZOffset = 0,
+            HitLocationZOffset = 1.0,
+            RiseDistance = 3,
+            HorizontalJitter = 1.0,
+            DriftDistance = 0.25,
+            Color = { R = 1.0, G = 0.78, B = 0.10, A = 1.0  },
         },
 
         -- Screen-edge vignette feedback. These are named camera-manager layers, so low HP,

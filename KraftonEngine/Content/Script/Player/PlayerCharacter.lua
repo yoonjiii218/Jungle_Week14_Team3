@@ -168,6 +168,8 @@ function GetDebugSnapshotText()
         ultimateRatio = Clamp(ultimateGauge / maxUltimateGauge, 0.0, 1.0)
     end
     local ultimatePercent = math.floor(ultimateRatio * 100.0 + 0.5)
+    local dashCooldownRemaining = NumberOrZero(action.DashCooldownRemaining)
+    local dashCooldownDuration = NumberOrZero(action.DashCooldownDuration or actionConfig.DashCooldown)
 
     local targetAssist = runtime.TargetAssistMode or "None"
     local targetName = "None"
@@ -182,7 +184,7 @@ function GetDebugSnapshotText()
         "Ultimate: [%s] %d%%\n" ..
         "Attack: index=%d comboWindow=%s queued=%s end=%s\n" ..
         "PostDashAttack: window=%s timer=%.3f uses=%d next=%d active=%s variant=%d\n" ..
-        "Dash: active=%s elapsed=%.3f / %.3f end=%s\n" ..
+        "Dash: active=%s elapsed=%.3f / %.3f end=%s cooldown=%.3f / %.3f blocked=%s accepted=%s\n" ..
         "DashCharge: charging=%s elapsed=%.3f released=%s consumedInput=%s turnTarget=%s\n" ..
         "DashChargeAttack: active=%s elapsed=%.3f end=%s\n" ..
         "PerfectDodge: window=%s consumed=%s  now=%.3f until=%.3f consumedUntil=%.3f\n" ..
@@ -198,7 +200,7 @@ function GetDebugSnapshotText()
         MakeGaugeBar(ultimateRatio), ultimatePercent,
         math.floor(NumberOrZero(action.AttackIndex)), BoolText(action.ComboWindow), BoolText(action.ComboQueued), BoolText(action.AttackEnd),
         BoolText(action.PostDashAttackWindowActive), NumberOrZero(action.PostDashAttackWindowTimer), math.floor(NumberOrZero(action.PostDashAttackUseCount)), math.floor(NumberOrZero(action.PostDashAttackNextVariant)), BoolText(action.PostDashAttackActive), math.floor(NumberOrZero(action.PostDashAttackVariant)),
-        BoolText(action.DashActive), NumberOrZero(action.DashElapsed), NumberOrZero(actionConfig.DashDuration), BoolText(action.DashEnd),
+        BoolText(action.DashActive), NumberOrZero(action.DashElapsed), NumberOrZero(actionConfig.DashDuration), BoolText(action.DashEnd), dashCooldownRemaining, dashCooldownDuration, BoolText(input.DashBlockedUntilReleased), BoolText(input.DashPressAccepted),
         BoolText(action.DashChargingActive), NumberOrZero(action.DashChargingElapsed), BoolText(input.DashChargingReleased), BoolText(input.DashChargingConsumedInput), tostring(runtime.DashChargingTurnTarget or "None"),
         BoolText(action.DashChargeAttackActive), NumberOrZero(action.DashChargeAttackElapsed), BoolText(action.DashChargeAttackEnd),
         BoolText(perfectWindow), BoolText(perfectConsumed), now, dodgeUntil, consumedUntil,

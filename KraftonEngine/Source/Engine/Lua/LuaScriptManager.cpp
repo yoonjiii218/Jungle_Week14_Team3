@@ -17,6 +17,7 @@
 #include "Component/Primitive/ParticleSystemComponent.h"
 #include "Component/Primitive/DecalComponent.h"
 #include "Component/Primitive/SubUVComponent.h"
+#include "Component/Primitive/TextRenderComponent.h"
 #include "Core/Types/CollisionTypes.h"
 #include "Runtime/Engine.h"
 #include "Viewport/GameViewportClient.h"
@@ -2941,6 +2942,33 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		"GetSpriteRoll", &USubUVComponent::GetSpriteRoll,
 		"SetAutoDestroyOwnerOnFinished", &USubUVComponent::SetAutoDestroyOwnerOnFinished);
 
+
+	Lua.new_usertype<UTextRenderComponent>("TextRenderComponent",
+		sol::base_classes,
+		sol::bases<UPrimitiveComponent, USceneComponent, UActorComponent, UObject>(),
+		"SetText", &UTextRenderComponent::SetText,
+		"GetText", &UTextRenderComponent::GetText,
+		"SetFont", [](UTextRenderComponent& C, const FString& FontName)
+	{
+		C.SetFont(FName(FontName));
+	},
+		"GetFontName", [](UTextRenderComponent& C)
+	{
+		return C.GetFontName().ToString();
+	},
+		"SetFontSize", &UTextRenderComponent::SetFontSize,
+		"GetFontSize", &UTextRenderComponent::GetFontSize,
+		"SetDisableDepthTest", &UTextRenderComponent::SetDisableDepthTest,
+		"GetDisableDepthTest", &UTextRenderComponent::GetDisableDepthTest,
+		"SetColorRGBA", [](UTextRenderComponent& C, float R, float G, float B, float A)
+	{
+		C.SetColor(FVector4(R, G, B, A));
+	},
+		"GetColor", [](sol::this_state State, UTextRenderComponent& C)
+	{
+		return LuaVector4ToTable(State, C.GetColor());
+	});
+
 	// 메시 에셋 경로로 컴포넌트 식별 가능하게 노출. 자동 생성된 FName ("UStaticMeshComponent_41")
 	// 은 월드 초기화 순서에 따라 카운터가 달라져 빌드별로 매칭이 깨질 수 있다. 메시 경로는
 	// 씬 파일에 명시 저장되므로 deterministic.
@@ -3121,6 +3149,32 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 	{
 		return Actor.AddComponent<UParticleSystemComponent>();
 	},
+		"AddTextRenderComponent", [](AActor& Actor) -> UTextRenderComponent*
+	{
+		UTextRenderComponent* Text = Actor.AddComponent<UTextRenderComponent>();
+		if (!Text)
+		{
+			return nullptr;
+		}
+
+		if (USceneComponent* Root = Actor.GetRootComponent())
+		{
+			if (Root != Text)
+			{
+				Text->AttachToComponent(Root);
+			}
+		}
+		else
+		{
+			Actor.SetRootComponent(Text);
+		}
+
+		return Text;
+	},
+		"GetTextRenderComponent", [](AActor& Actor) -> UTextRenderComponent*
+	{
+		return Actor.GetComponentByClass<UTextRenderComponent>();
+	},
 		"AddSubUVComponent", [](AActor& Actor) -> USubUVComponent*
 	{
 		USubUVComponent* SubUV = Actor.AddComponent<USubUVComponent>();
@@ -3254,6 +3308,53 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 
 	// --- VFX helper binding — one-shot effect spawning for Lua gameplay scripts. ---
 	sol::table VFX = Lua.create_named_table("VFX");
+	VFX.set_function("SpawnDamageText", [](
+		const FString& Text,
+		const FVector& Location,
+		sol::optional<float> FontSize,
+		sol::optional<float> R,
+		sol::optional<float> G,
+		sol::optional<float> B,
+		sol::optional<float> A,
+		sol::optional<FString> FontName) -> UTextRenderComponent*
+	{
+		if (!GEngine) return nullptr;
+		UWorld* W = GEngine->GetWorld();
+		if (!W) return nullptr;
+
+		UClass* ActorClass = UClass::FindByName("AActor");
+		if (!ActorClass) return nullptr;
+
+		AActor* Actor = W->SpawnActorByClass(ActorClass);
+		if (!Actor) return nullptr;
+
+		UTextRenderComponent* TextComp = Actor->AddComponent<UTextRenderComponent>();
+		if (!TextComp)
+		{
+			W->DestroyActor(Actor);
+			return nullptr;
+		}
+
+		Actor->SetRootComponent(TextComp);
+		TextComp->SetWorldLocation(Location);
+		TextComp->SetText(Text);
+		TextComp->SetFontSize(FontSize.value_or(1.0f));
+		TextComp->SetColor(FVector4(
+			R.value_or(1.0f),
+			G.value_or(0.85f),
+			B.value_or(0.12f),
+			A.value_or(1.0f)));
+
+		const FString& RequestedFont = FontName.value_or(FString("Default"));
+		if (!RequestedFont.empty() && RequestedFont != "None")
+		{
+			TextComp->SetFont(FName(RequestedFont));
+		}
+
+		TextComp->SetVisibility(true);
+		return TextComp;
+	});
+
 	VFX.set_function("SpawnSubUV", [](
 		const FString& ParticleName,
 		const FVector& Location,

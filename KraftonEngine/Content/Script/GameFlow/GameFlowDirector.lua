@@ -4,6 +4,8 @@ local TutorialDirector = require("Tutorial/TutorialDirector")
 local widgets = {}
 local director = nil
 local currentScreen = "None"
+local currentFlowBgmKey = nil
+local loadedFlowBgm = {}
 local TEST_HOTKEYS_ENABLED = true
 local TEST_PLAYER_DAMAGE = 10.0
 local TEST_BOSS_DAMAGE = 10.0
@@ -62,6 +64,18 @@ local comboHoldRemaining = 0.0
 local lastComboCount = 0
 local startHudFlow = nil
 local showCredits = nil
+local FLOW_BGM = {
+    StartMenu = {
+        key = "BGM_StartMenu",
+        path = "BGM/Start Menu BGM.mp3",
+        volume = 0.6,
+    },
+    TrainingMap = {
+        key = "BGM_TrainingMap",
+        path = "BGM/TrainingMap BGM.mp3",
+        volume = 0.2,
+    },
+}
 
 local function getDirector()
     if director ~= nil and director.IsValid ~= nil and director:IsValid() then
@@ -73,6 +87,47 @@ local function getDirector()
         director = obj
     end
     return director
+end
+
+local function getCurrentSceneName(d)
+    if d ~= nil and d.GetCurrentSceneName ~= nil then
+        return d:GetCurrentSceneName()
+    end
+    return ""
+end
+
+local function playFlowBGM(config)
+    if config == nil or AudioManager == nil or AudioManager.Load == nil or AudioManager.PlayBGM == nil then
+        return
+    end
+    if currentFlowBgmKey == config.key then
+        return
+    end
+
+    if loadedFlowBgm[config.key] ~= true then
+        if AudioManager.Load(config.key, config.path, true) ~= true then
+            print("[GameFlow] Failed to load BGM: " .. tostring(config.path))
+            return
+        end
+        loadedFlowBgm[config.key] = true
+    end
+
+    AudioManager.PlayBGM(config.key, config.volume or 0.6)
+    currentFlowBgmKey = config.key
+end
+
+local function stopFlowBGM()
+    if AudioManager ~= nil and AudioManager.StopBGM ~= nil then
+        AudioManager.StopBGM()
+    end
+    currentFlowBgmKey = nil
+end
+
+local function isTrainingMapFlow(d, bTrainingQueued)
+    if bTrainingQueued == true then
+        return true
+    end
+    return getCurrentSceneName(d) == "TrainingMap"
 end
 
 local function removeWidget(name)
@@ -258,6 +313,23 @@ local function getComboCount(d)
         return CombatContext.GetPlayerCombo()
     end
     return d:GetComboCount()
+end
+
+local function getDashCooldownStats()
+    if hasRegisteredPlayer() and CombatContext.GetPlayerDashCooldown ~= nil then
+        return CombatContext.GetPlayerDashCooldown()
+    end
+    return 0.0, 0.0, 0.0
+end
+
+local function dashCooldownText(remaining, duration)
+    if duration == nil or duration <= 0.0 then
+        return "DASH READY"
+    end
+    if remaining == nil or remaining <= 0.01 then
+        return "DASH READY"
+    end
+    return string.format("DASH %.1fs", remaining)
 end
 
 local function setPlayerHPForTest(d, current, maxValue)
@@ -662,9 +734,16 @@ startHudFlow = function()
     local d = getDirector()
     if d == nil then return end
 
+    local bTrainingQueued = TutorialDirector.HasQueuedTrainingSession ~= nil
+        and TutorialDirector.HasQueuedTrainingSession() == true
+    local bTrainingMapFlow = isTrainingMapFlow(d, bTrainingQueued)
+
     d:StartCombat()
     showHud()
-    if TutorialDirector.HasQueuedTrainingSession ~= nil and TutorialDirector.HasQueuedTrainingSession() == true then
+    if bTrainingMapFlow == true then
+        playFlowBGM(FLOW_BGM.TrainingMap)
+    end
+    if bTrainingQueued == true then
         showTutorialHud()
     end
     if TutorialDirector.BeginIfQueued("TrainingMap", widgets.TutorialHUD) == true then
@@ -936,6 +1015,7 @@ local function showStartMenu()
 
     removeAllWidgets()
     d:ResumeGame()
+    playFlowBGM(FLOW_BGM.StartMenu)
 
     local menu = createWidget("StartMenu", d:GetStartMenuWidgetPath(), true, 100)
     if menu ~= nil then
@@ -1282,9 +1362,10 @@ local function updateHud(dt)
     local ultimate = d:GetUltimateGauge()
     local ultimateMax = d:GetUltimateMaxGauge()
     local combo, comboTimeRemaining, comboTimeRatio = updateComboHold(d, d:GetComboCount(), dt)
+    local dashCooldownRemaining, dashCooldownDuration = getDashCooldownStats()
 
     setText(hud, "player-hp-text", "HP " .. whole(playerHP) .. "/" .. whole(playerMaxHP))
-    setText(hud, "player-state", percent(playerHP, playerMaxHP) .. "% STRUCT")
+    setText(hud, "player-state", percent(playerHP, playerMaxHP) .. "% STRUCT | " .. dashCooldownText(dashCooldownRemaining, dashCooldownDuration))
     setText(hud, "ultimate-text", "BURST " .. percent(ultimate, ultimateMax) .. "%")
     setText(hud, "ultimate-sub", ultimate >= ultimateMax and "READY" or "CHARGE")
     local comboText = string.format("%02d CHAIN", combo)
@@ -1409,6 +1490,7 @@ function EndPlay()
         end)
     end
     removeAllWidgets()
+    stopFlowBGM()
     director = nil
     currentScreen = "None"
 end

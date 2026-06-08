@@ -50,6 +50,17 @@ public:
 	UPROPERTY(Edit, Save, Category="AttackHitWindow", DisplayName="Hit Stop Duration", Min=0.0f, Max=1.0f, Speed=0.01f)
 	float HitStopDuration = 0.08f;
 
+	// Number of damage applications after this window detects a target once.
+	// Keep these edit-only, not Save, because old AnimSequence packages serialize
+	// notify-state payloads as a raw property stream. Adding new saved fields here
+	// changes that stream layout and can make existing attack animations fail to load.
+	// Persistent per-attack defaults live in PlayerConfig.Combat.AttackHitCounts / Intervals.
+	UPROPERTY(Edit, Category="AttackHitWindow", DisplayName="Hit Count", Min=1.0f, Max=20.0f, Speed=1.0f)
+	int32 HitCount = 1;
+
+	UPROPERTY(Edit, Category="AttackHitWindow", DisplayName="Hit Interval", Min=0.0f, Max=1.0f, Speed=0.01f)
+	float HitInterval = 0.06f;
+
 	UPROPERTY(Edit, Save, Category="AttackHitWindow", DisplayName="Apply Knockback")
 	bool bApplyKnockback = false;
 
@@ -106,6 +117,7 @@ private:
 	struct FActiveHitWindow
 	{
 		TSet<AActor*> HitActors;
+		int32 WindowSerial = 0;
 	};
 
 	void ProcessHit(USkeletalMeshComponent* MeshComp, UBoxComponent* HitBox, AActor* OtherActor, UPrimitiveComponent* OtherComp);
@@ -116,4 +128,5 @@ private:
 
 	TMap<USkeletalMeshComponent*, TWeakObjectPtr<UBoxComponent>> HitBoxesByMesh;
 	TMap<USkeletalMeshComponent*, FActiveHitWindow> ActiveWindowsByMesh;
+	int32 NextHitWindowSerial = 0;
 };

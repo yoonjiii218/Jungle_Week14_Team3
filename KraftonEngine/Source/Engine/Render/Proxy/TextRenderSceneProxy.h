@@ -25,8 +25,10 @@ public:
 	// Collector가 FFontGeometry 배칭에 사용하는 캐싱된 텍스트 데이터
 	FString CachedText;
 	float   CachedFontScale = 1.0f;
+	FVector4 CachedColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	FMatrix CachedBillboardMatrix;
 	const FFontResource* CachedFont = nullptr;
+	bool bCachedDisableDepthTest = false;
 
 private:
 	UTextRenderComponent* GetTextRenderComponent() const;
