@@ -44,15 +44,18 @@ FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)
     float3 n_24 = ((n_12).rgb * n_22);
     float n_31 = 1.000000f;
     float n_34 = 0.000000f;
+    float n_39 = ((n_12).r + (n_12).g);
+    float n_45 = (n_39 + (n_12).b);
+    float n_51 = saturate(n_45);
     float n_37 = 1.000000f;
-    float n_39 = ((n_12).a * n_37);
+    float n_55 = (n_51 * n_37);
     FMaterialResult Result;
     Result.BaseColor = n_24;
     Result.Normal = float3(0, 0, 1);
     Result.Roughness = n_31;
     Result.Metallic = n_34;
     Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = n_39;
+    Result.Opacity = n_55;
     return Result;
 }
 
@@ -85,7 +88,7 @@ float4 PS(MaterialDecalVSOutput input) : SV_TARGET
     clip(0.5f - abs(decalPos.z));
 
     FMaterialPixelInput MaterialInput;
-    MaterialInput.UV0           = decalPos.xy + 0.5f;
+    MaterialInput.UV0           = float2(decalPos.y + 0.5f, 0.5f - decalPos.z);
     MaterialInput.UV1           = float2(0, 0);
     MaterialInput.UV2           = float2(0, 0);
     MaterialInput.ParticleColor = float4(1, 1, 1, 1);

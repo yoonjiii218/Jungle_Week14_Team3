@@ -501,6 +501,8 @@ bool UEditorEngine::ProcessQueuedUnrealSceneCommandlet()
 	Report["materials"] = Result.MaterialCount;
 	Report["materialAssignments"] = Result.MaterialAssignmentCount;
 	Report["environmentActors"] = Result.EnvironmentActorCount;
+	Report["decalActors"] = Result.DecalActorCount;
+	Report["blockingVolumes"] = Result.BlockingVolumeCount;
 	Report["failedMeshes"] = Result.FailedMeshCount;
 	Report["failedTextures"] = Result.FailedTextureCount;
 	Report["failedMaterials"] = Result.FailedMaterialCount;
@@ -521,7 +523,7 @@ bool UEditorEngine::ProcessQueuedUnrealSceneCommandlet()
 		"UE_SCENE_COMMANDLET_END Success=%s ImportedActors=%d EngineActors=%d LoadedActors=%d "
 		"InstancedGroups=%d InstancedPlacements=%d MatrixTransforms=%d CorrectedMatrixTransforms=%d "
 		"Meshes=%d Textures=%d Materials=%d "
-		"Environment=%d FailedMeshes=%d FailedTextures=%d FailedMaterials=%d SkippedActors=%d Report=%s",
+		"Environment=%d Decals=%d BlockingVolumes=%d FailedMeshes=%d FailedTextures=%d FailedMaterials=%d SkippedActors=%d Report=%s",
 		bValidationSucceeded ? "true" : "false",
 		Result.ActorCount,
 		Result.EngineActorCount,
@@ -534,6 +536,8 @@ bool UEditorEngine::ProcessQueuedUnrealSceneCommandlet()
 		Result.TextureCount,
 		Result.MaterialCount,
 		Result.EnvironmentActorCount,
+		Result.DecalActorCount,
+		Result.BlockingVolumeCount,
 		Result.FailedMeshCount,
 		Result.FailedTextureCount,
 		Result.FailedMaterialCount,

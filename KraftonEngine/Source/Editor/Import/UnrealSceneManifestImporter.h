@@ -20,6 +20,7 @@ struct FUnrealSceneImportResult
 	int32 MaterialAssignmentCount = 0;
 	int32 EnvironmentActorCount = 0;
 	int32 DecalActorCount = 0;
+	int32 BlockingVolumeCount = 0;
 	int32 FailedMeshCount = 0;
 	int32 FailedTextureCount = 0;
 	int32 FailedMaterialCount = 0;

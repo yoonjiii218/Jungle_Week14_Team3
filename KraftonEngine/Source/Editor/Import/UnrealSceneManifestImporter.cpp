@@ -3,6 +3,7 @@
 #include "Component/Primitive/InstancedStaticMeshComponent.h"
 #include "Component/Primitive/DecalComponent.h"
 #include "Component/Primitive/StaticMeshComponent.h"
+#include "Component/Shape/BoxComponent.h"
 #include "Component/Primitive/HeightFogComponent.h"
 #include "Component/Light/AmbientLightComponent.h"
 #include "Component/Light/DirectionalLightComponent.h"
@@ -13,6 +14,7 @@
 #include "Engine/Platform/Paths.h"
 #include "GameFramework/Actor/StaticMeshActor.h"
 #include "GameFramework/Actor/DecalActor.h"
+#include "GameFramework/Actor/BoxActor.h"
 #include "GameFramework/AActor.h"
 #include "GameFramework/Actor/HeightFogActor.h"
 #include "GameFramework/Light/AmbientLightActor.h"
@@ -458,6 +460,14 @@ namespace
 			Record.Scale).ToMatrix();
 	}
 
+	bool CanUseInstancedStaticMeshForPlacement(const FScenePlacementImportRecord& Record)
+	{
+		// UInstancedStaticMeshComponent currently renders and picks per instance, but owns one
+		// PhysX body. Keep collision-enabled placements as individual actors so runtime
+		// collision stays aligned with the visible mesh transform.
+		return !Record.bNegativeScale && Record.Collision == ECollisionEnabled::NoCollision;
+	}
+
 	float GetScaleSign(float Value)
 	{
 		return Value < 0.0f ? -1.0f : 1.0f;
@@ -842,6 +852,32 @@ namespace
 		return FindPinId(Node, "Result", EMaterialGraphPinKind::Output);
 	}
 
+	uint32 AddAdd(
+		FMaterialGraph& Graph,
+		uint32 A,
+		uint32 B,
+		float X,
+		float Y)
+	{
+		FMaterialGraphNode* Node =
+			Graph.AddNodeOfType(EMaterialGraphNodeType::Add, X, Y, EMaterialDomain::Surface);
+		AddGraphLink(Graph, A, FindPinId(Node, "A", EMaterialGraphPinKind::Input));
+		AddGraphLink(Graph, B, FindPinId(Node, "B", EMaterialGraphPinKind::Input));
+		return FindPinId(Node, "Result", EMaterialGraphPinKind::Output);
+	}
+
+	uint32 AddSaturate(
+		FMaterialGraph& Graph,
+		uint32 Value,
+		float X,
+		float Y)
+	{
+		FMaterialGraphNode* Node =
+			Graph.AddNodeOfType(EMaterialGraphNodeType::Saturate, X, Y, EMaterialDomain::Surface);
+		AddGraphLink(Graph, Value, FindPinId(Node, "Value", EMaterialGraphPinKind::Input));
+		return FindPinId(Node, "Result", EMaterialGraphPinKind::Output);
+	}
+
 	FTextureSamplePins AddTextureSample(
 		FMaterialGraph& Graph,
 		const FString& TexturePath,
@@ -872,6 +908,22 @@ namespace
 		Pins.B = FindPinId(Sample, "B", EMaterialGraphPinKind::Output);
 		Pins.A = FindPinId(Sample, "A", EMaterialGraphPinKind::Output);
 		return Pins;
+	}
+
+	uint32 AddTextureRgbCoverageMask(
+		FMaterialGraph& Graph,
+		const FTextureSamplePins& Pins,
+		float X,
+		float Y)
+	{
+		if (Pins.R == 0 || Pins.G == 0 || Pins.B == 0)
+		{
+			return 0;
+		}
+
+		const uint32 RG = AddAdd(Graph, Pins.R, Pins.G, X, Y);
+		const uint32 RGB = AddAdd(Graph, RG, Pins.B, X + 160.0f, Y);
+		return AddSaturate(Graph, RGB, X + 320.0f, Y);
 	}
 
 	FString MakeMaterialGuid(const FString& Source)
@@ -1065,6 +1117,9 @@ namespace
 			ReadString(MaterialObject, "baseMaterial") + " " +
 			ReadString(MaterialObject, "sourceAsset"));
 		const bool bDecalMaterial = IsDecalIdentity(MaterialIdentity);
+		const bool bUseDecalBaseRgbOpacity = bDecalMaterial && ContainsAny(
+			MaterialIdentity,
+			{ "trim_decal", "decal01", "sm_decal", "mi_decal01", "m_decal01" });
 		bool bUseBaseRedForOpacityMask = bMasked && ContainsAny(
 			MaterialIdentity,
 			{ "trim_text", "m_text", "mi_text" });
@@ -1332,37 +1387,87 @@ namespace
 			const bool bUseBaseRedMask =
 				bUseBaseRedForOpacityMask ||
 				ContainsAny(ToLowerAscii(BaseTexture), { "t_text" });
-			uint32 MaskPin = (bUseBaseRedMask && BasePins.R != 0)
-				? BasePins.R
-				: BasePins.A;
 			if (!bUseBaseRedMask && !OpacityTexture.empty() && OpacityTexture != BaseTexture)
 			{
-				MaskPin = AddTextureSample(
+				const FTextureSamplePins OpacityPins = AddTextureSample(
 					OutGraph,
 					OpacityTexture,
 					EMaterialTextureSlot::Custom0,
 					"OpacityMask",
 					-760.0f,
-					900.0f).A;
-			}
-			Output = OutGraph.FindNode(OutputNodeId);
-			AddGraphLink(
-				OutGraph,
-				MaskPin,
-				FindPinId(Output, "OpacityMask", EMaterialGraphPinKind::Input));
-			if (bDecalMaterial)
-			{
+					900.0f);
+				const uint32 MaskPin = OpacityPins.R != 0 ? OpacityPins.R : OpacityPins.A;
+				Output = OutGraph.FindNode(OutputNodeId);
 				AddGraphLink(
 					OutGraph,
 					MaskPin,
-					FindPinId(Output, "Opacity", EMaterialGraphPinKind::Input));
+					FindPinId(Output, "OpacityMask", EMaterialGraphPinKind::Input));
+				if (bDecalMaterial)
+				{
+					AddGraphLink(
+						OutGraph,
+						MaskPin,
+						FindPinId(Output, "Opacity", EMaterialGraphPinKind::Input));
+				}
+			}
+			else
+			{
+				uint32 MaskPin = (bUseBaseRedMask && BasePins.R != 0)
+					? BasePins.R
+					: BasePins.A;
+				if (!bUseBaseRedMask && bUseDecalBaseRgbOpacity)
+				{
+					const uint32 CoveragePin =
+						AddTextureRgbCoverageMask(OutGraph, BasePins, -120.0f, 900.0f);
+					if (CoveragePin != 0)
+					{
+						MaskPin = CoveragePin;
+					}
+				}
+				Output = OutGraph.FindNode(OutputNodeId);
+				AddGraphLink(
+					OutGraph,
+					MaskPin,
+					FindPinId(Output, "OpacityMask", EMaterialGraphPinKind::Input));
+				if (bDecalMaterial)
+				{
+					AddGraphLink(
+						OutGraph,
+						MaskPin,
+						FindPinId(Output, "Opacity", EMaterialGraphPinKind::Input));
+				}
 			}
 		}
 
 		if (bTranslucent || bProceduralMaskedDecalFallback)
 		{
 			uint32 OpacityPin = AddConstant(OutGraph, Opacity, 180.0f, 860.0f);
-			if (BasePins.A != 0)
+			if (bUseDecalBaseRgbOpacity)
+			{
+				const uint32 CoveragePin =
+					AddTextureRgbCoverageMask(OutGraph, BasePins, -120.0f, 900.0f);
+				if (CoveragePin != 0)
+				{
+					OpacityPin = AddMultiply(OutGraph, CoveragePin, OpacityPin, 380.0f, 860.0f);
+				}
+				else if (BasePins.A != 0)
+				{
+					OpacityPin = AddMultiply(OutGraph, BasePins.A, OpacityPin, 380.0f, 860.0f);
+				}
+			}
+			else if (!OpacityTexture.empty() && OpacityTexture != BaseTexture)
+			{
+				const FTextureSamplePins OpacityPins = AddTextureSample(
+					OutGraph,
+					OpacityTexture,
+					EMaterialTextureSlot::Custom0,
+					"Opacity",
+					-760.0f,
+					900.0f);
+				const uint32 MaskPin = OpacityPins.R != 0 ? OpacityPins.R : OpacityPins.A;
+				OpacityPin = AddMultiply(OutGraph, MaskPin, OpacityPin, 380.0f, 860.0f);
+			}
+			else if (BasePins.A != 0)
 			{
 				OpacityPin = AddMultiply(OutGraph, BasePins.A, OpacityPin, 380.0f, 860.0f);
 			}
@@ -1964,6 +2069,92 @@ namespace
 		}
 	}
 
+	void ImportBlockingVolumes(
+		json::JSON& Root,
+		UWorld* World,
+		float LocationScale,
+		FUnrealSceneImportResult& Result)
+	{
+		if (!World ||
+			!Root.hasKey("blockingVolumes") ||
+			Root["blockingVolumes"].JSONType() != json::JSON::Class::Array)
+		{
+			return;
+		}
+
+		for (json::JSON& VolumeObject : Root["blockingVolumes"].ArrayRange())
+		{
+			FVector Location(0.0f, 0.0f, 0.0f);
+			FVector RotationEuler(0.0f, 0.0f, 0.0f);
+			FVector Scale(1.0f, 1.0f, 1.0f);
+			if (!ReadVector3(VolumeObject, "location", Location) ||
+				!ReadVector3(VolumeObject, "rotation", RotationEuler) ||
+				!ReadVector3(VolumeObject, "scale", Scale))
+			{
+				++Result.SkippedActorCount;
+				continue;
+			}
+
+			Location *= LocationScale;
+			Scale *= LocationScale;
+
+			FMatrix WorldMatrix = FMatrix::Identity;
+			const bool bHasWorldMatrix =
+				ReadMatrix4x4(VolumeObject, "worldMatrix", WorldMatrix) ||
+				ReadMatrix4x4(VolumeObject, "matrix", WorldMatrix);
+			if (bHasWorldMatrix)
+			{
+				for (int32 Row = 0; Row < 3; ++Row)
+				{
+					for (int32 Column = 0; Column < 3; ++Column)
+					{
+						WorldMatrix.M[Row][Column] *= LocationScale;
+					}
+				}
+				WorldMatrix.M[3][0] *= LocationScale;
+				WorldMatrix.M[3][1] *= LocationScale;
+				WorldMatrix.M[3][2] *= LocationScale;
+			}
+
+			ABoxActor* Actor = World->SpawnActor<ABoxActor>();
+			if (!Actor)
+			{
+				++Result.SkippedActorCount;
+				continue;
+			}
+
+			Actor->InitDefaultComponents();
+
+			FScenePlacementImportRecord Record;
+			Record.ActorObject = &VolumeObject;
+			Record.Location = Location;
+			Record.RotationEuler = RotationEuler;
+			Record.Scale = Scale;
+			Record.WorldMatrix = WorldMatrix;
+			Record.bHasWorldMatrix = bHasWorldMatrix;
+			Record.bVisible = true;
+
+			Actor->SetFName(FName(BuildActorName(VolumeObject)));
+			ApplyPlacementTransform(Actor, Record);
+			Actor->SetVisible(true);
+			if (UBoxComponent* BoxComponent = Actor->GetBoxComponent())
+			{
+				BoxComponent->SetBoxExtent(FVector(1.0f, 1.0f, 1.0f));
+				BoxComponent->SetVisibility(true);
+				BoxComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+				BoxComponent->SetCollisionObjectType(ECollisionChannel::WorldStatic);
+				BoxComponent->SetCollisionResponseToAllChannels(ECollisionResponse::Block);
+				BoxComponent->SetGenerateOverlapEvents(false);
+				BoxComponent->SetSimulatePhysics(false);
+				BoxComponent->SetEnableGravity(false);
+			}
+
+			++Result.ActorCount;
+			++Result.EngineActorCount;
+			++Result.BlockingVolumeCount;
+		}
+	}
+
 	void CopyOptionalExportMetadata(
 		const std::filesystem::path& SourceRoot,
 		const std::filesystem::path& DestinationRoot,
@@ -2031,12 +2222,20 @@ FUnrealSceneImportResult FUnrealSceneManifestImporter::Import(
 	}
 
 	const FString Unit = ReadString(Root, "unit", "meter");
-	const float LocationScale = Unit == "centimeter" ? 0.01f : 1.0f;
 	if (Unit != "meter" && Unit != "centimeter")
 	{
 		Result.ErrorMessage = "Unsupported manifest unit. Expected meter or centimeter.";
 		return Result;
 	}
+	float SceneImportScale = ReadFloat(Root, "engineImportScale", 1.0f);
+	SceneImportScale = ReadFloat(Root, "importScale", SceneImportScale);
+	if (SceneImportScale <= 0.0f)
+	{
+		Result.ErrorMessage = "Invalid manifest import scale. Expected a positive value.";
+		return Result;
+	}
+	const float UnitScale = Unit == "centimeter" ? 0.01f : 1.0f;
+	const float LocationScale = UnitScale * SceneImportScale;
 
 	const FString CoordinateSystem = ReadString(Root, "coordinateSystem", "leftHandedZUp");
 	if (CoordinateSystem != "leftHandedZUp")
@@ -2131,6 +2330,7 @@ FUnrealSceneImportResult FUnrealSceneManifestImporter::Import(
 		MeshImportOptions.bCreateMaterials = false;
 		MeshImportOptions.bBakeFbxNodeTransform = true;
 		MeshImportOptions.bConvertUnrealFbxCoordinateSystem = true;
+		MeshImportOptions.Scale = SceneImportScale;
 		UStaticMesh* Mesh = FMeshManager::LoadStaticMesh(ProjectRelativeFbx, MeshImportOptions, Device);
 		if (!Mesh)
 		{
@@ -2215,7 +2415,7 @@ FUnrealSceneImportResult FUnrealSceneManifestImporter::Import(
 		}
 
 		const int32 RecordIndex = static_cast<int32>(PlacementRecords.size());
-		if (Options.bOptimizeStaticMeshInstances && !Record.bNegativeScale)
+		if (Options.bOptimizeStaticMeshInstances && CanUseInstancedStaticMeshForPlacement(Record))
 		{
 			Record.GroupKey = BuildInstancingGroupKey(
 				Record,
@@ -2282,6 +2482,7 @@ FUnrealSceneImportResult FUnrealSceneManifestImporter::Import(
 		ImportedDecalMaterials,
 		Result);
 	ImportEnvironmentActors(Root, World, LocationScale, Result);
+	ImportBlockingVolumes(Root, World, LocationScale, Result);
 	World->EndDeferredPickingBVHUpdate();
 
 	Result.bSuccess = Result.ActorCount > 0;
@@ -2293,7 +2494,7 @@ FUnrealSceneImportResult FUnrealSceneManifestImporter::Import(
 	UE_LOG(
 		"UE scene import complete. Meshes=%d Placements=%d EngineActors=%d InstancedGroups=%d "
 		"InstancedPlacements=%d MatrixTransforms=%d CorrectedMatrixTransforms=%d "
-		"Environment=%d Decals=%d Textures=%d Materials=%d MaterialSlots=%d "
+		"Environment=%d Decals=%d BlockingVolumes=%d Textures=%d Materials=%d MaterialSlots=%d "
 		"FailedMeshes=%d FailedTextures=%d FailedMaterials=%d SkippedActors=%d NegativeScale=%d",
 		Result.MeshCount,
 		Result.ActorCount,
@@ -2304,6 +2505,7 @@ FUnrealSceneImportResult FUnrealSceneManifestImporter::Import(
 		Result.CorrectedMatrixTransformCount,
 		Result.EnvironmentActorCount,
 		Result.DecalActorCount,
+		Result.BlockingVolumeCount,
 		Result.TextureCount,
 		Result.MaterialCount,
 		Result.MaterialAssignmentCount,

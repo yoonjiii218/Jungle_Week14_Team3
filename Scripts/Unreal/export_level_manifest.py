@@ -28,6 +28,21 @@ def script_bool(name, default=False):
     return str(value).strip().lower() in ("1", "true", "yes", "on")
 
 
+def script_float(name, default):
+    try:
+        fallback = float(default)
+    except Exception:
+        fallback = 1.0
+
+    value = script_arg(name)
+    if value is None:
+        return fallback
+    try:
+        return float(value)
+    except Exception:
+        return fallback
+
+
 OUTPUT_FILE = (
     script_arg("--output")
     or os.environ.get("UE_SCENE_OUTPUT")
@@ -42,6 +57,10 @@ EXPORT_MESHES = script_bool(
     "--export-meshes",
     os.environ.get("UE_SCENE_EXPORT_MESHES", "1").lower()
     not in ("0", "false", "no", "off"),
+)
+ENGINE_IMPORT_SCALE = script_float(
+    "--engine-import-scale",
+    os.environ.get("UE_SCENE_ENGINE_IMPORT_SCALE", "3.333333"),
 )
 
 
@@ -695,7 +714,7 @@ def register_material(material, material_records, texture_records, texture_asset
         if value is not None:
             vector_params[name] = value
 
-    if not texture_params and any(is_decal_asset(node) for node in chain):
+    if any(is_decal_asset(node) for node in chain):
         for material_node in reversed(chain):
             for texture_record in dependency_textures(material_node):
                 add_texture_parameter(
@@ -808,25 +827,33 @@ def decal_component_material(component):
     return None
 
 
-def decal_scale_meters(component, transform):
-    scale = transform.scale3d
+def decal_size_and_scales(component, transform):
+    scale_3d = transform.scale3d
     decal_size = safe_property(component, "decal_size")
     if decal_size is not None and all(
         hasattr(decal_size, channel)
         for channel in ("x", "y", "z")
     ):
-        return [
-            round(float(decal_size.x) * 0.01 * float(scale.x), 6),
-            round(float(decal_size.y) * 0.01 * float(scale.y), 6),
-            round(float(decal_size.z) * 0.01 * float(scale.z), 6),
+        size_cm = [
+            float(decal_size.x) * 2.0 * float(scale_3d.x),
+            float(decal_size.y) * 2.0 * float(scale_3d.y),
+            float(decal_size.z) * 2.0 * float(scale_3d.z),
         ]
+        scale_meters = [
+            round(size_cm[0] * 0.01, 6),
+            round(size_cm[1] * 0.01, 6),
+            round(size_cm[2] * 0.01, 6),
+        ]
+        return scale_meters, size_cm
 
-    return vec3(scale)
+    scale_m = vec3(scale_3d)
+    size_cm = [float(scale_3d.x) * 100.0, float(scale_3d.y) * 100.0, float(scale_3d.z) * 100.0]
+    return scale_m, size_cm
 
 
 def decal_record(actor, component, material):
     transform = component.get_world_transform()
-    scale = decal_scale_meters(component, transform)
+    scale_meters, size_cm = decal_size_and_scales(component, transform)
     color = safe_property(
         component,
         "decal_color",
@@ -842,8 +869,8 @@ def decal_record(actor, component, material):
         "material": material.get_path_name() if material else "None",
         "location": location_meters(transform.translation),
         "rotation": rotation_degrees(transform.rotation.rotator()),
-        "scale": scale,
-        "worldMatrix": world_matrix_rows(transform, scale),
+        "scale": scale_meters,
+        "worldMatrix": world_matrix_rows(transform, size_cm),
         "color": linear_color(color),
         "visible": bool(safe_property(component, "visible", True)),
     }
@@ -1087,6 +1114,7 @@ loaded_actors = actor_system.get_all_level_actors()
 
 placements = []
 decal_records = []
+blocking_volumes = []
 environment = []
 meshes = {}
 mesh_assets = {}
@@ -1101,6 +1129,56 @@ unreal.log(f"Loaded actor count: {len(loaded_actors)}")
 for actor in loaded_actors:
     class_name = actor.get_class().get_name()
     if class_name in ("WorldPartitionHLOD", "LODActor"):
+        continue
+
+    if class_name == "BlockingVolume":
+        transform = actor.get_actor_transform()
+        scale_3d = transform.scale3d
+        loc = location_meters(transform.translation)
+        rot = rotation_degrees(transform.rotation.rotator())
+        
+        builder = safe_property(actor, "brush_builder")
+        is_cube = False
+        if builder is not None and unreal_class_name(builder) == "CubeBuilder":
+            bx = safe_property(builder, "x", 200.0)
+            by = safe_property(builder, "y", 200.0)
+            bz = safe_property(builder, "z", 200.0)
+            
+            local_extent_cm = [
+                bx * 0.5 * float(scale_3d.x),
+                by * 0.5 * float(scale_3d.y),
+                bz * 0.5 * float(scale_3d.z)
+            ]
+            
+            scale = [
+                round(local_extent_cm[0] * 0.01, 6),
+                round(local_extent_cm[1] * 0.01, 6),
+                round(local_extent_cm[2] * 0.01, 6)
+            ]
+            
+            matrix = world_matrix_rows(transform, override_scale=local_extent_cm)
+            is_cube = True
+            
+        if not is_cube:
+            origin, box_extent = actor.get_actor_bounds(True)
+            scale = location_meters(box_extent)
+            loc = location_meters(origin)
+            
+            temp_transform = actor.get_actor_transform()
+            temp_transform.translation = origin
+            
+            matrix = world_matrix_rows(temp_transform, override_scale=box_extent)
+            unreal.log_warning(f"BlockingVolume '{actor.get_actor_label()}' does not have a CubeBuilder. Bounding box might be inaccurate if rotated.")
+
+        identity = actor.get_path_name() + "|BlockingVolume"
+        blocking_volumes.append({
+            "id": stable_id(identity),
+            "name": actor.get_actor_label(),
+            "location": loc,
+            "rotation": rot,
+            "scale": scale,
+            "worldMatrix": matrix
+        })
         continue
 
     for component in actor.get_components_by_class(
@@ -1343,6 +1421,7 @@ manifest = {
     "version": 2,
     "sourceLevel": world.get_path_name(),
     "unit": "meter",
+    "engineImportScale": ENGINE_IMPORT_SCALE,
     "coordinateSystem": "leftHandedZUp",
     "materialLighting": True,
     "meshes": sorted(
@@ -1351,6 +1430,7 @@ manifest = {
     ),
     "actors": placements,
     "decals": decal_records,
+    "blockingVolumes": blocking_volumes,
     "environment": environment,
 }
 
@@ -1377,6 +1457,7 @@ unreal.log(
     f"exported textures: {exported_textures}, "
     f"placements: {len(placements)}, "
     f"decals: {len(decal_records)}, "
+    f"blockingVolumes: {len(blocking_volumes)}, "
     f"environment: {len(environment)}, "
     f"skipped sky meshes: {skipped_unreal_sky_meshes}"
 )

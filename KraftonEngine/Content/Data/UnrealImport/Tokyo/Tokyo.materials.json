@@ -3195,31 +3195,6 @@
       }
     },
     {
-      "key": "MI_Text02_Red_15b0e5aa",
-      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Text/MI_Text02_Red.MI_Text02_Red",
-      "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Text/MI_Text02_White.MI_Text02_White",
-      "blendMode": "<BlendMode.BLEND_MASKED: 1>",
-      "twoSided": false,
-      "textures": [
-        {
-          "parameter": "Text",
-          "texture": "T_Text02_0a280776",
-          "usageGuess": "unknown"
-        }
-      ],
-      "scalars": {
-        "RefractionDepthBias": 0.0
-      },
-      "vectors": {
-        "Color": [
-          0.792157,
-          0.098039,
-          0.07451,
-          0.0
-        ]
-      }
-    },
-    {
       "key": "MI_Text02_White_d25e02d8",
       "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Text/MI_Text02_White.MI_Text02_White",
       "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Text/M_Text01_White.M_Text01_White",
@@ -4854,26 +4829,6 @@
           0.181559,
           0.255317,
           0.359375,
-          0.0
-        ]
-      }
-    },
-    {
-      "key": "M_Glass_Ribbed_8c83a74d",
-      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Tile_Glass/M_Glass_Ribbed.M_Glass_Ribbed",
-      "baseMaterial": "",
-      "blendMode": "<BlendMode.BLEND_TRANSLUCENT: 2>",
-      "twoSided": false,
-      "textures": [],
-      "scalars": {
-        "Roughness": 0.0,
-        "Opacity": 0.5
-      },
-      "vectors": {
-        "Glass Color": [
-          0.127902,
-          0.180951,
-          0.213542,
           0.0
         ]
       }

@@ -4,7 +4,7 @@
     "BlendState" : "AlphaBlend",
     "Domain" : "Decal",
     "GeneratorVersion" : "GeneratedMaterialPass_v10_SurfacePinSwizzle_InstancedStaticMesh",
-    "GraphHash" : "1D982A59BEECBD70",
+    "GraphHash" : "4AFEA00D9C0AC4B2",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
 
@@ -48,19 +48,39 @@
         "LinkId" : 36,
         "ToPinId" : 5
       }, {
-        "FromPinId" : 19,
+        "FromPinId" : 16,
         "LinkId" : 43,
         "ToPinId" : 40
       }, {
-        "FromPinId" : 38,
+        "FromPinId" : 17,
         "LinkId" : 44,
         "ToPinId" : 41
       }, {
         "FromPinId" : 42,
-        "LinkId" : 45,
+        "LinkId" : 49,
+        "ToPinId" : 46
+      }, {
+        "FromPinId" : 18,
+        "LinkId" : 50,
+        "ToPinId" : 47
+      }, {
+        "FromPinId" : 48,
+        "LinkId" : 54,
+        "ToPinId" : 52
+      }, {
+        "FromPinId" : 53,
+        "LinkId" : 59,
+        "ToPinId" : 56
+      }, {
+        "FromPinId" : 38,
+        "LinkId" : 60,
+        "ToPinId" : 57
+      }, {
+        "FromPinId" : 58,
+        "LinkId" : 61,
         "ToPinId" : 7
       }],
-    "NextId" : 46,
+    "NextId" : 62,
     "Nodes" : [{
         "DisplayName" : "Material Output",
         "Mask" : "RGBA",
@@ -302,7 +322,7 @@
         "Type" : "ConstantFloat",
         "Value" : [0.400000, 0.000000, 0.000000, 0.000000]
       }, {
-        "DisplayName" : "Multiply",
+        "DisplayName" : "Add",
         "Mask" : "RGBA",
         "NodeId" : 39,
         "ParameterName" : "",
@@ -323,6 +343,90 @@
             "Kind" : "Output",
             "OwningNodeId" : 39,
             "PinId" : 42,
+            "Type" : "Float4"
+          }],
+        "PosX" : -120.000000,
+        "PosY" : 900.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "Add",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
+        "DisplayName" : "Add",
+        "Mask" : "RGBA",
+        "NodeId" : 45,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "A",
+            "Kind" : "Input",
+            "OwningNodeId" : 45,
+            "PinId" : 46,
+            "Type" : "Float4"
+          }, {
+            "DisplayName" : "B",
+            "Kind" : "Input",
+            "OwningNodeId" : 45,
+            "PinId" : 47,
+            "Type" : "Float4"
+          }, {
+            "DisplayName" : "Result",
+            "Kind" : "Output",
+            "OwningNodeId" : 45,
+            "PinId" : 48,
+            "Type" : "Float4"
+          }],
+        "PosX" : 40.000000,
+        "PosY" : 900.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "Add",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
+        "DisplayName" : "Saturate",
+        "Mask" : "RGBA",
+        "NodeId" : 51,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "Value",
+            "Kind" : "Input",
+            "OwningNodeId" : 51,
+            "PinId" : 52,
+            "Type" : "Float4"
+          }, {
+            "DisplayName" : "Result",
+            "Kind" : "Output",
+            "OwningNodeId" : 51,
+            "PinId" : 53,
+            "Type" : "Float4"
+          }],
+        "PosX" : 200.000000,
+        "PosY" : 900.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "Saturate",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
+        "DisplayName" : "Multiply",
+        "Mask" : "RGBA",
+        "NodeId" : 55,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "A",
+            "Kind" : "Input",
+            "OwningNodeId" : 55,
+            "PinId" : 56,
+            "Type" : "Float4"
+          }, {
+            "DisplayName" : "B",
+            "Kind" : "Input",
+            "OwningNodeId" : 55,
+            "PinId" : 57,
+            "Type" : "Float4"
+          }, {
+            "DisplayName" : "Result",
+            "Kind" : "Output",
+            "OwningNodeId" : 55,
+            "PinId" : 58,
             "Type" : "Float4"
           }],
         "PosX" : 380.000000,

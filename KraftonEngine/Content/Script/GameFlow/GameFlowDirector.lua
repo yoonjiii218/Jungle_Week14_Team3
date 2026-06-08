@@ -32,6 +32,8 @@ local BOSS_HP_PANEL_WIDGET_PATH = "Content/UI/GameFlow/BossHPPanel.uasset"
 local BOSS_DAMAGE_LAG_RATIO_PER_SECOND = 0.72
 local COMBO_HOLD_DURATION = 3.0
 local COMBO_IMPACT_DURATION = 0.42
+local SCOREBOARD_FILE = "GameFlowScoreboard.tsv"
+local SCOREBOARD_MAX_ENTRIES = 5
 local UI_AUDIO = {
     Hover = { key = "UI_ButtonHover", path = "UI/button_hover.mp3", volume = 0.55 },
     Down = { key = "UI_ButtonDown", path = "UI/button_down.mp3", volume = 0.75 },
@@ -74,6 +76,9 @@ local lastComboCount = 0
 local comboImpactTime = 0.0
 local comboImpactThreshold = 0
 local loadedUiAudio = {}
+local combatElapsedTime = 0.0
+local clearTimeSaved = false
+local lastClearScore = nil
 local startHudFlow = nil
 local showCredits = nil
 local FLOW_BGM = {
@@ -273,6 +278,120 @@ local function percent(current, maxValue)
         return 0
     end
     return math.floor(clamp((current or 0.0) / maxValue, 0.0, 1.0) * 100.0 + 0.5)
+end
+
+local function formatClearTime(seconds)
+    local safeSeconds = math.max(0.0, seconds or 0.0)
+    local minutes = math.floor(safeSeconds / 60.0)
+    local remain = safeSeconds - minutes * 60.0
+    return string.format("%02d:%05.2f", minutes, remain)
+end
+
+local function parseScoreboardLine(line)
+    if line == nil or line == "" then
+        return nil
+    end
+
+    local timeValue, sceneName, stamp = string.match(line, "([^\t]+)\t([^\t]*)\t([^\t]*)")
+    local seconds = tonumber(timeValue)
+    if seconds == nil then
+        return nil
+    end
+
+    return {
+        Time = seconds,
+        Scene = sceneName or "",
+        Stamp = stamp or "",
+    }
+end
+
+local function loadScoreboard()
+    local entries = {}
+    if Engine == nil or Engine.ReadTextFile == nil then
+        return entries
+    end
+
+    local content = Engine.ReadTextFile(SCOREBOARD_FILE)
+    if content == nil or content == "" then
+        return entries
+    end
+
+    for line in string.gmatch(content, "([^\r\n]+)") do
+        local entry = parseScoreboardLine(line)
+        if entry ~= nil then
+            table.insert(entries, entry)
+        end
+    end
+
+    table.sort(entries, function(a, b)
+        return (a.Time or 0.0) < (b.Time or 0.0)
+    end)
+    return entries
+end
+
+local function saveScoreboard(entries)
+    if Engine == nil or Engine.WriteTextFile == nil or entries == nil then
+        return false
+    end
+
+    local lines = {}
+    local count = math.min(#entries, SCOREBOARD_MAX_ENTRIES)
+    for i = 1, count do
+        local entry = entries[i]
+        table.insert(lines, string.format("%.3f\t%s\t%s", entry.Time or 0.0, entry.Scene or "", entry.Stamp or ""))
+    end
+
+    local text = ""
+    if #lines > 0 then
+        text = table.concat(lines, "\n") .. "\n"
+    end
+    return Engine.WriteTextFile(SCOREBOARD_FILE, text) == true
+end
+
+local function recordClearScore(d)
+    if clearTimeSaved == true then
+        return lastClearScore
+    end
+
+    local score = {
+        Time = combatElapsedTime,
+        Scene = getCurrentSceneName(d),
+        Stamp = os.date ~= nil and os.date("%Y-%m-%d %H:%M:%S") or "",
+    }
+
+    local entries = loadScoreboard()
+    table.insert(entries, score)
+    table.sort(entries, function(a, b)
+        return (a.Time or 0.0) < (b.Time or 0.0)
+    end)
+    while #entries > SCOREBOARD_MAX_ENTRIES do
+        table.remove(entries)
+    end
+
+    saveScoreboard(entries)
+    clearTimeSaved = true
+    lastClearScore = score
+    return score
+end
+
+local function applyScoreboardToClear(screen, currentScore)
+    if screen == nil then
+        return
+    end
+
+    local entries = loadScoreboard()
+    setText(screen, "clear-time", "CLEAR TIME  " .. formatClearTime(currentScore ~= nil and currentScore.Time or combatElapsedTime))
+
+    for i = 1, 3 do
+        local entry = entries[i]
+        if entry ~= nil then
+            setText(screen, "score-rank-" .. tostring(i), string.format("#%d  %s", i, formatClearTime(entry.Time)))
+            setText(screen, "score-meta-" .. tostring(i), (entry.Scene ~= nil and entry.Scene ~= "" and entry.Scene or "UNKNOWN") .. "  " .. (entry.Stamp or ""))
+        else
+            setText(screen, "score-rank-" .. tostring(i), string.format("#%d  --:--.--", i))
+            setText(screen, "score-meta-" .. tostring(i), "NO RECORD")
+        end
+    end
 end
 
 local function updateBossDamageBar(hud, hp, maxHP, dt)
@@ -822,6 +941,9 @@ local function showHud()
     bossPanelCreateFailed = false
     resetBossHudAnimation()
     resetComboHoldTimer()
+    combatElapsedTime = 0.0
+    clearTimeSaved = false
+    lastClearScore = nil
 
     local hud = createWidget("HUD", d:GetHudWidgetPath(), false, 0)
     addToViewport(hud, 0)
@@ -1353,9 +1475,11 @@ local function showClear()
     removeAllWidgets()
     d:ResumeGame()
     clearToCreditsTime = 0.0
+    local clearScore = recordClearScore(d)
 
     local screen = createWidget("Clear", d:GetClearWidgetPath(), true, 100)
     if screen ~= nil then
+        applyScoreboardToClear(screen, clearScore)
         bindButtonAudio(screen, { "btn-credits", "btn-main-menu", "btn-exit" })
         screen:bind_click("btn-credits", function()
             if showCredits ~= nil then
@@ -1489,6 +1613,7 @@ local function updateHud(dt)
     if d == nil or hud == nil then
         return
     end
+    combatElapsedTime = combatElapsedTime + math.max(dt or 0.0, 0.0)
 
     local hasBossInContext = hasRegisteredBoss()
     local hasBoss = hasBossInContext or hasBossActor(d)

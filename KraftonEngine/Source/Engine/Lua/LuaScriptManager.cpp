@@ -139,6 +139,64 @@ namespace
 		return false;
 	}
 
+	bool ResolveLuaSavedTextPath(const FString& RelativePath, std::filesystem::path& OutPath)
+	{
+		if (RelativePath.empty())
+		{
+			return false;
+		}
+
+		std::filesystem::path RelPath(FPaths::ToWide(RelativePath));
+		if (RelPath.is_absolute())
+		{
+			return false;
+		}
+
+		const std::filesystem::path SaveRoot = std::filesystem::path(FPaths::SaveDir()).lexically_normal();
+		const std::filesystem::path FullPath = (SaveRoot / RelPath).lexically_normal();
+
+		auto RootIt = SaveRoot.begin();
+		auto FullIt = FullPath.begin();
+		for (; RootIt != SaveRoot.end(); ++RootIt, ++FullIt)
+		{
+			if (FullIt == FullPath.end() || *RootIt != *FullIt)
+			{
+				return false;
+			}
+		}
+
+		OutPath = FullPath;
+		return true;
+	}
+
+	bool WriteLuaSavedTextFile(const FString& RelativePath, const FString& Content, bool bAppend)
+	{
+		std::filesystem::path FullPath;
+		if (!ResolveLuaSavedTextPath(RelativePath, FullPath))
+		{
+			UE_LOG("[LuaIO] Rejected saved-file path: %s", RelativePath.c_str());
+			return false;
+		}
+
+		std::error_code Error;
+		std::filesystem::create_directories(FullPath.parent_path(), Error);
+		if (Error)
+		{
+			UE_LOG("[LuaIO] Failed to create save directory: %s", FPaths::ToUtf8(FullPath.parent_path().wstring()).c_str());
+			return false;
+		}
+
+		std::ofstream File(FullPath, std::ios::binary | (bAppend ? std::ios::app : std::ios::trunc));
+		if (!File.is_open())
+		{
+			UE_LOG("[LuaIO] Failed to open saved-file for write: %s", FPaths::ToUtf8(FullPath.wstring()).c_str());
+			return false;
+		}
+
+		File << Content;
+		return File.good();
+	}
+
 	bool GetActionPreviousDown(const FInputSystemSnapshot& Snapshot, const FString& ActionName)
 	{
 		if (ActionName == "Attack")
@@ -2031,6 +2089,33 @@ void FLuaScriptManager::RegisterCoreBindings(sol::state& Lua)
 		}
 
 		return Result;
+	});
+	Engine.set_function("ReadTextFile", [](const FString& RelativePath) -> sol::object
+	{
+		std::filesystem::path FullPath;
+		if (!ResolveLuaSavedTextPath(RelativePath, FullPath))
+		{
+			UE_LOG("[LuaIO] Rejected saved-file path: %s", RelativePath.c_str());
+			return sol::nil;
+		}
+
+		std::ifstream File(FullPath, std::ios::binary);
+		if (!File.is_open())
+		{
+			return sol::nil;
+		}
+
+		std::ostringstream Stream;
+		Stream << File.rdbuf();
+		return sol::make_object(FLuaScriptManager::GetState(), Stream.str());
+	});
+	Engine.set_function("WriteTextFile", [](const FString& RelativePath, const FString& Content)
+	{
+		return WriteLuaSavedTextFile(RelativePath, Content, false);
+	});
+	Engine.set_function("AppendTextFile", [](const FString& RelativePath, const FString& Content)
+	{
+		return WriteLuaSavedTextFile(RelativePath, Content, true);
 	});
 	Engine.set_function("Exit", []()
 	{

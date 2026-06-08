@@ -3,6 +3,7 @@
 #include "Collision/Ray/RayUtils.h"
 #include "Collision/Ray/RayUtilsSIMD.h"
 #include "Component/PrimitiveComponent.h"
+#include "Component/Primitive/InstancedStaticMeshComponent.h"
 #include "Component/Primitive/StaticMeshComponent.h"
 #include "GameFramework/AActor.h"
 
@@ -61,7 +62,9 @@ void FWorldPrimitivePickingBVH::BuildNow(const TArray<AActor*>& Actors)
 
 			FLeaf Leaf;
 			Leaf.Primitive = Primitive;
-			Leaf.StaticMeshPrimitive = Cast<UStaticMeshComponent>(Primitive);
+			Leaf.StaticMeshPrimitive = Cast<UInstancedStaticMeshComponent>(Primitive)
+				? nullptr
+				: Cast<UStaticMeshComponent>(Primitive);
 			Leaf.Owner = Actor;
 			Leaf.Bounds = Primitive->GetWorldBoundingBox();
 

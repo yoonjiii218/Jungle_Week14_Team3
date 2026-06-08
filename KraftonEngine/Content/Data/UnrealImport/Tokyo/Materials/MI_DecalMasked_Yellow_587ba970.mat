@@ -4,7 +4,7 @@
     "BlendState" : "Opaque",
     "Domain" : "Surface",
     "GeneratorVersion" : "GeneratedMaterialPass_v10_SurfacePinSwizzle_InstancedStaticMesh",
-    "GraphHash" : "549BC3A92D9B0460",
+    "GraphHash" : "D0B63A0FE4C4E3BC",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
 
@@ -68,11 +68,11 @@
         "LinkId" : 61,
         "ToPinId" : 53
       }, {
-        "FromPinId" : 59,
+        "FromPinId" : 56,
         "LinkId" : 62,
         "ToPinId" : 8
       }, {
-        "FromPinId" : 59,
+        "FromPinId" : 56,
         "LinkId" : 63,
         "ToPinId" : 7
       }],

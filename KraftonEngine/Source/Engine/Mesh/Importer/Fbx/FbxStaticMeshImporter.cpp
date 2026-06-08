@@ -180,7 +180,7 @@ bool FFbxStaticMeshImporter::Import(FbxScene* Scene, const FString& SourcePath, 
 				}
 
 				FbxVector4 CP = Mesh->GetControlPointAt(CPIndex);
-				Vertex.pos = MeshToWorld.TransformPositionWithW(FVector(static_cast<float>(CP[0]), static_cast<float>(CP[1]), static_cast<float>(CP[2])));
+				Vertex.pos = MeshToWorld.TransformPositionWithW(FVector(static_cast<float>(CP[0]), static_cast<float>(CP[1]), static_cast<float>(CP[2]))) * EffectiveOptions.Scale;
 
 				FbxVector4 Normal;
 				Mesh->GetPolygonVertexNormal(PolygonIndex, CornerIndex, Normal);
