@@ -170,7 +170,7 @@ PlayerConfig.Default = {
         FlyingSlashDamage = 20,
         FlyingSlashGaugeDelta = 8,
         FlyingSlashHitStopDuration = 0.03,
-        UltimateDamage = 100,
+        UltimateDamage = 10,
         UltimateRange = 42.0,
         UltimateHitStopDuration = 0.08,
         UltimateDuplicateHitLifetime = 1.2,
@@ -198,8 +198,8 @@ PlayerConfig.Default = {
         },
         DashChargeAttackHitCount = 1,
         DashChargeAttackHitInterval = 0.06,
-        UltimateHitCount = 1,
-        UltimateHitInterval = 0.06,
+        UltimateHitCount = 10,
+        UltimateHitInterval = 0.03,
 
         -- Gauge/anti-duplicate policy.
         AttackHitGaugeDelta = 10,
@@ -560,7 +560,7 @@ PlayerConfig.Default = {
             SlomoDuration = 0.65,
             SlomoScale = 0.7,
             AttackStartDelay = 0.08,
-            AttackDamageDelay = 0.10,
+            AttackDamageDelay = 0,
             AttackDuration = 0.95,
             RecoverHold = 0.15,
         },

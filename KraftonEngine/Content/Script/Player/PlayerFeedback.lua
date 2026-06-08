@@ -1180,9 +1180,30 @@ function PlayerFeedback.BeginUltimate(playerContext)
     action.IsInUltimateMode = true
 
     Wait(moveConfig.AttackDamageDelay or 0.0)
-    CombatContext.ApplyPlayerUltimateDamage(playerContext, focusLocation, focusTarget)
 
-    local remainingAttackTime = (moveConfig.AttackDuration or 0.0) - (moveConfig.AttackDamageDelay or 0.0)
+    local combatConfig = playerContext.Config.Combat or {}
+    local ultimateHitCount = math.max(1, math.min(20, math.floor(tonumber(combatConfig.UltimateHitCount) or 1)))
+    local ultimateHitInterval = math.max(0.0, tonumber(combatConfig.UltimateHitInterval) or 0.0)
+    local baseUltimateAttackInstanceId = action.UltimateAttackInstanceId
+    local repeatedHitTime = 0.0
+
+    for hitIndex = 1, ultimateHitCount do
+        if hitIndex > 1 then
+            if ultimateHitInterval > 0.0 then
+                Wait(ultimateHitInterval)
+                repeatedHitTime = repeatedHitTime + ultimateHitInterval
+            else
+                WaitFrame()
+            end
+            action.UltimateAttackInstanceId = tostring(baseUltimateAttackInstanceId) .. "_H" .. tostring(hitIndex)
+        end
+
+        CombatContext.ApplyPlayerUltimateDamage(playerContext, focusLocation, focusTarget)
+    end
+
+    action.UltimateAttackInstanceId = baseUltimateAttackInstanceId
+
+    local remainingAttackTime = (moveConfig.AttackDuration or 0.0) - (moveConfig.AttackDamageDelay or 0.0) - repeatedHitTime
     if remainingAttackTime > 0.0 then
         Wait(remainingAttackTime)
     end
