@@ -20,7 +20,7 @@ MB.SEPARATION_RADIUS = 10.0   -- 이 거리 안의 잡몹끼리 서로 밀어냄
 MB.SEPARATION_WEIGHT = 30.0   -- 추격 방향 대비 반발 강도 (클수록 더 강하게 벌어짐)
 
 -- ── 공격 수치 ────────────────────────────────
-MB.ATTACK_COOLDOWN = 2.0    -- 공격 시작 시 충전되는 다음 공격까지의 쿨타임
+MB.ATTACK_COOLDOWN = 3.0    -- 공격 시작 시 충전되는 다음 공격까지의 쿨타임
 MB.DAMAGE          = 3      -- 1회 피격 시 데미지
 MB.RECOVERY        = 0.5    -- 판정 종료 후 후딜 (ActionLock 해제까지)
 

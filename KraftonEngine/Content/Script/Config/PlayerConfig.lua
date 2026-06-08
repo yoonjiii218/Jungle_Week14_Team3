@@ -271,10 +271,24 @@ PlayerConfig.Default = {
             CameraShakeScale = 0.5,
             PostProcessIntensity = 1.0,
             FocusHighlightStrength = 1.25,
+            Sound = {
+                Enabled = true,
+                Key = "PlayerPerfectDodge",
+                Path = "PerfectDodge.mp3",
+                Volume = 1.0,
+                Pitch = 2.0,
+            },
         },
 
         AttackHit = {
             CameraShakeScale = 0.25,
+            Sound = {
+                Enabled = true,
+                Key = "PlayerAttackHit",
+                Path = "Player Whoosh/whoosh_swish_high_fast_04.wav",
+                Volume = 1.0,
+                Pitch = 1.0,
+            },
         },
 
         DamageText = {

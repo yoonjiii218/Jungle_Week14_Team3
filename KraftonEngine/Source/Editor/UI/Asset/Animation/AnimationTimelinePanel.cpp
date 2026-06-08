@@ -253,7 +253,34 @@ namespace
 				case EPropertyType::Float:
 				{
 					float* V = static_cast<float*>(Prop.GetValuePtr());
-					if (V) bChanged = ImGui::DragFloat("##v", V, Prop.GetSpeed());
+					if (V)
+					{
+						float NewValue = *V;
+						if (ImGui::InputFloat("##v", &NewValue, 0.0f, 0.0f, "%.3f"))
+						{
+							const float Min = Prop.GetMin();
+							const float Max = Prop.GetMax();
+							const TMap<FString, FString>& Metadata = Prop.GetMetadata();
+							const bool bHasMin =
+								Metadata.find("min") != Metadata.end() ||
+								Metadata.find("clampmin") != Metadata.end() ||
+								Metadata.find("uimin") != Metadata.end();
+							const bool bHasMax =
+								Metadata.find("max") != Metadata.end() ||
+								Metadata.find("clampmax") != Metadata.end() ||
+								Metadata.find("uimax") != Metadata.end();
+							if (bHasMin && NewValue < Min)
+							{
+								NewValue = Min;
+							}
+							if (bHasMax && NewValue > Max)
+							{
+								NewValue = Max;
+							}
+							*V = NewValue;
+							bChanged = true;
+						}
+					}
 					break;
 				}
 				case EPropertyType::Vec3:
@@ -673,8 +700,8 @@ namespace
 			return 0.0f;
 		}
 
-		const int32 PrevIndex = std::max<float>(0, KeyIndex - 1);
-		const int32 NextIndex = std::min<float>(NumKeys - 1, KeyIndex + 1);
+		const int32 PrevIndex = std::max<int32>(0, KeyIndex - 1);
+		const int32 NextIndex = std::min<int32>(NumKeys - 1, KeyIndex + 1);
 		const FRawFloatCurveKey& Prev = Curve.Keys[PrevIndex];
 		const FRawFloatCurveKey& Next = Curve.Keys[NextIndex];
 		const float DeltaTime = Next.TimeSeconds - Prev.TimeSeconds;
@@ -1105,7 +1132,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 
 	// ── 룰러 눈금 / 프레임 번호 ──
 	const int RawStep = static_cast<int>(std::lround(NumFrames * 55.0f / CanvasW));
-	const int Step    = NiceFrameStep(std::max<float>(RawStep, 1));
+	const int Step    = NiceFrameStep(std::max<int>(RawStep, 1));
 	for (int F = 0; F <= EndFrame; ++F)
 	{
 		const float X = TimeToX((static_cast<float>(F) / EndFrame) * PlayLength);
@@ -1633,7 +1660,7 @@ void FAnimationTimelinePanel::Render(UAnimSingleNodeInstance* NodeInst,
 					{
 						ImVec2 PrevPoint;
 						bool bHasPrevPoint = false;
-						const int32 SampleCount = std::max<float>(32, static_cast<int32>(CanvasW / 8.0f));
+						const int32 SampleCount = std::max<int32>(32, static_cast<int32>(CanvasW / 8.0f));
 						for (int32 Sample = 0; Sample <= SampleCount; ++Sample)
 						{
 							const float T = (static_cast<float>(Sample) / static_cast<float>(SampleCount)) * PlayLength;

@@ -24,10 +24,20 @@ public:
 	UPROPERTY(Edit, Save, Category="PlaySound", DisplayName="Sound Path", AssetType="Audio")
 	FString SoundPath;
 
-	UPROPERTY(Edit, Save, Category="PlaySound", DisplayName="Volume")
+	UPROPERTY(Edit, Save, Category="PlaySound", DisplayName="Volume", Min=0.0f, Speed=0.01f)
 	float Volume = 1.0f;
 
+	UPROPERTY(Edit, Save, Category="PlaySound", DisplayName="Pitch", Min=0.1f, Speed=0.01f)
+	float Pitch = 1.0f;
+
+	void PreSave() override;
+	void PostLoad() override;
+	void PreGetEditableProperties() override;
+	void PostEditProperty(const char* PropertyName) override;
 	void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Anim) override;
+
+private:
+	void NormalizePitch();
 };
 
 UCLASS()
