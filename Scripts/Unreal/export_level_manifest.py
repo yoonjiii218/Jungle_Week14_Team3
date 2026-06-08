@@ -240,6 +240,13 @@ def texture_usage_guess(parameter, texture):
     return "unknown"
 
 
+def is_decal_asset(asset):
+    try:
+        return "decal" in asset.get_path_name().lower()
+    except Exception:
+        return False
+
+
 def unreal_name(value):
     name_type = getattr(unreal, "Name", None)
     if name_type is None:
@@ -260,6 +267,134 @@ def material_library_call(method_name, *args):
         return method(*args)
     except Exception:
         return None
+
+
+def asset_registry():
+    helpers = getattr(unreal, "AssetRegistryHelpers", None)
+    if helpers is None:
+        return None
+
+    try:
+        return helpers.get_asset_registry()
+    except Exception:
+        return None
+
+
+def asset_dependency_options():
+    options_type = getattr(unreal, "AssetRegistryDependencyOptions", None)
+    if options_type is None:
+        return None
+
+    try:
+        return options_type(
+            include_soft_package_references=True,
+            include_hard_package_references=True,
+            include_searchable_names=False,
+            include_soft_management_references=False,
+            include_hard_management_references=False,
+        )
+    except Exception:
+        try:
+            options = options_type()
+            options.include_soft_package_references = True
+            options.include_hard_package_references = True
+            options.include_searchable_names = False
+            options.include_soft_management_references = False
+            options.include_hard_management_references = False
+            return options
+        except Exception:
+            return None
+
+
+def package_path(asset):
+    try:
+        return asset.get_path_name().split(".")[0]
+    except Exception:
+        return ""
+
+
+def load_asset_from_package(package):
+    package = str(package)
+    if not package:
+        return None
+
+    candidates = [package]
+    leaf = package.rsplit("/", 1)[-1]
+    if leaf:
+        candidates.append(f"{package}.{leaf}")
+
+    library = getattr(unreal, "EditorAssetLibrary", None)
+    if library is None:
+        return None
+
+    for candidate in candidates:
+        try:
+            asset = library.load_asset(candidate)
+            if asset is not None:
+                return asset
+        except Exception:
+            pass
+
+    return None
+
+
+def is_texture_asset(asset):
+    if asset is None:
+        return False
+
+    class_name = unreal_class_name(asset).lower()
+    return "texture" in class_name
+
+
+def is_dependency_container(asset):
+    if asset is None:
+        return False
+
+    class_name = unreal_class_name(asset).lower()
+    return (
+        "material" in class_name
+        or "function" in class_name
+    )
+
+
+def dependency_packages(asset):
+    registry = asset_registry()
+    options = asset_dependency_options()
+    root_package = package_path(asset)
+    if registry is None or options is None or not root_package:
+        return []
+
+    try:
+        return [str(item) for item in registry.get_dependencies(root_package, options)]
+    except Exception:
+        return []
+
+
+def dependency_textures(material, max_depth=3):
+    records = []
+    seen_packages = set()
+
+    def visit(asset, depth):
+        if asset is None or depth > max_depth:
+            return
+
+        for dependency_package in dependency_packages(asset):
+            if dependency_package in seen_packages:
+                continue
+            seen_packages.add(dependency_package)
+
+            dependency_asset = load_asset_from_package(dependency_package)
+            if is_texture_asset(dependency_asset):
+                records.append({
+                    "name": dependency_asset.get_name(),
+                    "texture": dependency_asset,
+                    "usageHint": "AssetDependency",
+                })
+            elif is_dependency_container(dependency_asset):
+                visit(dependency_asset, depth + 1)
+
+    visit(material, 0)
+    return records
 
 
 def unreal_class_name(obj):
@@ -559,6 +694,19 @@ def register_material(material, material_records, texture_records, texture_asset
         value = vector_value(material_vector_parameter_value(material, name))
         if value is not None:
             vector_params[name] = value
+
+    if not texture_params and any(is_decal_asset(node) for node in chain):
+        for material_node in reversed(chain):
+            for texture_record in dependency_textures(material_node):
+                add_texture_parameter(
+                    texture_params,
+                    texture_record["name"],
+                    texture_record["texture"],
+                    texture_records,
+                    texture_assets,
+                    texture_record["usageHint"],
+                    allow_override=False,
+                )
 
     material_records[key] = {
         "key": key,
@@ -911,6 +1059,7 @@ def common_light_record(actor, component, light_type, intensity):
         "type": light_type,
         "location": transform["location"],
         "rotation": transform["rotation"],
+        "worldMatrix": transform["worldMatrix"],
         "color": color_value,
         "intensity": round(float(intensity), 6),
         "sourceIntensity": round(

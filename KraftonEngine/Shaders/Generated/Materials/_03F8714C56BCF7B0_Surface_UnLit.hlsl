@@ -12,6 +12,8 @@
 #include "Common/GeneratedSurfacePass.hlsli"
 Texture2D GeneratedSceneColorTexture : register(t17);
 
+Texture2D Tex_Diffuse : register(t0);
+
 struct FMaterialEvalResult
 {
     FMaterialResult Material;
@@ -22,17 +24,20 @@ struct FMaterialEvalResult
 
 FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
-    float3 n_10 = float3(0.041667f, 0.034329f, 0.024306f);
-    float n_13 = 1.000000f;
-    float n_16 = 0.000000f;
-    float n_19 = 1.000000f;
+    float4 n_12 = Tex_Diffuse.Sample(LinearWrapSampler, Input.UV0);
+    float3 n_22 = float3(0.041667f, 0.034329f, 0.024306f);
+    float3 n_24 = ((n_12).rgb * n_22);
+    float n_31 = 1.000000f;
+    float n_34 = 0.000000f;
+    float n_37 = 1.000000f;
+    float n_39 = ((n_12).a * n_37);
     FMaterialResult Result;
-    Result.BaseColor = n_10;
+    Result.BaseColor = n_24;
     Result.Normal = float3(0, 0, 1);
-    Result.Roughness = n_13;
-    Result.Metallic = n_16;
+    Result.Roughness = n_31;
+    Result.Metallic = n_34;
     Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = n_19;
+    Result.Opacity = n_39;
     Result.OpacityMask = 1.0f;
     Result.NormalConnected = 0.0f;
     FMaterialEvalResult Eval;

@@ -563,6 +563,50 @@ namespace
 		Root->SetRelativeScale(Scale);
 	}
 
+	FRotator BuildUnrealEnvironmentFallbackRotator(const FVector& RotationEuler)
+	{
+		return FRotator(-RotationEuler.Y, RotationEuler.Z, RotationEuler.X);
+	}
+
+	void ApplyEnvironmentTransform(
+		AActor* Actor,
+		const FVector& Location,
+		const FVector& RotationEuler,
+		const FMatrix& WorldMatrix,
+		bool bHasWorldMatrix)
+	{
+		if (!Actor)
+		{
+			return;
+		}
+
+		USceneComponent* Root = Actor->GetRootComponent();
+		if (Root && bHasWorldMatrix)
+		{
+			FScenePlacementImportRecord Record;
+			Record.Location = Location;
+			Record.RotationEuler = RotationEuler;
+			Record.Scale = FVector(1.0f, 1.0f, 1.0f);
+			Record.WorldMatrix = WorldMatrix;
+			Record.bHasWorldMatrix = true;
+
+			FVector MatrixLocation;
+			FQuat MatrixRotation;
+			FVector MatrixScale;
+			DecomposePlacementMatrix(Record, MatrixLocation, MatrixRotation, MatrixScale);
+
+			Root->SetRelativeLocation(MatrixLocation);
+			Root->SetRelativeRotationWithEulerHint(
+				MatrixRotation,
+				MatrixRotation.ToRotator());
+			Root->SetRelativeScale(MatrixScale);
+			return;
+		}
+
+		Actor->SetActorLocation(Location);
+		Actor->SetActorRotation(BuildUnrealEnvironmentFallbackRotator(RotationEuler));
+	}
+
 	void ApplyCommonStaticMeshComponentState(
 		json::JSON& ActorObject,
 		UStaticMeshComponent* Component,
@@ -1775,6 +1819,16 @@ namespace
 			ReadVector3(EnvironmentObject, "location", Location);
 			ReadVector3(EnvironmentObject, "rotation", RotationEuler);
 			Location *= LocationScale;
+			FMatrix WorldMatrix = FMatrix::Identity;
+			const bool bHasWorldMatrix =
+				ReadMatrix4x4(EnvironmentObject, "worldMatrix", WorldMatrix) ||
+				ReadMatrix4x4(EnvironmentObject, "matrix", WorldMatrix);
+			if (bHasWorldMatrix)
+			{
+				WorldMatrix.M[3][0] *= LocationScale;
+				WorldMatrix.M[3][1] *= LocationScale;
+				WorldMatrix.M[3][2] *= LocationScale;
+			}
 
 			FVector4 Color(1.0f, 1.0f, 1.0f, 1.0f);
 			ReadVector4(EnvironmentObject, "color", Color);
@@ -1897,9 +1951,12 @@ namespace
 			}
 
 			SpawnedActor->SetFName(FName(BuildActorName(EnvironmentObject)));
-			SpawnedActor->SetActorLocation(Location);
-			SpawnedActor->SetActorRotation(
-				FRotator(RotationEuler.Y, RotationEuler.Z, RotationEuler.X));
+			ApplyEnvironmentTransform(
+				SpawnedActor,
+				Location,
+				RotationEuler,
+				WorldMatrix,
+				bHasWorldMatrix);
 			SpawnedActor->SetVisible(bVisible);
 			++Result.ActorCount;
 			++Result.EngineActorCount;

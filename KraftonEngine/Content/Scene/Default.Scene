@@ -14835,7 +14835,7 @@
         "PlayerStartTag" : "PlayerStart",
         "RetrySceneName" : "Default",
         "StartMenuWidgetPath" : "Content/UI/GameFlow/StartMenu.uasset",
-        "StartupScreen" : "HUD",
+        "StartupScreen" : "Countdown",
         "StoryBossSceneName" : "Default",
         "TrainingSceneName" : "TrainingMap",
         "UltimateGauge" : 0.000000,

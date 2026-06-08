@@ -1,43 +1,82 @@
 {
-  "BlendState" : "AlphaBlend",
+  "BlendState" : "Opaque",
   "Compiled" : {
-    "BlendState" : "AlphaBlend",
+    "BlendState" : "Opaque",
     "Domain" : "Surface",
     "GeneratorVersion" : "GeneratedMaterialPass_v10_SurfacePinSwizzle_InstancedStaticMesh",
-    "GraphHash" : "A3D5696B8B57DFFF",
+    "GraphHash" : "72338B37650A12C0",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
 
     },
     "ReceiveLighting" : false,
-    "RenderPass" : "AlphaBlend",
+    "RenderPass" : "Opaque",
     "ShadingModel" : "UnLit",
     "Textures" : {
-
+      "Custom0Texture" : {
+        "Path" : "Content/Data/UnrealImport/Tokyo/Textures/T_DirtMask_01_5e752c01.png",
+        "Slot" : "Custom0"
+      },
+      "DiffuseTexture" : {
+        "Path" : "Content/Data/UnrealImport/Tokyo/Textures/T_Decal01_Base_c3a96033.png",
+        "Slot" : "Diffuse"
+      },
+      "NormalTexture" : {
+        "Path" : "Content/Data/UnrealImport/Tokyo/Textures/T_RoadAsphalt_Normal_8a6ade60.png",
+        "Slot" : "Normal"
+      }
     }
   },
-  "DepthStencilState" : "DepthReadOnly",
+  "DepthStencilState" : "Default",
   "Domain" : "Surface",
   "GeneratedShaderPath" : "Shaders/Generated/Materials/_6ED308E23E1C77E2_Surface_UnLit.hlsl",
   "Graph" : {
     "Links" : [{
         "FromPinId" : 11,
-        "LinkId" : 12,
+        "LinkId" : 21,
+        "ToPinId" : 13
+      }, {
+        "FromPinId" : 15,
+        "LinkId" : 28,
+        "ToPinId" : 25
+      }, {
+        "FromPinId" : 23,
+        "LinkId" : 29,
+        "ToPinId" : 26
+      }, {
+        "FromPinId" : 27,
+        "LinkId" : 30,
         "ToPinId" : 2
       }, {
-        "FromPinId" : 14,
-        "LinkId" : 15,
+        "FromPinId" : 32,
+        "LinkId" : 42,
+        "ToPinId" : 34
+      }, {
+        "FromPinId" : 36,
+        "LinkId" : 43,
+        "ToPinId" : 3
+      }, {
+        "FromPinId" : 45,
+        "LinkId" : 46,
         "ToPinId" : 4
       }, {
-        "FromPinId" : 17,
-        "LinkId" : 18,
+        "FromPinId" : 48,
+        "LinkId" : 49,
         "ToPinId" : 5
       }, {
-        "FromPinId" : 20,
-        "LinkId" : 21,
+        "FromPinId" : 51,
+        "LinkId" : 61,
+        "ToPinId" : 53
+      }, {
+        "FromPinId" : 59,
+        "LinkId" : 62,
+        "ToPinId" : 8
+      }, {
+        "FromPinId" : 59,
+        "LinkId" : 63,
         "ToPinId" : 7
       }],
-    "NextId" : 22,
+    "NextId" : 64,
     "Nodes" : [{
         "DisplayName" : "Material Output",
         "Mask" : "RGBA",
@@ -99,33 +138,219 @@
         "Type" : "Output",
         "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
       }, {
-        "DisplayName" : "ConstantFloat3",
+        "DisplayName" : "Texture Object",
         "Mask" : "RGBA",
         "NodeId" : 10,
+        "ParameterName" : "Diffuse",
+        "Pins" : [{
+            "DisplayName" : "Texture",
+            "Kind" : "Output",
+            "OwningNodeId" : 10,
+            "PinId" : 11,
+            "Type" : "Texture2D"
+          }],
+        "PosX" : -760.000000,
+        "PosY" : -280.000000,
+        "TexturePath" : "Content/Data/UnrealImport/Tokyo/Textures/T_Decal01_Base_c3a96033.png",
+        "TextureSlot" : "Diffuse",
+        "Type" : "TextureObject",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
+        "DisplayName" : "Texture Sample",
+        "Mask" : "RGBA",
+        "NodeId" : 12,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "Texture",
+            "Kind" : "Input",
+            "OwningNodeId" : 12,
+            "PinId" : 13,
+            "Type" : "Texture2D"
+          }, {
+            "DisplayName" : "UV",
+            "Kind" : "Input",
+            "OwningNodeId" : 12,
+            "PinId" : 14,
+            "Type" : "Float2"
+          }, {
+            "DisplayName" : "RGB",
+            "Kind" : "Output",
+            "OwningNodeId" : 12,
+            "PinId" : 15,
+            "Type" : "Float3"
+          }, {
+            "DisplayName" : "R",
+            "Kind" : "Output",
+            "OwningNodeId" : 12,
+            "PinId" : 16,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "G",
+            "Kind" : "Output",
+            "OwningNodeId" : 12,
+            "PinId" : 17,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "B",
+            "Kind" : "Output",
+            "OwningNodeId" : 12,
+            "PinId" : 18,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "A",
+            "Kind" : "Output",
+            "OwningNodeId" : 12,
+            "PinId" : 19,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "RGBA",
+            "Kind" : "Output",
+            "OwningNodeId" : 12,
+            "PinId" : 20,
+            "Type" : "Float4"
+          }],
+        "PosX" : -540.000000,
+        "PosY" : -280.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "TextureSample",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
+        "DisplayName" : "ConstantFloat3",
+        "Mask" : "RGBA",
+        "NodeId" : 22,
         "ParameterName" : "",
         "Pins" : [{
             "DisplayName" : "Value",
             "Kind" : "Output",
-            "OwningNodeId" : 10,
-            "PinId" : 11,
+            "OwningNodeId" : 22,
+            "PinId" : 23,
             "Type" : "Float3"
           }],
-        "PosX" : 20.000000,
-        "PosY" : -260.000000,
+        "PosX" : -300.000000,
+        "PosY" : -170.000000,
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "ConstantFloat3",
         "Value" : [0.447917, 0.447917, 0.447917, 1.000000]
       }, {
+        "DisplayName" : "Multiply",
+        "Mask" : "RGBA",
+        "NodeId" : 24,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "A",
+            "Kind" : "Input",
+            "OwningNodeId" : 24,
+            "PinId" : 25,
+            "Type" : "Float4"
+          }, {
+            "DisplayName" : "B",
+            "Kind" : "Input",
+            "OwningNodeId" : 24,
+            "PinId" : 26,
+            "Type" : "Float4"
+          }, {
+            "DisplayName" : "Result",
+            "Kind" : "Output",
+            "OwningNodeId" : 24,
+            "PinId" : 27,
+            "Type" : "Float4"
+          }],
+        "PosX" : 20.000000,
+        "PosY" : -260.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "Multiply",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
+        "DisplayName" : "Texture Object",
+        "Mask" : "RGBA",
+        "NodeId" : 31,
+        "ParameterName" : "Normal",
+        "Pins" : [{
+            "DisplayName" : "Texture",
+            "Kind" : "Output",
+            "OwningNodeId" : 31,
+            "PinId" : 32,
+            "Type" : "Texture2D"
+          }],
+        "PosX" : -760.000000,
+        "PosY" : 40.000000,
+        "TexturePath" : "Content/Data/UnrealImport/Tokyo/Textures/T_RoadAsphalt_Normal_8a6ade60.png",
+        "TextureSlot" : "Normal",
+        "Type" : "TextureObject",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
+        "DisplayName" : "Texture Sample",
+        "Mask" : "RGBA",
+        "NodeId" : 33,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "Texture",
+            "Kind" : "Input",
+            "OwningNodeId" : 33,
+            "PinId" : 34,
+            "Type" : "Texture2D"
+          }, {
+            "DisplayName" : "UV",
+            "Kind" : "Input",
+            "OwningNodeId" : 33,
+            "PinId" : 35,
+            "Type" : "Float2"
+          }, {
+            "DisplayName" : "RGB",
+            "Kind" : "Output",
+            "OwningNodeId" : 33,
+            "PinId" : 36,
+            "Type" : "Float3"
+          }, {
+            "DisplayName" : "R",
+            "Kind" : "Output",
+            "OwningNodeId" : 33,
+            "PinId" : 37,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "G",
+            "Kind" : "Output",
+            "OwningNodeId" : 33,
+            "PinId" : 38,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "B",
+            "Kind" : "Output",
+            "OwningNodeId" : 33,
+            "PinId" : 39,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "A",
+            "Kind" : "Output",
+            "OwningNodeId" : 33,
+            "PinId" : 40,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "RGBA",
+            "Kind" : "Output",
+            "OwningNodeId" : 33,
+            "PinId" : 41,
+            "Type" : "Float4"
+          }],
+        "PosX" : -540.000000,
+        "PosY" : 40.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "TextureSample",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
         "DisplayName" : "ConstantFloat",
         "Mask" : "RGBA",
-        "NodeId" : 13,
+        "NodeId" : 44,
         "ParameterName" : "",
         "Pins" : [{
             "DisplayName" : "Value",
             "Kind" : "Output",
-            "OwningNodeId" : 13,
-            "PinId" : 14,
+            "OwningNodeId" : 44,
+            "PinId" : 45,
             "Type" : "Float"
           }],
         "PosX" : 180.000000,
@@ -137,13 +362,13 @@
       }, {
         "DisplayName" : "ConstantFloat",
         "Mask" : "RGBA",
-        "NodeId" : 16,
+        "NodeId" : 47,
         "ParameterName" : "",
         "Pins" : [{
             "DisplayName" : "Value",
             "Kind" : "Output",
-            "OwningNodeId" : 16,
-            "PinId" : 17,
+            "OwningNodeId" : 47,
+            "PinId" : 48,
             "Type" : "Float"
           }],
         "PosX" : 180.000000,
@@ -153,23 +378,83 @@
         "Type" : "ConstantFloat",
         "Value" : [0.000000, 0.000000, 0.000000, 0.000000]
       }, {
-        "DisplayName" : "ConstantFloat",
+        "DisplayName" : "Texture Object",
         "Mask" : "RGBA",
-        "NodeId" : 19,
+        "NodeId" : 50,
+        "ParameterName" : "OpacityMask",
+        "Pins" : [{
+            "DisplayName" : "Texture",
+            "Kind" : "Output",
+            "OwningNodeId" : 50,
+            "PinId" : 51,
+            "Type" : "Texture2D"
+          }],
+        "PosX" : -760.000000,
+        "PosY" : 900.000000,
+        "TexturePath" : "Content/Data/UnrealImport/Tokyo/Textures/T_DirtMask_01_5e752c01.png",
+        "TextureSlot" : "Custom0",
+        "Type" : "TextureObject",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
+        "DisplayName" : "Texture Sample",
+        "Mask" : "RGBA",
+        "NodeId" : 52,
         "ParameterName" : "",
         "Pins" : [{
-            "DisplayName" : "Value",
+            "DisplayName" : "Texture",
+            "Kind" : "Input",
+            "OwningNodeId" : 52,
+            "PinId" : 53,
+            "Type" : "Texture2D"
+          }, {
+            "DisplayName" : "UV",
+            "Kind" : "Input",
+            "OwningNodeId" : 52,
+            "PinId" : 54,
+            "Type" : "Float2"
+          }, {
+            "DisplayName" : "RGB",
             "Kind" : "Output",
-            "OwningNodeId" : 19,
-            "PinId" : 20,
+            "OwningNodeId" : 52,
+            "PinId" : 55,
+            "Type" : "Float3"
+          }, {
+            "DisplayName" : "R",
+            "Kind" : "Output",
+            "OwningNodeId" : 52,
+            "PinId" : 56,
             "Type" : "Float"
+          }, {
+            "DisplayName" : "G",
+            "Kind" : "Output",
+            "OwningNodeId" : 52,
+            "PinId" : 57,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "B",
+            "Kind" : "Output",
+            "OwningNodeId" : 52,
+            "PinId" : 58,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "A",
+            "Kind" : "Output",
+            "OwningNodeId" : 52,
+            "PinId" : 59,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "RGBA",
+            "Kind" : "Output",
+            "OwningNodeId" : 52,
+            "PinId" : 60,
+            "Type" : "Float4"
           }],
-        "PosX" : 180.000000,
-        "PosY" : 860.000000,
+        "PosX" : -540.000000,
+        "PosY" : 900.000000,
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
-        "Type" : "ConstantFloat",
-        "Value" : [0.250000, 0.000000, 0.000000, 0.000000]
+        "Type" : "TextureSample",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
       }]
   },
   "GraphShaderMode" : "Generated",
@@ -177,7 +462,7 @@
   "PathFileName" : "Content/Data/UnrealImport/Tokyo/Materials/MI_DecalMasked_RoadMarking_c5af2557.mat",
   "RasterizerState" : "SolidNoCull",
   "ReceiveLighting" : false,
-  "RenderPass" : "AlphaBlend",
+  "RenderPass" : "Opaque",
   "ShaderPath" : "Shaders/Generated/Materials/_6ED308E23E1C77E2_Surface_UnLit.hlsl",
   "ShadingModel" : "UnLit",
   "Version" : 2

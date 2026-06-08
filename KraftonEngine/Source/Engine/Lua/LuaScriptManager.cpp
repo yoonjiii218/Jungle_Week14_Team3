@@ -20,6 +20,7 @@
 #include "Core/Types/CollisionTypes.h"
 #include "Runtime/Engine.h"
 #include "Viewport/GameViewportClient.h"
+#include "Viewport/Viewport.h"
 #include "Input/InputSystem.h"
 #include "GameFramework/AActor.h"
 #include "GameFramework/Pawn/Pawn.h"
@@ -2011,6 +2012,16 @@ void FLuaScriptManager::RegisterCoreBindings(sol::state& Lua)
 
 		if (GEngine)
 		{
+			if (UGameViewportClient* GameViewportClient = GEngine->GetGameViewportClient())
+			{
+				if (FViewport* Viewport = GameViewportClient->GetViewport())
+				{
+					Result["Width"] = static_cast<float>(Viewport->GetWidth());
+					Result["Height"] = static_cast<float>(Viewport->GetHeight());
+					return Result;
+				}
+			}
+
 			if (FWindowsWindow* Window = GEngine->GetWindow())
 			{
 				Result["Width"] = Window->GetWidth();

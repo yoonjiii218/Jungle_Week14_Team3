@@ -67548,12 +67548,12 @@
       "location": [
         -8.770797,
         25.043394,
-        0.322411
+        1.722411
       ],
       "rotation": [
-        -89.999832,
-        -0.00032,
-        -179.999634
+        -159.999832,
+        0.000235,
+        -179.999574
       ],
       "scale": [
         2.078855,
@@ -67563,26 +67563,26 @@
       "worldMatrix": [
         [
           -2.078855,
-          -1.3e-05,
-          -1.2e-05,
+          -1.5e-05,
+          9e-06,
           0.0
         ],
         [
           -6e-06,
-          -3e-06,
-          1.0,
+          0.939692,
+          0.342023,
           0.0
         ],
         [
           -9e-06,
-          1.410705,
-          4e-06,
+          0.482493,
+          -1.325628,
           0.0
         ],
         [
           -8.770797,
           25.043394,
-          0.322411,
+          1.722411,
           1.0
         ]
       ],
@@ -271333,118 +271333,6 @@
       "negativeScale": false
     },
     {
-      "id": "40c1254918aca90f",
-      "name": "SM_Fence76",
-      "actorClass": "StaticMeshActor",
-      "component": "StaticMeshComponent0",
-      "type": "StaticMesh",
-      "mesh": "SM_Fence01_52ec74ed",
-      "location": [
-        -42.651412,
-        29.409904,
-        0.4
-      ],
-      "rotation": [
-        0.0,
-        0.0,
-        89.999999
-      ],
-      "scale": [
-        1.0,
-        1.0,
-        1.0
-      ],
-      "worldMatrix": [
-        [
-          0.0,
-          1.0,
-          0.0,
-          0.0
-        ],
-        [
-          -1.0,
-          0.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          -0.0,
-          1.0,
-          0.0
-        ],
-        [
-          -42.651412,
-          29.409904,
-          0.4,
-          1.0
-        ]
-      ],
-      "materials": [
-        "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/MI_RoadFences_YellowAccent.MI_RoadFences_YellowAccent"
-      ],
-      "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
-      "negativeScale": false
-    },
-    {
-      "id": "5513ab598a81569e",
-      "name": "SM_Fence77",
-      "actorClass": "StaticMeshActor",
-      "component": "StaticMeshComponent0",
-      "type": "StaticMesh",
-      "mesh": "SM_Fence01_52ec74ed",
-      "location": [
-        -42.651412,
-        27.409904,
-        0.4
-      ],
-      "rotation": [
-        0.0,
-        0.0,
-        89.999999
-      ],
-      "scale": [
-        1.0,
-        1.0,
-        1.0
-      ],
-      "worldMatrix": [
-        [
-          0.0,
-          1.0,
-          0.0,
-          0.0
-        ],
-        [
-          -1.0,
-          0.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          -0.0,
-          1.0,
-          0.0
-        ],
-        [
-          -42.651412,
-          27.409904,
-          0.4,
-          1.0
-        ]
-      ],
-      "materials": [
-        "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/MI_RoadFences_YellowAccent.MI_RoadFences_YellowAccent"
-      ],
-      "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
-      "negativeScale": false
-    },
-    {
       "id": "8dea989e5133486f",
       "name": "SM_Wall_500x1987",
       "actorClass": "StaticMeshActor",
@@ -292807,62 +292695,6 @@
       "visible": true,
       "castShadow": true,
       "collision": "<CollisionEnabled.NO_COLLISION: 0>",
-      "negativeScale": false
-    },
-    {
-      "id": "ed8ca280352db038",
-      "name": "SM_Bollard132",
-      "actorClass": "StaticMeshActor",
-      "component": "StaticMeshComponent0",
-      "type": "StaticMesh",
-      "mesh": "SM_Bollard02_1711b25e",
-      "location": [
-        -42.504892,
-        27.245597,
-        0.390482
-      ],
-      "rotation": [
-        -0.0,
-        0.0,
-        0.0
-      ],
-      "scale": [
-        1.0,
-        1.0,
-        1.0
-      ],
-      "worldMatrix": [
-        [
-          1.0,
-          0.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          1.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          0.0,
-          1.0,
-          0.0
-        ],
-        [
-          -42.504892,
-          27.245597,
-          0.390482,
-          1.0
-        ]
-      ],
-      "materials": [
-        "/Game/TokyoStylizedEnvironment/Materials/Unique_RoadFences/M_RoadFences_Orange.M_RoadFences_Orange"
-      ],
-      "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
       "negativeScale": false
     },
     {
@@ -321179,8 +321011,8 @@
       "type": "StaticMesh",
       "mesh": "SM_Tree02_c36c880c",
       "location": [
-        -47.826263,
-        17.315996,
+        -50.626263,
+        19.615996,
         0.300033
       ],
       "rotation": [
@@ -321213,8 +321045,8 @@
           0.0
         ],
         [
-          -47.826263,
-          17.315996,
+          -50.626263,
+          19.615996,
           0.300033,
           1.0
         ]
@@ -321728,62 +321560,6 @@
       ],
       "materials": [
         "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim.MI_StreetTrim"
-      ],
-      "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
-      "negativeScale": false
-    },
-    {
-      "id": "3804c518e4334b83",
-      "name": "SM_Decal_Dirt483",
-      "actorClass": "StaticMeshActor",
-      "component": "StaticMeshComponent0",
-      "type": "StaticMesh",
-      "mesh": "SM_Decal_Dirt01_d4974121",
-      "location": [
-        -37.965193,
-        25.180995,
-        0.40927
-      ],
-      "rotation": [
-        -89.999986,
-        -2.3e-05,
-        -0.000185
-      ],
-      "scale": [
-        2.110875,
-        1.0,
-        0.831188
-      ],
-      "worldMatrix": [
-        [
-          2.110875,
-          -7e-06,
-          -1e-06,
-          0.0
-        ],
-        [
-          0.0,
-          0.0,
-          1.0,
-          0.0
-        ],
-        [
-          -3e-06,
-          -0.831188,
-          0.0,
-          0.0
-        ],
-        [
-          -37.965193,
-          25.180995,
-          0.40927,
-          1.0
-        ]
-      ],
-      "materials": [
-        "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01"
       ],
       "visible": true,
       "castShadow": true,
@@ -322981,120 +322757,6 @@
       "negativeScale": false
     },
     {
-      "id": "37933adb5a399095",
-      "name": "SM_Bench18",
-      "actorClass": "StaticMeshActor",
-      "component": "StaticMeshComponent0",
-      "type": "StaticMesh",
-      "mesh": "SM_Bench_a2ddd0e1",
-      "location": [
-        -37.222805,
-        25.488575,
-        0.409268
-      ],
-      "rotation": [
-        -0.0,
-        0.0,
-        0.0
-      ],
-      "scale": [
-        1.0,
-        1.0,
-        1.0
-      ],
-      "worldMatrix": [
-        [
-          1.0,
-          0.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          1.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          0.0,
-          1.0,
-          0.0
-        ],
-        [
-          -37.222805,
-          25.488575,
-          0.409268,
-          1.0
-        ]
-      ],
-      "materials": [
-        "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_Cream.MI_Panel02_Cream",
-        "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim.MI_StreetTrim"
-      ],
-      "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
-      "negativeScale": false
-    },
-    {
-      "id": "d27e876003165dec",
-      "name": "SM_Bench19",
-      "actorClass": "StaticMeshActor",
-      "component": "StaticMeshComponent0",
-      "type": "StaticMesh",
-      "mesh": "SM_Bench_a2ddd0e1",
-      "location": [
-        -33.524422,
-        25.488575,
-        0.409268
-      ],
-      "rotation": [
-        -0.0,
-        0.0,
-        0.0
-      ],
-      "scale": [
-        1.0,
-        1.0,
-        1.0
-      ],
-      "worldMatrix": [
-        [
-          1.0,
-          0.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          1.0,
-          0.0,
-          0.0
-        ],
-        [
-          0.0,
-          0.0,
-          1.0,
-          0.0
-        ],
-        [
-          -33.524422,
-          25.488575,
-          0.409268,
-          1.0
-        ]
-      ],
-      "materials": [
-        "/Game/TokyoStylizedEnvironment/Materials/Tile_Panel02/MI_Panel02_Cream.MI_Panel02_Cream",
-        "/Game/TokyoStylizedEnvironment/Materials/Trim_StreetTrim/MI_StreetTrim.MI_StreetTrim"
-      ],
-      "visible": true,
-      "castShadow": true,
-      "collision": "<CollisionEnabled.QUERY_AND_PHYSICS: 3>",
-      "negativeScale": false
-    },
-    {
       "id": "57955f3f478b3145",
       "name": "SM_Maglev_Train01",
       "actorClass": "StaticMeshActor",
@@ -323395,6 +323057,5423 @@
       "negativeScale": false
     }
   ],
+  "decals": [
+    {
+      "id": "56f5bfd55c49431b",
+      "name": "DecalActor",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -20.915838,
+        -0.562761,
+        0.304115
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -40.0
+      ],
+      "scale": [
+        0.018106,
+        1.539046,
+        1.539046
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          -0.0,
+          -0.018106,
+          0.0
+        ],
+        [
+          0.98928,
+          1.178978,
+          -0.0,
+          0.0
+        ],
+        [
+          1.178978,
+          -0.98928,
+          -0.0,
+          0.0
+        ],
+        [
+          -20.915838,
+          -0.562761,
+          0.304115,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "f7b73df6ad3cd6f4",
+      "name": "DecalActor2",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -23.086918,
+        -1.596444,
+        0.304115
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        80.0
+      ],
+      "scale": [
+        0.018106,
+        1.539046,
+        1.539046
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.018106,
+          0.0
+        ],
+        [
+          -1.515664,
+          0.267253,
+          -0.0,
+          0.0
+        ],
+        [
+          0.267253,
+          1.515664,
+          0.0,
+          0.0
+        ],
+        [
+          -23.086918,
+          -1.596444,
+          0.304115,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "7407a410caeba4b2",
+      "name": "DecalActor3",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -19.300734,
+        3.360514,
+        0.304115
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        80.000001
+      ],
+      "scale": [
+        0.018106,
+        1.539047,
+        1.539047
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          0.0,
+          -0.018106,
+          0.0
+        ],
+        [
+          -1.515665,
+          0.267253,
+          0.0,
+          0.0
+        ],
+        [
+          0.267253,
+          1.515665,
+          -0.0,
+          0.0
+        ],
+        [
+          -19.300734,
+          3.360514,
+          0.304115,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "5492b20a57eadd01",
+      "name": "DecalActor4",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -16.228779,
+        2.7781,
+        0.304115
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -170.0
+      ],
+      "scale": [
+        0.018106,
+        1.539046,
+        1.539046
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.018106,
+          0.0
+        ],
+        [
+          0.267253,
+          -1.515664,
+          0.0,
+          0.0
+        ],
+        [
+          -1.515664,
+          -0.267253,
+          -0.0,
+          0.0
+        ],
+        [
+          -16.228779,
+          2.7781,
+          0.304115,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "b8a816da3331250a",
+      "name": "DecalActor5",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -13.741166,
+        3.605913,
+        0.304115
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -90.000001
+      ],
+      "scale": [
+        0.018106,
+        1.539046,
+        1.539046
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          0.0,
+          -0.018106,
+          0.0
+        ],
+        [
+          1.539046,
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        [
+          -0.0,
+          -1.539046,
+          0.0,
+          0.0
+        ],
+        [
+          -13.741166,
+          3.605913,
+          0.304115,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "a819384f01d9a7be",
+      "name": "DecalActor7",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -3.450619,
+        -1.410201,
+        0.304115
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        140.0
+      ],
+      "scale": [
+        0.018106,
+        1.539046,
+        1.539046
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.018106,
+          0.0
+        ],
+        [
+          -0.98928,
+          -1.178978,
+          0.0,
+          0.0
+        ],
+        [
+          -1.178978,
+          0.98928,
+          0.0,
+          0.0
+        ],
+        [
+          -3.450619,
+          -1.410201,
+          0.304115,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "74ccd1d01a5d666d",
+      "name": "DecalActor8",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -6.446517,
+        -1.167258,
+        0.304115
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -110.000001
+      ],
+      "scale": [
+        0.018106,
+        1.539046,
+        1.539046
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.018106,
+          0.0
+        ],
+        [
+          1.44623,
+          -0.526385,
+          -0.0,
+          0.0
+        ],
+        [
+          -0.526385,
+          -1.44623,
+          0.0,
+          0.0
+        ],
+        [
+          -6.446517,
+          -1.167258,
+          0.304115,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "fdac69d903bb3021",
+      "name": "DecalActor9",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -8.715314,
+        -1.627231,
+        0.304115
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        29.999998
+      ],
+      "scale": [
+        0.018106,
+        1.539046,
+        1.539046
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.018106,
+          0.0
+        ],
+        [
+          -0.769523,
+          1.332853,
+          0.0,
+          0.0
+        ],
+        [
+          1.332853,
+          0.769523,
+          0.0,
+          0.0
+        ],
+        [
+          -8.715314,
+          -1.627231,
+          0.304115,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "851d8409d1d51856",
+      "name": "DecalActor10",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -5.742857,
+        3.572561,
+        0.304115
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -150.000001
+      ],
+      "scale": [
+        0.018106,
+        1.539046,
+        1.539046
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.018106,
+          0.0
+        ],
+        [
+          0.769523,
+          -1.332853,
+          -0.0,
+          0.0
+        ],
+        [
+          -1.332853,
+          -0.769523,
+          0.0,
+          0.0
+        ],
+        [
+          -5.742857,
+          3.572561,
+          0.304115,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "a478dd6af3f7b2ba",
+      "name": "DecalActor11",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -7.813178,
+        3.879393,
+        0.304115
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -30.000002
+      ],
+      "scale": [
+        0.018106,
+        1.539046,
+        1.539046
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.018106,
+          0.0
+        ],
+        [
+          0.769523,
+          1.332853,
+          0.0,
+          0.0
+        ],
+        [
+          1.332853,
+          -0.769523,
+          0.0,
+          0.0
+        ],
+        [
+          -7.813178,
+          3.879393,
+          0.304115,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "fcab038f108d7dcb",
+      "name": "DecalActor12",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -14.605739,
+        -1.744778,
+        0.304115
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -170.0
+      ],
+      "scale": [
+        0.018106,
+        1.539046,
+        1.539046
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.018106,
+          0.0
+        ],
+        [
+          0.267253,
+          -1.515664,
+          0.0,
+          0.0
+        ],
+        [
+          -1.515664,
+          -0.267253,
+          0.0,
+          0.0
+        ],
+        [
+          -14.605739,
+          -1.744778,
+          0.304115,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "c64c2375db247be0",
+      "name": "DecalActor13",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -11.252423,
+        -1.117298,
+        0.304115
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        149.999997
+      ],
+      "scale": [
+        0.018106,
+        1.539046,
+        1.539046
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.018106,
+          0.0
+        ],
+        [
+          -0.769523,
+          -1.332853,
+          0.0,
+          0.0
+        ],
+        [
+          -1.332853,
+          0.769523,
+          0.0,
+          0.0
+        ],
+        [
+          -11.252423,
+          -1.117298,
+          0.304115,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "4b364c848b516e9b",
+      "name": "DecalActor20",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -26.391274,
+        -1.213952,
+        0.304115
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -39.999999
+      ],
+      "scale": [
+        0.018106,
+        1.539046,
+        1.539046
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.018106,
+          0.0
+        ],
+        [
+          0.98928,
+          1.178978,
+          -0.0,
+          0.0
+        ],
+        [
+          1.178978,
+          -0.98928,
+          0.0,
+          0.0
+        ],
+        [
+          -26.391274,
+          -1.213952,
+          0.304115,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "9be2dc7f1942350d",
+      "name": "DecalActor21",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -21.07838,
+        4.608437,
+        0.42435
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -40.000001
+      ],
+      "scale": [
+        0.053781,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.053781,
+          0.0
+        ],
+        [
+          0.98926,
+          1.178955,
+          -0.0,
+          0.0
+        ],
+        [
+          1.178955,
+          -0.98926,
+          0.0,
+          0.0
+        ],
+        [
+          -21.07838,
+          4.608437,
+          0.42435,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "a5022f6e43d088ae",
+      "name": "DecalActor22",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -21.936501,
+        4.054283,
+        0.307977
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        80.000001
+      ],
+      "scale": [
+        0.018656,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          0.0,
+          -0.018656,
+          0.0
+        ],
+        [
+          -1.515635,
+          0.267247,
+          0.0,
+          0.0
+        ],
+        [
+          0.267247,
+          1.515635,
+          -0.0,
+          0.0
+        ],
+        [
+          -21.936501,
+          4.054283,
+          0.307977,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "60687d03d08a8150",
+      "name": "DecalActor24",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -39.464558,
+        -1.117543,
+        0.307977
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -1e-06
+      ],
+      "scale": [
+        0.018656,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.018656,
+          0.0
+        ],
+        [
+          0.0,
+          1.539016,
+          0.0,
+          0.0
+        ],
+        [
+          1.539016,
+          -0.0,
+          0.0,
+          0.0
+        ],
+        [
+          -39.464558,
+          -1.117543,
+          0.307977,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "7539a1a889447b64",
+      "name": "DecalActor25",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -39.122273,
+        -2.326764,
+        0.417351
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -1e-06
+      ],
+      "scale": [
+        0.030983,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.030983,
+          0.0
+        ],
+        [
+          0.0,
+          1.539016,
+          0.0,
+          0.0
+        ],
+        [
+          1.539016,
+          -0.0,
+          0.0,
+          0.0
+        ],
+        [
+          -39.122273,
+          -2.326764,
+          0.417351,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "771ba7145ab9e1a6",
+      "name": "DecalActor23",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -15.772742,
+        4.014973,
+        0.42435
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -170.0
+      ],
+      "scale": [
+        0.05378,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          0.0,
+          -0.05378,
+          0.0
+        ],
+        [
+          0.267247,
+          -1.515635,
+          -0.0,
+          0.0
+        ],
+        [
+          -1.515635,
+          -0.267247,
+          0.0,
+          0.0
+        ],
+        [
+          -15.772742,
+          4.014973,
+          0.42435,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "fa856372ba15d9ab",
+      "name": "DecalActor26",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -13.51988,
+        3.967384,
+        0.42435
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -60.000001
+      ],
+      "scale": [
+        0.05378,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.05378,
+          0.0
+        ],
+        [
+          1.332827,
+          0.769508,
+          0.0,
+          0.0
+        ],
+        [
+          0.769508,
+          -1.332827,
+          0.0,
+          0.0
+        ],
+        [
+          -13.51988,
+          3.967384,
+          0.42435,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "d67f4a68771141e3",
+      "name": "DecalActor27",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -6.181522,
+        4.291572,
+        0.42435
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        79.999998
+      ],
+      "scale": [
+        0.05378,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.05378,
+          0.0
+        ],
+        [
+          -1.515635,
+          0.267247,
+          -0.0,
+          0.0
+        ],
+        [
+          0.267247,
+          1.515635,
+          0.0,
+          0.0
+        ],
+        [
+          -6.181522,
+          4.291572,
+          0.42435,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "26ba072b56fa73e2",
+      "name": "DecalActor28",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -4.721219,
+        -2.409431,
+        0.42435
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        79.999998
+      ],
+      "scale": [
+        0.05378,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.05378,
+          0.0
+        ],
+        [
+          -1.515635,
+          0.267247,
+          -0.0,
+          0.0
+        ],
+        [
+          0.267247,
+          1.515635,
+          0.0,
+          0.0
+        ],
+        [
+          -4.721219,
+          -2.409431,
+          0.42435,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "5c6942714b5d6b5f",
+      "name": "DecalActor29",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -9.439412,
+        -2.419783,
+        0.42435
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        139.999998
+      ],
+      "scale": [
+        0.05378,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.05378,
+          0.0
+        ],
+        [
+          -0.98926,
+          -1.178955,
+          -0.0,
+          0.0
+        ],
+        [
+          -1.178955,
+          0.98926,
+          -0.0,
+          0.0
+        ],
+        [
+          -9.439412,
+          -2.419783,
+          0.42435,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "a4f21da0ee032e9f",
+      "name": "DecalActor30",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -14.599032,
+        -2.446114,
+        0.42435
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        89.999997
+      ],
+      "scale": [
+        0.05378,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.05378,
+          0.0
+        ],
+        [
+          -1.539016,
+          0.0,
+          -0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.539016,
+          0.0,
+          0.0
+        ],
+        [
+          -14.599032,
+          -2.446114,
+          0.42435,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "8e63b61c6f7284a8",
+      "name": "DecalActor31",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -20.197128,
+        -2.446114,
+        0.42435
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        19.999998
+      ],
+      "scale": [
+        0.05378,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.05378,
+          0.0
+        ],
+        [
+          -0.526374,
+          1.446202,
+          0.0,
+          0.0
+        ],
+        [
+          1.446202,
+          0.526374,
+          0.0,
+          0.0
+        ],
+        [
+          -20.197128,
+          -2.446114,
+          0.42435,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "6856f1483bd68743",
+      "name": "DecalActor32",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -26.414239,
+        -2.446114,
+        0.42435
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        19.999997
+      ],
+      "scale": [
+        0.05378,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.05378,
+          0.0
+        ],
+        [
+          -0.526374,
+          1.446202,
+          -0.0,
+          0.0
+        ],
+        [
+          1.446202,
+          0.526374,
+          0.0,
+          0.0
+        ],
+        [
+          -26.414239,
+          -2.446114,
+          0.42435,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "740037cd51d16562",
+      "name": "DecalActor33",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -30.659794,
+        26.54481,
+        0.417351
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -19.999998
+      ],
+      "scale": [
+        0.030984,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.030984,
+          0.0
+        ],
+        [
+          0.526374,
+          1.446202,
+          -0.0,
+          0.0
+        ],
+        [
+          1.446202,
+          -0.526374,
+          0.0,
+          0.0
+        ],
+        [
+          -30.659794,
+          26.54481,
+          0.417351,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "c8ee2efb3c3cd806",
+      "name": "DecalActor34",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -34.433988,
+        16.95292,
+        0.47477
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -80.0
+      ],
+      "scale": [
+        0.050715,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.050715,
+          0.0
+        ],
+        [
+          1.515635,
+          0.267247,
+          0.0,
+          0.0
+        ],
+        [
+          0.267247,
+          -1.515635,
+          0.0,
+          0.0
+        ],
+        [
+          -34.433988,
+          16.95292,
+          0.47477,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "455d7b9c4e4136e4",
+      "name": "DecalActor35",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -40.637654,
+        25.961108,
+        0.47477
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -169.999999
+      ],
+      "scale": [
+        0.050715,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          -0.0,
+          -0.050715,
+          0.0
+        ],
+        [
+          0.267247,
+          -1.515635,
+          0.0,
+          0.0
+        ],
+        [
+          -1.515635,
+          -0.267247,
+          0.0,
+          0.0
+        ],
+        [
+          -40.637654,
+          25.961108,
+          0.47477,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "1fc63650798deb0a",
+      "name": "DecalActor36",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -39.519142,
+        25.946992,
+        0.384483
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -100.0
+      ],
+      "scale": [
+        0.050715,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.050715,
+          0.0
+        ],
+        [
+          1.515635,
+          -0.267247,
+          -0.0,
+          0.0
+        ],
+        [
+          -0.267247,
+          -1.515635,
+          0.0,
+          0.0
+        ],
+        [
+          -39.519142,
+          25.946992,
+          0.384483,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "467b97cac598139d",
+      "name": "DecalActor37",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -49.289793,
+        9.508813,
+        0.446
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        40.0
+      ],
+      "scale": [
+        0.115696,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.115696,
+          0.0
+        ],
+        [
+          -0.98926,
+          1.178955,
+          -0.0,
+          0.0
+        ],
+        [
+          1.178955,
+          0.98926,
+          0.0,
+          0.0
+        ],
+        [
+          -49.289793,
+          9.508813,
+          0.446,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "2639f33feb806d0c",
+      "name": "DecalActor38",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -21.210257,
+        18.551164,
+        0.438879
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        160.000001
+      ],
+      "scale": [
+        0.065072,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.065072,
+          0.0
+        ],
+        [
+          -0.526374,
+          -1.446202,
+          0.0,
+          0.0
+        ],
+        [
+          -1.446202,
+          0.526374,
+          0.0,
+          0.0
+        ],
+        [
+          -21.210257,
+          18.551164,
+          0.438879,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "b73e0da71592ec5e",
+      "name": "DecalActor39",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -20.841873,
+        20.941738,
+        0.255694
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        40.000002
+      ],
+      "scale": [
+        0.069758,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.069758,
+          0.0
+        ],
+        [
+          -0.98926,
+          1.178955,
+          -0.0,
+          0.0
+        ],
+        [
+          1.178955,
+          0.98926,
+          0.0,
+          0.0
+        ],
+        [
+          -20.841873,
+          20.941738,
+          0.255694,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "31ca5a19bd837d2c",
+      "name": "DecalActor40",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -22.346854,
+        19.184354,
+        0.255694
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        110.000001
+      ],
+      "scale": [
+        0.069759,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.069759,
+          0.0
+        ],
+        [
+          -1.446202,
+          -0.526375,
+          -0.0,
+          0.0
+        ],
+        [
+          -0.526375,
+          1.446202,
+          0.0,
+          0.0
+        ],
+        [
+          -22.346854,
+          19.184354,
+          0.255694,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "fc77826a0fdb9be7",
+      "name": "DecalActor41",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -5.556579,
+        27.886668,
+        0.392699
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        110.000001
+      ],
+      "scale": [
+        0.069759,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.069759,
+          0.0
+        ],
+        [
+          -1.446202,
+          -0.526374,
+          -0.0,
+          0.0
+        ],
+        [
+          -0.526374,
+          1.446202,
+          0.0,
+          0.0
+        ],
+        [
+          -5.556579,
+          27.886668,
+          0.392699,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "038220c4b14df467",
+      "name": "DecalActor42",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -58.847101,
+        25.573762,
+        0.408923
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -50.0
+      ],
+      "scale": [
+        0.100334,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.100334,
+          0.0
+        ],
+        [
+          1.178955,
+          0.98926,
+          0.0,
+          0.0
+        ],
+        [
+          0.98926,
+          -1.178955,
+          0.0,
+          0.0
+        ],
+        [
+          -58.847101,
+          25.573762,
+          0.408923,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "94a1acb3af06a433",
+      "name": "DecalActor43",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -56.199637,
+        8.062686,
+        0.408923
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -50.0
+      ],
+      "scale": [
+        0.100334,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.100334,
+          0.0
+        ],
+        [
+          1.178955,
+          0.98926,
+          0.0,
+          0.0
+        ],
+        [
+          0.98926,
+          -1.178955,
+          0.0,
+          0.0
+        ],
+        [
+          -56.199637,
+          8.062686,
+          0.408923,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "696f990177e292e9",
+      "name": "DecalActor44",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -58.650746,
+        7.455941,
+        0.408923
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -159.999999
+      ],
+      "scale": [
+        0.100334,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          -0.0,
+          -0.100334,
+          0.0
+        ],
+        [
+          0.526374,
+          -1.446202,
+          -0.0,
+          0.0
+        ],
+        [
+          -1.446202,
+          -0.526374,
+          0.0,
+          0.0
+        ],
+        [
+          -58.650746,
+          7.455941,
+          0.408923,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "a4c5ae202f81d9f0",
+      "name": "DecalActor45",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -69.946066,
+        25.937813,
+        0.408923
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        59.999999
+      ],
+      "scale": [
+        0.100334,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.100334,
+          0.0
+        ],
+        [
+          -1.332827,
+          0.769508,
+          0.0,
+          0.0
+        ],
+        [
+          0.769508,
+          1.332827,
+          0.0,
+          0.0
+        ],
+        [
+          -69.946066,
+          25.937813,
+          0.408923,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "afb7346ad6a9c63e",
+      "name": "DecalActor46",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -50.651486,
+        20.77753,
+        0.47477
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -80.0
+      ],
+      "scale": [
+        0.050715,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.050715,
+          0.0
+        ],
+        [
+          1.515635,
+          0.267247,
+          0.0,
+          0.0
+        ],
+        [
+          0.267247,
+          -1.515635,
+          0.0,
+          0.0
+        ],
+        [
+          -50.651486,
+          20.77753,
+          0.47477,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "e8e1b7d8f4d36213",
+      "name": "DecalActor47",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -50.694058,
+        20.523206,
+        0.417351
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        160.000001
+      ],
+      "scale": [
+        0.030984,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.030984,
+          0.0
+        ],
+        [
+          -0.526374,
+          -1.446202,
+          0.0,
+          0.0
+        ],
+        [
+          -1.446202,
+          0.526374,
+          0.0,
+          0.0
+        ],
+        [
+          -50.694058,
+          20.523206,
+          0.417351,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "d1e90266430f2fce",
+      "name": "DecalActor48",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -50.690914,
+        23.074678,
+        0.374632
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        160.000001
+      ],
+      "scale": [
+        0.06177,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.06177,
+          0.0
+        ],
+        [
+          -0.526374,
+          -1.446202,
+          0.0,
+          0.0
+        ],
+        [
+          -1.446202,
+          0.526374,
+          0.0,
+          0.0
+        ],
+        [
+          -50.690914,
+          23.074678,
+          0.374632,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "051e9a32f5b5c46f",
+      "name": "DecalActor49",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -38.069425,
+        -17.662125,
+        0.361904
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        160.000001
+      ],
+      "scale": [
+        0.098655,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.098655,
+          0.0
+        ],
+        [
+          -0.526374,
+          -1.446202,
+          0.0,
+          0.0
+        ],
+        [
+          -1.446202,
+          0.526374,
+          0.0,
+          0.0
+        ],
+        [
+          -38.069425,
+          -17.662125,
+          0.361904,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "5a21ec453508ed4a",
+      "name": "DecalActor50",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -49.071522,
+        -18.226044,
+        0.379331
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        50.000002
+      ],
+      "scale": [
+        0.098655,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.098655,
+          0.0
+        ],
+        [
+          -1.178955,
+          0.98926,
+          -0.0,
+          0.0
+        ],
+        [
+          0.98926,
+          1.178955,
+          0.0,
+          0.0
+        ],
+        [
+          -49.071522,
+          -18.226044,
+          0.379331,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "f7080a992b9ed5dd",
+      "name": "DecalActor51",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -44.907676,
+        -17.891736,
+        0.379331
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        50.000002
+      ],
+      "scale": [
+        0.098655,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.098655,
+          0.0
+        ],
+        [
+          -1.178955,
+          0.98926,
+          -0.0,
+          0.0
+        ],
+        [
+          0.98926,
+          1.178955,
+          -0.0,
+          0.0
+        ],
+        [
+          -44.907676,
+          -17.891736,
+          0.379331,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "bd8ae469f09c6df1",
+      "name": "DecalActor52",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -41.180616,
+        -16.956148,
+        0.232917
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -50.0
+      ],
+      "scale": [
+        0.098655,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          0.0,
+          -0.098655,
+          0.0
+        ],
+        [
+          1.178955,
+          0.98926,
+          -0.0,
+          0.0
+        ],
+        [
+          0.98926,
+          -1.178955,
+          -0.0,
+          0.0
+        ],
+        [
+          -41.180616,
+          -16.956148,
+          0.232917,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "bd6319dddf9bbbf4",
+      "name": "DecalActor53",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -67.815942,
+        24.207868,
+        0.338033
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        59.999999
+      ],
+      "scale": [
+        0.100334,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          0.0,
+          -0.100334,
+          0.0
+        ],
+        [
+          -1.332827,
+          0.769508,
+          0.0,
+          0.0
+        ],
+        [
+          0.769508,
+          1.332827,
+          0.0,
+          0.0
+        ],
+        [
+          -67.815942,
+          24.207868,
+          0.338033,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "ecad816342bc6e9b",
+      "name": "DecalActor54",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -31.854392,
+        24.469209,
+        0.417351
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -139.999997
+      ],
+      "scale": [
+        0.030984,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          -0.0,
+          -0.030984,
+          0.0
+        ],
+        [
+          0.98926,
+          -1.178955,
+          0.0,
+          0.0
+        ],
+        [
+          -1.178955,
+          -0.98926,
+          0.0,
+          0.0
+        ],
+        [
+          -31.854392,
+          24.469209,
+          0.417351,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "9ad4992a4663845a",
+      "name": "DecalActor14",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -2.753191,
+        4.028631,
+        0.304115
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -30.000002
+      ],
+      "scale": [
+        0.018106,
+        1.539046,
+        1.539046
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.018106,
+          0.0
+        ],
+        [
+          0.769523,
+          1.332853,
+          0.0,
+          0.0
+        ],
+        [
+          1.332853,
+          -0.769523,
+          0.0,
+          0.0
+        ],
+        [
+          -2.753191,
+          4.028631,
+          0.304115,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "dd7775726b6de039",
+      "name": "DecalActor15",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -4.375851,
+        16.519233,
+        0.411702
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        140.0
+      ],
+      "scale": [
+        0.065259,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.065259,
+          0.0
+        ],
+        [
+          -0.715923,
+          -0.853204,
+          -0.0,
+          0.0
+        ],
+        [
+          -0.853204,
+          0.715923,
+          0.0,
+          0.0
+        ],
+        [
+          -4.375851,
+          16.519233,
+          0.411702,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "d56fe1a1fd2b18a2",
+      "name": "DecalActor16",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -20.877931,
+        25.697283,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        140.0
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          -0.715923,
+          -0.853204,
+          -0.0,
+          0.0
+        ],
+        [
+          -0.853204,
+          0.715923,
+          0.0,
+          0.0
+        ],
+        [
+          -20.877931,
+          25.697283,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "38d35196f9d73e7b",
+      "name": "DecalActor17",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -41.887543,
+        28.597021,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        140.0
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          -0.715923,
+          -0.853204,
+          -0.0,
+          0.0
+        ],
+        [
+          -0.853204,
+          0.715923,
+          0.0,
+          0.0
+        ],
+        [
+          -41.887543,
+          28.597021,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "f4153355f5eb11ca",
+      "name": "DecalActor18",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -44.93943,
+        20.038294,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        90.0
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          -1.113779,
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        [
+          -0.0,
+          1.113779,
+          0.0,
+          0.0
+        ],
+        [
+          -44.93943,
+          20.038294,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "dd318ea270e35b6b",
+      "name": "DecalActor19",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -46.860906,
+        32.988823,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        150.0
+      ],
+      "scale": [
+        0.097058,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.097058,
+          0.0
+        ],
+        [
+          -0.55689,
+          -0.964561,
+          0.0,
+          0.0
+        ],
+        [
+          -0.964561,
+          0.55689,
+          0.0,
+          0.0
+        ],
+        [
+          -46.860906,
+          32.988823,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "c448652cb95fae40",
+      "name": "DecalActor55",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -45.434604,
+        34.283486,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -50.000001
+      ],
+      "scale": [
+        0.097057,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.097057,
+          0.0
+        ],
+        [
+          0.853204,
+          0.715923,
+          -0.0,
+          0.0
+        ],
+        [
+          0.715923,
+          -0.853204,
+          0.0,
+          0.0
+        ],
+        [
+          -45.434604,
+          34.283486,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "7874a839699d6913",
+      "name": "DecalActor56",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -42.781935,
+        38.362783,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -140.0
+      ],
+      "scale": [
+        0.097057,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.097057,
+          0.0
+        ],
+        [
+          0.715923,
+          -0.853204,
+          0.0,
+          0.0
+        ],
+        [
+          -0.853204,
+          -0.715923,
+          -0.0,
+          0.0
+        ],
+        [
+          -42.781935,
+          38.362783,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "3c64058c26826ad3",
+      "name": "DecalActor57",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -45.984988,
+        42.050416,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -2e-06
+      ],
+      "scale": [
+        0.097057,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.097057,
+          0.0
+        ],
+        [
+          0.0,
+          1.113779,
+          0.0,
+          0.0
+        ],
+        [
+          1.113779,
+          -0.0,
+          0.0,
+          0.0
+        ],
+        [
+          -45.984988,
+          42.050416,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "8a680cfe012dd01d",
+      "name": "DecalActor58",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -47.80849,
+        42.488886,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -2e-06
+      ],
+      "scale": [
+        0.097057,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.097057,
+          0.0
+        ],
+        [
+          0.0,
+          1.113779,
+          0.0,
+          0.0
+        ],
+        [
+          1.113779,
+          -0.0,
+          0.0,
+          0.0
+        ],
+        [
+          -47.80849,
+          42.488886,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "251735750d5011f8",
+      "name": "DecalActor59",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -68.078394,
+        15.800151,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -2e-06
+      ],
+      "scale": [
+        0.097057,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.097057,
+          0.0
+        ],
+        [
+          0.0,
+          1.113779,
+          0.0,
+          0.0
+        ],
+        [
+          1.113779,
+          -0.0,
+          0.0,
+          0.0
+        ],
+        [
+          -68.078394,
+          15.800151,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "37995a8e3e79d2c8",
+      "name": "DecalActor60",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -67.92767,
+        14.071815,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -40.000002
+      ],
+      "scale": [
+        0.097057,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          0.0,
+          -0.097057,
+          0.0
+        ],
+        [
+          0.715923,
+          0.853204,
+          -0.0,
+          0.0
+        ],
+        [
+          0.853204,
+          -0.715923,
+          0.0,
+          0.0
+        ],
+        [
+          -67.92767,
+          14.071815,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "8d6daed415f09fec",
+      "name": "DecalActor61",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -67.006649,
+        14.812967,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -40.000002
+      ],
+      "scale": [
+        0.097057,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.097057,
+          0.0
+        ],
+        [
+          0.715923,
+          0.853204,
+          -0.0,
+          0.0
+        ],
+        [
+          0.853204,
+          -0.715923,
+          0.0,
+          0.0
+        ],
+        [
+          -67.006649,
+          14.812967,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "78b28e27ce513161",
+      "name": "DecalActor62",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -18.628362,
+        26.174365,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -90.000001
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          1.113779,
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        [
+          -0.0,
+          -1.113779,
+          -0.0,
+          0.0
+        ],
+        [
+          -18.628362,
+          26.174365,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "52b8c7eb83be2e32",
+      "name": "DecalActor63",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -17.191026,
+        25.613015,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -150.000001
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          0.556889,
+          -0.964561,
+          0.0,
+          0.0
+        ],
+        [
+          -0.964561,
+          -0.556889,
+          0.0,
+          0.0
+        ],
+        [
+          -17.191026,
+          25.613015,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "f824aded59029e29",
+      "name": "DecalActor64",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -9.521338,
+        26.091864,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        179.999999
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          -0.0,
+          -1.113779,
+          0.0,
+          0.0
+        ],
+        [
+          -1.113779,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          -9.521338,
+          26.091864,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "00ba0770ac54cdcb",
+      "name": "DecalActor65",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -6.473,
+        26.091864,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        179.999999
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          -0.0,
+          -1.113779,
+          0.0,
+          0.0
+        ],
+        [
+          -1.113779,
+          0.0,
+          -0.0,
+          0.0
+        ],
+        [
+          -6.473,
+          26.091864,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "c47ad6109924ba24",
+      "name": "DecalActor66",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -2.921589,
+        29.856961,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        179.999999
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          -0.0,
+          -1.113779,
+          0.0,
+          0.0
+        ],
+        [
+          -1.113779,
+          0.0,
+          -0.0,
+          0.0
+        ],
+        [
+          -2.921589,
+          29.856961,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "7ffdc0557641297c",
+      "name": "DecalActor67",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -2.921589,
+        27.900954,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -110.000002
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          1.04661,
+          -0.380935,
+          0.0,
+          0.0
+        ],
+        [
+          -0.380935,
+          -1.04661,
+          0.0,
+          0.0
+        ],
+        [
+          -2.921589,
+          27.900954,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "f1cb847c5a4651ea",
+      "name": "DecalActor68",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        11.657527,
+        28.11883,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -110.000002
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          1.04661,
+          -0.380935,
+          0.0,
+          0.0
+        ],
+        [
+          -0.380935,
+          -1.04661,
+          0.0,
+          0.0
+        ],
+        [
+          11.657527,
+          28.11883,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "8ce41ef9fd86528e",
+      "name": "DecalActor69",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        11.321878,
+        31.053782,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -3e-06
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          0.0,
+          1.113779,
+          -0.0,
+          0.0
+        ],
+        [
+          1.113779,
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        [
+          11.321878,
+          31.053782,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "3ccd2ddcaa82655e",
+      "name": "DecalActor70",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        11.022162,
+        35.047128,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -3e-06
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          0.0,
+          1.113779,
+          -0.0,
+          0.0
+        ],
+        [
+          1.113779,
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        [
+          11.022162,
+          35.047128,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "2b71b02a2cf8d5df",
+      "name": "DecalActor71",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        11.645604,
+        13.949014,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -3e-06
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          0.0,
+          1.113779,
+          -0.0,
+          0.0
+        ],
+        [
+          1.113779,
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        [
+          11.645604,
+          13.949014,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "5a1ad54cbc4664cc",
+      "name": "DecalActor72",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        11.645604,
+        12.138489,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -3e-06
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          0.0,
+          1.113779,
+          -0.0,
+          0.0
+        ],
+        [
+          1.113779,
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        [
+          11.645604,
+          12.138489,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "7a6e33e8707913ba",
+      "name": "DecalActor73",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        11.645604,
+        10.379682,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        109.999996
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          -1.04661,
+          -0.380935,
+          -0.0,
+          0.0
+        ],
+        [
+          -0.380935,
+          1.04661,
+          -0.0,
+          0.0
+        ],
+        [
+          11.645604,
+          10.379682,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "67471a6b3ed5db94",
+      "name": "DecalActor74",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        11.645604,
+        6.702443,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -10.000003
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          0.193406,
+          1.096858,
+          -0.0,
+          0.0
+        ],
+        [
+          1.096858,
+          -0.193406,
+          0.0,
+          0.0
+        ],
+        [
+          11.645604,
+          6.702443,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "f3696d062ec15042",
+      "name": "DecalActor75",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        11.645604,
+        4.562913,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        79.999996
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          -1.096858,
+          0.193406,
+          -0.0,
+          0.0
+        ],
+        [
+          0.193406,
+          1.096858,
+          0.0,
+          0.0
+        ],
+        [
+          11.645604,
+          4.562913,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "f08766342f1f7369",
+      "name": "DecalActor76",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        11.645604,
+        0.142682,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        99.999996
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          -1.096858,
+          -0.193406,
+          -0.0,
+          0.0
+        ],
+        [
+          -0.193406,
+          1.096858,
+          0.0,
+          0.0
+        ],
+        [
+          11.645604,
+          0.142682,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "174028b6c391bb6f",
+      "name": "DecalActor77",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        11.645604,
+        -2.079351,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -110.000005
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          1.04661,
+          -0.380935,
+          0.0,
+          0.0
+        ],
+        [
+          -0.380935,
+          -1.04661,
+          0.0,
+          0.0
+        ],
+        [
+          11.645604,
+          -2.079351,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "2d427f5199948235",
+      "name": "DecalActor78",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -6.987903,
+        -3.086377,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -90.000005
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          1.113779,
+          -0.0,
+          -0.0,
+          0.0
+        ],
+        [
+          -0.0,
+          -1.113779,
+          0.0,
+          0.0
+        ],
+        [
+          -6.987903,
+          -3.086377,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "89e9d623373ebff2",
+      "name": "DecalActor79",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -17.256323,
+        -2.93973,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -10.000006
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          0.193406,
+          1.096858,
+          0.0,
+          0.0
+        ],
+        [
+          1.096858,
+          -0.193406,
+          0.0,
+          0.0
+        ],
+        [
+          -17.256323,
+          -2.93973,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "6b030f344ea6dd05",
+      "name": "DecalActor80",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -23.210858,
+        -3.008052,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -60.000006
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          0.964561,
+          0.556889,
+          0.0,
+          0.0
+        ],
+        [
+          0.556889,
+          -0.964561,
+          0.0,
+          0.0
+        ],
+        [
+          -23.210858,
+          -3.008052,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "dc8929a7f997fce5",
+      "name": "DecalActor81",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -39.27032,
+        -6.379496,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -60.000006
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          0.964561,
+          0.556889,
+          0.0,
+          0.0
+        ],
+        [
+          0.556889,
+          -0.964561,
+          0.0,
+          0.0
+        ],
+        [
+          -39.27032,
+          -6.379496,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "f0bd30e9c298d6b6",
+      "name": "DecalActor82",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -38.86975,
+        -9.939334,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -60.000006
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          0.964561,
+          0.556889,
+          0.0,
+          0.0
+        ],
+        [
+          0.556889,
+          -0.964561,
+          -0.0,
+          0.0
+        ],
+        [
+          -38.86975,
+          -9.939334,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "afe8bcdb5f8d494c",
+      "name": "DecalActor83",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -46.780285,
+        -3.838756,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -60.000006
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          0.964561,
+          0.556889,
+          0.0,
+          0.0
+        ],
+        [
+          0.556889,
+          -0.964561,
+          0.0,
+          0.0
+        ],
+        [
+          -46.780285,
+          -3.838756,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "cc83457ccdb17f76",
+      "name": "DecalActor84",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -46.780285,
+        -7.29434,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -60.000006
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          0.964561,
+          0.556889,
+          0.0,
+          0.0
+        ],
+        [
+          0.556889,
+          -0.964561,
+          0.0,
+          0.0
+        ],
+        [
+          -46.780285,
+          -7.29434,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "40744ee1018fe32f",
+      "name": "DecalActor85",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -46.92533,
+        -5.292204,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        89.999993
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          -1.113779,
+          0.0,
+          -0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.113779,
+          0.0,
+          0.0
+        ],
+        [
+          -46.92533,
+          -5.292204,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "6e9a4a4bb0e852ea",
+      "name": "DecalActor86",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -51.248139,
+        -6.016398,
+        0.349187
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        49.999991
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          -0.853204,
+          0.715923,
+          -0.0,
+          0.0
+        ],
+        [
+          0.715923,
+          0.853204,
+          0.0,
+          0.0
+        ],
+        [
+          -51.248139,
+          -6.016398,
+          0.349187,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "e0865750085463f3",
+      "name": "DecalActor87",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -56.374051,
+        24.782536,
+        0.356663
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -149.999999
+      ],
+      "scale": [
+        0.100334,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.100334,
+          0.0
+        ],
+        [
+          0.769508,
+          -1.332827,
+          0.0,
+          0.0
+        ],
+        [
+          -1.332827,
+          -0.769508,
+          0.0,
+          0.0
+        ],
+        [
+          -56.374051,
+          24.782536,
+          0.356663,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "13f0cf0829170446",
+      "name": "DecalActor88",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -45.781676,
+        13.57976,
+        0.45106
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -69.999997
+      ],
+      "scale": [
+        0.012801,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          -0.0,
+          -0.012801,
+          0.0
+        ],
+        [
+          1.446202,
+          0.526375,
+          0.0,
+          0.0
+        ],
+        [
+          0.526375,
+          -1.446202,
+          0.0,
+          0.0
+        ],
+        [
+          -45.781676,
+          13.57976,
+          0.45106,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "a86a197c16d3c10a",
+      "name": "DecalActor89",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -31.406434,
+        25.159285,
+        0.45106
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        50.000005
+      ],
+      "scale": [
+        0.012801,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.012801,
+          0.0
+        ],
+        [
+          -1.178955,
+          0.98926,
+          0.0,
+          0.0
+        ],
+        [
+          0.98926,
+          1.178955,
+          0.0,
+          0.0
+        ],
+        [
+          -31.406434,
+          25.159285,
+          0.45106,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "f0b76c85f6361806",
+      "name": "DecalActor90",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -61.366894,
+        8.526714,
+        0.349186
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -20.000002
+      ],
+      "scale": [
+        0.097057,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          0.0,
+          -0.097057,
+          0.0
+        ],
+        [
+          0.380935,
+          1.04661,
+          -0.0,
+          0.0
+        ],
+        [
+          1.04661,
+          -0.380935,
+          -0.0,
+          0.0
+        ],
+        [
+          -61.366894,
+          8.526714,
+          0.349186,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "c49c2dd30fa0daba",
+      "name": "DecalActor91",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -62.940951,
+        8.53553,
+        0.349186
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        109.999997
+      ],
+      "scale": [
+        0.097057,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.097057,
+          0.0
+        ],
+        [
+          -1.04661,
+          -0.380935,
+          -0.0,
+          0.0
+        ],
+        [
+          -0.380935,
+          1.04661,
+          0.0,
+          0.0
+        ],
+        [
+          -62.940951,
+          8.53553,
+          0.349186,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "b0780d8670232ef7",
+      "name": "DecalActor92",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -4.746085,
+        35.982476,
+        0.362736
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        179.999999
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          -0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          -0.0,
+          -1.113779,
+          0.0,
+          0.0
+        ],
+        [
+          -1.113779,
+          0.0,
+          -0.0,
+          0.0
+        ],
+        [
+          -4.746085,
+          35.982476,
+          0.362736,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "dba5aadf311c5fa8",
+      "name": "DecalActor93",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -2.864403,
+        36.717173,
+        0.362736
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        110.0
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          -1.04661,
+          -0.380935,
+          0.0,
+          0.0
+        ],
+        [
+          -0.380935,
+          1.04661,
+          0.0,
+          0.0
+        ],
+        [
+          -2.864403,
+          36.717173,
+          0.362736,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "5675e24d8530861b",
+      "name": "DecalActor94",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -1.081373,
+        36.59089,
+        0.268192
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        109.999999
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          -1.04661,
+          -0.380935,
+          -0.0,
+          0.0
+        ],
+        [
+          -0.380935,
+          1.04661,
+          0.0,
+          0.0
+        ],
+        [
+          -1.081373,
+          36.59089,
+          0.268192,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "cbff5c439a0ec619",
+      "name": "DecalActor95",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "location": [
+        -42.687679,
+        31.209062,
+        0.3911
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -166.372298
+      ],
+      "scale": [
+        0.06526,
+        1.113779,
+        1.113779
+      ],
+      "worldMatrix": [
+        [
+          0.0,
+          0.0,
+          -0.06526,
+          0.0
+        ],
+        [
+          0.26242,
+          -1.082423,
+          -0.0,
+          0.0
+        ],
+        [
+          -1.082423,
+          -0.26242,
+          0.0,
+          0.0
+        ],
+        [
+          -42.687679,
+          31.209062,
+          0.3911,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    },
+    {
+      "id": "9113ad78d59fee77",
+      "name": "DecalActor96",
+      "actorClass": "DecalActor",
+      "component": "NewDecalComponent",
+      "type": "Decal",
+      "material": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "location": [
+        -38.219142,
+        25.046992,
+        0.984484
+      ],
+      "rotation": [
+        0.0,
+        -90.0,
+        -100.0
+      ],
+      "scale": [
+        0.050715,
+        1.539016,
+        1.539016
+      ],
+      "worldMatrix": [
+        [
+          -0.0,
+          -0.0,
+          -0.050715,
+          0.0
+        ],
+        [
+          1.515635,
+          -0.267247,
+          0.0,
+          0.0
+        ],
+        [
+          -0.267247,
+          -1.515635,
+          0.0,
+          0.0
+        ],
+        [
+          -38.219142,
+          25.046992,
+          0.984484,
+          1.0
+        ]
+      ],
+      "color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "visible": true,
+      "sortOrder": 0
+    }
+  ],
   "environment": [
     {
       "id": "d5b10f7d974f8a34",
@@ -323410,6 +328489,32 @@
         -177.590846,
         -62.760728,
         -131.325529
+      ],
+      "worldMatrix": [
+        [
+          -0.755602,
+          -0.859311,
+          -2.222757,
+          0.0
+        ],
+        [
+          -1.937464,
+          1.579215,
+          0.0481,
+          0.0
+        ],
+        [
+          1.387552,
+          1.737142,
+          -1.143257,
+          0.0
+        ],
+        [
+          -31.186462,
+          19.291309,
+          3.099998,
+          1.0
+        ]
       ],
       "color": [
         1.0,
@@ -323436,6 +328541,32 @@
         -0.0,
         0.0,
         0.0
+      ],
+      "worldMatrix": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          -31.4,
+          16.6,
+          2.82894,
+          1.0
+        ]
       ],
       "color": [
         0.8,

@@ -287,7 +287,13 @@
       "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01",
       "blendMode": "<BlendMode.BLEND_TRANSLUCENT: 2>",
       "twoSided": false,
-      "textures": [],
+      "textures": [
+        {
+          "parameter": "T_Decal01_Base",
+          "texture": "T_Decal01_Base_c3a96033",
+          "usageGuess": "baseColor"
+        }
+      ],
       "scalars": {
         "Opacity": 1.0,
         "RefractionDepthBias": 0.0,
@@ -308,7 +314,13 @@
       "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01",
       "blendMode": "<BlendMode.BLEND_TRANSLUCENT: 2>",
       "twoSided": false,
-      "textures": [],
+      "textures": [
+        {
+          "parameter": "T_Decal01_Base",
+          "texture": "T_Decal01_Base_c3a96033",
+          "usageGuess": "baseColor"
+        }
+      ],
       "scalars": {
         "Opacity": 0.4,
         "RefractionDepthBias": 0.0,
@@ -329,7 +341,13 @@
       "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_Decal01.M_Decal01",
       "blendMode": "<BlendMode.BLEND_TRANSLUCENT: 2>",
       "twoSided": false,
-      "textures": [],
+      "textures": [
+        {
+          "parameter": "T_Decal01_Base",
+          "texture": "T_Decal01_Base_c3a96033",
+          "usageGuess": "baseColor"
+        }
+      ],
       "scalars": {
         "Opacity": 0.4,
         "RefractionDepthBias": 0.0,
@@ -350,7 +368,23 @@
       "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/M_DecalMasked.M_DecalMasked",
       "blendMode": "<BlendMode.BLEND_MASKED: 1>",
       "twoSided": false,
-      "textures": [],
+      "textures": [
+        {
+          "parameter": "T_Decal01_Base",
+          "texture": "T_Decal01_Base_c3a96033",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "T_DirtMask_01",
+          "texture": "T_DirtMask_01_5e752c01",
+          "usageGuess": "opacity"
+        },
+        {
+          "parameter": "T_RoadAsphalt_Normal",
+          "texture": "T_RoadAsphalt_Normal_8a6ade60",
+          "usageGuess": "normal"
+        }
+      ],
       "scalars": {
         "Dirt Mask Opacity": 0.7,
         "Mask Size": 1289.172729,
@@ -372,7 +406,23 @@
       "baseMaterial": "/Game/TokyoStylizedEnvironment/Materials/Trim_Decal01/MI_DecalMasked_RoadMarking.MI_DecalMasked_RoadMarking",
       "blendMode": "<BlendMode.BLEND_MASKED: 1>",
       "twoSided": false,
-      "textures": [],
+      "textures": [
+        {
+          "parameter": "T_Decal01_Base",
+          "texture": "T_Decal01_Base_c3a96033",
+          "usageGuess": "baseColor"
+        },
+        {
+          "parameter": "T_DirtMask_01",
+          "texture": "T_DirtMask_01_5e752c01",
+          "usageGuess": "opacity"
+        },
+        {
+          "parameter": "T_RoadAsphalt_Normal",
+          "texture": "T_RoadAsphalt_Normal_8a6ade60",
+          "usageGuess": "normal"
+        }
+      ],
       "scalars": {
         "Dirt Mask Opacity": 0.7,
         "Mask Size": 1289.172729,
@@ -4768,7 +4818,13 @@
       "baseMaterial": "",
       "blendMode": "<BlendMode.BLEND_TRANSLUCENT: 2>",
       "twoSided": false,
-      "textures": [],
+      "textures": [
+        {
+          "parameter": "T_Decal01_Base",
+          "texture": "T_Decal01_Base_c3a96033",
+          "usageGuess": "baseColor"
+        }
+      ],
       "scalars": {
         "Roughness": 1.0,
         "Opacity": 0.6
@@ -4821,6 +4877,22 @@
           0.0
         ]
       }
+    },
+    {
+      "key": "M_Leaves_Ground_Decal1_881a59bf",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree01/M_Leaves_Ground_Decal1.M_Leaves_Ground_Decal1",
+      "baseMaterial": "",
+      "blendMode": "<BlendMode.BLEND_TRANSLUCENT: 2>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "T_Leaves_Decal",
+          "texture": "T_Leaves_Decal_5afaee2f",
+          "usageGuess": "unknown"
+        }
+      ],
+      "scalars": {},
+      "vectors": {}
     },
     {
       "key": "M_Poster_94f69c7f",
@@ -5014,6 +5086,22 @@
       }
     },
     {
+      "key": "M_Sakura_Ground_Decal_0fc5a201",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Foliage_Tree_Sakura/M_Sakura_Ground_Decal.M_Sakura_Ground_Decal",
+      "baseMaterial": "",
+      "blendMode": "<BlendMode.BLEND_TRANSLUCENT: 2>",
+      "twoSided": false,
+      "textures": [
+        {
+          "parameter": "T_Sakura_Ground",
+          "texture": "T_Sakura_Ground_635f0c0b",
+          "usageGuess": "unknown"
+        }
+      ],
+      "scalars": {},
+      "vectors": {}
+    },
+    {
       "key": "M_StreetTrash_a1511efa",
       "sourceAsset": "/Game/TokyoStylizedEnvironment/Materials/Trim_Street_Trash/M_StreetTrash.M_StreetTrash",
       "baseMaterial": "",
@@ -5124,6 +5212,16 @@
   ],
   "textures": [
     {
+      "key": "T_Decal01_Base_c3a96033",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Decal01_Base.T_Decal01_Base",
+      "file": "Textures/T_Decal01_Base_c3a96033.png"
+    },
+    {
+      "key": "T_DirtMask_01_5e752c01",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_DirtMask_01.T_DirtMask_01",
+      "file": "Textures/T_DirtMask_01_5e752c01.png"
+    },
+    {
       "key": "T_Grass_Base_f0d8c110",
       "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Grass_Base.T_Grass_Base",
       "file": "Textures/T_Grass_Base_f0d8c110.png"
@@ -5142,6 +5240,11 @@
       "key": "T_Leaves01_Opacity_b4870800",
       "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Leaves01_Opacity.T_Leaves01_Opacity",
       "file": "Textures/T_Leaves01_Opacity_b4870800.png"
+    },
+    {
+      "key": "T_Leaves_Decal_5afaee2f",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Leaves_Decal.T_Leaves_Decal",
+      "file": "Textures/T_Leaves_Decal_5afaee2f.png"
     },
     {
       "key": "T_Panel02_Base_b06d104e",
@@ -5237,6 +5340,11 @@
       "key": "T_RoadFences_RMO_a5d3e0d8",
       "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_RoadFences_RMO.T_RoadFences_RMO",
       "file": "Textures/T_RoadFences_RMO_a5d3e0d8.png"
+    },
+    {
+      "key": "T_Sakura_Ground_635f0c0b",
+      "sourceAsset": "/Game/TokyoStylizedEnvironment/Textures/T_Sakura_Ground.T_Sakura_Ground",
+      "file": "Textures/T_Sakura_Ground_635f0c0b.png"
     },
     {
       "key": "T_Sakura_bb7f6f58",

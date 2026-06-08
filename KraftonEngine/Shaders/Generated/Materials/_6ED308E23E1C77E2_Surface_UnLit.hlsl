@@ -6,11 +6,12 @@
 #include "Common/VertexLayouts.hlsli"
 #include "Common/Functions.hlsli"
 #include "Common/SystemSamplers.hlsli"
-#define USE_FOG 1
-#include "Common/Fog.hlsli"
 #include "Common/ForwardLighting.hlsli"
 #include "Common/GeneratedSurfacePass.hlsli"
-Texture2D GeneratedSceneColorTexture : register(t17);
+
+Texture2D Tex_Diffuse : register(t0);
+Texture2D Tex_Normal : register(t1);
+Texture2D Tex_OpacityMask : register(t6);
 
 struct FMaterialEvalResult
 {
@@ -22,19 +23,22 @@ struct FMaterialEvalResult
 
 FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
-    float3 n_10 = float3(0.447917f, 0.447917f, 0.447917f);
-    float n_13 = 0.700000f;
-    float n_16 = 0.000000f;
-    float n_19 = 0.250000f;
+    float4 n_12 = Tex_Diffuse.Sample(LinearWrapSampler, Input.UV0);
+    float3 n_22 = float3(0.447917f, 0.447917f, 0.447917f);
+    float3 n_24 = ((n_12).rgb * n_22);
+    float4 n_33 = Tex_Normal.Sample(LinearWrapSampler, Input.UV0);
+    float n_44 = 0.700000f;
+    float n_47 = 0.000000f;
+    float4 n_52 = Tex_OpacityMask.Sample(LinearWrapSampler, Input.UV0);
     FMaterialResult Result;
-    Result.BaseColor = n_10;
-    Result.Normal = float3(0, 0, 1);
-    Result.Roughness = n_13;
-    Result.Metallic = n_16;
+    Result.BaseColor = n_24;
+    Result.Normal = (n_33).rgb;
+    Result.Roughness = n_44;
+    Result.Metallic = n_47;
     Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = n_19;
-    Result.OpacityMask = 1.0f;
-    Result.NormalConnected = 0.0f;
+    Result.Opacity = (n_52).a;
+    Result.OpacityMask = (n_52).a;
+    Result.NormalConnected = 1.0f;
     FMaterialEvalResult Eval;
     Eval.Material = Result;
     Eval.RefractionOffset = float2(0, 0);
@@ -87,40 +91,18 @@ MaterialSurfacePSOutput ShadeGeneratedSurfaceUnLit(MaterialSurfaceVSOutput input
 }
 
 
-float4 PS(MaterialSurfaceVSOutput input) : SV_TARGET
+MaterialSurfacePSOutput PS(MaterialSurfaceVSOutput input)
 {
     FMaterialPixelInput MaterialInput = BuildGeneratedSurfaceMaterialInput(input);
+#if MATERIAL_SHADING_MODEL_TOON
     FMaterialEvalResult Eval = EvaluateMaterialWithRefraction(MaterialInput);
     FMaterialResult Result = Eval.Material;
-
-    const float3 N = ApplyGeneratedSurfaceNormal(input, Result);
-#if MATERIAL_SHADING_MODEL_TOON
-    float4 FinalColor = float4(ComputeGeneratedSurfaceToonColor(input, Result, Eval, N), Result.Opacity);
+    return ShadeGeneratedSurfaceToon(input, Result, Eval);
 #elif MATERIAL_SHADING_MODEL_UNLIT
-    float4 FinalColor = float4(Result.BaseColor + Result.Emissive, Result.Opacity);
+    FMaterialResult Result = EvaluateMaterial(MaterialInput);
+    return ShadeGeneratedSurfaceUnLit(input, Result);
 #else
-    float4 FinalColor = float4(ComputeGeneratedSurfaceLighting(input.worldPos, input.position, N, Result), Result.Opacity);
+    FMaterialResult Result = EvaluateMaterial(MaterialInput);
+    return ShadeGeneratedSurface(input, Result);
 #endif
-    clip(FinalColor.a - 0.01f);
-
-    // Without RefractionOffset, keep the existing hardware alpha blending path.
-    if (Eval.RefractionEnabled < 0.5f)
-    {
-        return ApplyFogTranslucent(FinalColor, input.worldPos, CameraWorldPos);
-    }
-
-    // Refraction path: sample the copied opaque scene color at screen UV + user offset,
-    // then manually composite: final = foreground * alpha + refractedBackground * (1 - alpha).
-    uint SceneWidth = 1;
-    uint SceneHeight = 1;
-    GeneratedSceneColorTexture.GetDimensions(SceneWidth, SceneHeight);
-    float2 SceneSize = max(float2((float)SceneWidth, (float)SceneHeight), float2(1.0f, 1.0f));
-    float2 ScreenUV = input.position.xy / SceneSize;
-    float2 RefractedUV = saturate(ScreenUV + Eval.RefractionOffset);
-    float4 BackgroundColor = GeneratedSceneColorTexture.Sample(LinearClampSampler, RefractedUV);
-
-    float4 ForegroundColor = ApplyFogTranslucent(FinalColor, input.worldPos, CameraWorldPos);
-    float Alpha = saturate(ForegroundColor.a);
-    float3 OutColor = ForegroundColor.rgb * Alpha + BackgroundColor.rgb * (1.0f - Alpha);
-    return float4(OutColor, 1.0f);
 }

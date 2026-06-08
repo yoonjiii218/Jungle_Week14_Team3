@@ -36628,7 +36628,7 @@
         "UltimateGauge": 0.0,
         "UltimateMaxGauge": 100.0,
         "ComboCount": 0,
-        "StartupScreen": "HUD"
+        "StartupScreen": "Countdown"
       },
       "NonSceneComponents": [
         {

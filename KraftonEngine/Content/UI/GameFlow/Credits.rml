@@ -3,56 +3,84 @@
     <title>Credits</title>
     <style>
         body { width: 100%; height: 100%; margin: 0; font-family: Maplestory; color: #ffffff; }
-        #screen { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #02030a; }
-        #backdrop { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; }
-        #shade { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #0102078f; }
-        #title-panel { position: absolute; left: 360px; top: 92px; width: 570px; height: 220px; }
-        #sign { position: absolute; left: 335px; top: 366px; width: 610px; height: 286px; opacity: 0.93; }
-        #panel { position: absolute; left: 460px; top: 424px; width: 360px; height: 150px; }
-        .eyebrow { position: absolute; left: 0px; top: 0px; width: 240px; height: 18px; font-size: 16px; color: #d9ff2f; }
-        .title-stack { position: absolute; left: 0px; top: 28px; width: 520px; height: 58px; }
-        .title-layer { position: absolute; top: 0px; font-size: 46px; }
-        .title-cyan { left: -3px; color: #00eaff; }
-        .title-pink { left: 3px; color: #ff2bd6; }
-        .title-main { left: 0px; color: #ffffff; }
-        p { font-size: 18px; margin: 0; color: #d3d8e3; }
-        .credit-row { position: absolute; left: 4px; width: 500px; height: 28px; border-width: 0px 0px 1px 0px; border-color: #00eaff; }
-        #credit-row-a { top: 112px; }
-        #credit-row-b { top: 150px; }
+        #screen { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #02030a; overflow: hidden; }
+        #backdrop { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; opacity: 0.42; }
+        #shade { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #010207d8; }
+        #roll-window { position: absolute; left: 240px; top: 0px; width: 800px; height: 720px; overflow: hidden; }
+        #roll-track { position: absolute; left: 0px; top: 720px; width: 800px; height: 1120px; text-align: center; }
+        #fade-top { position: absolute; left: 0px; top: 0px; width: 100%; height: 150px; background-color: #02030a; opacity: 0.76; }
+        #fade-bottom { position: absolute; left: 0px; bottom: 0px; width: 100%; height: 180px; background-color: #02030a; opacity: 0.84; }
+        #scanline { position: absolute; left: 0px; top: 0px; width: 100%; height: 3px; background-color: #00eaff; opacity: 0.16; }
+        #title-cyan { position: absolute; left: 0px; top: 0px; width: 800px; height: 56px; color: #00eaff; font-size: 44px; text-align: center; opacity: 0.42; }
+        #title-pink { position: absolute; left: 0px; top: 0px; width: 800px; height: 56px; color: #ff2bd6; font-size: 44px; text-align: center; opacity: 0.42; }
+        #title-main { position: absolute; left: 0px; top: 0px; width: 800px; height: 56px; color: #ffffff; font-size: 44px; text-align: center; }
+        #subtitle { position: absolute; left: 0px; top: 70px; width: 800px; height: 28px; color: #d9ff2f; font-size: 20px; text-align: center; }
+        #roll-line-a { position: absolute; left: 250px; top: 126px; width: 300px; height: 2px; background-color: #00eaff; opacity: 0.70; }
+        #roll-line-b { position: absolute; left: 320px; top: 142px; width: 160px; height: 2px; background-color: #ff2bd6; opacity: 0.70; }
+        .credit-role { position: absolute; left: 0px; width: 800px; height: 24px; color: #00eaff; font-size: 17px; text-align: center; }
+        .credit-name { position: absolute; left: 0px; width: 800px; height: 46px; color: #ffffff; font-size: 32px; text-align: center; }
+        .credit-note { position: absolute; left: 0px; width: 800px; height: 26px; color: #d3d8e3; font-size: 18px; text-align: center; }
+        #role-01 { top: 212px; }
+        #name-01 { top: 240px; }
+        #role-02 { top: 346px; }
+        #name-02 { top: 374px; }
+        #role-03 { top: 480px; }
+        #name-03 { top: 508px; }
+        #role-04 { top: 614px; }
+        #name-04 { top: 642px; }
+        #thanks-a { top: 800px; }
+        #thanks-b { top: 832px; }
+        #end-title { position: absolute; left: 0px; top: 930px; width: 800px; height: 58px; color: #ffffff; font-size: 42px; text-align: center; }
+        #end-sub { position: absolute; left: 0px; top: 994px; width: 800px; height: 28px; color: #d9ff2f; font-size: 18px; text-align: center; }
+        #control-panel { position: absolute; left: 816px; top: 520px; width: 360px; height: 150px; opacity: 0; }
         .button-bg { position: absolute; left: 0px; width: 320px; height: 48px; }
         button { position: absolute; left: 32px; width: 250px; height: 26px; font-size: 18px; color: #ffffff; background-color: #00000000; border-width: 0px; text-align: left; }
         button:hover { color: #d9ff2f; background-color: #00000000; border-width: 0px; }
-        .widget-scan-a { width: 132px; height: 2px; background-color: #00eaff; margin-bottom: 8px; }
-        .widget-scan-b { width: 64px; height: 2px; background-color: #ff2bd6; margin-bottom: 12px; }
         #bg-main-menu { top: 10px; }
         #btn-main-menu { top: 22px; }
         #bg-exit { top: 68px; }
         #btn-exit { top: 80px; }
+        #skip-hint { position: absolute; left: 64px; top: 626px; width: 340px; height: 24px; color: #d3d8e3; font-size: 15px; opacity: 0.68; }
     </style>
 </head>
 <body>
-    <div id="screen">
+    <div id="screen" data-ue-anchors="0 0 1 1" data-ue-offsets="0 0 0 0" data-ue-alignment="0 0">
         <img id="backdrop" src="Images/menu_graffiti_backdrop.png" />
         <div id="shade"></div>
-        <div id="title-panel" data-ue-anchors="0.5 0 0.5 0" data-ue-offsets="0 92 570 220" data-ue-alignment="0.5 0">
-            <div class="eyebrow">ARCHIVE//CREDITS</div>
-            <div class="widget-scan-a"></div>
-            <div class="title-stack">
-                <div class="title-layer title-cyan">Credits</div>
-                <div class="title-layer title-pink">Credits</div>
-                <div class="title-layer title-main">Credits</div>
+        <div id="roll-window" data-ue-anchors="0.5 0 0.5 1" data-ue-offsets="0 0 800 0" data-ue-alignment="0.5 0">
+            <div id="roll-track">
+                <div id="title-cyan">ENDING CREDITS</div>
+                <div id="title-pink">ENDING CREDITS</div>
+                <div id="title-main">ENDING CREDITS</div>
+                <div id="subtitle">FINAL ARCHIVE // TARGET CORE COLLAPSED</div>
+                <div id="roll-line-a"></div>
+                <div id="roll-line-b"></div>
+
+                <div id="role-01" class="credit-role">GAME DIRECTOR</div>
+                <div id="name-01" class="credit-name">TEAM MEMBER 01</div>
+                <div id="role-02" class="credit-role">COMBAT SYSTEM</div>
+                <div id="name-02" class="credit-name">TEAM MEMBER 02</div>
+                <div id="role-03" class="credit-role">UI / GAME FLOW</div>
+                <div id="name-03" class="credit-name">TEAM MEMBER 03</div>
+                <div id="role-04" class="credit-role">BOSS / STAGE INTEGRATION</div>
+                <div id="name-04" class="credit-name">TEAM MEMBER 04</div>
+
+                <div id="thanks-a" class="credit-note">SPECIAL THANKS TO THE JUNGLE WEEK 14 TEAM</div>
+                <div id="thanks-b" class="credit-note">RMLUI GAME FLOW DEMO BUILD</div>
+                <div id="end-title">THE END</div>
+                <div id="end-sub">THANK YOU FOR PLAYING</div>
             </div>
-            <div id="credit-row-a" class="credit-row"><p>Game Director / UI / Integration Template</p></div>
-            <div id="credit-row-b" class="credit-row"><p>Replace this text in the RmlUi widget editor.</p></div>
-            <div class="widget-scan-b"></div>
         </div>
-        <img id="sign" src="Images/menu_neon_backboard.png" data-ue-anchors="0.5 0.5 0.5 0.5" data-ue-offsets="0 149 610 286" data-ue-alignment="0.5 0.5" />
-        <div id="panel" data-ue-anchors="0.5 0.5 0.5 0.5" data-ue-offsets="0 139 360 150" data-ue-alignment="0.5 0.5">
+        <div id="fade-top"></div>
+        <div id="fade-bottom"></div>
+        <div id="scanline"></div>
+        <div id="control-panel" data-ue-anchors="1 1 1 1" data-ue-offsets="-104 -188 360 150" data-ue-alignment="1 1">
             <img id="bg-main-menu" class="button-bg" src="Images/button_main_menu.png" />
             <button id="btn-main-menu">Main Menu</button>
             <img id="bg-exit" class="button-bg" src="Images/button_exit.png" />
             <button id="btn-exit">Exit</button>
         </div>
+        <div id="skip-hint" data-ue-anchors="0 1 0 1" data-ue-offsets="64 -74 340 24" data-ue-alignment="0 1">Esc pauses. Buttons unlock after the staff roll.</div>
     </div>
 </body>
 </rml>

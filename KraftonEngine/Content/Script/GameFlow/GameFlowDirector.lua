@@ -19,7 +19,11 @@ local FILM_COUNTDOWN_PLAY_SECONDS = 3.0
 local FILM_SPROCKET_COUNT = 11
 local FILM_SPROCKET_SPACING = 86.0
 local FILM_SPROCKET_SPEED = 210.0
-local FILM_SWEEP_BRIGHT_COUNT = 24
+local FILM_SWEEP_SECTOR_FRAME_COUNT = 33
+local CLEAR_TO_CREDITS_DELAY = 2.35
+local CREDITS_ROLL_DURATION = 18.0
+local CREDITS_ROLL_START_PADDING = 120.0
+local CREDITS_ROLL_END_OFFSET = 1080.0
 local START_MENU_BOOT_ELEMENT_IDS = {
     "boot-black",
     "boot-shutter-top",
@@ -45,7 +49,10 @@ local START_MENU_BOOT_ELEMENT_IDS = {
 }
 local startMenuBootTime = START_MENU_BOOT_DURATION + 1.0
 local filmCountdownTime = FILM_COUNTDOWN_DURATION + 1.0
+local clearToCreditsTime = 0.0
+local creditsRollTime = CREDITS_ROLL_DURATION + 1.0
 local startHudFlow = nil
+local showCredits = nil
 
 local function getDirector()
     if director ~= nil and director.IsValid ~= nil and director:IsValid() then
@@ -573,37 +580,34 @@ local function setCountdownOpacity(widget, id, value)
     setCountdownProperty(widget, id, "opacity", scalar(value))
 end
 
-local function updateFilmSprockets(widget, t, viewportHeight, masterOpacity, offsetY)
-    local travel = viewportHeight + FILM_SPROCKET_SPACING
-    local offset = (t * FILM_SPROCKET_SPEED) % FILM_SPROCKET_SPACING
+local function updateFilmSprockets(widget, t, viewportWidth, viewportHeight, masterOpacity, offsetY, filmScale, filmWidth)
+    local spacing = math.max(30.0, FILM_SPROCKET_SPACING * filmScale)
+    local speed = math.max(70.0, FILM_SPROCKET_SPEED * filmScale)
+    local sprocketWidth = clamp(34.0 * filmScale, 14.0, math.max(14.0, filmWidth * 0.58))
+    local sprocketHeight = clamp(52.0 * filmScale, 22.0, math.max(22.0, spacing * 0.72))
+    local sprocketInset = clamp(28.0 * filmScale, 6.0, math.max(6.0, filmWidth - sprocketWidth - 6.0))
+    local travel = viewportHeight + spacing
+    local offset = (t * speed) % spacing
     local sprocketOpacity = scalar(0.80 * masterOpacity)
 
     for i = 0, FILM_SPROCKET_COUNT - 1 do
-        local top = ((i * FILM_SPROCKET_SPACING + offset) % travel) - FILM_SPROCKET_SPACING * 0.58 + (offsetY or 0.0)
-        local topText = px(top)
         local leftId = "sp-l-" .. tostring(i)
         local rightId = "sp-r-" .. tostring(i)
-        setCountdownProperty(widget, leftId, "top", topText)
-        setCountdownProperty(widget, rightId, "top", topText)
+        local top = ((i * spacing + offset) % travel) - spacing * 0.58 + (offsetY or 0.0)
+        setCountdownRect(widget, leftId, sprocketInset, top, sprocketWidth, sprocketHeight)
+        setCountdownRect(widget, rightId, viewportWidth - sprocketInset - sprocketWidth, top, sprocketWidth, sprocketHeight)
         setCountdownProperty(widget, leftId, "opacity", sprocketOpacity)
         setCountdownProperty(widget, rightId, "opacity", sprocketOpacity)
     end
 end
 
-local function updateSweepBrightArea(widget, centerX, centerY, sweepLength, sweepCycle, masterOpacity)
-    for i = 0, FILM_SWEEP_BRIGHT_COUNT - 1 do
-        local segmentCycle = (i + 0.5) / FILM_SWEEP_BRIGHT_COUNT
-        local id = "sweep-bright-" .. tostring(i)
-        local opacity = 0.0
-        if segmentCycle <= sweepCycle then
-            local fillRatio = segmentCycle / math.max(sweepCycle, 0.001)
-            opacity = (0.06 + 0.11 * fillRatio) * masterOpacity
-        end
+local function updateSweepSector(widget, centerX, centerY, sectorSize, sweepCycle, sectorOpacity)
+    local frameIndex = math.floor(clamp(sweepCycle, 0.0, 1.0) * (FILM_SWEEP_SECTOR_FRAME_COUNT - 1) + 0.5)
 
-        setCountdownRect(widget, id, centerX - 10.0, centerY - sweepLength, 20.0, sweepLength)
-        setCountdownProperty(widget, id, "transform-origin", string.format("10px %.0fpx", sweepLength))
-        setCountdownProperty(widget, id, "transform", string.format("rotate(%.1fdeg)", segmentCycle * 360.0))
-        setCountdownOpacity(widget, id, opacity)
+    for i = 0, FILM_SWEEP_SECTOR_FRAME_COUNT - 1 do
+        local id = "sweep-sector-" .. tostring(i)
+        setCountdownRect(widget, id, centerX - sectorSize * 0.5, centerY - sectorSize * 0.5, sectorSize, sectorSize)
+        setCountdownOpacity(widget, id, i == frameIndex and sectorOpacity or 0.0)
     end
 end
 
@@ -671,8 +675,10 @@ local function updateFilmCountdown(dt)
     local scratchLeftB = viewportWidth * (0.28 + ((scratchSlot + 3) % 4) * 0.16)
     local contentCenterY = centerY + jitterY
     local circleSize = math.min(viewportWidth, viewportHeight) * 0.58
+    local uiScale = clamp(circleSize / 414.0, 0.35, 1.85)
     local innerCircleSize = circleSize * 0.72
     local sweepLength = circleSize * 0.50
+    local sectorSize = math.sqrt(viewportWidth * viewportWidth + viewportHeight * viewportHeight) + 16.0
     local sweepCycle = clamp(digitTime, 0.0, 1.0)
     local sweepGlow = (1.0 - sweepCycle) * (1.0 - sweepCycle)
     local sweepColor = "#4b351d"
@@ -683,11 +689,20 @@ local function updateFilmCountdown(dt)
     elseif sweepCycle < 0.72 then
         sweepColor = "#7a552d"
     end
-    local digitWidth = digitText == "START" and 520.0 or 190.0
-    local digitFontSize = digitText == "START" and 92.0 or 150.0
-    local digitBoxHeight = digitText == "START" and 92.0 or 150.0
+    local digitWidth = (digitText == "START" and 520.0 or 190.0) * uiScale
+    local digitFontSize = (digitText == "START" and 92.0 or 150.0) * uiScale
+    local digitBoxHeight = (digitText == "START" and 100.0 or 164.0) * uiScale
     local digitLeft = centerX - digitWidth * 0.5
     local digitTop = contentCenterY - digitBoxHeight * 0.5
+    local filmWidth = clamp(92.0 * uiScale, 36.0, math.max(36.0, viewportWidth * 0.12))
+    local filmEdgeWidth = clamp(3.0 * uiScale, 1.0, 5.0)
+    local frameHeight = clamp(42.0 * uiScale, 16.0, math.max(16.0, viewportHeight * 0.08))
+    local crossThickness = clamp(3.0 * uiScale, 1.0, 6.0)
+    local sweepGlowWidth = clamp(17.0 * uiScale, 6.0, 28.0)
+    local sweepWidth = clamp(7.0 * uiScale, 2.0, 12.0)
+    local leaderWidth = 336.0 * uiScale
+    local leaderHeight = 28.0 * uiScale
+    local leaderTop = math.max(frameHeight + 6.0 * uiScale, contentCenterY - circleSize * 0.5 - 46.0 * uiScale)
 
     setCountdownProperty(countdown, "screen", "left", "0px")
     setCountdownProperty(countdown, "screen", "top", "0px")
@@ -697,17 +712,18 @@ local function updateFilmCountdown(dt)
     setCountdownOpacity(countdown, "screen", masterOpacity)
     setCountdownRect(countdown, "gate", 0.0, 0.0, viewportWidth, viewportHeight)
     setCountdownOpacity(countdown, "gate", masterOpacity)
+    updateSweepSector(countdown, centerX, contentCenterY, sectorSize, sweepCycle, (0.24 + flash * 0.08) * masterOpacity)
     setCountdownRect(countdown, "flicker", 0.0, 0.0, viewportWidth, viewportHeight)
     setCountdownOpacity(countdown, "flicker", flash * 0.20 + (1.0 - framePulse) * 0.08)
-    setCountdownRect(countdown, "film-left", 0.0, 0.0, 92.0, viewportHeight)
-    setCountdownRect(countdown, "film-right", viewportWidth - 92.0, 0.0, 92.0, viewportHeight)
-    setCountdownRect(countdown, "film-left-edge", 92.0, 0.0, 3.0, viewportHeight)
-    setCountdownRect(countdown, "film-right-edge", viewportWidth - 95.0, 0.0, 3.0, viewportHeight)
+    setCountdownRect(countdown, "film-left", 0.0, 0.0, filmWidth, viewportHeight)
+    setCountdownRect(countdown, "film-right", viewportWidth - filmWidth, 0.0, filmWidth, viewportHeight)
+    setCountdownRect(countdown, "film-left-edge", filmWidth, 0.0, filmEdgeWidth, viewportHeight)
+    setCountdownRect(countdown, "film-right-edge", viewportWidth - filmWidth - filmEdgeWidth, 0.0, filmEdgeWidth, viewportHeight)
     setCountdownOpacity(countdown, "film-left", 0.44 * masterOpacity)
     setCountdownOpacity(countdown, "film-right", 0.44 * masterOpacity)
     setCountdownOpacity(countdown, "film-left-edge", 0.30 * masterOpacity)
     setCountdownOpacity(countdown, "film-right-edge", 0.30 * masterOpacity)
-    updateFilmSprockets(countdown, t, viewportHeight, masterOpacity, jitterY)
+    updateFilmSprockets(countdown, t, viewportWidth, viewportHeight, masterOpacity, jitterY, uiScale, filmWidth)
     setCountdownRect(countdown, "film-noise", 0.0, -24.0 + ((math.floor(t * 18.0) % 5) - 2), viewportWidth, viewportHeight + 48.0)
     setCountdownOpacity(countdown, "film-noise", (0.18 + 0.10 * (math.floor(t * 11.0) % 2)) * masterOpacity)
     setCountdownRect(countdown, "grain-a", 0.0, 0.0, viewportWidth, viewportHeight)
@@ -716,32 +732,35 @@ local function updateFilmCountdown(dt)
     setCountdownOpacity(countdown, "grain-b", (0.12 - grainPulse * 0.35) * masterOpacity)
     setCountdownRect(countdown, "vignette", 0.0, 0.0, viewportWidth, viewportHeight)
     setCountdownOpacity(countdown, "vignette", 0.36 * masterOpacity)
-    setCountdownRect(countdown, "frame-top", 0.0, 0.0, viewportWidth, 42.0)
-    setCountdownRect(countdown, "frame-bottom", 0.0, viewportHeight - 42.0, viewportWidth, 42.0)
+    setCountdownRect(countdown, "frame-top", 0.0, 0.0, viewportWidth, frameHeight)
+    setCountdownRect(countdown, "frame-bottom", 0.0, viewportHeight - frameHeight, viewportWidth, frameHeight)
     setCountdownOpacity(countdown, "frame-top", 0.46 * masterOpacity)
     setCountdownOpacity(countdown, "frame-bottom", 0.46 * masterOpacity)
-    setCountdownRect(countdown, "scanline", 0.0, scanTop, viewportWidth, 3.0 + flash * 8.0)
+    setCountdownRect(countdown, "scanline", 0.0, scanTop, viewportWidth, (3.0 + flash * 8.0) * uiScale)
     setCountdownOpacity(countdown, "scanline", (0.07 + flash * 0.13) * masterOpacity)
-    setCountdownRect(countdown, "scratch-a", scratchLeftA, 0.0, 2.0, viewportHeight)
-    setCountdownRect(countdown, "scratch-b", scratchLeftB, 0.0, 1.0, viewportHeight)
+    setCountdownRect(countdown, "scratch-a", scratchLeftA, 0.0, math.max(1.0, 2.0 * uiScale), viewportHeight)
+    setCountdownRect(countdown, "scratch-b", scratchLeftB, 0.0, math.max(1.0, 1.0 * uiScale), viewportHeight)
     setCountdownOpacity(countdown, "scratch-a", (0.12 + flash * 0.14) * masterOpacity)
     setCountdownOpacity(countdown, "scratch-b", 0.09 * masterOpacity)
     setCountdownRect(countdown, "outer-circle", centerX - circleSize * 0.5, contentCenterY - circleSize * 0.5, circleSize, circleSize)
     setCountdownRect(countdown, "inner-circle", centerX - innerCircleSize * 0.5, contentCenterY - innerCircleSize * 0.5, innerCircleSize, innerCircleSize)
-    setCountdownRect(countdown, "cross-h", centerX - circleSize * 0.56, contentCenterY - 1.5, circleSize * 1.12, 3.0)
-    setCountdownRect(countdown, "cross-v", centerX - 1.5, contentCenterY - circleSize * 0.56, 3.0, circleSize * 1.12)
-    updateSweepBrightArea(countdown, centerX, contentCenterY, sweepLength, sweepCycle, masterOpacity)
-    setCountdownRect(countdown, "sweep-glow", centerX - 8.5, contentCenterY - sweepLength, 17.0, sweepLength)
-    setCountdownProperty(countdown, "sweep-glow", "transform-origin", string.format("8px %.0fpx", sweepLength))
+    setCountdownRect(countdown, "cross-h", centerX - circleSize * 0.56, contentCenterY - crossThickness * 0.5, circleSize * 1.12, crossThickness)
+    setCountdownRect(countdown, "cross-v", centerX - crossThickness * 0.5, contentCenterY - circleSize * 0.56, crossThickness, circleSize * 1.12)
+    setCountdownRect(countdown, "sweep-glow", centerX - sweepGlowWidth * 0.5, contentCenterY - sweepLength, sweepGlowWidth, sweepLength)
+    setCountdownProperty(countdown, "sweep-glow", "transform-origin", string.format("%.0fpx %.0fpx", sweepGlowWidth * 0.5, sweepLength))
     setCountdownProperty(countdown, "sweep-glow", "transform", string.format("rotate(%.1fdeg)", sweepAngle))
     setCountdownOpacity(countdown, "sweep-glow", (0.52 * sweepGlow + flash * 0.16) * masterOpacity)
-    setCountdownRect(countdown, "sweep", centerX - 3.5, contentCenterY - sweepLength, 7.0, sweepLength)
-    setCountdownProperty(countdown, "sweep", "transform-origin", string.format("3px %.0fpx", sweepLength))
+    setCountdownRect(countdown, "sweep", centerX - sweepWidth * 0.5, contentCenterY - sweepLength, sweepWidth, sweepLength)
+    setCountdownProperty(countdown, "sweep", "transform-origin", string.format("%.0fpx %.0fpx", sweepWidth * 0.5, sweepLength))
     setCountdownProperty(countdown, "sweep", "transform", string.format("rotate(%.1fdeg)", sweepAngle))
     setCountdownProperty(countdown, "sweep", "background-color", sweepColor)
     setCountdownOpacity(countdown, "sweep", (0.30 + 0.42 * sweepGlow) * masterOpacity)
-    setCountdownProperty(countdown, "leader-text", "left", px(centerX - 168.0))
-    setCountdownProperty(countdown, "leader-text", "top", px(contentCenterY - circleSize * 0.5 - 46.0))
+    setCountdownProperty(countdown, "leader-text", "left", px(centerX - leaderWidth * 0.5))
+    setCountdownProperty(countdown, "leader-text", "top", px(leaderTop))
+    setCountdownProperty(countdown, "leader-text", "width", px(leaderWidth))
+    setCountdownProperty(countdown, "leader-text", "height", px(leaderHeight))
+    setCountdownProperty(countdown, "leader-text", "font-size", px(22.0 * uiScale))
+    setCountdownProperty(countdown, "leader-text", "line-height", px(leaderHeight))
     setCountdownProperty(countdown, "leader-text", "opacity", scalar(0.84 * masterOpacity))
     setText(countdown, "leader-text", string.format("PICTURE START // %s", digitText))
     setCountdownProperty(countdown, "countdown-number-cyan", "left", px(digitLeft - 2.0))
@@ -973,11 +992,16 @@ local function showClear()
 
     removeAllWidgets()
     d:ResumeGame()
+    clearToCreditsTime = 0.0
 
     local screen = createWidget("Clear", d:GetClearWidgetPath(), true, 100)
     if screen ~= nil then
         screen:bind_click("btn-credits", function()
-            d:RequestCredits()
+            if showCredits ~= nil then
+                showCredits()
+            else
+                d:RequestCredits()
+            end
         end)
         screen:bind_click("btn-main-menu", function()
             d:RequestMainMenu()
@@ -990,15 +1014,101 @@ local function showClear()
     currentScreen = "Clear"
 end
 
-local function showCredits()
+local function updateClearOutro(dt)
+    if currentScreen ~= "Clear" then
+        return
+    end
+
+    clearToCreditsTime = clearToCreditsTime + (dt or 0.0)
+    if clearToCreditsTime >= CLEAR_TO_CREDITS_DELAY and showCredits ~= nil then
+        showCredits()
+    end
+end
+
+local function setCreditsRect(widget, id, left, top, width, height)
+    setCountdownRect(widget, id, left, top, width, height)
+end
+
+local function setCreditsOpacity(widget, id, value)
+    setCountdownOpacity(widget, id, value)
+end
+
+local function setCreditsProperty(widget, id, property, value)
+    setCountdownProperty(widget, id, property, value)
+end
+
+local function setCreditsTextBox(widget, id, top, height, fontSize, rollWidth, uiScale)
+    setCreditsRect(widget, id, 0.0, top * uiScale, rollWidth, height * uiScale)
+    setCreditsProperty(widget, id, "font-size", px(fontSize * uiScale))
+    setCreditsProperty(widget, id, "line-height", px(height * uiScale))
+end
+
+local function updateCreditsRoll(dt)
+    local credits = widgets.Credits
+    if credits == nil then
+        return
+    end
+
+    creditsRollTime = creditsRollTime + (dt or 0.0)
+    local viewportWidth, viewportHeight, centerX, _ = getStartMenuBootViewport()
+    local uiScale = clamp(math.min(viewportWidth / 1280.0, viewportHeight / 720.0), 0.55, 1.45)
+    local rollWidth = clamp(800.0 * uiScale, 430.0, math.max(430.0, viewportWidth * 0.78))
+    local rollHeight = CREDITS_ROLL_END_OFFSET * uiScale
+    local rollStart = viewportHeight + CREDITS_ROLL_START_PADDING * uiScale
+    local rollEnd = viewportHeight * 0.42 - 994.0 * uiScale
+    local p = clamp(creditsRollTime / CREDITS_ROLL_DURATION, 0.0, 1.0)
+    local eased = p * p * (3.0 - 2.0 * p)
+    local rollTop = lerp(rollStart, rollEnd, eased)
+    local buttonFade = clamp((creditsRollTime - CREDITS_ROLL_DURATION + 1.2) / 1.2, 0.0, 1.0)
+    local scanTop = (math.floor(creditsRollTime * 20.0) % 18) * viewportHeight / 18.0
+
+    setCreditsRect(credits, "screen", 0.0, 0.0, viewportWidth, viewportHeight)
+    setCreditsRect(credits, "backdrop", 0.0, 0.0, viewportWidth, viewportHeight)
+    setCreditsRect(credits, "shade", 0.0, 0.0, viewportWidth, viewportHeight)
+    setCreditsRect(credits, "roll-window", centerX - rollWidth * 0.5, 0.0, rollWidth, viewportHeight)
+    setCreditsRect(credits, "roll-track", 0.0, rollTop, rollWidth, rollHeight)
+    setCreditsRect(credits, "fade-top", 0.0, 0.0, viewportWidth, 150.0 * uiScale)
+    setCreditsRect(credits, "fade-bottom", 0.0, viewportHeight - 180.0 * uiScale, viewportWidth, 180.0 * uiScale)
+    setCreditsRect(credits, "scanline", 0.0, scanTop, viewportWidth, math.max(1.0, 3.0 * uiScale))
+    setCreditsTextBox(credits, "title-cyan", 0.0, 56.0, 44.0, rollWidth, uiScale)
+    setCreditsTextBox(credits, "title-pink", 0.0, 56.0, 44.0, rollWidth, uiScale)
+    setCreditsTextBox(credits, "title-main", 0.0, 56.0, 44.0, rollWidth, uiScale)
+    setCreditsProperty(credits, "title-cyan", "left", px(-3.0 * uiScale))
+    setCreditsProperty(credits, "title-pink", "left", px(3.0 * uiScale))
+    setCreditsTextBox(credits, "subtitle", 70.0, 28.0, 20.0, rollWidth, uiScale)
+    setCreditsRect(credits, "roll-line-a", rollWidth * 0.5 - 150.0 * uiScale, 126.0 * uiScale, 300.0 * uiScale, math.max(1.0, 2.0 * uiScale))
+    setCreditsRect(credits, "roll-line-b", rollWidth * 0.5 - 80.0 * uiScale, 142.0 * uiScale, 160.0 * uiScale, math.max(1.0, 2.0 * uiScale))
+
+    setCreditsTextBox(credits, "role-01", 212.0, 24.0, 17.0, rollWidth, uiScale)
+    setCreditsTextBox(credits, "name-01", 240.0, 46.0, 32.0, rollWidth, uiScale)
+    setCreditsTextBox(credits, "role-02", 346.0, 24.0, 17.0, rollWidth, uiScale)
+    setCreditsTextBox(credits, "name-02", 374.0, 46.0, 32.0, rollWidth, uiScale)
+    setCreditsTextBox(credits, "role-03", 480.0, 24.0, 17.0, rollWidth, uiScale)
+    setCreditsTextBox(credits, "name-03", 508.0, 46.0, 32.0, rollWidth, uiScale)
+    setCreditsTextBox(credits, "role-04", 614.0, 24.0, 17.0, rollWidth, uiScale)
+    setCreditsTextBox(credits, "name-04", 642.0, 46.0, 32.0, rollWidth, uiScale)
+    setCreditsTextBox(credits, "thanks-a", 800.0, 26.0, 18.0, rollWidth, uiScale)
+    setCreditsTextBox(credits, "thanks-b", 832.0, 26.0, 18.0, rollWidth, uiScale)
+    setCreditsTextBox(credits, "end-title", 930.0, 58.0, 42.0, rollWidth, uiScale)
+    setCreditsTextBox(credits, "end-sub", 994.0, 28.0, 18.0, rollWidth, uiScale)
+
+    setCreditsOpacity(credits, "control-panel", buttonFade)
+    setCreditsProperty(credits, "control-panel", "display", buttonFade > 0.02 and "block" or "none")
+    setCreditsOpacity(credits, "skip-hint", clamp(1.0 - buttonFade, 0.0, 0.68))
+end
+
+showCredits = function()
     local d = getDirector()
     if d == nil then return end
 
     removeAllWidgets()
     d:ResumeGame()
+    creditsRollTime = 0.0
 
     local screen = createWidget("Credits", d:GetCreditsWidgetPath(), true, 100)
     if screen ~= nil then
+        setCreditsOpacity(screen, "control-panel", 0.0)
+        setCreditsProperty(screen, "control-panel", "display", "none")
         screen:bind_click("btn-main-menu", function()
             d:RequestMainMenu()
         end)
@@ -1008,6 +1118,7 @@ local function showCredits()
     end
     addToViewport(screen, 100)
     currentScreen = "Credits"
+    updateCreditsRoll(0.0)
 end
 
 local function updateHud()
@@ -1146,6 +1257,10 @@ function Tick(dt)
         updateStartMenuBoot(dt)
     elseif currentScreen == "Countdown" then
         updateFilmCountdown(dt)
+    elseif currentScreen == "Clear" then
+        updateClearOutro(dt)
+    elseif currentScreen == "Credits" then
+        updateCreditsRoll(dt)
     end
 end
 
