@@ -157,6 +157,11 @@ PlayerConfig.Default = {
         PerfectDodgeGraceAfterDash = 0.05,
         PerfectDodgeSlomoDuration = 1.5,
         PerfectDodgeSlomoScale = 0.1,
+        -- World is slowed by SlomoScale. PlayerSpeedScale is the player's final speed
+        -- relative to real/raw time while TimeRush is active. 1.0 = normal, 1.2 = 20% faster.
+        PerfectDodgePlayerSpeedScale = 1.5,
+        -- Extra AI/cooldown scale on top of global slomo. Keep 1.0 to avoid double slomo.
+        PerfectDodgeEnemyBrainScale = 1.0,
 
         -- Lua-triggered hit feedback. Player attack hitstop is still primarily
         -- driven by AnimNotifyState_AttackHitWindow, but these values are used

@@ -144,22 +144,30 @@ local function ApplyLocalHitStop(actor, duration)
     end
 end
 
--- Perfect dodge slomo is gameplay time control, not just visual feedback.
--- Keep it in CombatContext so boss coroutine/cooldown scaling is always synchronized.
-local function ApplyCombatSlomo(actor, duration, scale)
+-- Perfect dodge is gameplay time control, not just visual feedback.
+-- TimeRush = world slomo + player custom time dilation compensation.
+local function ApplyCombatTimeRush(actor, duration, worldScale, playerSpeedScale, enemyBrainScale)
     duration = duration or 0.0
     if duration <= 0.0 then
         return
     end
 
-    scale = scale or 0.1
+    worldScale = worldScale or 0.1
+    playerSpeedScale = playerSpeedScale or 1.0
+    enemyBrainScale = enemyBrainScale or 1.0
 
     local action = GetOrAddActionComponent(actor)
-    if action ~= nil and action.Slomo ~= nil then
-        action:Slomo(duration, scale)
+    if action ~= nil then
+        if action.TimeRush ~= nil then
+            action:TimeRush(duration, worldScale, playerSpeedScale)
+        elseif action.Slomo ~= nil then
+            action:Slomo(duration, worldScale)
+        end
     end
 
-    CombatContext.OnSlomoStarted(duration, scale)
+    -- GlobalTimeDilation already slows enemy Tick dt. Keep the extra brain scale
+    -- separately tunable so boss AI is not accidentally slowed twice.
+    CombatContext.OnSlomoStarted(duration, enemyBrainScale)
 end
 
 ---@param playerContext PlayerContext
@@ -315,9 +323,8 @@ end
 -- 퍼펙트 회피 / 슬로모
 -- ════════════════════════════════════════════
 
--- [플레이어팀 호출] 글로벌 슬로모를 시작했다고 보스에 알림.
---   ⚠️ 플레이어가 ActionComponent.Slomo 를 부른 직후 반드시 같이 호출.
---      안 그러면 보스 코루틴이 보정 안 돼서 혼자 정상 속도로 폭주함.
+-- [플레이어팀 호출] 글로벌 슬로모/TimeRush를 시작했다고 보스에 알림.
+--   enemyBrainScale은 GlobalTimeDilation 위에 추가로 곱할 AI/쿨타임 보정값이다.
 function CombatContext.OnSlomoStarted(duration, scale)
     if registeredBossContext == nil then return end
     local perfectConfig = registeredBossContext.Config.PERFECT
@@ -371,6 +378,8 @@ function CombatContext.OnPlayerPerfectDodge(playerContext, hit)
     local combatConfig = playerContext.Config.Combat
     local duration = hit.SlomoDuration or combatConfig.PerfectDodgeSlomoDuration
     local scale = hit.SlomoScale or combatConfig.PerfectDodgeSlomoScale
+    local playerSpeedScale = combatConfig.PerfectDodgePlayerSpeedScale or 1.0
+    local enemyBrainScale = combatConfig.PerfectDodgeEnemyBrainScale or 1.0
 
     CombatContext.SetCurrentThreat(playerContext, hit.SourceActor)
 
@@ -380,9 +389,11 @@ function CombatContext.OnPlayerPerfectDodge(playerContext, hit)
         GaugeDelta = combatConfig.PerfectDodgeGaugeDelta,
         SlomoDuration = duration,
         SlomoScale = scale,
+        PlayerSpeedScale = playerSpeedScale,
+        EnemyBrainScale = enemyBrainScale,
     })
 
-    ApplyCombatSlomo(playerContext.Owner, duration, scale)
+    ApplyCombatTimeRush(playerContext.Owner, duration, scale, playerSpeedScale, enemyBrainScale)
 
     print(string.format("[Player] Perfect Dodge! source=%s attack=%s",
         SafeActorName(hit.SourceActor), tostring(hit.AttackId)))
