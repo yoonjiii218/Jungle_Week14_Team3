@@ -153,7 +153,7 @@ namespace
 		}
 	}
 
-    constexpr const char* MaterialGraphGeneratorVersion = "GeneratedMaterialPass_v9_SurfaceToonShading_InstancedStaticMesh";
+    constexpr const char* MaterialGraphGeneratorVersion = "GeneratedMaterialPass_v10_SurfacePinSwizzle_InstancedStaticMesh";
 }
 
 void FMaterialManager::ScanMaterialAssets()

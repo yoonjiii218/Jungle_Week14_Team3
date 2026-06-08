@@ -14,6 +14,7 @@
 #include "Render/Shader/ShaderManager.h"
 #include "Render/Resource/Buffer.h"
 #include "Render/Types/LightFrustumUtils.h"
+#include "Materials/Material.h"
 #include "Profiling/Stats/ShadowStats.h"
 #include "Core/ProjectSettings.h"
 #include "Collision/Octree/SpatialPartition.h"
@@ -23,6 +24,33 @@
 #include <d3d11.h>
 
 REGISTER_RENDER_PASS(FShadowMapPass)
+
+namespace
+{
+	bool IsTranslucentShadowSection(const FMeshSectionDraw& Section)
+	{
+		const UMaterial* Material = Section.Material;
+		return Material && Material->GetRenderPass() == ERenderPass::AlphaBlend;
+	}
+
+	bool IsMaskedShadowSection(const FMeshSectionDraw& Section)
+	{
+		const UMaterial* Material = Section.Material;
+		return Material && Material->HasOpacityMaskInputConnected();
+	}
+
+	ID3D11ShaderResourceView* GetShadowMaskSRV(const FMeshSectionDraw& Section)
+	{
+		const UMaterial* Material = Section.Material;
+		if (!Material)
+		{
+			return nullptr;
+		}
+
+		const ID3D11ShaderResourceView* const* SRVs = Material->GetCachedSRVs();
+		return const_cast<ID3D11ShaderResourceView*>(SRVs[(int)EMaterialTextureSlot::Diffuse]);
+	}
+}
 
 // ============================================================
 // 생성 / 소멸
@@ -660,6 +688,20 @@ void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, F
 	FShader* SkeletalShadowShader = bUseGpuSkinning
 		? FShaderManager::Get().GetOrCreateShadowDepthPermutation(EShadowDepthDefines::EVertexFactory::SkeletalMesh)
 		: StaticShadowShader;
+	FShader* StaticMaskedShadowShader = FShaderManager::Get().GetOrCreateShadowDepthPermutation(
+		EShadowDepthDefines::EVertexFactory::StaticMesh,
+		EShaderErrorMode::Notification,
+		true);
+	FShader* InstancedStaticMaskedShadowShader = FShaderManager::Get().GetOrCreateShadowDepthPermutation(
+		EShadowDepthDefines::EVertexFactory::InstancedStaticMesh,
+		EShaderErrorMode::Notification,
+		true);
+	FShader* SkeletalMaskedShadowShader = bUseGpuSkinning
+		? FShaderManager::Get().GetOrCreateShadowDepthPermutation(
+			EShadowDepthDefines::EVertexFactory::SkeletalMesh,
+			EShaderErrorMode::Notification,
+			true)
+		: StaticMaskedShadowShader;
 
 	if (!StaticShadowShader || !StaticShadowShader->IsValid()) return;
 	if (!InstancedStaticShadowShader || !InstancedStaticShadowShader->IsValid())
@@ -667,6 +709,18 @@ void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, F
 		InstancedStaticShadowShader = StaticShadowShader;
 	}
 	const bool bCanDrawGpuSkinnedCasters = SkeletalShadowShader && SkeletalShadowShader->IsValid();
+	if (!StaticMaskedShadowShader || !StaticMaskedShadowShader->IsValid())
+	{
+		StaticMaskedShadowShader = StaticShadowShader;
+	}
+	if (!InstancedStaticMaskedShadowShader || !InstancedStaticMaskedShadowShader->IsValid())
+	{
+		InstancedStaticMaskedShadowShader = StaticMaskedShadowShader;
+	}
+	if (!SkeletalMaskedShadowShader || !SkeletalMaskedShadowShader->IsValid())
+	{
+		SkeletalMaskedShadowShader = StaticMaskedShadowShader;
+	}
 
 	ID3D11Device* Device = nullptr;
 	DC->GetDevice(&Device);
@@ -773,6 +827,33 @@ void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, F
 		for (const FMeshSectionDraw& Section : Proxy->GetSectionDraws())
 		{
 			if (Section.IndexCount == 0) continue;
+			if (IsTranslucentShadowSection(Section)) continue;
+
+			const bool bMaskedShadow = IsMaskedShadowSection(Section);
+			FShader* SectionShadowShader = DesiredShader;
+			if (bMaskedShadow)
+			{
+				SectionShadowShader = bGpuSkinned
+					? SkeletalMaskedShadowShader
+					: (bInstancedStaticMesh ? InstancedStaticMaskedShadowShader : StaticMaskedShadowShader);
+			}
+			if (SectionShadowShader && SectionShadowShader->IsValid() && SectionShadowShader != BoundShader)
+			{
+				SectionShadowShader->Bind(DC);
+				BoundShader = SectionShadowShader;
+
+				if (!bMaskedShadow && CurrentFilterMode != EShadowFilterMode::VSM)
+				{
+					DC->PSSetShader(nullptr, nullptr, 0);
+				}
+			}
+
+			if (bMaskedShadow)
+			{
+				ID3D11ShaderResourceView* MaskSRV = GetShadowMaskSRV(Section);
+				DC->PSSetShaderResources((int)EMaterialTextureSlot::Diffuse, 1, &MaskSRV);
+			}
+
 			if (ProxyBuffer.InstanceVB && ProxyBuffer.InstanceCount > 0)
 			{
 				DC->DrawIndexedInstanced(Section.IndexCount, ProxyBuffer.InstanceCount, Section.FirstIndex, 0, 0);
@@ -795,6 +876,7 @@ void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, F
 
 	ID3D11ShaderResourceView* NullSRV = nullptr;
 	DC->VSSetShaderResources(EVertexFactoryTexSlot::SkinMatrices, 1, &NullSRV);
+	DC->PSSetShaderResources((int)EMaterialTextureSlot::Diffuse, 1, &NullSRV);
 
 	if (Device)
 	{

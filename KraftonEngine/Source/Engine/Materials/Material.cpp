@@ -315,6 +315,40 @@ void UMaterial::RebuildCachedSRVs()
 	}
 }
 
+bool UMaterial::HasOpacityMaskInputConnected() const
+{
+	if (Domain != EMaterialDomain::Surface)
+	{
+		return false;
+	}
+
+	for (const FMaterialGraphNode& Node : Graph.Nodes)
+	{
+		if (Node.Type != EMaterialGraphNodeType::Output)
+		{
+			continue;
+		}
+
+		for (const FMaterialGraphPin& Pin : Node.Pins)
+		{
+			if (Pin.Kind != EMaterialGraphPinKind::Input || Pin.DisplayName.ToString() != "OpacityMask")
+			{
+				continue;
+			}
+
+			for (const FMaterialGraphLink& Link : Graph.Links)
+			{
+				if (Link.ToPinId == Pin.PinId)
+				{
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
 void UMaterial::Serialize(FArchive& Ar)
 {
 	Ar << PathFileName;

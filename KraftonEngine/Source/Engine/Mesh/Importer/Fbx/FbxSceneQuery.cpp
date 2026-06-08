@@ -1,5 +1,42 @@
 #include "Mesh/Importer/Fbx/FbxSceneQuery.h"
 
+#include <cctype>
+
+namespace
+{
+	bool StartsWithNoCase(const char* Value, const char* Prefix)
+	{
+		if (!Value || !Prefix)
+		{
+			return false;
+		}
+
+		while (*Prefix)
+		{
+			const unsigned char ValueChar = static_cast<unsigned char>(*Value);
+			const unsigned char PrefixChar = static_cast<unsigned char>(*Prefix);
+			if (std::tolower(ValueChar) != std::tolower(PrefixChar))
+			{
+				return false;
+			}
+
+			++Value;
+			++Prefix;
+		}
+
+		return true;
+	}
+
+	bool HasUnrealCollisionPrefix(const char* Name)
+	{
+		return StartsWithNoCase(Name, "UCX_") ||
+			StartsWithNoCase(Name, "UBX_") ||
+			StartsWithNoCase(Name, "UCP_") ||
+			StartsWithNoCase(Name, "USP_") ||
+			StartsWithNoCase(Name, "MCDCX_");
+	}
+}
+
 void FFbxSceneQuery::CollectAllNodes(FbxNode* RootNode, TArray<FbxNode*>& OutNodes)
 {
 	if (!RootNode)
@@ -21,7 +58,7 @@ void FFbxSceneQuery::CollectMeshNodes(FbxNode* RootNode, TArray<FbxNode*>& OutMe
 		return;
 	}
 
-	if (RootNode->GetMesh())
+	if (RootNode->GetMesh() && !IsCollisionMeshNode(RootNode))
 	{
 		OutMeshNodes.push_back(RootNode);
 	}
@@ -30,6 +67,22 @@ void FFbxSceneQuery::CollectMeshNodes(FbxNode* RootNode, TArray<FbxNode*>& OutMe
 	{
 		CollectMeshNodes(RootNode->GetChild(ChildIndex), OutMeshNodes);
 	}
+}
+
+bool FFbxSceneQuery::IsCollisionMeshNode(FbxNode* Node)
+{
+	if (!Node || !Node->GetMesh())
+	{
+		return false;
+	}
+
+	if (HasUnrealCollisionPrefix(Node->GetName()))
+	{
+		return true;
+	}
+
+	FbxNodeAttribute* Attr = Node->GetNodeAttribute();
+	return Attr && HasUnrealCollisionPrefix(Attr->GetName());
 }
 
 bool FFbxSceneQuery::IsSkeletonNode(FbxNode* Node)

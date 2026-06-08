@@ -53,9 +53,9 @@ FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
     float2 n_26 = Input.UV0;
     float4 n_17 = Tex_Diffuse.Sample(LinearWrapSampler, n_26);
     FMaterialResult Result;
-    Result.Color = (n_17).xyz;
+    Result.Color = (n_17).rgb;
     Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = (n_17).x;
+    Result.Opacity = (n_17).a;
     Result.UVOffset = float2(0, 0);
     FMaterialEvalResult Eval;
     Eval.Material = Result;

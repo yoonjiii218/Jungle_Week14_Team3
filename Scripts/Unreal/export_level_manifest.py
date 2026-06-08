@@ -1,19 +1,58 @@
 import hashlib
 import json
 import os
+import sys
 
 import unreal
 
 
-OUTPUT_FILE = r"C:\Temp\Tokyo.scene.json"
+DEFAULT_OUTPUT_FILE = r"C:\Temp\Tokyo.scene.json"
+DEFAULT_MAP_PATH = "/Game/TokyoStylizedEnvironment/Maps/Tokyo"
 UNREAL_SKY_SCALE_THRESHOLD = 10000.0
+
+
+def script_arg(name, default=None):
+    prefix = name + "="
+    for index, arg in enumerate(sys.argv[1:]):
+        if arg == name and index + 2 <= len(sys.argv[1:]):
+            return sys.argv[index + 2]
+        if arg.startswith(prefix):
+            return arg[len(prefix):]
+    return default
+
+
+def script_bool(name, default=False):
+    value = script_arg(name)
+    if value is None:
+        return default
+    return str(value).strip().lower() in ("1", "true", "yes", "on")
+
+
+OUTPUT_FILE = (
+    script_arg("--output")
+    or os.environ.get("UE_SCENE_OUTPUT")
+    or DEFAULT_OUTPUT_FILE
+)
+MAP_PATH = (
+    script_arg("--map")
+    or os.environ.get("UE_SCENE_MAP")
+    or DEFAULT_MAP_PATH
+)
+EXPORT_MESHES = script_bool(
+    "--export-meshes",
+    os.environ.get("UE_SCENE_EXPORT_MESHES", "1").lower()
+    not in ("0", "false", "no", "off"),
+)
 
 
 def safe_property(obj, name, default=None):
     try:
         return obj.get_editor_property(name)
     except Exception:
-        return default
+        try:
+            return getattr(obj, name)
+        except Exception:
+            return default
 
 
 def vec3(value):
@@ -118,14 +157,349 @@ def light_color(value):
     ]
 
 
-def mesh_key(asset_path):
+def asset_key(asset_path):
     name = asset_path.rsplit("/", 1)[-1].split(".")[0]
     digest = hashlib.sha1(asset_path.encode("utf-8")).hexdigest()[:8]
     return f"{name}_{digest}"
 
 
+def mesh_key(asset_path):
+    return asset_key(asset_path)
+
+
+def material_key(asset_path):
+    return asset_key(asset_path)
+
+
+def texture_key(asset_path):
+    return asset_key(asset_path)
+
+
 def stable_id(text):
     return hashlib.sha1(text.encode("utf-8")).hexdigest()[:16]
+
+
+def editor_array(obj, property_name):
+    value = safe_property(obj, property_name)
+    if value is None:
+        return []
+
+    try:
+        return list(value)
+    except Exception:
+        return []
+
+
+def parameter_name(parameter):
+    info = safe_property(parameter, "parameter_info")
+    name = safe_property(info, "name") if info is not None else None
+    if name is None:
+        name = safe_property(parameter, "parameter_name")
+    if name is None:
+        name = safe_property(parameter, "name")
+    return str(name) if name is not None else ""
+
+
+def vector_value(value):
+    if value is None:
+        return None
+
+    if all(hasattr(value, channel) for channel in ("r", "g", "b", "a")):
+        return linear_color(value)
+
+    if all(hasattr(value, channel) for channel in ("x", "y", "z")):
+        return [
+            round(float(value.x), 6),
+            round(float(value.y), 6),
+            round(float(value.z), 6),
+            round(float(getattr(value, "w", 1.0)), 6),
+        ]
+
+    return None
+
+
+def texture_usage_guess(parameter, texture):
+    classifier = (
+        f"{parameter} {texture.get_name()} {texture.get_path_name()}"
+    ).lower()
+
+    if any(token in classifier for token in ("normal", "_n.", "_n_", "nrml")):
+        return "normal"
+    if any(token in classifier for token in ("opacity", "alpha", "mask")):
+        return "opacity"
+    if any(token in classifier for token in ("rmo", "orm", "roughness", "metallic", "metalness")):
+        return "rmo"
+    if any(token in classifier for token in ("emissive", "emission")):
+        return "emissive"
+    if any(token in classifier for token in ("base", "albedo", "diffuse", "color")):
+        return "baseColor"
+    return "unknown"
+
+
+def unreal_name(value):
+    name_type = getattr(unreal, "Name", None)
+    if name_type is None:
+        return value
+    try:
+        return name_type(value)
+    except Exception:
+        return value
+
+
+def material_library_call(method_name, *args):
+    library = getattr(unreal, "MaterialEditingLibrary", None)
+    method = getattr(library, method_name, None) if library is not None else None
+    if method is None:
+        return None
+
+    try:
+        return method(*args)
+    except Exception:
+        return None
+
+
+def result_value(result):
+    if isinstance(result, tuple):
+        for item in result:
+            if item is not None and not isinstance(item, bool):
+                return item
+        return None
+    return result
+
+
+def material_parameter_names(material, method_name):
+    result = material_library_call(method_name, material)
+    if result is None:
+        return []
+
+    try:
+        return [str(name) for name in result]
+    except Exception:
+        return []
+
+
+def material_texture_parameter_value(material, name):
+    parameter = unreal_name(name)
+    value = result_value(material_library_call(
+        "get_material_instance_texture_parameter_value",
+        material,
+        parameter,
+    ))
+    if value is not None:
+        return value
+
+    return result_value(material_library_call(
+        "get_material_default_texture_parameter_value",
+        material,
+        parameter,
+    ))
+
+
+def material_scalar_parameter_value(material, name):
+    parameter = unreal_name(name)
+    value = result_value(material_library_call(
+        "get_material_instance_scalar_parameter_value",
+        material,
+        parameter,
+    ))
+    if value is not None:
+        return value
+
+    return result_value(material_library_call(
+        "get_material_default_scalar_parameter_value",
+        material,
+        parameter,
+    ))
+
+
+def material_vector_parameter_value(material, name):
+    parameter = unreal_name(name)
+    value = result_value(material_library_call(
+        "get_material_instance_vector_parameter_value",
+        material,
+        parameter,
+    ))
+    if value is not None:
+        return value
+
+    return result_value(material_library_call(
+        "get_material_default_vector_parameter_value",
+        material,
+        parameter,
+    ))
+
+
+def material_chain(material):
+    chain = []
+    current = material
+    seen = set()
+    while current is not None:
+        path = current.get_path_name()
+        if path in seen:
+            break
+        seen.add(path)
+        chain.append(current)
+        current = safe_property(current, "parent")
+    return chain
+
+
+def first_material_property(chain, property_name, default=None):
+    for material in chain:
+        value = safe_property(material, property_name)
+        if value is not None:
+            return value
+    return default
+
+
+def register_texture(texture, texture_records, texture_assets):
+    if texture is None:
+        return None
+
+    asset_path = texture.get_path_name()
+    key = texture_key(asset_path)
+    texture_records[key] = {
+        "key": key,
+        "sourceAsset": asset_path,
+        "file": f"Textures/{key}.png",
+    }
+    texture_assets[key] = texture
+    return key
+
+
+def register_material(material, material_records, texture_records, texture_assets):
+    if material is None:
+        return None
+
+    asset_path = material.get_path_name()
+    key = material_key(asset_path)
+    if key in material_records:
+        return key
+
+    chain = material_chain(material)
+    parent = safe_property(material, "parent")
+    texture_params = {}
+    scalar_params = {}
+    vector_params = {}
+
+    for material_node in reversed(chain):
+        for parameter in editor_array(material_node, "texture_parameter_values"):
+            texture = safe_property(parameter, "parameter_value")
+            if texture is None:
+                continue
+
+            name = parameter_name(parameter)
+            texture_param_key = register_texture(
+                texture,
+                texture_records,
+                texture_assets,
+            )
+            if texture_param_key is None:
+                continue
+
+            texture_params[name] = {
+                "parameter": name,
+                "texture": texture_param_key,
+                "usageGuess": texture_usage_guess(name, texture),
+            }
+
+        for parameter in editor_array(material_node, "scalar_parameter_values"):
+            name = parameter_name(parameter)
+            value = safe_property(parameter, "parameter_value")
+            try:
+                scalar_params[name] = round(float(value), 6)
+            except Exception:
+                pass
+
+        for parameter in editor_array(material_node, "vector_parameter_values"):
+            name = parameter_name(parameter)
+            value = vector_value(safe_property(parameter, "parameter_value"))
+            if value is not None:
+                vector_params[name] = value
+
+    for name in material_parameter_names(material, "get_texture_parameter_names"):
+        texture = material_texture_parameter_value(material, name)
+        texture_param_key = register_texture(
+            texture,
+            texture_records,
+            texture_assets,
+        )
+        if texture_param_key is not None:
+            texture_params[name] = {
+                "parameter": name,
+                "texture": texture_param_key,
+                "usageGuess": texture_usage_guess(name, texture),
+            }
+
+    for name in material_parameter_names(material, "get_scalar_parameter_names"):
+        value = material_scalar_parameter_value(material, name)
+        try:
+            scalar_params[name] = round(float(value), 6)
+        except Exception:
+            pass
+
+    for name in material_parameter_names(material, "get_vector_parameter_names"):
+        value = vector_value(material_vector_parameter_value(material, name))
+        if value is not None:
+            vector_params[name] = value
+
+    material_records[key] = {
+        "key": key,
+        "sourceAsset": asset_path,
+        "baseMaterial": parent.get_path_name() if parent else "",
+        "blendMode": str(first_material_property(chain, "blend_mode", "")),
+        "twoSided": bool(first_material_property(chain, "two_sided", False)),
+        "textures": sorted(texture_params.values(), key=lambda item: item["parameter"]),
+        "scalars": scalar_params,
+        "vectors": vector_params,
+    }
+    return key
+
+
+def unreal_package_path_from_umap(path):
+    normalized = os.path.normpath(path)
+    parts = normalized.split(os.sep)
+    lowered = [part.lower() for part in parts]
+    if "content" not in lowered:
+        return path
+
+    content_index = lowered.index("content")
+    relative_parts = parts[content_index + 1:]
+    if not relative_parts:
+        return path
+
+    relative_path = "/".join(relative_parts)
+    if relative_path.lower().endswith(".umap"):
+        relative_path = relative_path[:-5]
+    return "/Game/" + relative_path
+
+
+def load_requested_map(map_path):
+    if not map_path:
+        return
+
+    package_path = (
+        unreal_package_path_from_umap(map_path)
+        if map_path.lower().endswith(".umap")
+        else map_path
+    )
+
+    loading_utils = getattr(unreal, "EditorLoadingAndSavingUtils", None)
+    if loading_utils is not None and hasattr(loading_utils, "load_map"):
+        loading_utils.load_map(package_path)
+        unreal.log(f"Loaded map for scene export: {package_path}")
+        return
+
+    level_subsystem_type = getattr(unreal, "LevelEditorSubsystem", None)
+    if level_subsystem_type is not None:
+        level_subsystem = unreal.get_editor_subsystem(level_subsystem_type)
+        if level_subsystem is not None and hasattr(level_subsystem, "load_level"):
+            level_subsystem.load_level(package_path)
+            unreal.log(f"Loaded level for scene export: {package_path}")
+            return
+
+    unreal.log_warning(
+        "Could not explicitly load map before export; exporting current editor world."
+    )
 
 
 def component_identity(actor, component):
@@ -189,6 +563,105 @@ def iter_static_mesh_component_transforms(component):
         transform = get_instance_transform_world(component, index)
         if transform is not None:
             yield index, transform
+
+
+def export_static_mesh_assets(mesh_assets, output_file):
+    if not EXPORT_MESHES:
+        return 0
+
+    output_directory = os.path.dirname(output_file)
+    mesh_directory = os.path.join(output_directory, "Meshes")
+    os.makedirs(mesh_directory, exist_ok=True)
+
+    exported_count = 0
+    for key, mesh in sorted(mesh_assets.items()):
+        filename = os.path.join(mesh_directory, f"{key}.fbx")
+        task = unreal.AssetExportTask()
+        task.object = mesh
+        task.filename = filename
+        task.automated = True
+        task.replace_identical = True
+        task.prompt = False
+
+        fbx_options_type = getattr(unreal, "FbxExportOption", None)
+        if fbx_options_type is not None:
+            task.options = fbx_options_type()
+
+        if unreal.Exporter.run_asset_export_task(task):
+            exported_count += 1
+        else:
+            unreal.log_warning(
+                f"Failed to export static mesh FBX: {mesh.get_path_name()}"
+            )
+
+    return exported_count
+
+
+def export_texture_assets(texture_assets, output_file):
+    output_directory = os.path.dirname(output_file)
+    texture_directory = os.path.join(output_directory, "Textures")
+    os.makedirs(texture_directory, exist_ok=True)
+
+    exported_count = 0
+    for key, texture in sorted(texture_assets.items()):
+        filename = os.path.join(texture_directory, f"{key}.png")
+        task = unreal.AssetExportTask()
+        task.object = texture
+        task.filename = filename
+        task.automated = True
+        task.replace_identical = True
+        task.prompt = False
+
+        exporter_type = getattr(unreal, "TextureExporterPNG", None)
+        if exporter_type is not None:
+            task.exporter = exporter_type()
+
+        if unreal.Exporter.run_asset_export_task(task):
+            exported_count += 1
+        else:
+            unreal.log_warning(
+                f"Failed to export texture PNG: {texture.get_path_name()}"
+            )
+
+    return exported_count
+
+
+def material_metadata_path(output_file):
+    lower_path = output_file.lower()
+    if lower_path.endswith(".scene.json"):
+        return output_file[:-len(".scene.json")] + ".materials.json"
+    return os.path.splitext(output_file)[0] + ".materials.json"
+
+
+def export_material_metadata(
+    material_records,
+    texture_records,
+    texture_assets,
+    output_file,
+):
+    exported_textures = export_texture_assets(texture_assets, output_file)
+    metadata = {
+        "version": 1,
+        "materials": sorted(
+            material_records.values(),
+            key=lambda item: item["key"],
+        ),
+        "textures": sorted(
+            texture_records.values(),
+            key=lambda item: item["key"],
+        ),
+    }
+
+    filename = material_metadata_path(output_file)
+    output_directory = os.path.dirname(filename)
+    if output_directory:
+        os.makedirs(output_directory, exist_ok=True)
+
+    with open(filename, "w", encoding="utf-8") as file:
+        json.dump(metadata, file, ensure_ascii=False, indent=2)
+
+    unreal.log(f"Material metadata exported: {filename}")
+    return exported_textures
 
 
 def should_skip_unreal_sky_mesh(actor, mesh, transform):
@@ -267,12 +740,18 @@ editor_system = unreal.get_editor_subsystem(
     unreal.UnrealEditorSubsystem
 )
 
+load_requested_map(MAP_PATH)
+
 world = editor_system.get_editor_world()
 loaded_actors = actor_system.get_all_level_actors()
 
 placements = []
 environment = []
 meshes = {}
+mesh_assets = {}
+material_records = {}
+texture_records = {}
+texture_assets = {}
 skipped_unreal_sky_meshes = 0
 
 unreal.log(f"Loaded actor count: {len(loaded_actors)}")
@@ -309,10 +788,18 @@ for actor in loaded_actors:
             "sourceAsset": asset_path,
             "fbx": f"Meshes/{key}.fbx",
         }
+        mesh_assets[key] = mesh
 
         materials = []
         for index in range(component.get_num_materials()):
             material = component.get_material(index)
+            if material:
+                register_material(
+                    material,
+                    material_records,
+                    texture_records,
+                    texture_assets,
+                )
             materials.append(
                 material.get_path_name() if material else "None"
             )
@@ -516,12 +1003,23 @@ output_directory = os.path.dirname(OUTPUT_FILE)
 if output_directory:
     os.makedirs(output_directory, exist_ok=True)
 
+exported_meshes = export_static_mesh_assets(mesh_assets, OUTPUT_FILE)
+exported_textures = export_material_metadata(
+    material_records,
+    texture_records,
+    texture_assets,
+    OUTPUT_FILE,
+)
+
 with open(OUTPUT_FILE, "w", encoding="utf-8") as file:
     json.dump(manifest, file, ensure_ascii=False, indent=2)
 
 unreal.log(f"Scene manifest exported: {OUTPUT_FILE}")
 unreal.log(
     f"Meshes: {len(meshes)}, "
+    f"exported FBX: {exported_meshes}, "
+    f"materials: {len(material_records)}, "
+    f"exported textures: {exported_textures}, "
     f"placements: {len(placements)}, "
     f"environment: {len(environment)}, "
     f"skipped sky meshes: {skipped_unreal_sky_meshes}"

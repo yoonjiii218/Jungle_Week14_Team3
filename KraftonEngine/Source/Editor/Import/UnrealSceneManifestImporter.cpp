@@ -254,6 +254,11 @@ namespace
 		return false;
 	}
 
+	bool IsDecalIdentity(const FString& Identity)
+	{
+		return ContainsAny(Identity, { "decal" });
+	}
+
 	bool ReadNamedScalar(
 		json::JSON& Object,
 		std::initializer_list<const char*> Names,
@@ -550,8 +555,9 @@ namespace
 		DecomposePlacementMatrix(Record, Location, Rotation, Scale);
 
 		Root->SetRelativeLocation(Location);
-		Root->SetRelativeRotation(
-			FRotator(Record.RotationEuler.Y, Record.RotationEuler.Z, Record.RotationEuler.X));
+		Root->SetRelativeRotationWithEulerHint(
+			Rotation,
+			Rotation.ToRotator());
 		Root->SetRelativeScale(Scale);
 	}
 
@@ -852,9 +858,9 @@ namespace
 		FString& OutDepthState,
 		FString& OutRasterState)
 	{
-		const FString BlendMode = ReadString(MaterialObject, "blendMode");
-		const bool bMasked = BlendMode.find("MASKED") != FString::npos;
-		const bool bTranslucent = BlendMode.find("TRANSLUCENT") != FString::npos;
+		const FString BlendMode = ToLowerAscii(ReadString(MaterialObject, "blendMode"));
+		const bool bMasked = ContainsAny(BlendMode, { "blend_masked", "masked" });
+		const bool bTranslucent = ContainsAny(BlendMode, { "blend_translucent", "translucent" });
 
 		OutRenderPass = bTranslucent ? "AlphaBlend" : "Opaque";
 		OutBlendState = bTranslucent ? "AlphaBlend" : "Opaque";
@@ -868,6 +874,14 @@ namespace
 		FString PackedRmoTexture;
 		FString EmissiveTexture;
 		FString OpacityTexture;
+		const FString MaterialIdentity = ToLowerAscii(
+			ReadString(MaterialObject, "key") + " " +
+			ReadString(MaterialObject, "baseMaterial") + " " +
+			ReadString(MaterialObject, "sourceAsset"));
+		const bool bDecalMaterial = IsDecalIdentity(MaterialIdentity);
+		bool bUseBaseRedForOpacityMask = bMasked && ContainsAny(
+			MaterialIdentity,
+			{ "trim_text", "m_text", "mi_text" });
 
 		if (MaterialObject.hasKey("textures") &&
 			MaterialObject["textures"].JSONType() == json::JSON::Class::Array)
@@ -885,6 +899,10 @@ namespace
 					ReadString(TextureRef, "parameter") + " " +
 					TextureKey + " " +
 					ReadString(TextureRef, "usageGuess"));
+				if (bMasked && ContainsAny(Classifier, { "text" }))
+				{
+					bUseBaseRedForOpacityMask = true;
+				}
 				if (ContainsAny(Classifier, { "normal" }))
 				{
 					NormalTexture = PathIt->second;
@@ -916,6 +934,22 @@ namespace
 			}
 		}
 
+		if (bMasked && OpacityTexture.empty() && !BaseTexture.empty())
+		{
+			OpacityTexture = BaseTexture;
+		}
+
+		const bool bProceduralMaskedDecalFallback =
+			bDecalMaterial && bMasked && BaseTexture.empty() && OpacityTexture.empty();
+		if (bProceduralMaskedDecalFallback)
+		{
+			// UE decal masters can use procedural masks that are not exported in the manifest.
+			// Keep those planes as overlays instead of importing them as opaque geometry.
+			OutRenderPass = "AlphaBlend";
+			OutBlendState = "AlphaBlend";
+			OutDepthState = "DepthReadOnly";
+		}
+
 		json::JSON EmptyObject = json::JSON::Make(json::JSON::Class::Object);
 		json::JSON& Scalars = MaterialObject.hasKey("scalars") ? MaterialObject["scalars"] : EmptyObject;
 		json::JSON& Vectors = MaterialObject.hasKey("vectors") ? MaterialObject["vectors"] : EmptyObject;
@@ -929,19 +963,21 @@ namespace
 
 		float Roughness = 0.5f;
 		float Metallic = 0.0f;
-		float Opacity = bTranslucent ? 0.5f : 1.0f;
-		ReadNamedScalar(Scalars, { "roughness" }, Roughness);
+		float Opacity = (bTranslucent || bProceduralMaskedDecalFallback) ? 0.5f : 1.0f;
+		ReadNamedScalar(Scalars, { "roughness", "rough" }, Roughness);
 		ReadNamedScalar(Scalars, { "metallic", "metalness" }, Metallic);
-		ReadNamedScalar(Scalars, { "opacity" }, Opacity);
+		ReadNamedScalar(
+			Scalars,
+			bProceduralMaskedDecalFallback
+				? std::initializer_list<const char*>{ "dirt mask opacity", "mask opacity", "opacity" }
+				: std::initializer_list<const char*>{ "opacity" },
+			Opacity);
 
 		float EmissiveIntensity = 0.0f;
 		const bool bHasEmissiveIntensity = ReadNamedScalar(
 			Scalars,
 			{ "light intensity", "emissive intensity", "emissive int" },
 			EmissiveIntensity);
-		const FString MaterialIdentity = ToLowerAscii(
-			ReadString(MaterialObject, "key") + " " +
-			ReadString(MaterialObject, "baseMaterial"));
 		if (!bHasEmissiveIntensity &&
 			(!EmissiveTexture.empty() || ContainsAny(MaterialIdentity, { "emissive" })))
 		{
@@ -1101,10 +1137,15 @@ namespace
 				FindPinId(Output, "Emissive", EMaterialGraphPinKind::Input));
 		}
 
-		if (bMasked)
+		if (bMasked && !bProceduralMaskedDecalFallback)
 		{
-			uint32 MaskPin = BasePins.A;
-			if (!OpacityTexture.empty() && OpacityTexture != BaseTexture)
+			const bool bUseBaseRedMask =
+				bUseBaseRedForOpacityMask ||
+				ContainsAny(ToLowerAscii(BaseTexture), { "t_text" });
+			uint32 MaskPin = (bUseBaseRedMask && BasePins.R != 0)
+				? BasePins.R
+				: BasePins.A;
+			if (!bUseBaseRedMask && !OpacityTexture.empty() && OpacityTexture != BaseTexture)
 			{
 				MaskPin = AddTextureSample(
 					OutGraph,
@@ -1121,7 +1162,7 @@ namespace
 				FindPinId(Output, "OpacityMask", EMaterialGraphPinKind::Input));
 		}
 
-		if (bTranslucent)
+		if (bTranslucent || bProceduralMaskedDecalFallback)
 		{
 			uint32 OpacityPin = AddConstant(OutGraph, Opacity, 180.0f, 860.0f);
 			if (BasePins.A != 0)
@@ -1265,7 +1306,14 @@ namespace
 			MaterialJson[MatKeys::RasterizerState] = RasterState;
 			MaterialJson[MatKeys::GraphShaderMode] = "Generated";
 			MaterialJson[MatKeys::GeneratedShaderPath] = "";
-			MaterialJson[MatKeys::ReceiveLighting] = bReceiveLighting;
+			const FString MaterialIdentity = ToLowerAscii(
+				Key + " " +
+				ReadString(MaterialObject, "baseMaterial") + " " +
+				SourceAsset);
+			const bool bDecalMaterial = IsDecalIdentity(MaterialIdentity);
+			MaterialJson[MatKeys::ShadingModel] = bDecalMaterial ? "UnLit" : "DefaultLit";
+			MaterialJson[MatKeys::ReceiveLighting] =
+				bReceiveLighting && !bDecalMaterial;
 			MaterialJson[MatKeys::Graph] = std::move(GraphJson);
 			MaterialJson[MatKeys::Compiled] = json::JSON::Make(json::JSON::Class::Object);
 			MaterialJson[MatKeys::Compiled][MatKeys::Parameters] =
@@ -1318,14 +1366,9 @@ namespace
 		}
 
 		const int32 SlotCount = static_cast<int32>(Component->GetOverrideMaterials().size());
-		int32 SlotIndex = 0;
+		TArray<UMaterial*> ResolvedMaterials;
 		for (json::JSON& MaterialValue : ActorObject["materials"].ArrayRange())
 		{
-			if (SlotIndex >= SlotCount)
-			{
-				break;
-			}
-
 			bool bOk = false;
 			const FString SourceAsset = MaterialValue.ToString(bOk);
 			if (bOk)
@@ -1333,11 +1376,23 @@ namespace
 				auto MaterialIt = ImportedMaterials.find(SourceAsset);
 				if (MaterialIt != ImportedMaterials.end() && MaterialIt->second)
 				{
-					Component->SetMaterial(SlotIndex, MaterialIt->second);
-					++Result.MaterialAssignmentCount;
+					ResolvedMaterials.push_back(MaterialIt->second);
 				}
 			}
-			++SlotIndex;
+		}
+
+		if (ResolvedMaterials.empty())
+		{
+			return;
+		}
+
+		for (int32 SlotIndex = 0; SlotIndex < SlotCount; ++SlotIndex)
+		{
+			UMaterial* Material = SlotIndex < static_cast<int32>(ResolvedMaterials.size())
+				? ResolvedMaterials[SlotIndex]
+				: ResolvedMaterials.back();
+			Component->SetMaterial(SlotIndex, Material);
+			++Result.MaterialAssignmentCount;
 		}
 	}
 
@@ -1643,6 +1698,8 @@ FUnrealSceneImportResult FUnrealSceneManifestImporter::Import(
 		FImportOptions MeshImportOptions = FImportOptions::Default();
 		MeshImportOptions.bImportTextures = false;
 		MeshImportOptions.bCreateMaterials = false;
+		MeshImportOptions.bBakeFbxNodeTransform = true;
+		MeshImportOptions.bConvertUnrealFbxCoordinateSystem = true;
 		UStaticMesh* Mesh = FMeshManager::LoadStaticMesh(ProjectRelativeFbx, MeshImportOptions, Device);
 		if (!Mesh)
 		{
@@ -1692,16 +1749,6 @@ FUnrealSceneImportResult FUnrealSceneManifestImporter::Import(
 			WorldMatrix.M[3][0] *= LocationScale;
 			WorldMatrix.M[3][1] *= LocationScale;
 			WorldMatrix.M[3][2] *= LocationScale;
-
-			const FMatrix SrtMatrix = FTransform(
-				Location,
-				FRotator(RotationEuler.Y, RotationEuler.Z, RotationEuler.X),
-				Scale).ToMatrix();
-			if (!WorldMatrix.Equals(SrtMatrix))
-			{
-				WorldMatrix = SrtMatrix;
-				++Result.CorrectedMatrixTransformCount;
-			}
 		}
 
 		FScenePlacementImportRecord Record;
@@ -1717,6 +1764,14 @@ FUnrealSceneImportResult FUnrealSceneManifestImporter::Import(
 		Record.Collision = ParseCollisionMode(Record.CollisionString);
 		Record.bVisible = ReadBool(ActorObject, "visible", true);
 		Record.bCastShadow = ReadBool(ActorObject, "castShadow", true);
+		const FString ActorIdentity = ToLowerAscii(
+			MeshKey + " " +
+			ReadString(ActorObject, "name") + " " +
+			ReadString(ActorObject, "sourceAsset"));
+		if (IsDecalIdentity(ActorIdentity))
+		{
+			Record.bCastShadow = false;
+		}
 		Record.bNegativeScale = Scale.X < 0.0f || Scale.Y < 0.0f || Scale.Z < 0.0f;
 		if (Record.bHasWorldMatrix)
 		{

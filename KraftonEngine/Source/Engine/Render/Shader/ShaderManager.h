@@ -204,11 +204,27 @@ namespace EShadowDepthDefines
 	inline const D3D_SHADER_MACRO StaticMesh[] = { {nullptr, nullptr} };
 	// SkeletalMesh: 별도 VS 엔트리포인트가 GPU skinning 경로를 선택한다.
 	inline const D3D_SHADER_MACRO SkeletalMesh[] = { {nullptr, nullptr} };
+	inline const D3D_SHADER_MACRO StaticMeshMasked[] = {
+		{ "SHADOW_DEPTH_MASKED", "1" },
+		{ nullptr, nullptr }
+	};
+	inline const D3D_SHADER_MACRO SkeletalMeshMasked[] = {
+		{ "SHADOW_DEPTH_MASKED", "1" },
+		{ nullptr, nullptr }
+	};
 
-	inline FShaderKey MakePermutationKey(EVertexFactory VF)
+	inline const D3D_SHADER_MACRO* GetDefines(EVertexFactory VF, bool bMasked)
 	{
-		const D3D_SHADER_MACRO* Defines =
-			(VF == EVertexFactory::SkeletalMesh) ? SkeletalMesh : StaticMesh;
+		if (bMasked)
+		{
+			return (VF == EVertexFactory::SkeletalMesh) ? SkeletalMeshMasked : StaticMeshMasked;
+		}
+		return (VF == EVertexFactory::SkeletalMesh) ? SkeletalMesh : StaticMesh;
+	}
+
+	inline FShaderKey MakePermutationKey(EVertexFactory VF, bool bMasked = false)
+	{
+		const D3D_SHADER_MACRO* Defines = GetDefines(VF, bMasked);
 		const char* VSEntry = EntryPoint::StaticMeshVS;
 		if (VF == EVertexFactory::InstancedStaticMesh)
 		{
@@ -400,7 +416,10 @@ public:
 	FShader* GetOrCreate(const FShaderKey& Key, EShaderErrorMode ErrorMode = EShaderErrorMode::Notification);
 	FShader* PreCompile(const FShaderKey& Key, const D3D_SHADER_MACRO* Defines, EShaderErrorMode ErrorMode = EShaderErrorMode::Notification);
 	FShader* GetOrCreate(const FString& Path, EShaderErrorMode ErrorMode = EShaderErrorMode::Notification) { return GetOrCreate(FShaderKey(Path), ErrorMode); }
-	FShader* GetOrCreateShadowDepthPermutation(EShadowDepthDefines::EVertexFactory VF, EShaderErrorMode ErrorMode = EShaderErrorMode::Notification);
+	FShader* GetOrCreateShadowDepthPermutation(
+		EShadowDepthDefines::EVertexFactory VF,
+		EShaderErrorMode ErrorMode = EShaderErrorMode::Notification,
+		bool bMasked = false);
 	FShader* GetOrCreateUberLitPermutation(EUberLitDefines::ELightingModel LightingModel, EUberLitDefines::EVertexFactory VertexFactory,
 		EShaderErrorMode ErrorMode = EShaderErrorMode::Notification, bool bWeightBoneHeatMap = false, bool bFog = false);
 	FShader* FindOrCreate(const FString& Path);

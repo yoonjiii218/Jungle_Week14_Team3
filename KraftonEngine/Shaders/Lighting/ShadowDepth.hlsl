@@ -11,6 +11,16 @@
 #include "Common/ConstantBuffers.hlsli"
 #include "Common/VertexLayouts.hlsli"
 #include "Common/Skinning.hlsli"
+#include "Common/SystemSamplers.hlsli"
+
+#ifndef SHADOW_DEPTH_ALPHA_CLIP
+#define SHADOW_DEPTH_ALPHA_CLIP 0.333f
+#endif
+#ifndef SHADOW_DEPTH_MASKED
+#define SHADOW_DEPTH_MASKED 0
+#endif
+
+Texture2D DiffuseTexture : register(t0);
 
 // b2: Light ViewProj — Shadow depth pass 전용
 cbuffer ShadowLightBuffer : register(b2)
@@ -30,6 +40,7 @@ PS_Input_Shadow VS_StaticMesh(VS_Input_PNCTT input)
     float4 clipPos = mul(worldPos, LightViewProj);
     output.position = clipPos;
     output.depth = clipPos.z / clipPos.w;
+    output.uv = input.texcoord;
     return output;
 }
 
@@ -41,6 +52,7 @@ PS_Input_Shadow VS_InstancedStaticMesh(VS_Input_PNCTT input, VS_Input_StaticMesh
     float4 clipPos = mul(worldPos, LightViewProj);
     output.position = clipPos;
     output.depth = clipPos.z / clipPos.w;
+    output.uv = input.texcoord;
     return output;
 }
 
@@ -59,6 +71,7 @@ PS_Input_Shadow VS_SkeletalMesh(VS_Input_PNCTTBB input)
     float4 clipPos = mul(worldPos, LightViewProj);
     output.position = clipPos;
     output.depth = clipPos.z / clipPos.w;
+    output.uv = input.texcoord;
     return output;
 }
 
@@ -70,6 +83,11 @@ PS_Input_Shadow VS_SkeletalMesh(VS_Input_PNCTTBB input)
 // EVSM: 지수 워프로 깊이 분포를 분리하여 light bleeding 대폭 감소
 float2 PS(PS_Input_Shadow input) : SV_TARGET
 {
+#if SHADOW_DEPTH_MASKED
+    const float mask = DiffuseTexture.Sample(LinearWrapSampler, input.uv).a;
+    clip(mask - SHADOW_DEPTH_ALPHA_CLIP);
+#endif
+
     float d = input.depth;
     float e = exp(EVSM_EXPONENT * d);
 

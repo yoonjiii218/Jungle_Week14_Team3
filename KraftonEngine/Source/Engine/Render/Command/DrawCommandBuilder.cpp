@@ -279,6 +279,23 @@ void FDrawCommandBuilder::BuildCommandForProxy(FScene& Scene, const FPrimitiveSc
 			// single-sided shell meshes with SolidNoCull fail the opaque pass
 			// depth test after being culled here.
 			Cmd.RenderState.Rasterizer = Section.Material->GetRasterizerState();
+
+			if (Section.Material->GetGraphShaderMode() == EMaterialGraphShaderMode::Generated
+				&& Section.Material->GetDomain() == EMaterialDomain::Surface
+				&& !Section.Material->GetGeneratedShaderPath().empty())
+			{
+				UMaterial* Mat = Section.Material;
+				Mat->FlushDirtyBuffers(CachedDevice, Ctx);
+
+				Cmd.Bindings.PerShaderCB[0] = Mat->GetGPUBufferBySlot(ECBSlot::PerShader0);
+				Cmd.Bindings.PerShaderCB[1] = Mat->GetGPUBufferBySlot(ECBSlot::PerShader1);
+
+				const ID3D11ShaderResourceView* const* MatSRVs = Mat->GetCachedSRVs();
+				for (int s = 0; s < (int)EMaterialTextureSlot::Max; s++)
+				{
+					Cmd.Bindings.SRVs[s] = const_cast<ID3D11ShaderResourceView*>(MatSRVs[s]);
+				}
+			}
 		}
 
 		if (!bDepthOnly && Section.Material)

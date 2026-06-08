@@ -35,10 +35,18 @@ FRotator FQuat::ToRotator() const
 	Rot.Pitch = asinf(SinPitch) * Rad2Deg;
 
 	// Yaw (Z축)
-	if (fabsf(SinPitch) > 0.9999f)
+	constexpr float GimbalLockThreshold = 0.9999999f;
+	if (SinPitch >= GimbalLockThreshold)
 	{
 		Rot.Roll = 0.0f;
-		Rot.Yaw = atan2f(-2.0f * (X * Y - W * Z), 1.0f - 2.0f * (Y * Y + Z * Z)) * Rad2Deg;
+		Rot.Pitch = 90.0f;
+		Rot.Yaw = -2.0f * atan2f(X, W) * Rad2Deg;
+	}
+	else if (SinPitch <= -GimbalLockThreshold)
+	{
+		Rot.Roll = 0.0f;
+		Rot.Pitch = -90.0f;
+		Rot.Yaw = 2.0f * atan2f(X, W) * Rad2Deg;
 	}
 	else
 	{

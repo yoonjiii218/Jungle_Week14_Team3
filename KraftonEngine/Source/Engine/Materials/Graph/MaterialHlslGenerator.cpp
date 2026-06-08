@@ -737,6 +737,7 @@ namespace
 		if (!FromPin || !FromNode) return ConvertExpr(DefaultExpr, DefaultType, TargetType, &Result.Errors);
 
 		FEmittedNode Source = Context.Emit(*FromNode);
+		ApplyOutputPinSwizzle(FromPin->DisplayName.ToString(), Source.Expr, Source.Type);
 		return ConvertExpr(Source.Expr, Source.Type, TargetType, &Result.Errors);
 	}
 

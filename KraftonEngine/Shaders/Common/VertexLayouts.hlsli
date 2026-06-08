@@ -160,6 +160,7 @@ struct PS_Input_Shadow
 {
     float4 position : SV_POSITION;
     float  depth    : TEXCOORD0;    // VSM용 normalized depth
+    float2 uv       : TEXCOORD1;    // masked shadow caster alpha clip
 };
 
 #endif // VERTEX_LAYOUTS_HLSL

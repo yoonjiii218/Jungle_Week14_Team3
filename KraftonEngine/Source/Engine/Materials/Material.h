@@ -183,6 +183,7 @@ public:
 	FMaterialGraph& GetGraph() { return Graph; }
 	const FMaterialGraph& GetGraph() const { return Graph; }
 	void SetGraph(const FMaterialGraph& InGraph) { Graph = InGraph; }
+	bool HasOpacityMaskInputConnected() const;
 	void Serialize(FArchive& Ar);//>>>>>Manager가 위임
 
 	FConstantBuffer* GetGPUBufferBySlot(uint32 InSlot) const

@@ -1,0 +1,162 @@
+{
+  "BlendState" : "Opaque",
+  "Compiled" : {
+    "BlendState" : "Opaque",
+    "Domain" : "Surface",
+    "GeneratorVersion" : "GeneratedMaterialPass_v10_SurfacePinSwizzle_InstancedStaticMesh",
+    "GraphHash" : "734F922F54CA4AFC",
+    "GraphShaderMode" : "Generated",
+    "Parameters" : {
+
+    },
+    "ReceiveLighting" : true,
+    "RenderPass" : "Opaque",
+    "ShadingModel" : "DefaultLit",
+    "Textures" : {
+
+    }
+  },
+  "DepthStencilState" : "Default",
+  "Domain" : "Surface",
+  "GeneratedShaderPath" : "Shaders/Generated/Materials/_4DA153CCF040CD1A_Surface_DefaultLit.hlsl",
+  "Graph" : {
+    "Links" : [{
+        "FromPinId" : 11,
+        "LinkId" : 12,
+        "ToPinId" : 2
+      }, {
+        "FromPinId" : 14,
+        "LinkId" : 15,
+        "ToPinId" : 4
+      }, {
+        "FromPinId" : 17,
+        "LinkId" : 18,
+        "ToPinId" : 5
+      }],
+    "NextId" : 19,
+    "Nodes" : [{
+        "DisplayName" : "Material Output",
+        "Mask" : "RGBA",
+        "NodeId" : 1,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "BaseColor",
+            "Kind" : "Input",
+            "OwningNodeId" : 1,
+            "PinId" : 2,
+            "Type" : "Float3"
+          }, {
+            "DisplayName" : "Normal",
+            "Kind" : "Input",
+            "OwningNodeId" : 1,
+            "PinId" : 3,
+            "Type" : "Float3"
+          }, {
+            "DisplayName" : "Roughness",
+            "Kind" : "Input",
+            "OwningNodeId" : 1,
+            "PinId" : 4,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "Metallic",
+            "Kind" : "Input",
+            "OwningNodeId" : 1,
+            "PinId" : 5,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "Emissive",
+            "Kind" : "Input",
+            "OwningNodeId" : 1,
+            "PinId" : 6,
+            "Type" : "Float3"
+          }, {
+            "DisplayName" : "Opacity",
+            "Kind" : "Input",
+            "OwningNodeId" : 1,
+            "PinId" : 7,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "OpacityMask",
+            "Kind" : "Input",
+            "OwningNodeId" : 1,
+            "PinId" : 8,
+            "Type" : "Float"
+          }, {
+            "DisplayName" : "RefractionOffset",
+            "Kind" : "Input",
+            "OwningNodeId" : 1,
+            "PinId" : 9,
+            "Type" : "Float2"
+          }],
+        "PosX" : 760.000000,
+        "PosY" : 80.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "Output",
+        "Value" : [1.000000, 1.000000, 1.000000, 1.000000]
+      }, {
+        "DisplayName" : "ConstantFloat3",
+        "Mask" : "RGBA",
+        "NodeId" : 10,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "Value",
+            "Kind" : "Output",
+            "OwningNodeId" : 10,
+            "PinId" : 11,
+            "Type" : "Float3"
+          }],
+        "PosX" : 20.000000,
+        "PosY" : -260.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "ConstantFloat3",
+        "Value" : [0.181559, 0.255317, 0.359375, 1.000000]
+      }, {
+        "DisplayName" : "ConstantFloat",
+        "Mask" : "RGBA",
+        "NodeId" : 13,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "Value",
+            "Kind" : "Output",
+            "OwningNodeId" : 13,
+            "PinId" : 14,
+            "Type" : "Float"
+          }],
+        "PosX" : 180.000000,
+        "PosY" : 300.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "ConstantFloat",
+        "Value" : [0.050000, 0.000000, 0.000000, 0.000000]
+      }, {
+        "DisplayName" : "ConstantFloat",
+        "Mask" : "RGBA",
+        "NodeId" : 16,
+        "ParameterName" : "",
+        "Pins" : [{
+            "DisplayName" : "Value",
+            "Kind" : "Output",
+            "OwningNodeId" : 16,
+            "PinId" : 17,
+            "Type" : "Float"
+          }],
+        "PosX" : 180.000000,
+        "PosY" : 440.000000,
+        "TexturePath" : "",
+        "TextureSlot" : "Diffuse",
+        "Type" : "ConstantFloat",
+        "Value" : [0.800000, 0.000000, 0.000000, 0.000000]
+      }]
+  },
+  "GraphShaderMode" : "Generated",
+  "MaterialGuid" : "4DA153CCF040CD1A",
+  "PathFileName" : "Content/Data/UnrealImport/Tokyo/Materials/M_Glass_Opaque_d1e5989f.mat",
+  "RasterizerState" : "SolidNoCull",
+  "ReceiveLighting" : true,
+  "RenderPass" : "Opaque",
+  "ShaderPath" : "Shaders/Generated/Materials/_4DA153CCF040CD1A_Surface_DefaultLit.hlsl",
+  "ShadingModel" : "DefaultLit",
+  "Version" : 2
+}

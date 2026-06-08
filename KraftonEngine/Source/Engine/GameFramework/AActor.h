@@ -35,6 +35,8 @@ public:
 	bool HasActorBegunPlay() const { return bActorHasBegunPlay; }
 
 	void Serialize(FArchive& Ar) override;
+	void PreSave() override;
+	void PostLoad() override;
 	UObject* Duplicate(UObject* NewOuter = nullptr) const override;
 
 	void PreGetEditableProperties() override;

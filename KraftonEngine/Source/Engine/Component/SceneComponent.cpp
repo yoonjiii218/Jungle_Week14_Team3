@@ -98,6 +98,12 @@ void USceneComponent::Serialize(FArchive& Ar)
 	}
 }
 
+void USceneComponent::PostLoad()
+{
+	UActorComponent::PostLoad();
+	ApplyCachedEditRotator();
+}
+
 USceneComponent::USceneComponent()
 {
 	CachedWorldMatrix = FMatrix::Identity;
@@ -374,7 +380,6 @@ void USceneComponent::SetRelativeRotationWithEulerHint(const FQuat& NewQuat, con
 void USceneComponent::ApplyCachedEditRotator()
 {
 	CachedEditRotator = CachedEditRotator.GetClamped();
-	CachedEditRotator.Pitch = Clamp(CachedEditRotator.Pitch, -89.9f, 89.9f);
 	bCachedEulerDirty = false;
 	RelativeTransform.SetRotation(CachedEditRotator);
 	MarkTransformDirty();
