@@ -1,7 +1,9 @@
 #include "Editor/EditorEngine.h"
 
 #include "Profiling/StartupProfiler.h"
+#include "Audio/AudioManager.h"
 #include "Core/Logging/Notification.h"
+#include "Core/Logging/Log.h"
 #include "Engine/Platform/WindowsWindow.h"
 #include "Engine/Serialization/SceneSaveManager.h"
 #include "Engine/Platform/DirectoryWatcher.h"
@@ -325,6 +327,8 @@ void UEditorEngine::Tick(float DeltaTime)
 	MainPanel.TickAssetEditors(DeltaTime);
 
 	WorldTick(DeltaTime);
+
+	FAudioManager::Get().Tick();
     
     FGarbageCollector::Get().CollectGarbage();
     
@@ -582,11 +586,14 @@ void UEditorEngine::ProcessQueuedPIESceneTransition()
 		EndPlayMap();
 	}
 
-	if (!LoadSceneFromPath(ResolveSceneFilePath(ScenePath)))
+	const FString FilePath = ResolveSceneFilePath(ScenePath);
+	if (!LoadSceneFromPath(FilePath))
 	{
+		UE_LOG("[EditorEngine] PIE TransitionToScene failed: %s", FilePath.c_str());
 		return;
 	}
 
+	UE_LOG("[EditorEngine] PIE TransitionToScene loaded: %s", FilePath.c_str());
 	RequestPlaySession(Params);
 }
 

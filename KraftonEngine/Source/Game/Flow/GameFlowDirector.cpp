@@ -144,11 +144,13 @@ void AGameFlowDirector::RequestScene(const FString& SceneName)
 		UE_LOG("[GameFlowDirector] Scene transition requested without GEngine: %s", SceneName.c_str());
 		return;
 	}
+	UE_LOG("[GameFlowDirector] RequestScene: %s", SceneName.c_str());
 	GEngine->RequestTransitionToScene(SceneName);
 }
 
 void AGameFlowDirector::StartTraining()
 {
+	UE_LOG("[GameFlowDirector] StartTraining -> %s", TrainingSceneName.c_str());
 	RequestScene(TrainingSceneName);
 }
 

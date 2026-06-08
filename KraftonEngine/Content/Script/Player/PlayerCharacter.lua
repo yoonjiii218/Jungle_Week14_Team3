@@ -8,6 +8,7 @@ local PlayerAction = require("Player/PlayerAction")
 local PlayerProjectile = require("Player/PlayerProjectile")
 local CombatContext = require("Combat/CombatContext")
 local PlayerFeedback = require("Player/PlayerFeedback")
+local GameplayEventBus = require("Core/GameplayEventBus")
 
 local PlayerCharacter = {}
 local playerContext = nil
@@ -92,6 +93,7 @@ function Tick(dt)
 
     local events = PlayerEvents.Drain(currentPlayerContext)
     CombatContext.ProcessPlayerEvents(currentPlayerContext, events)
+    GameplayEventBus.PublishMany(events, currentPlayerContext)
     PlayerFeedback.ProcessEvents(currentPlayerContext, events)
 end
 

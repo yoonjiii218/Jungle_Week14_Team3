@@ -377,6 +377,17 @@ void USkeletalMeshComponent::SetAnimInstanceClass(UClass* InClass)
     }
 }
 
+void USkeletalMeshComponent::SetLuaAnimScriptFile(const FString& InScriptFile)
+{
+    LuaAnimScriptFile = InScriptFile.empty() ? FString("None") : InScriptFile;
+
+    if (ULuaAnimInstance* LuaAnim = Cast<ULuaAnimInstance>(AnimInstance))
+    {
+        LuaAnim->ScriptFile = LuaAnimScriptFile;
+        LuaAnim->ReloadScript();
+    }
+}
+
 void USkeletalMeshComponent::SetAnimInstance(UAnimInstance* InInstance)
 {
     if (AnimInstance == InInstance) return;

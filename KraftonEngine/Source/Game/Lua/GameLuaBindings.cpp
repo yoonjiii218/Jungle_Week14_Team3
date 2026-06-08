@@ -1,4 +1,4 @@
-#include "Game/Lua/GameLuaBindings.h"
+﻿#include "Game/Lua/GameLuaBindings.h"
 
 #include "sol/sol.hpp"
 
@@ -9,6 +9,14 @@
 #include "Game/Flow/GameFlowDirector.h"
 #include "GameFramework/GameMode/GameModeBase.h"
 #include "GameFramework/GameMode/GameStateBase.h"
+#include "Animation/AnimationMode.h"
+#include "Component/Input/ActionComponent.h"
+#include "Component/Primitive/SkeletalMeshComponent.h"
+#include "Component/Shape/CapsuleComponent.h"
+#include "GameFramework/Pawn/LuaCharacter.h"
+#include "Materials/MaterialManager.h"
+#include "Mesh/MeshManager.h"
+#include "Object/Reflection/ObjectFactory.h"
 #include "GameFramework/World.h"
 #include "Lua/LuaScriptManager.h"
 #include "Object/Object.h"
@@ -16,6 +24,132 @@
 
 namespace
 {
+	struct FTutorialCharacterSpawnSpec
+	{
+		FString MeshPath;
+		FString ScriptFile;
+		FString LuaAnimScriptFile;
+		FVector MeshRelativeLocation = FVector::ZeroVector;
+		FVector MeshRelativeScale = FVector(1.0f, 1.0f, 1.0f);
+		float CapsuleRadius = 3.0f;
+		float CapsuleHalfHeight = 5.0f;
+		TArray<FString> MaterialPaths;
+		TArray<FString> Tags;
+	};
+
+	void ApplySkeletalMaterialPaths(USkeletalMeshComponent* Mesh, const TArray<FString>& MaterialPaths)
+	{
+		if (!Mesh)
+		{
+			return;
+		}
+
+		for (int32 Index = 0; Index < static_cast<int32>(MaterialPaths.size()); ++Index)
+		{
+			const FString& MatPath = MaterialPaths[Index];
+			UMaterial* Material = (MatPath.empty() || MatPath == "None")
+				? nullptr
+				: FMaterialManager::Get().GetOrCreateMaterial(MatPath);
+			Mesh->SetMaterial(Index, Material);
+		}
+	}
+
+	ALuaCharacter* SpawnTutorialLuaCharacter(const FTutorialCharacterSpawnSpec& Spec, const FVector& Location, float YawDegrees)
+	{
+		if (!GEngine)
+		{
+			return nullptr;
+		}
+
+		UWorld* World = GEngine->GetWorld();
+		if (!World)
+		{
+			return nullptr;
+		}
+
+		UObject* Created = FObjectFactory::Get().Create("ALuaCharacter", World);
+		ALuaCharacter* Actor = Cast<ALuaCharacter>(Created);
+		if (!Actor)
+		{
+			return nullptr;
+		}
+
+		Actor->InitDefaultComponents(Spec.MeshPath, Spec.ScriptFile);
+		Actor->SetActorLocation(Location);
+		Actor->SetActorRotation(FRotator(0.0f, YawDegrees, 0.0f));
+		Actor->SetActorScale(FVector(1.0f, 1.0f, 1.0f));
+		Actor->bAutoInputMouseLook = false;
+
+		if (UCapsuleComponent* Capsule = Actor->GetCapsuleComponent())
+		{
+			Capsule->SetCapsuleSize(Spec.CapsuleRadius, Spec.CapsuleHalfHeight);
+			Capsule->SetSimulatePhysics(false);
+		}
+
+		if (USkeletalMeshComponent* Mesh = Actor->GetMesh())
+		{
+			Mesh->SetRelativeLocation(Spec.MeshRelativeLocation);
+			Mesh->SetRelativeScale(Spec.MeshRelativeScale);
+			Mesh->SetAnimationMode(EAnimationMode::AnimationCustom);
+			Mesh->SetAnimInstanceClass(UClass::FindByName("ULuaAnimInstance"));
+			Mesh->SetLuaAnimScriptFile(Spec.LuaAnimScriptFile);
+			ApplySkeletalMaterialPaths(Mesh, Spec.MaterialPaths);
+			Mesh->InitializeAnimation();
+		}
+
+		if (!Actor->GetComponentByClass<UActionComponent>())
+		{
+			Actor->AddComponent<UActionComponent>();
+		}
+
+		for (const FString& Tag : Spec.Tags)
+		{
+			if (!Tag.empty())
+			{
+				Actor->AddTag(FName(Tag));
+			}
+		}
+
+		World->AddActor(Actor);
+		return Actor;
+	}
+
+	FTutorialCharacterSpawnSpec MakeTutorialMobSpec()
+	{
+		FTutorialCharacterSpawnSpec Spec;
+		Spec.MeshPath = "Content/Mesh/Trooper1/SK_SciFITrooper-01_SkeletalMesh.uasset";
+		Spec.ScriptFile = "Mob/MobCharacter.lua";
+		Spec.LuaAnimScriptFile = "Anim/MobAnimation.lua";
+		Spec.MeshRelativeLocation = FVector(0.0f, 0.0f, -5.149981f);
+		Spec.MeshRelativeScale = FVector(5.0f, 5.0f, 5.0f);
+		Spec.CapsuleRadius = 3.0f;
+		Spec.CapsuleHalfHeight = 5.0f;
+		Spec.MaterialPaths = {
+			"Content/Material/Auto/M_SciFITrooper-01_Top.mat",
+			"Content/Material/Auto/M_SciFITrooper-01_Bottom.mat"
+		};
+		Spec.Tags = { "Mob", "Enemy", "HitTarget", "TutorialEnemy", "TutorialMob" };
+		return Spec;
+	}
+
+	FTutorialCharacterSpawnSpec MakeTutorialBossSpec()
+	{
+		FTutorialCharacterSpawnSpec Spec;
+		Spec.MeshPath = "Content/Mesh/Boss/BossModel_SkeletalMesh.uasset";
+		Spec.ScriptFile = "Boss/BossCharacter.lua";
+		Spec.LuaAnimScriptFile = "Anim/BossAnimation.lua";
+		Spec.MeshRelativeLocation = FVector(0.0f, 0.0f, -9.271478f);
+		Spec.MeshRelativeScale = FVector(10.0f, 10.0f, 10.0f);
+		Spec.CapsuleRadius = 4.0f;
+		Spec.CapsuleHalfHeight = 9.0f;
+		Spec.MaterialPaths = {
+			"Content/Material/Auto/M_Sci_Fi_Character_Details_3.mat",
+			"Content/Material/Auto/M_Sci_Fi_Character_Body_3.mat"
+		};
+		Spec.Tags = { "Boss", "Enemy", "HitTarget", "TutorialEnemy", "TutorialBoss" };
+		return Spec;
+	}
+
 	AGameFlowDirector* FindGameFlowDirector()
 	{
 		if (!GEngine)
@@ -184,6 +318,20 @@ void RegisterGameLuaBindings(sol::state& Lua)
 		{
 			GEngine->RequestTransitionToScene(SceneName);
 		}
+	});
+
+	// Tutorial spawns are runtime-created ALuaCharacter actors configured from
+	// MobTest.Scene / BossTest.Scene actor settings. The helper initializes
+	// default components before AddActor(), so BeginPlay observes a complete
+	// character instead of a bare ALuaCharacter.
+	GameFlow.set_function("SpawnTutorialMob", [](const FVector& Location, sol::optional<float> YawDegrees) -> AActor*
+	{
+		return SpawnTutorialLuaCharacter(MakeTutorialMobSpec(), Location, YawDegrees.value_or(0.0f));
+	});
+
+	GameFlow.set_function("SpawnTutorialBoss", [](const FVector& Location, sol::optional<float> YawDegrees) -> AActor*
+	{
+		return SpawnTutorialLuaCharacter(MakeTutorialBossSpec(), Location, YawDegrees.value_or(0.0f));
 	});
 }
 
