@@ -805,6 +805,7 @@ function PlayerFeedback.BeginUltimate(playerContext)
         + actorRight * (moveConfig.EndRightDistance)
 
     cinematicEndPos.Z = actorLocation.Z
+    local subUVSlashAnchor = cinematicEndPos
 
     local controlPos =
         focusLocation
@@ -858,27 +859,27 @@ function PlayerFeedback.BeginUltimate(playerContext)
         end
 
         if not spawnedAirSlashA and t >= 0.20 then
-            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, slashAnchor - actorForward * 6.0 - actorRight * 8.0 + up * 0.4, Vector(1.0, 88.0, 7.0), -12.0, vfxConfig.SlashFrameRate, false, true)
+            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, subUVSlashAnchor - actorForward * 6.0 - actorRight * 8.0 + up * 0.4, Vector(1.0, 88.0, 7.0), -12.0, vfxConfig.SlashFrameRate, false, true)
             spawnedAirSlashA = true
         end
 
         if not spawnedAirSlashB and t >= 0.34 then
-            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, slashAnchor + actorForward * 2.0 + actorRight * 9.0 + up * 3.0, Vector(1.0, 65.0, 4.5), 32.0, vfxConfig.SlashFrameRate, false, true)
+            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, subUVSlashAnchor + actorForward * 2.0 + actorRight * 9.0 + up * 3.0, Vector(1.0, 65.0, 4.5), 32.0, vfxConfig.SlashFrameRate, false, true)
             spawnedAirSlashB = true
         end
 
         if not spawnedAirSlashD and t >= 0.42 then
-            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, slashAnchor + actorForward * 8.0 - actorRight * 3.0 + up * 5.0, Vector(1.0, 72.0, 4.0), 58.0, vfxConfig.SlashFrameRate, false, true)
+            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, subUVSlashAnchor + actorForward * 8.0 - actorRight * 3.0 + up * 5.0, Vector(1.0, 72.0, 4.0), 58.0, vfxConfig.SlashFrameRate, false, true)
             spawnedAirSlashD = true
         end
 
         if not spawnedAirSlashC and t >= 0.50 then
-            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, slashAnchor + actorForward * 12.0 - actorRight * 12.0 + up * -2.0, Vector(1.0, 55.0, 3.5), -36.0, vfxConfig.SlashFrameRate, false, true)
+            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, subUVSlashAnchor + actorForward * 12.0 - actorRight * 12.0 + up * -2.0, Vector(1.0, 55.0, 3.5), -36.0, vfxConfig.SlashFrameRate, false, true)
             spawnedAirSlashC = true
         end
 
         if not spawnedAirSlashE and t >= 0.62 then
-            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, slashAnchor - actorForward * 2.0 + actorRight * 15.0 + up * -3.4, Vector(1.0, 50.0, 3.0), -62.0, vfxConfig.SlashFrameRate, false, true)
+            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, subUVSlashAnchor - actorForward * 2.0 + actorRight * 15.0 + up * -3.4, Vector(1.0, 50.0, 3.0), -62.0, vfxConfig.SlashFrameRate, false, true)
             spawnedAirSlashE = true
         end
 
