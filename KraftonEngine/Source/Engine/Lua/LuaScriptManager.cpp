@@ -1,4 +1,4 @@
-﻿#include "LuaScriptManager.h"
+#include "LuaScriptManager.h"
 
 #include "Core/Logging/Log.h"
 #include "Core/Logging/Notification.h"
@@ -3032,7 +3032,8 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 
 	Lua.new_usertype<UCameraComponent>("CameraComponent",
 		sol::base_classes,
-		sol::bases<USceneComponent, UActorComponent, UObject>()
+		sol::bases<USceneComponent, UActorComponent, UObject>(),
+		"ProjectWorldToScreen", &UCameraComponent::ProjectWorldToScreen
 	);
 
 	Lua.new_usertype<AActor>("Actor",

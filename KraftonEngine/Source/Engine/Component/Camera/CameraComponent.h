@@ -40,6 +40,9 @@ public:
 	// DeltaTime 은 향후 카메라 lag / interpolation 에 쓰이도록 시그니처 보존.
 	void GetCameraView(float DeltaTime, FMinimalViewInfo& OutPOV) const;
 
+	UFUNCTION(Pure, Category="Camera")
+	bool ProjectWorldToScreen(const FVector& WorldPosition, FVector& OutScreenPosition, float ScreenWidth, float ScreenHeight) const;
+
 	UFUNCTION(Callable, Exec, Category="Camera")
 	void SetFOV(float InFOV) { CameraState.FOV = InFOV; }
 	UFUNCTION(Callable, Exec, Category="Camera")

@@ -1,0 +1,30 @@
+<rml>
+<head>
+    <title>Mob HP Bar</title>
+    <style>
+        body { width: 100%; height: 100%; margin: 0; font-family: Maplestory; color: #ffffff; pointer-events: none; }
+        #hp-bar {
+            position: absolute;
+            width: 64px;
+            height: 6px;
+            background-color: #0c1524e0;
+            border-width: 1px;
+            border-color: #ff2bd680;
+            overflow: hidden;
+        }
+        #hp-fill {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            width: 100%;
+            height: 100%;
+            background-color: #ff2bd6;
+        }
+    </style>
+</head>
+<body>
+    <div id="hp-bar">
+        <div id="hp-fill"></div>
+    </div>
+</body>
+</rml>

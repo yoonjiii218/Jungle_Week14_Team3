@@ -16,8 +16,10 @@ local START_MENU_BOOT_DURATION = 1.50
 local START_MENU_BOOT_BASE_WIDTH = 1280.0
 local START_MENU_BOOT_BASE_HEIGHT = 720.0
 local FILM_COUNTDOWN_WIDGET_FALLBACK = "Content/UI/GameFlow/FilmCountdown.uasset"
-local FILM_COUNTDOWN_DURATION = 3.35
-local FILM_COUNTDOWN_PLAY_SECONDS = 3.0
+local FILM_COUNTDOWN_DURATION = 5.35
+local FILM_COUNTDOWN_PLAY_SECONDS = 5.0
+local pendingTransitionAction = nil
+local pendingTransitionFrameDelay = 0
 local FILM_SPROCKET_COUNT = 11
 local FILM_SPROCKET_SPACING = 86.0
 local FILM_SPROCKET_SPEED = 210.0
@@ -953,7 +955,12 @@ local function updateFilmCountdown(dt)
         return
     end
 
-    filmCountdownTime = filmCountdownTime + (dt or 0.0)
+    local clampedDt = dt or 0.0
+    if clampedDt > 0.1 then
+        clampedDt = 0.016
+    end
+
+    filmCountdownTime = filmCountdownTime + clampedDt
     local t = filmCountdownTime
     if t >= FILM_COUNTDOWN_DURATION then
         completeFilmCountdown()
@@ -973,7 +980,7 @@ local function updateFilmCountdown(dt)
 
     local activeTime = clamp(t, 0.0, FILM_COUNTDOWN_PLAY_SECONDS - 0.001)
     local digitIndex = math.floor(activeTime)
-    local digit = 3 - digitIndex
+    local digit = 5 - digitIndex
     local digitTime = activeTime - digitIndex
     local digitText = tostring(digit)
     if t >= FILM_COUNTDOWN_PLAY_SECONDS then
@@ -982,7 +989,7 @@ local function updateFilmCountdown(dt)
     end
 
     local fadeIn = clamp(t / 0.18, 0.0, 1.0)
-    local fadeOut = t > 3.08 and (1.0 - clamp((t - 3.08) / 0.27, 0.0, 1.0)) or 1.0
+    local fadeOut = t > 5.08 and (1.0 - clamp((t - 5.08) / 0.27, 0.0, 1.0)) or 1.0
     local masterOpacity = fadeIn * fadeOut
     local digitPulse = 1.0 - clamp(digitTime / 0.92, 0.0, 1.0)
     local flash = flashPulse(digitTime, 0.0, 0.16, 1.0)
@@ -1109,6 +1116,25 @@ local function updateFilmCountdown(dt)
     setCountdownOpacity(countdown, "flash", flash * 0.22 * masterOpacity)
 end
 
+local function triggerTransitionWithCountdown(action)
+    local d = getDirector()
+    if d == nil then
+        action()
+        return
+    end
+
+    local countdown = createWidget("Countdown", getCountdownWidgetPath(d), false, 400)
+    if countdown ~= nil then
+        addToViewport(countdown, 400)
+        widgets.Countdown = countdown
+        filmCountdownTime = 0.0
+        updateFilmCountdown(0.0)
+    end
+
+    pendingTransitionAction = action
+    pendingTransitionFrameDelay = 2
+end
+
 local function showFilmCountdown()
     local d = getDirector()
     if d == nil then return end
@@ -1144,7 +1170,9 @@ local function showStartMenu()
     if menu ~= nil then
         bindButtonAudio(menu, { "btn-story-boss", "btn-training", "btn-credits", "btn-exit" })
         menu:bind_click("btn-story-boss", function()
-            d:StartStoryBoss()
+            triggerTransitionWithCountdown(function()
+                d:StartStoryBoss()
+            end)
         end)
         menu:bind_click("btn-training", function()
             local sceneName = "TrainingMap"
@@ -1153,7 +1181,9 @@ local function showStartMenu()
             end
             print("[GameFlow] Training button clicked -> " .. tostring(sceneName))
             TutorialDirector.QueueTrainingSession(sceneName)
-            d:StartTraining()
+            triggerTransitionWithCountdown(function()
+                d:StartTraining()
+            end)
         end)
         menu:bind_click("btn-credits", function()
             d:RequestCredits()
@@ -1266,7 +1296,9 @@ local function showPauseMenu()
             hidePauseMenu()
         end)
         pause:bind_click("btn-restart", function()
-            d:RestartCombatScene()
+            triggerTransitionWithCountdown(function()
+                d:RestartCombatScene()
+            end)
         end)
         pause:bind_click("btn-main-menu", function()
             d:RequestMainMenu()
@@ -1299,7 +1331,9 @@ local function showGameOver()
     if screen ~= nil then
         bindButtonAudio(screen, { "btn-retry", "btn-main-menu", "btn-exit" })
         screen:bind_click("btn-retry", function()
-            d:RestartCombatScene()
+            triggerTransitionWithCountdown(function()
+                d:RestartCombatScene()
+            end)
         end)
         screen:bind_click("btn-main-menu", function()
             d:RequestMainMenu()
@@ -1589,6 +1623,16 @@ function BeginPlay()
 end
 
 function Tick(dt)
+    if pendingTransitionAction ~= nil then
+        pendingTransitionFrameDelay = pendingTransitionFrameDelay - 1
+        if pendingTransitionFrameDelay <= 0 then
+            local action = pendingTransitionAction
+            pendingTransitionAction = nil
+            action()
+        end
+        return
+    end
+
     if currentScreen == "HUD" then
         if applyTrainingExitConfirmHotkeys() == true then
             TutorialDirector.Tick(dt, widgets.TutorialHUD)

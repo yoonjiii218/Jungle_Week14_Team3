@@ -84,10 +84,30 @@ function BeginPlay()
     MobAttacks.Init(mobContext)
     MobContext.Register(mobContext)   -- MobAnimation 이 obj 로 컨텍스트를 찾도록 등록
     CombatContext.RegisterMob(mobContext)   -- 피격/데미지 해결 대상으로 등록 (ApplyHitToMob)
+
+    -- 몹 체력바 위젯 생성
+    local widget = nil
+    if UI ~= nil and (UI.CreateWidgetForPlayer or UI.CreateWidget) then
+        local widgetFactory = UI.CreateWidgetForPlayer or UI.CreateWidget
+        widget = widgetFactory("Content/UI/GameFlow/MobHPBar.uasset")
+        if widget ~= nil then
+            widget:SetWantsMouse(false)
+            widget:AddToViewportZ(100)
+            mobContext.Runtime.HPBarWidget = widget
+        end
+    end
 end
 
 function Tick(dt)
     if mobContext == nil then
+        return
+    end
+
+    if mobContext.Combat.IsDead then
+        if mobContext.Runtime.HPBarWidget ~= nil then
+            mobContext.Runtime.HPBarWidget:RemoveFromParent()
+            mobContext.Runtime.HPBarWidget = nil
+        end
         return
     end
 
@@ -111,11 +131,64 @@ function Tick(dt)
     MobAttacks.Update(mobContext, scaledDt)
 
     CoroutineManager.End()
+
+    -- 체력바 화면 투영 업데이트
+    local widget = mobContext.Runtime.HPBarWidget
+    if widget ~= nil then
+        local targetActor = mobContext.Brain.TargetActor
+        local camera = nil
+        if targetActor and targetActor:IsValid() and targetActor.GetCamera then
+            camera = targetActor:GetCamera()
+        end
+        
+        if camera == nil then
+            local playerRef = World.FindFirstActorByTag("Player")
+            if playerRef and playerRef:IsValid() and playerRef.GetCamera then
+                camera = playerRef:GetCamera()
+            end
+        end
+
+        if camera ~= nil then
+            local width, height = 1280.0, 720.0
+            if Engine ~= nil and Engine.GetViewportSize ~= nil then
+                local size = Engine.GetViewportSize()
+                if size ~= nil then
+                    width = tonumber(size.Width or size["Width"] or width) or width
+                    height = tonumber(size.Height or size["Height"] or height) or height
+                end
+            end
+
+            local screenPos = Vector(0.0, 0.0, 0.0)
+            local headWorldPos = obj.Location + Vector(0.0, 0.0, 1.85)
+            local isProjected = camera:ProjectWorldToScreen(headWorldPos, screenPos, width, height)
+
+            if isProjected then
+                widget:SetProperty("hp-bar", "display", "block")
+                widget:SetProperty("hp-bar", "left", string.format("%.0fpx", screenPos.X - 32.0))
+                widget:SetProperty("hp-bar", "top", string.format("%.0fpx", screenPos.Y))
+                
+                local combat = mobContext.Combat
+                local hpRatio = 0.0
+                if combat.MaxHP > 0 then
+                    hpRatio = combat.HP / combat.MaxHP
+                end
+                widget:SetProperty("hp-fill", "width", string.format("%.1f%%", hpRatio * 100.0))
+            else
+                widget:SetProperty("hp-bar", "display", "none")
+            end
+        else
+            widget:SetProperty("hp-bar", "display", "none")
+        end
+    end
 end
 
 function EndPlay()
     CoroutineManager.Destroy(obj.UUID)
     if mobContext ~= nil then
+        if mobContext.Runtime.HPBarWidget ~= nil then
+            mobContext.Runtime.HPBarWidget:RemoveFromParent()
+            mobContext.Runtime.HPBarWidget = nil
+        end
         MobContext.Unregister(mobContext)
         CombatContext.UnregisterMob(mobContext)
     end

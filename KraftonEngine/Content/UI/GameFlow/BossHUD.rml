@@ -62,7 +62,6 @@
     <img id="player-plate" class="plate" src="Images/hud_data_plate.png" data-ue-anchors="0 0 0 0" data-ue-offsets="12 8 286 54" data-ue-alignment="0 0" />
     <div id="player-shell" class="panel" data-ue-anchors="0 0 0 0" data-ue-offsets="14 10 274 48" data-ue-alignment="0 0">
         <div id="player-hp-text" class="label">VITAL FIELD</div>
-        <div id="player-state" class="readout">STRUCTURE</div>
         <div id="player-hp-bar" class="bar">
             <div id="player-hp-fill" class="bar-fill"></div>
             <div class="bar-hotline"></div>
@@ -72,7 +71,6 @@
         <div id="player-accent-b" class="line-white"></div>
         <div id="player-chip-a" class="chip chip-on"></div>
         <div id="player-chip-b" class="chip chip-cyan"></div>
-        <div id="player-chip-c" class="chip"></div>
     </div>
 
     <img id="combo-plate" class="plate" src="Images/hud_data_plate.png" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="24 -72 250 118" data-ue-alignment="0 0.5" />
