@@ -8,7 +8,7 @@ local TEST_PLAYER_DAMAGE = 10.0
 local TEST_BOSS_DAMAGE = 10.0
 local TEST_ULTIMATE_DELTA = 25.0
 local START_MENU_BOOT_REPLAY_KEY_NAME = "F9"
-local START_MENU_BOOT_DURATION = 1.35
+local START_MENU_BOOT_DURATION = 1.50
 local START_MENU_BOOT_BASE_WIDTH = 1280.0
 local START_MENU_BOOT_BASE_HEIGHT = 720.0
 local START_MENU_BOOT_ELEMENT_IDS = {
@@ -401,14 +401,17 @@ local function updateStartMenuBoot(dt)
         sweepOpacity = p < 0.20 and lerp(0.36, 0.24, p / 0.20) or lerp(0.24, 0.0, (p - 0.20) / 0.80)
     end
 
-    local staticBase = flashPulse(t, 0.08, 0.22, 0.44) + flashPulse(t, 0.28, 0.30, 0.32) + flashPulse(t, 0.60, 0.26, 0.16)
-    local staticPhase = math.floor(t * 24.0) % 2
-    local staticA = staticPhase == 0 and staticBase or staticBase * 0.38
-    local staticB = staticPhase == 1 and staticBase * 0.76 or staticBase * 0.22
-    local noiseA = flashPulse(t, 0.12, 0.05, 0.34) + flashPulse(t, 0.39, 0.07, 0.20)
-    local noiseB = flashPulse(t, 0.20, 0.07, 0.28) + flashPulse(t, 0.54, 0.08, 0.14)
-    local noiseC = flashPulse(t, 0.31, 0.05, 0.20) + flashPulse(t, 0.64, 0.06, 0.12)
-    local noiseSlot = math.floor(t * 47.0)
+    local staticBase = flashPulse(t, 0.07, 0.30, 0.82)
+        + flashPulse(t, 0.29, 0.40, 0.62)
+        + flashPulse(t, 0.62, 0.34, 0.36)
+        + flashPulse(t, 0.96, 0.18, 0.18)
+    local staticPhase = math.floor(t * 38.0) % 2
+    local staticA = staticPhase == 0 and staticBase or staticBase * 0.56
+    local staticB = staticPhase == 1 and staticBase * 0.92 or staticBase * 0.36
+    local noiseA = flashPulse(t, 0.10, 0.10, 0.70) + flashPulse(t, 0.38, 0.14, 0.44) + flashPulse(t, 0.72, 0.12, 0.24)
+    local noiseB = flashPulse(t, 0.18, 0.12, 0.58) + flashPulse(t, 0.51, 0.16, 0.34) + flashPulse(t, 0.86, 0.10, 0.20)
+    local noiseC = flashPulse(t, 0.28, 0.10, 0.44) + flashPulse(t, 0.61, 0.14, 0.28) + flashPulse(t, 0.98, 0.08, 0.16)
+    local noiseSlot = math.floor(t * 64.0)
     local noiseATop = 0.08 * viewportHeight + (noiseSlot % 11) * viewportHeight * 0.065
     local noiseBTop = 0.14 * viewportHeight + ((noiseSlot + 5) % 9) * viewportHeight * 0.075
     local noiseCTop = 0.05 * viewportHeight + ((noiseSlot + 8) % 10) * viewportHeight * 0.070
@@ -448,17 +451,17 @@ local function updateStartMenuBoot(dt)
     setBootProperty(menu, "boot-sweep", "width", px(viewportWidth))
     setBootProperty(menu, "boot-noise-a", "opacity", scalar(noiseA))
     setBootProperty(menu, "boot-noise-a", "top", px(noiseATop))
-    setBootProperty(menu, "boot-noise-a", "height", px(lerp(4.0, 28.0, noiseA)))
+    setBootProperty(menu, "boot-noise-a", "height", px(lerp(8.0, 54.0, noiseA)))
     setBootProperty(menu, "boot-noise-a", "left", "0px")
     setBootProperty(menu, "boot-noise-a", "width", px(viewportWidth))
     setBootProperty(menu, "boot-noise-b", "opacity", scalar(noiseB))
     setBootProperty(menu, "boot-noise-b", "top", px(noiseBTop))
-    setBootProperty(menu, "boot-noise-b", "height", px(lerp(4.0, 22.0, noiseB)))
+    setBootProperty(menu, "boot-noise-b", "height", px(lerp(6.0, 42.0, noiseB)))
     setBootProperty(menu, "boot-noise-b", "left", "0px")
     setBootProperty(menu, "boot-noise-b", "width", px(viewportWidth))
     setBootProperty(menu, "boot-noise-c", "opacity", scalar(noiseC))
     setBootProperty(menu, "boot-noise-c", "top", px(noiseCTop))
-    setBootProperty(menu, "boot-noise-c", "height", px(lerp(4.0, 18.0, noiseC)))
+    setBootProperty(menu, "boot-noise-c", "height", px(lerp(5.0, 34.0, noiseC)))
     setBootProperty(menu, "boot-noise-c", "left", "0px")
     setBootProperty(menu, "boot-noise-c", "width", px(viewportWidth))
 end

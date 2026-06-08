@@ -14451,6 +14451,62 @@
           "bTickEnable" : true
         }
       }
+    }, {
+      "ClassName" : "AGameFlowDirector",
+      "Name" : "GameFlowDirector",
+      "NonSceneComponents" : [{
+          "ClassName" : "ULuaScriptComponent",
+          "ObjectId" : 449,
+          "Properties" : {
+            "ScriptFile" : "GameFlow/GameFlowDirector.lua",
+            "bAutoActivate" : true,
+            "bEditorOnly" : false,
+            "bHiddenInComponentTree" : false,
+            "bIsActive" : true,
+            "bTickEnable" : true
+          }
+        }],
+      "ObjectId" : 448,
+      "Properties" : {
+        "PendingActorLocation" : [0.000000, 0.000000, 0.000000],
+        "PendingActorRotation" : [0.000000, 0.000000, 0.000000],
+        "PendingActorScale" : [1.000000, 1.000000, 1.000000],
+        "PendingActorVisible" : true,
+        "PendingTagsString" : "GameDirector",
+        "bNeedsTick" : true,
+        "StartMenuWidgetPath" : "Content/UI/GameFlow/StartMenu.uasset",
+        "HudWidgetPath" : "Content/UI/GameFlow/BossHUD.uasset",
+        "PauseMenuWidgetPath" : "Content/UI/GameFlow/PauseMenu.uasset",
+        "GameOverWidgetPath" : "Content/UI/GameFlow/GameOver.uasset",
+        "ClearWidgetPath" : "Content/UI/GameFlow/Clear.uasset",
+        "CreditsWidgetPath" : "Content/UI/GameFlow/Credits.uasset",
+        "MainMenuSceneName" : "StartMenu",
+        "TrainingSceneName" : "TrainingMap",
+        "StoryBossSceneName" : "Default",
+        "RetrySceneName" : "Default",
+        "GameOverSceneName" : "GameOver",
+        "ClearSceneName" : "Clear",
+        "CreditsSceneName" : "Credits",
+        "PlayerActorTag" : "Player",
+        "BossActorTag" : "Boss",
+        "PlayerStartTag" : "PlayerStart",
+        "BossStartTag" : "BossStart",
+        "bApplyStartPositions" : false,
+        "PlayerStartLocation" : [-5.000000, 0.000000, 1.000000],
+        "BossStartLocation" : [5.000000, 0.000000, 1.000000],
+        "bStartCombatOnBeginPlay" : false,
+        "bAutoClearWhenBossDefeated" : true,
+        "bAutoFailWhenPlayerDead" : true,
+        "bEnableEscapePause" : true,
+        "PlayerHP" : 100.000000,
+        "PlayerMaxHP" : 100.000000,
+        "BossHP" : 100.000000,
+        "BossMaxHP" : 100.000000,
+        "UltimateGauge" : 0.000000,
+        "UltimateMaxGauge" : 100.000000,
+        "ComboCount" : 0,
+        "StartupScreen" : "HUD"
+      }
     }],
   "ClassName" : "UWorld",
   "ContextHandle" : "NewScene",
@@ -14466,7 +14522,7 @@
   },
   "Version" : 2,
   "WorldSettings" : {
-    "GameMode" : ""
+    "GameMode" : "ABossGameMode"
   },
   "WorldType" : "Editor"
 }
