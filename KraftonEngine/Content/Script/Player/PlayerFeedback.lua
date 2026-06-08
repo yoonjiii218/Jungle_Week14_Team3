@@ -350,6 +350,8 @@ local function PlayPerfectDodgeFeedback(playerContext, event)
         CameraManager.StartWaveShake(shakeScale)
     end
 
+    PlayConfiguredSound(playerContext, perfectDodgeConfig.Sound)
+
     if CameraManager ~= nil and CameraManager.StartPerfectDodgeEffect ~= nil then
         local duration = event.SlomoDuration or perfectDodgeConfig.PostProcessDuration or 1.5
         local intensity = perfectDodgeConfig.PostProcessIntensity or 1.0
@@ -991,6 +993,8 @@ function PlayerFeedback.Init(playerContext)
 
     local feedbackConfig = playerContext.Config.Feedback or {}
     local attackHitConfig = feedbackConfig.AttackHit or {}
+    local perfectDodgeConfig = feedbackConfig.PerfectDodge or {}
+    EnsureConfiguredSoundLoaded(playerContext, perfectDodgeConfig.Sound)
     EnsureConfiguredSoundLoaded(playerContext, attackHitConfig.Sound)
 end
 
