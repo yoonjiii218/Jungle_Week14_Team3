@@ -9,6 +9,8 @@ void FFontGeometry::Create(ID3D11Device* InDevice)
 
 	WorldVB.Create(InDevice, 1024, sizeof(FTextureVertex));
 	WorldIB.Create(InDevice, 1536);
+	NoDepthWorldVB.Create(InDevice, 256, sizeof(FTextureVertex));
+	NoDepthWorldIB.Create(InDevice, 384);
 	ScreenVB.Create(InDevice, 256, sizeof(FTextureVertex));
 	ScreenIB.Create(InDevice, 384);
 
@@ -29,6 +31,8 @@ void FFontGeometry::Release()
 
 	WorldVB.Release();
 	WorldIB.Release();
+	NoDepthWorldVB.Release();
+	NoDepthWorldIB.Release();
 	ScreenVB.Release();
 	ScreenIB.Release();
 
@@ -87,6 +91,8 @@ void FFontGeometry::Clear()
 {
 	WorldVertices.clear();
 	WorldIndices.clear();
+	NoDepthWorldVertices.clear();
+	NoDepthWorldIndices.clear();
 }
 
 void FFontGeometry::ClearScreen()
@@ -100,21 +106,25 @@ void FFontGeometry::AddWorldText(const FString& Text,
 	const FVector& CamRight,
 	const FVector& CamUp,
 	const FVector& WorldScale,
-	float Scale)
+	float Scale,
+	bool bDisableDepthTest)
 {
 	if (Text.empty()) return;
+
+	TArray<FTextureVertex>& Vertices = bDisableDepthTest ? NoDepthWorldVertices : WorldVertices;
+	TArray<uint32>& Indices = bDisableDepthTest ? NoDepthWorldIndices : WorldIndices;
 
 	const float CharW = 0.5f * Scale * WorldScale.Y;
 	const float CharH = 0.5f * Scale * WorldScale.Z;
 	float CharCursorX = 0.0f;
-	const uint32 Base = static_cast<uint32>(WorldVertices.size());
-	const uint32 IdxBase = static_cast<uint32>(WorldIndices.size());
+	const uint32 Base = static_cast<uint32>(Vertices.size());
+	const uint32 IdxBase = static_cast<uint32>(Indices.size());
 	const size_t CharCount = Text.size();
 
-	WorldVertices.resize(Base + CharCount * 4);
-	WorldIndices.resize(IdxBase + CharCount * 6);
-	FTextureVertex* pV = WorldVertices.data() + Base;
-	uint32* pI = WorldIndices.data() + IdxBase;
+	Vertices.resize(Base + CharCount * 4);
+	Indices.resize(IdxBase + CharCount * 6);
+	FTextureVertex* pV = Vertices.data() + Base;
+	uint32* pI = Indices.data() + IdxBase;
 
 	const FVector HalfRight = CamRight * (CharW * 0.5f);
 	const FVector HalfUp    = CamUp    * (CharH * 0.5f);
@@ -152,8 +162,8 @@ void FFontGeometry::AddWorldText(const FString& Text,
 		CharCursorX += CharW;
 	}
 
-	WorldVertices.resize(Base + CharIdx * 4);
-	WorldIndices.resize(IdxBase + CharIdx * 6);
+	Vertices.resize(Base + CharIdx * 4);
+	Indices.resize(IdxBase + CharIdx * 6);
 }
 
 void FFontGeometry::AddScreenText(const FString& Text,
@@ -230,17 +240,22 @@ void FFontGeometry::AddScreenText(const FString& Text,
 	ScreenIndices.resize(IdxBase + CharIdx * 6);
 }
 
-bool FFontGeometry::UploadWorldBuffers(ID3D11DeviceContext* Context)
+bool FFontGeometry::UploadWorldBuffers(ID3D11DeviceContext* Context, bool bDisableDepthTest)
 {
-	if (WorldVertices.empty()) return false;
+	TArray<FTextureVertex>& Vertices = bDisableDepthTest ? NoDepthWorldVertices : WorldVertices;
+	TArray<uint32>& Indices = bDisableDepthTest ? NoDepthWorldIndices : WorldIndices;
+	FDynamicVertexBuffer& VB = bDisableDepthTest ? NoDepthWorldVB : WorldVB;
+	FDynamicIndexBuffer& IB = bDisableDepthTest ? NoDepthWorldIB : WorldIB;
 
-	const uint32 VertCount = static_cast<uint32>(WorldVertices.size());
-	const uint32 IdxCount  = static_cast<uint32>(WorldIndices.size());
+	if (Vertices.empty()) return false;
 
-	WorldVB.EnsureCapacity(Device, VertCount);
-	WorldIB.EnsureCapacity(Device, IdxCount);
-	if (!WorldVB.Update(Context, WorldVertices.data(), VertCount)) return false;
-	if (!WorldIB.Update(Context, WorldIndices.data(), IdxCount)) return false;
+	const uint32 VertCount = static_cast<uint32>(Vertices.size());
+	const uint32 IdxCount  = static_cast<uint32>(Indices.size());
+
+	VB.EnsureCapacity(Device, VertCount);
+	IB.EnsureCapacity(Device, IdxCount);
+	if (!VB.Update(Context, Vertices.data(), VertCount)) return false;
+	if (!IB.Update(Context, Indices.data(), IdxCount)) return false;
 	return true;
 }
 

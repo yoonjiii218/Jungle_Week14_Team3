@@ -250,6 +250,19 @@ PlayerConfig.Default = {
             CameraShakeScale = 0.25,
         },
 
+        DamageText = {
+            Enabled = true,
+            FontName = "Default",
+            FontSize = 2.0,
+            Duration = 0.65,
+            ZOffset = 0,
+            HitLocationZOffset = 1.0,
+            RiseDistance = 1.65,
+            HorizontalJitter = 0.35,
+            DriftDistance = 0.25,
+            Color = { R = 1.0, G = 0.3, B = 0.08, A = 1.0 },
+        },
+
         -- Screen-edge vignette feedback. These are named camera-manager layers, so low HP,
         -- hit flash, dash, and ultimate pulses can overlap without overwriting each other.
         Vignette = {

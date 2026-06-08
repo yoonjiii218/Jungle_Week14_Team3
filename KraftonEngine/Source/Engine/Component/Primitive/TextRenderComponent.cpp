@@ -20,6 +20,7 @@ void UTextRenderComponent::SetFont(const FName& InFontName)
 {
 	FontName = InFontName;
 	CachedFont = FResourceManager::Get().FindFont(FontName);
+	MarkProxyDirty(EDirtyFlag::Mesh);
 }
 
 void UTextRenderComponent::UpdateWorldAABB() const

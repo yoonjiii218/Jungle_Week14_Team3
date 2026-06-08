@@ -434,7 +434,8 @@ void FDrawCommandBuilder::AddWorldText(const FTextRenderSceneProxy* TextProxy, c
 		Frame.CameraRight,
 		Frame.CameraUp,
 		TextProxy->CachedBillboardMatrix.GetScale(),
-		TextProxy->CachedFontScale
+		TextProxy->CachedFontScale,
+		TextProxy->bCachedDisableDepthTest
 	);
 }
 
@@ -1063,6 +1064,19 @@ void FDrawCommandBuilder::BuildFontCommands(EViewMode ViewMode)
 		Cmd.Buffer.IndexCount = FontGeometry.GetWorldIndexCount();
 		Cmd.Bindings.SRVs[(int)EMaterialTextureSlot::Diffuse] = FontRes->SRV;
 		Cmd.BuildSortKey();
+	}
+
+	if (FontGeometry.GetWorldQuadCount(true) > 0 && FontGeometry.UploadWorldBuffers(Ctx, true))
+	{
+		FDrawCommand& Cmd = DrawCommandList.AddCommand();
+		Cmd.Pass = ERenderPass::AlphaBlend;
+		Cmd.Shader = FShaderManager::Get().GetOrCreate(EShaderPath::Font);
+		Cmd.RenderState = PassRenderStateTable->ToDrawCommandState(ERenderPass::AlphaBlend, ViewMode);
+		Cmd.RenderState.DepthStencil = EDepthStencilState::NoDepth;
+		Cmd.Buffer = { FontGeometry.GetWorldVBBuffer(true), FontGeometry.GetWorldVBStride(true), FontGeometry.GetWorldIBBuffer(true) };
+		Cmd.Buffer.IndexCount = FontGeometry.GetWorldIndexCount(true);
+		Cmd.Bindings.SRVs[(int)EMaterialTextureSlot::Diffuse] = FontRes->SRV;
+		Cmd.BuildSortKey(1);
 	}
 
 	if (FontGeometry.GetScreenQuadCount() > 0 && FontGeometry.UploadScreenBuffers(Ctx))

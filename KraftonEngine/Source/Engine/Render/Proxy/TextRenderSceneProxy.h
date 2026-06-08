@@ -27,6 +27,7 @@ public:
 	float   CachedFontScale = 1.0f;
 	FMatrix CachedBillboardMatrix;
 	const FFontResource* CachedFont = nullptr;
+	bool bCachedDisableDepthTest = false;
 
 private:
 	UTextRenderComponent* GetTextRenderComponent() const;
