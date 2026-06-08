@@ -8,5 +8,4 @@ function OnOverlap(OtherActor)
 end
 
 function Tick(dt)
-    UpdateCoroutines(dt)
 end

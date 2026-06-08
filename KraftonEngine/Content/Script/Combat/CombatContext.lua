@@ -4,12 +4,14 @@
 
 local CombatContext = {}
 
+local CoroutineManager = require("CoroutineManager")
 local PlayerContext = require("Player/PlayerContext")
 local PlayerEvents = require("Player/PlayerEvents")
 local PlayerAction = require("Player/PlayerAction")
 local HitTypes = require("Combat/HitTypes")
 local BossContext = require("Boss/BossContext")
 local BossEvents = require("Boss/BossEvents")
+local BossFeedback = require("Boss/BossFeedback")
 local MobContext = require("Mob/MobContext")
 local Strict = require("Core/Strict")
 
@@ -438,9 +440,8 @@ end
 --   enemyBrainScale은 GlobalTimeDilation 위에 추가로 곱할 AI/쿨타임 보정값이다.
 function CombatContext.OnSlomoStarted(duration, scale)
     if registeredBossContext == nil then return end
-    local perfectConfig = registeredBossContext.Config.PERFECT
-    duration = duration or perfectConfig.SLOMO_DURATION
-    scale = scale or perfectConfig.SLOMO_SCALE
+    duration = duration or 0.0
+    scale = scale or 1.0
 
     -- ⑤ 보스 코루틴/쿨타임/LookAt 보정 → Tick 의 scaledDt 에 반영
     registeredBossContext.Brain.TimeScale = scale
@@ -704,12 +705,54 @@ local function ResolveHitDirection(targetOwner, sourceActor)
     return hitDirection
 end
 
+-- 사망 모션 선택용 방향 판정. 좌/우는 구분하지 않고 "치명타가 앞에서 들어왔는가/뒤에서 들어왔는가"만 본다.
+-- @return string  "Front" | "Back" (정보 부족 시 "Front")
+local function ResolveDeathDirection(targetOwner, sourceActor)
+    local ownerLocation = GetActorLocation2DByCall(targetOwner)
+    local sourceLocation = GetActorLocation2DByCall(sourceActor)
+    local ownerForward = GetActorForward2DByCall(targetOwner)
+
+    if ownerLocation ~= nil and sourceLocation ~= nil and ownerForward ~= nil then
+        local sourceToOwner = ownerLocation - sourceLocation
+        sourceToOwner.Z = 0.0
+        if sourceToOwner:Length() > 0.001 then
+            local ownerToSource = sourceToOwner:Normalized() * -1.0
+            if Dot2D(ownerForward, ownerToSource) < 0.0 then
+                return "Back"
+            end
+        end
+    end
+
+    return "Front"
+end
+
 -- 보스 사망 처리 (HP 0 도달 시 1회만)
 local function HandleBossDeath(bossContext, hit)
     if bossContext == nil or bossContext.Combat.IsDead then return end
 
     bossContext.Combat.IsDead = true
     bossContext.Brain.ActionLock = false
+
+    -- 사망 즉시 정지: 진행 중이던 공격 패턴 코루틴(장판 표시·히트박스 열기/닫기 등)을 전부 멈추고
+    -- 화면에 남아있는 장판(텔레그래프) 데칼을 즉시 지운다.
+    -- (코루틴을 안 멈추면 죽은 보스가 계속 장판을 띄우거나 히트박스를 여닫는 등 유령처럼 행동한다.)
+    local attackState = bossContext.Attack
+    for _, zone in ipairs(attackState.ActiveZones) do
+        BossFeedback.HideAttackZone(bossContext, { Zone = zone })
+    end
+    attackState.CurrentPhase  = nil
+    attackState.HitWindowOpen = false
+    attackState.HitboxOpen    = false
+    attackState.HitboxClose   = false
+    attackState.ActiveZone    = nil
+    attackState.ActiveZones   = {}
+
+    if bossRef ~= nil then
+        CoroutineManager.Destroy(bossRef.UUID)
+    end
+
+    -- 사망 모션 방향 신호 (BossAnimation 이 소비해 SamuraiDeath_Front/Back 재생)
+    bossContext.Brain.DeathSignal = ResolveDeathDirection(bossRef, hit and hit.SourceActor or nil)
 
     -- 이동 정지
     if bossRef and bossRef:IsValid() then
@@ -746,7 +789,7 @@ local function HandleBossDeath(bossContext, hit)
     })
 
     print("[Boss] ☠ 사망!")
-    -- TODO: 사망 애니메이션, 전투 종료 이벤트, 보상 등 (에셋/연출 단계)
+    -- TODO: 전투 종료 이벤트, 보상 등 (에셋/연출 단계)
 end
 
 function CombatContext.ApplyHitToBoss(hit)

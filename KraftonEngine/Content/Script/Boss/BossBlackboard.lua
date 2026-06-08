@@ -5,7 +5,7 @@
 local BB = {}
 
 -- ── 체력 ─────────────────────────────────────
-BB.MAX_HP = 10000.0   -- 보스 최대 체력
+BB.MAX_HP = 1000000.0   -- 보스 최대 체력
 
 -- ── 거리 임계값 ──────────────────────────────
 BB.CHASE_DISTANCE  = 15.0   -- 이 이상이면 추격
@@ -27,14 +27,6 @@ BB.PROB_HEAVY  = 0.35   -- 패턴3(강공격) 선택 확률 — 길고 강하니
 BB.PROB_DOUBLE = 0.35  -- 패턴2(2연타) 선택 확률 (누적: 0.35 + 0.35)
 -- 나머지 0.30 → 패턴1(빠른 견제)
 
--- ── 슬로모 (공통) ────────────────────────────
--- 퍼펙트 회피 판정/슬로모 호출은 플레이어가 함 (회피 무적 중 피격 = 퍼펙트).
--- 보스는 OnSlomoStarted 알림을 받아 코루틴/쿨타임만 보정한다.
-BB.PERFECT = {
-    SLOMO_DURATION = 1.5,   -- 슬로우모션 지속 시간
-    SLOMO_SCALE    = 0.1,   -- 타임스케일 (0.1 = 10% 속도)
-}
-
 -- ── 패턴 1: 단발 (HeavyCombo1) — 옆으로 피하기
 -- 타이밍은 애니 에셋의 FlashWarning / HitboxOpen 노티파이로 제어
 BB.P1 = {
@@ -50,6 +42,7 @@ BB.P2 = {
     DAMAGE2  = 12,
     HITSTOP  = 0.04,
     RECOVERY = 1.75,   -- 2타 판정 후 후딜
+    HIT_GAP  = 1.0,    -- 1타 판정 종료 → 2타 장판 시작까지 추가 대기 (이 값을 늘리면 두 타격 사이 간격이 넓어짐)
 }
 
 -- ── 패턴 3: 차오름 강타 (LightCombo3 → LightCombo4) — 차오름 보고 회피
@@ -71,21 +64,19 @@ BB.FEEDBACK = {
     ZONE_Z_OFFSET = -2.5,   -- 보스 위치 기준 Z 보정 (발밑으로) — 띄워보고 조절
 
     -- 색 (R,G,B,A)
-    ZONE_COLOR_IDLE  = { 1.0, 0.0, 0.0, 0.4 },   -- 평소 흐릿한 빨강
-    ZONE_COLOR_FLASH = { 1.0, 0.0, 0.0, 1.0 },   -- 번쩍임 (진해짐)
-
-    -- ZoneShow 시작 → ZoneFlash 시점까지 장판이 점점 차오르는 연출 기준 시간 (VFX 튜닝용)
-    FILL_DURATION = 1.55,
+    ZONE_COLOR_OUTLINE = { 1.0, 0.0, 0.0, 0.12 },   -- 전체 범위 미리보기 (아주 흐릿하게, 배경)
+    ZONE_COLOR_IDLE  = { 1.0, 0.0, 0.0, 1.0 },   -- 차오르는 장판 (불투명한 빨강)
 
     -- P1 종베기 장판 (좁은 직사각형 → 옆으로 피해야 회피 성공)
-    P1_LENGTH = 20.0,   -- 보스 앞으로 뻗는 길이 (P3 8.0보다 짧게)
+    P1_LENGTH = 15.0,   -- 보스 앞으로 뻗는 길이 (P3 8.0보다 짧게)
     P1_WIDTH  = 10,   -- 폭 (좁을수록 옆 회피 유도)
 
-    -- P2 횡베기 부채꼴 장판 (가는 조각 N개를 방사형으로 펼침)
-    FAN_ANGLE     = 55.0,   -- 총 중심각 (도) — 80→55, 좌우로 옆 회피 공간 확보
-    FAN_SEGMENTS  = 10,      -- 조각 개수 (많을수록 매끈, 무거움)
-    FAN_RADIUS    = 15.0,    -- 부채꼴 반지름 (조각 길이)
-    FAN_SEG_WIDTH = 5,    -- 조각 폭 (인접 조각과 겹치게 넉넉히 → 빈틈 방지)
+    -- P2 횡베기 부채꼴 장판 (Fan.png 텍스처 데칼 한 장)
+    FAN_ANGLE   = 55.0,   -- 히트박스 판정용 중심각 (도) — BossHitbox 의 부채꼴 판정과 공유
+    FAN_RADIUS  = 15.0,   -- 부채꼴 길이 (보스 기준 뻗어나가는 거리)
+    FAN_DECAL_MATERIAL = "Content/Material/VFX/M_CircleZone.mat",
+    FAN_WIDTH   = 18.0,   -- 부채꼴 데칼 가로 폭 (Fan.png 비율에 맞춰 튜닝: 텍스처 가로:세로 ≈ 1.83)
+    FAN_YAW_OFFSET = 90.0, -- 텍스처의 진행 방향이 가로축으로 그려져 있어서 Z축 90도 보정
 
     -- 자동 페이드 방지용 큰 값 (HideZone 에서 직접 제거)
     NO_FADE_DELAY = 9999.0,
@@ -126,6 +117,33 @@ BB.HIT_REACT = {
     -- true  : 공격/콤보 중에도 피격 모션으로 끊는다 (플레이어와 동일 동작)
     -- false : 공격 중에는 피격 모션을 생략한다 (슈퍼아머)
     INTERRUPT_ATTACK  = false,
+}
+
+-- ── 공격 애니메이션 재생 속도 ─────────────────
+-- (PlayerConfig.Animation.Samurai.AttackPlayRate / AttackPlayRates 구조를 보스로 이식)
+-- 콤보 단(인덱스)별로 다르게 줄 수 있고, 표에 없는 단은 DEFAULT_PLAY_RATE 를 쓴다.
+-- 값을 낮추면 그 단의 모션뿐 아니라 노티파이(ZoneShow/HitboxOpen 등) 타이밍도 함께 느려진다.
+BB.ANIM = {
+    DEFAULT_PLAY_RATE = 1.0,
+    LIGHT_PLAY_RATES  = {
+        [2] = 1.0,
+        [3] = 1.0, --P3 준비 동작
+        [4] = 1.0 --P3 공격모션
+    },
+    
+    HEAVY_PLAY_RATES  = {
+        [1] = 0.5, --P1
+        [2] = 0.7, --P2 1타
+        [3] = 0.7, --P2 2타 
+    },
+
+    -- 콤보 단의 AttackEnd 이후 다음 단으로 넘어가기 전 애니메이션이 실제로 멈춰있는 시간(초).
+    -- 인덱스 = 현재(끝나는) 단. 비워두면 0 → 기존처럼 곧장 다음 단으로 전환.
+    -- (BossAttacks 의 장판/판정 타이밍도 같이 늦춰야 하므로 BB.P2.HIT_GAP 을 그대로 참조한다)
+    LIGHT_COMBO_GAPS = {},
+    HEAVY_COMBO_GAPS = {
+        [2] = BB.P2.HIT_GAP,   -- HeavyCombo2(P2 1타) 종료 → HeavyCombo3(P2 2타) 사이 호흡
+    },
 }
 
 -- ── 디버그 ───────────────────────────────────

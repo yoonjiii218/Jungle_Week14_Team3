@@ -187,7 +187,7 @@
       "ObjectId" : 9,
       "Properties" : {
         "PendingActorLocation" : [-12.283114, -2.130730, 10.289471],
-        "PendingActorRotation" : [37.584747, -44.383163, -25.173111],
+        "PendingActorRotation" : [37.584747, -44.383167, -25.173107],
         "PendingActorScale" : [1.000000, 1.000000, 1.000000],
         "PendingActorVisible" : true,
         "PendingTagsString" : "",
@@ -5601,7 +5601,7 @@
       "ObjectId" : 170,
       "Properties" : {
         "PendingActorLocation" : [-0.672232, -16.963694, 0.354132],
-        "PendingActorRotation" : [-0.000046, 79.200897, 69.352531],
+        "PendingActorRotation" : [-0.000051, 79.200905, 69.352531],
         "PendingActorScale" : [1.000000, 1.000000, 1.000000],
         "PendingActorVisible" : true,
         "PendingTagsString" : "",
@@ -8785,7 +8785,7 @@
       "ObjectId" : 267,
       "Properties" : {
         "PendingActorLocation" : [9.468845, 16.203501, 14.984215],
-        "PendingActorRotation" : [0.000000, 0.000000, -22.213102],
+        "PendingActorRotation" : [0.000000, 0.000000, -22.213108],
         "PendingActorScale" : [1.000000, 1.000000, 1.000000],
         "PendingActorVisible" : true,
         "PendingTagsString" : "",
@@ -8899,7 +8899,7 @@
       "ObjectId" : 271,
       "Properties" : {
         "PendingActorLocation" : [9.568846, 15.126863, 19.048161],
-        "PendingActorRotation" : [-0.000000, 0.000000, 26.341612],
+        "PendingActorRotation" : [-0.000000, 0.000000, 26.341619],
         "PendingActorScale" : [1.000000, 1.000000, 1.000000],
         "PendingActorVisible" : true,
         "PendingTagsString" : "",
@@ -14251,7 +14251,7 @@
       "ObjectId" : 438,
       "Properties" : {
         "PendingActorLocation" : [10.542603, 29.251192, 8.615175],
-        "PendingActorRotation" : [-56.520931, 0.000000, 0.000000],
+        "PendingActorRotation" : [-56.520939, 0.000000, 0.000000],
         "PendingActorScale" : [5.000000, 5.000000, 5.000000],
         "PendingActorVisible" : true,
         "PendingTagsString" : "",
@@ -14310,7 +14310,7 @@
       "ObjectId" : 440,
       "Properties" : {
         "PendingActorLocation" : [2.578224, -24.757160, -1.173471],
-        "PendingActorRotation" : [-35.910843, -91.191528, 0.000000],
+        "PendingActorRotation" : [-35.910843, -91.191528, 0.000006],
         "PendingActorScale" : [1.000000, 1.000000, 1.000000],
         "PendingActorVisible" : true,
         "PendingTagsString" : "",
@@ -14821,7 +14821,6 @@
         "GameOverSceneName" : "GameOver",
         "GameOverWidgetPath" : "Content/UI/GameFlow/GameOver.uasset",
         "HudWidgetPath" : "Content/UI/GameFlow/BossHUD.uasset",
-        "CountdownWidgetPath" : "Content/UI/GameFlow/FilmCountdown.uasset",
         "MainMenuSceneName" : "StartMenu",
         "PauseMenuWidgetPath" : "Content/UI/GameFlow/PauseMenu.uasset",
         "PendingActorLocation" : [0.000000, 0.000000, 0.000000],
@@ -14836,10 +14835,9 @@
         "PlayerStartTag" : "PlayerStart",
         "RetrySceneName" : "Default",
         "StartMenuWidgetPath" : "Content/UI/GameFlow/StartMenu.uasset",
-        "StartupScreen" : "Countdown",
+        "StartupScreen" : "HUD",
         "StoryBossSceneName" : "Default",
         "TrainingSceneName" : "TrainingMap",
-        "TutorialHudWidgetPath" : "Content/UI/GameFlow/TutorialHUD.uasset",
         "UltimateGauge" : 0.000000,
         "UltimateMaxGauge" : 100.000000,
         "bApplyStartPositions" : false,

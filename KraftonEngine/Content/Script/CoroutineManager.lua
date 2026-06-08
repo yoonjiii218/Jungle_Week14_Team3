@@ -1,39 +1,96 @@
-local Coroutine = {}
-Coroutine.coroutines = {}
+-- CoroutineManager.lua
+-- Per-owner coroutine pools.
+--
+-- A coroutine must only ever be advanced by the dt of the actor that started
+-- it (Player / Boss / Mob each tick with their own, possibly time-scaled, dt).
+-- Mixing dt sources breaks anything that depends on elapsed time — zone fill
+-- ratios, WaitForNotify timeouts, Wait() recovery timers — which is exactly
+-- what happens once per-actor TimeScale diverges (perfect-dodge slomo slows
+-- the boss/mobs while speeding the player up).
+--
+-- Owners bracket their Tick with CoroutineManager.Begin(key)/End() so the
+-- existing global StartCoroutine/Wait/WaitFrame/UpdateCoroutines calls used
+-- throughout attack/feedback code keep working unchanged, just routed to that
+-- owner's own pool.
 
-function StartCoroutine(func)
-    return Coroutine:Create(func)
+local CoroutineManager = {}
+CoroutineManager.__index = CoroutineManager
+
+local pools = {}
+local current = nil
+
+local function GetOrCreatePool(ownerKey)
+    local pool = pools[ownerKey]
+    if pool == nil then
+        pool = setmetatable({ coroutines = {} }, CoroutineManager)
+        pools[ownerKey] = pool
+    end
+    return pool
 end
 
-function StopCoroutine(handle)
-    return Coroutine:Stop(handle)
+---@param ownerKey any  unique per-actor key (e.g. obj.UUID)
+---@return table the owner's coroutine pool
+function CoroutineManager.Begin(ownerKey)
+    current = GetOrCreatePool(ownerKey)
+    return current
 end
 
-function StopAllCoroutines()
-    for i = #Coroutine.coroutines, 1, -1 do
-        local routine = Coroutine.coroutines[i]
-        routine.dead = true
-        table.remove(Coroutine.coroutines, i)
+---@return nil
+function CoroutineManager.End()
+    current = nil
+end
+
+---@param ownerKey any
+---@return nil
+function CoroutineManager.Destroy(ownerKey)
+    local pool = pools[ownerKey]
+    if pool == nil then
+        return
+    end
+
+    pool:StopAll()
+    pools[ownerKey] = nil
+    if current == pool then
+        current = nil
     end
 end
 
+local function CurrentPool(callerName)
+    if current == nil then
+        error(callerName .. " called outside of CoroutineManager.Begin/End scope")
+    end
+    return current
+end
+
+function StartCoroutine(func)
+    return CurrentPool("StartCoroutine"):Create(func)
+end
+
+function StopCoroutine(handle)
+    return CurrentPool("StopCoroutine"):Stop(handle)
+end
+
+function StopAllCoroutines()
+    CurrentPool("StopAllCoroutines"):StopAll()
+end
+
 function Wait(seconds)
-    Coroutine:Wait(seconds)
+    CurrentPool("Wait"):Wait(seconds)
 end
 
 function WaitFrame()
-    return Coroutine:WaitFrame()
+    return CurrentPool("WaitFrame"):WaitFrame()
 end
 
 function WaitUntil(predicate)
-    Coroutine:WaitUntil(predicate)
+    CurrentPool("WaitUntil"):WaitUntil(predicate)
 end
 
 function UpdateCoroutines(dt)
-    Coroutine:Update(dt)
+    CurrentPool("UpdateCoroutines"):Update(dt)
 end
 
-function Coroutine:Create(func)
+function CoroutineManager:Create(func)
     local routine = {
         co = coroutine.create(func),
         wait = nil,
@@ -46,7 +103,7 @@ function Coroutine:Create(func)
     return routine
 end
 
-function Coroutine:Stop(handle)
+function CoroutineManager:Stop(handle)
     if handle == nil then
         return false
     end
@@ -63,7 +120,15 @@ function Coroutine:Stop(handle)
     return false
 end
 
-function Coroutine:Resume(routine, dt)
+function CoroutineManager:StopAll()
+    for i = #self.coroutines, 1, -1 do
+        local routine = self.coroutines[i]
+        routine.dead = true
+        table.remove(self.coroutines, i)
+    end
+end
+
+function CoroutineManager:Resume(routine, dt)
     local success, waitInfo = coroutine.resume(routine.co, dt or 0)
 
     if not success then
@@ -75,27 +140,27 @@ function Coroutine:Resume(routine, dt)
     routine.wait = waitInfo
 end
 
-function Coroutine:Wait(seconds)
+function CoroutineManager:Wait(seconds)
     coroutine.yield({
         type = "wait",
         time = seconds
     })
 end
 
-function Coroutine:WaitFrame()
+function CoroutineManager:WaitFrame()
     return coroutine.yield({
         type = "frame"
     }) or 0
 end
 
-function Coroutine:WaitUntil(predicate)
+function CoroutineManager:WaitUntil(predicate)
     coroutine.yield({
         type = "wait_until",
         predicate = predicate
     })
 end
 
-function Coroutine:Update(dt)
+function CoroutineManager:Update(dt)
     for i = #self.coroutines, 1, -1 do
         local routine = self.coroutines[i]
 
@@ -131,4 +196,4 @@ function Coroutine:Update(dt)
     end
 end
 
-return Coroutine
+return CoroutineManager

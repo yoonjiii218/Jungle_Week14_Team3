@@ -2,6 +2,7 @@
 -- ULuaScriptComponent entry point for the playerContext actor.
 -- Owns the PlayerContext instance and orchestrates action -> combat -> feedback event flow.
 
+local CoroutineManager = require("CoroutineManager")
 local PlayerContext = require("Player/PlayerContext")
 local PlayerEvents = require("Player/PlayerEvents")
 local PlayerAction = require("Player/PlayerAction")
@@ -56,6 +57,8 @@ function BeginPlay()
 end
 
 function EndPlay()
+    CoroutineManager.Destroy(obj.UUID)
+
     if playerContext ~= nil then
         PlayerProjectile.Shutdown(playerContext)
         CombatContext.UnregisterPlayer(playerContext)
@@ -79,10 +82,14 @@ function OnOverlap(OtherActor, OverlappedComponent, OtherComp)
 end
 
 function Tick(dt)
+    -- Own coroutine pool: this player's coroutines must only ever advance by
+    -- this player's dt, never another actor's (see CoroutineManager.lua).
+    CoroutineManager.Begin(obj.UUID)
     UpdateCoroutines(dt)
 
     local currentPlayerContext = GetPlayerContext()
     if currentPlayerContext == nil then
+        CoroutineManager.End()
         return
     end
 
@@ -95,6 +102,8 @@ function Tick(dt)
     CombatContext.ProcessPlayerEvents(currentPlayerContext, events)
     GameplayEventBus.PublishMany(events, currentPlayerContext)
     PlayerFeedback.ProcessEvents(currentPlayerContext, events)
+
+    CoroutineManager.End()
 end
 
 local function BoolText(value)
