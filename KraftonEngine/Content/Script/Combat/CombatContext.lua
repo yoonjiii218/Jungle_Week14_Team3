@@ -878,6 +878,10 @@ local function HandleMobDeath(mobContext, hit)
     -- 락을 풀어 "맞고 굳어버리는" 상태를 방지 (MobAction.Update 는 IsDead 면 어차피 조기 반환).
     mobContext.Combat.ActionLock = false
 
+    -- 사망 모션 방향 신호 (MobAnimation 이 소비해 Death_Forward/Backward 재생)
+    -- 보스의 HandleBossDeath 와 동일하게, 치명타가 앞에서 들어왔으면 "Front", 뒤에서 들어왔으면 "Back".
+    mobContext.Combat.DeathSignal = ResolveDeathDirection(mobContext.Owner, hit and hit.SourceActor or nil)
+
     if mobContext.Runtime ~= nil and mobContext.Runtime.MovementComp ~= nil then
         mobContext.Runtime.MovementComp:StopMovementImmediately()
     end

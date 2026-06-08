@@ -98,7 +98,7 @@ void USubUVComponent::RebuildSubUVMaterial()
 	{
 		SubUVMaterial = UMaterial::CreateTransient(
 			ERenderPass::AlphaBlend, EBlendState::AlphaBlend,
-			EDepthStencilState::Default, ERasterizerState::SolidBackCull,
+			EDepthStencilState::Default, ERasterizerState::SolidNoCull,
 			FShaderManager::Get().GetOrCreate(EShaderPath::SubUV));
 	}
 

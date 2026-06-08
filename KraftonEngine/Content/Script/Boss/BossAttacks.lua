@@ -38,24 +38,19 @@ local function WaitForNotify(bossContext, flag, timeout)
     end
 end
 
--- 공격별 ZoneShow~ZoneFlash 노티파이 실측 간격(초). PLAY_RATE = 1.0 기준 실측값이며,
--- 장판이 그 타이밍에 맞춰 차오르도록 고정값으로 사용한다.
+-- 공격이 실제로 시작(swing)된 뒤 ZoneFlash 노티파이가 뜰 때까지의 간격(초). PLAY_RATE = 1.0 기준 실측값.
+-- 장판 채움 지속시간 = BB.ZONE_LEAD(리드 타임) + 이 값 으로 잡아서, flash 순간에 장판이 딱 다 차게 한다.
+--   - P1/P2-1/P3 : TriggerPatternAnim(swing 시작) → ZoneFlash 간격
+--   - P2-2       : 콤보 중 2타 장판 spawn → ZoneFlash 간격 (별도 리드 타임 없음)
+-- 아래 로그([BossAttacks] fill~ZoneFlash)가 찍는 값을 그대로 복붙하면 된다(play rate 1.0 기준으로 환산해 출력).
 local FILL_DURATION = {
-    P1 = 0.207,
-    ["P2-1"] = 0.310,
-    ["P2-2"] = 0.901,
-    P3 = 0.952,
+    P1 = 0.149,
+    ["P2-1"] = 0.141,
+    ["P2-2"] = 0.812,
+    P3 = 0.739,
 }
 
--- ZoneShow ~ ZoneFlash 실제 간격을 로그로만 확인하기 위한 디버그 출력 (FILL_DURATION 보정에는 더 이상 사용하지 않음)
-local function LogZoneFillSpan(bossContext, attackId, zoneShowAt)
-    if not bossContext.Config.DEBUG then return end
-    local elapsed = (World.GetGameTime() or 0.0) - zoneShowAt
-    print("[BossAttacks] ZoneShow~ZoneFlash: " .. attackId
-        .. " = " .. string.format("%.3f", elapsed) .. "s")
-end
-
--- 위 실측값을 만든 콤보 단(애니 클립). BossBlackboard.ANIM 의 play rate 가 바뀌면
+-- 실측값을 만든 콤보 단(애니 클립). BossBlackboard.ANIM 의 play rate 가 바뀌면
 -- 노티파이가 실제로 불리는 시점도 그만큼(1 / playRate) 늦춰지므로, 차오름 연출도 같이 보정해야
 -- "장판이 다 찬 뒤에야 ZoneFlash 가 도착" 하는 불일치가 생기지 않는다.
 local FILL_DURATION_STAGE = {
@@ -65,12 +60,8 @@ local FILL_DURATION_STAGE = {
     P3        = { kind = "light", index = 3 },
 }
 
--- attackId 의 실측 FILL_DURATION 을 현재 BossBlackboard.ANIM play rate 기준으로 보정한다.
--- (실측 당시 play rate 가 1.0 이었다고 가정: 실제 간격 = 실측값 / 현재 play rate)
-local function GetFillDuration(bossContext, attackId)
-    local base = FILL_DURATION[attackId]
-    if base == nil then return nil end
-
+-- attackId 가 재생되는 콤보 단의 현재 play rate (표에 없으면 DEFAULT_PLAY_RATE).
+local function GetStagePlayRate(bossContext, attackId)
     local animConfig = bossContext.Config.ANIM or {}
     local rate = animConfig.DEFAULT_PLAY_RATE or 1.0
     local stage = FILL_DURATION_STAGE[attackId]
@@ -80,7 +71,27 @@ local function GetFillDuration(bossContext, attackId)
             rate = rates[stage.index]
         end
     end
+    return rate
+end
 
+-- 실제 채움~ZoneFlash 간격을 로그로 확인해 FILL_DURATION 을 맞추기 위한 디버그 출력.
+-- 실측은 현재 play rate 로 느려진 실제 시간이므로, FILL_DURATION 에 그대로 복붙할 수 있도록
+-- play rate 1.0 기준값(= 실측 × rate)으로 환산해 찍는다.
+local function LogZoneFillSpan(bossContext, attackId, sinceTime)
+    if not bossContext.Config.DEBUG then return end
+    local elapsed = (World.GetGameTime() or 0.0) - sinceTime
+    local rate = GetStagePlayRate(bossContext, attackId)
+    print("[BossAttacks] fill~ZoneFlash: " .. attackId
+        .. " = " .. string.format("%.3f", elapsed * rate) .. "s  ← FILL_DURATION 에 입력"
+        .. "  (실측 " .. string.format("%.3f", elapsed) .. "s @ rate " .. string.format("%.2f", rate) .. ")")
+end
+
+-- attackId 의 실측 FILL_DURATION 을 현재 BossBlackboard.ANIM play rate 기준으로 보정한다.
+-- (저장값은 play rate 1.0 기준: 실제 간격 = 저장값 / 현재 play rate)
+local function GetFillDuration(bossContext, attackId)
+    local base = FILL_DURATION[attackId]
+    if base == nil then return nil end
+    local rate = GetStagePlayRate(bossContext, attackId)
     if rate == nil or rate <= 0 then return base end
     return base / rate
 end
@@ -111,13 +122,6 @@ local function BeginPattern(bossContext, attackId)
     attackState.HitWindowOpen = false
     attackState.ActiveZones = {}
 
-    local anim = PATTERN_ANIM[attackId]
-    if anim then
-        brain.AnimAttack = anim.kind
-        brain.AnimAttackStart = anim.start
-        brain.AnimAttackHits = anim.hits
-    end
-
     if bossContext.Runtime.MovementComp then
         bossContext.Runtime.MovementComp:StopMovementImmediately()
     end
@@ -126,6 +130,24 @@ local function BeginPattern(bossContext, attackId)
 
     if bossContext.Config.DEBUG then
         print("[BossAttacks] -- " .. attackId .. " START -- @ "
+            .. string.format("%.3f", World.GetGameTime()))
+    end
+end
+
+-- 준비 모션(AttackPrep) 제거에 따른 분리: BeginPattern 은 락/장판 셋업만 하고,
+-- 실제 공격 애니는 장판 리드 타임이 끝난 뒤 이 함수로 트리거한다.
+-- (이 신호를 BossAnimation.ConsumeAnimSignal 이 받아 Locomotion → 콤보로 직접 진입시킨다)
+local function TriggerPatternAnim(bossContext, attackId)
+    local brain = bossContext.Brain
+    local anim = PATTERN_ANIM[attackId]
+    if anim then
+        brain.AnimAttack = anim.kind
+        brain.AnimAttackStart = anim.start
+        brain.AnimAttackHits = anim.hits
+    end
+
+    if bossContext.Config.DEBUG then
+        print("[BossAttacks] -- " .. attackId .. " SWING -- @ "
             .. string.format("%.3f", World.GetGameTime()))
     end
 end
@@ -203,16 +225,20 @@ local function Pattern1(bossContext)
 
     BeginPattern(bossContext, "P1")
 
-    WaitForNotify(bossContext, "ZoneShow", 3.0)
-    local zoneShowAt = World.GetGameTime() or 0.0
+    -- 준비 모션 대체: 장판을 먼저 띄우고 리드 타임 동안 차오르게 한 뒤 공격을 시작한다.
     local zone = BossFeedback.ShowAttackZone(bossContext, { AttackId = "P1", Shape = "P1" })
     BossFeedback.FillZone(bossContext, zone, 0.0)
     attackState.ActiveZone = zone
     table.insert(attackState.ActiveZones, zone)
-    RunZoneFill(bossContext, zone, GetFillDuration(bossContext, "P1"))
+    local lead = config.ZONE_LEAD.P1
+    RunZoneFill(bossContext, zone, lead + (GetFillDuration(bossContext, "P1") or 0))
+    Wait(lead)
+
+    TriggerPatternAnim(bossContext, "P1")
+    local swingAt = World.GetGameTime() or 0.0
 
     WaitForNotify(bossContext, "ZoneFlash", 3.0)
-    LogZoneFillSpan(bossContext, "P1", zoneShowAt)
+    LogZoneFillSpan(bossContext, "P1", swingAt)
     BossFeedback.FillZone(bossContext, zone, 1.0)
 
     WaitForNotify(bossContext, "ZoneHide", 3.0)
@@ -230,6 +256,8 @@ local function Pattern1(bossContext)
     end
     BossAttacks.CloseHitWindow(bossContext, { AttackId = "P1" })
 
+    -- 후딜(반격 타임): 슈퍼아머를 풀어 이 구간 피격에는 모션이 나오게 한다. (IsBossAttacking 참조)
+    attackState.CurrentPhase = "Recovery"
     Wait(config.P1.RECOVERY)
     EndPattern(bossContext, "P1", config.PATTERN_COOLDOWN.AFTER_P1, nil)
 end
@@ -240,16 +268,20 @@ local function Pattern2(bossContext)
 
     BeginPattern(bossContext, "P2")
 
-    WaitForNotify(bossContext, "ZoneShow", 3.0)
-    local zone1ShowAt = World.GetGameTime() or 0.0
+    -- 준비 모션 대체: 1타 장판을 먼저 띄우고 리드 타임 동안 차오르게 한 뒤 공격을 시작한다.
     local zone1 = BossFeedback.ShowAttackZone(bossContext, { AttackId = "P2-1", Shape = "Fan" })
     BossFeedback.FillZone(bossContext, zone1, 0.0)
     attackState.ActiveZone = zone1
     table.insert(attackState.ActiveZones, zone1)
-    RunZoneFill(bossContext, zone1, GetFillDuration(bossContext, "P2-1"))
+    local lead = config.ZONE_LEAD.P2
+    RunZoneFill(bossContext, zone1, lead + (GetFillDuration(bossContext, "P2-1") or 0))
+    Wait(lead)
+
+    TriggerPatternAnim(bossContext, "P2")
+    local swingAt = World.GetGameTime() or 0.0
 
     WaitForNotify(bossContext, "ZoneFlash", 3.0)
-    LogZoneFillSpan(bossContext, "P2-1", zone1ShowAt)
+    LogZoneFillSpan(bossContext, "P2-1", swingAt)
     BossFeedback.FillZone(bossContext, zone1, 1.0)
 
     WaitForNotify(bossContext, "ZoneHide", 3.0)
@@ -296,6 +328,8 @@ local function Pattern2(bossContext)
     end
     BossAttacks.CloseHitWindow(bossContext, { AttackId = "P2-2" })
 
+    -- 후딜(반격 타임): 슈퍼아머를 풀어 이 구간 피격에는 모션이 나오게 한다. (IsBossAttacking 참조)
+    attackState.CurrentPhase = "Recovery"
     Wait(config.P2.RECOVERY)
     EndPattern(bossContext, "P2", config.PATTERN_COOLDOWN.AFTER_P2, nil)
 end
@@ -306,19 +340,23 @@ local function Pattern3(bossContext)
 
     BeginPattern(bossContext, "P3")
 
-    WaitForNotify(bossContext, "ZoneShow", 3.0)
-    local zoneShowAt = World.GetGameTime() or 0.0
+    -- 준비 모션 대체: 장판을 먼저 띄우고 리드 타임 동안 차오르게 한 뒤 공격을 시작한다.
     local zone = BossFeedback.ShowAttackZone(bossContext, { AttackId = "P3", Shape = "Rect" })
     BossFeedback.FillZone(bossContext, zone, 0.0)
     attackState.ActiveZone = zone
     table.insert(attackState.ActiveZones, zone)
-    RunZoneFill(bossContext, zone, GetFillDuration(bossContext, "P3"))
+    local lead = config.ZONE_LEAD.P3
+    RunZoneFill(bossContext, zone, lead + (GetFillDuration(bossContext, "P3") or 0))
+    Wait(lead)
+
+    TriggerPatternAnim(bossContext, "P3")
+    local swingAt = World.GetGameTime() or 0.0
 
     WaitForNotify(bossContext, "TrackEnd", 3.0)
     bossContext.Brain.IsTracking = false
 
     WaitForNotify(bossContext, "ZoneFlash", 3.0)
-    LogZoneFillSpan(bossContext, "P3", zoneShowAt)
+    LogZoneFillSpan(bossContext, "P3", swingAt)
     BossFeedback.FillZone(bossContext, zone, 1.0)
 
     WaitForNotify(bossContext, "ZoneHide", 3.0)
@@ -336,6 +374,8 @@ local function Pattern3(bossContext)
     end
     BossAttacks.CloseHitWindow(bossContext, { AttackId = "P3" })
 
+    -- 후딜(반격 타임): 슈퍼아머를 풀어 이 구간 피격에는 모션이 나오게 한다. (IsBossAttacking 참조)
+    attackState.CurrentPhase = "Recovery"
     Wait(config.P3.RECOVERY)
     EndPattern(bossContext, "P3", config.PATTERN_COOLDOWN.AFTER_P3, config.HEAVY_ATTACK_COOLDOWN)
 end

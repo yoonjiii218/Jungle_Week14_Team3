@@ -1,17 +1,16 @@
 -- Anim/MobAnimation.lua
 -- 잡몹(Rusher) 애니메이션 상태 머신. (BossAnimation 의 경량 버전)
 --
--- 상태 흐름:
---   Locomotion → AttackPrep(준비동작/Idle1) → Attack(공격/보스 P1) → Locomotion
+-- 상태 흐름 (준비동작 없이 바로 공격 — 보스와 동일):
+--   Locomotion → Attack(공격) → Locomotion
 --
 -- 코루틴(MobAttacks)과의 동기화:
 --   1) StartAttack → Combat.ActionLock=true, Brain.IsTracking=true
---      → update 가 ActionLock 상승 엣지를 감지해 AttackPrep 진입
---   2) prep 애니(Idle1)의 ZoneShow notify → 장판 예고
---   3) prep 애니의 TrackEnd notify → 코루틴이 Brain.IsTracking=false (조준 고정)
---      → update 가 이를 보고 AttackPrep → Attack 전환
---   4) 공격 애니의 ZoneFlash/ZoneHide/HitboxOpen/HitboxClose notify → 코루틴 판정
---   5) 코루틴 종료 시 Combat.ActionLock=false → Attack → Locomotion 복귀
+--      → 코드가 장판을 띄우고 리드 타임(ZONE_LEAD)동안 차오르게 함 (이 동안 mob 은 Locomotion 유지)
+--   2) 리드 타임 종료 → 코루틴이 Brain.IsTracking=false (조준 고정)
+--      → update 가 이를 보고 Locomotion → Attack 전환 (준비동작 없이 즉시 공격 시작)
+--   3) 공격 애니의 ZoneFlash/ZoneHide/HitboxOpen/HitboxClose notify → 코루틴 판정
+--   4) 코루틴 종료 시 Combat.ActionLock=false → Attack → Locomotion 복귀
 --
 -- self 가 아니라 obj(액터)로 컨텍스트를 조회하므로 잡몹이 여러 마리여도 안전.
 
@@ -24,8 +23,6 @@ local ANIM_BASE = "Content/Animation/Samurai_Mob/"
 local IDLE_PATH   = ANIM_BASE .. "SamuraiIdle2.uasset"
 local WALK_PATH   = ANIM_BASE .. "SamuraiWalk.uasset"
 local SPRINT_PATH = ANIM_BASE .. "SamurSprint.uasset"
-
-local ATTACK_PREP_PATH = ANIM_BASE .. "SamuraiIdle1.uasset"
 
 local ATTACK_PATH = ANIM_BASE .. "SamuraiAttack_Combo1.uasset"
 
@@ -43,8 +40,6 @@ function init(self)
 
     self.Speed = 0.0
     self.BlendSpeed = 0.0
-    self.WasLocked = false
-    self.AttackTrigger = false
 
     -- 코루틴 상태 캐시 (transition 클로저가 읽는다)
     self._mobLocked = false
@@ -57,6 +52,10 @@ function init(self)
     self.HitReactElapsed   = 0.0
     self.HitReactEnd       = false
 
+    -- 사망 모션 상태 플래그 (BossAnimation 과 동일 패턴)
+    self.DeathPending   = false
+    self.DeathDirection = nil
+
     -- 이동 블렌드스페이스 (Idle → Walk → Sprint)
     local loco = Anim.create_blend_space_1d(0.0)
     Anim.blend_space_1d_add_sample(loco, IDLE_PATH,   0.0,          1.0, true)
@@ -66,35 +65,19 @@ function init(self)
 
     local top = Anim.create_state_machine("MobTop")
     Anim.sm_add_state(top, "Locomotion", loco)
-    Anim.sm_add_state(top, "AttackPrep",
-        Anim.create_sequence_player(ATTACK_PREP_PATH, PLAY_RATE, false))
     Anim.sm_add_state(top, "Attack",
         Anim.create_sequence_player(ATTACK_PATH, PLAY_RATE, false))
 
-    -- Locomotion → AttackPrep: 공격 시작(ActionLock 상승 엣지)
-    Anim.sm_add_transition(top, "Locomotion", "AttackPrep",
-        function()
-            if self.AttackTrigger then
-                self.AttackTrigger = false
-                return true
-            end
-            return false
-        end, ATTACK_BLEND_IN)
-
-    -- AttackPrep → Attack: 코루틴이 TrackEnd 를 받아 IsTracking=false (조준 고정 = 본 공격 시작)
-    Anim.sm_add_transition(top, "AttackPrep", "Attack",
+    -- Locomotion → Attack: 준비동작 없이 바로 공격 (보스와 동일).
+    -- MobAttacks 코루틴이 장판 리드 타임(ZONE_LEAD)을 기다린 뒤 IsTracking=false 로 조준을 고정하면
+    -- 그 신호로 곧장 공격 애니가 시작된다. 리드 타임 동안 mob 은 Locomotion(서있기)으로 장판만 띄운다.
+    Anim.sm_add_transition(top, "Locomotion", "Attack",
         function()
             return self._mobTracking == false
         end, ATTACK_BLEND_IN)
 
     -- Attack → Locomotion: 코루틴 종료(ActionLock 해제)
     Anim.sm_add_transition(top, "Attack", "Locomotion",
-        function()
-            return self._mobLocked == false
-        end, ATTACK_BLEND_OUT)
-
-    -- 안전 복귀: prep 도중 코루틴이 끝나버린 비정상 상황 (영구 락 방지)
-    Anim.sm_add_transition(top, "AttackPrep", "Locomotion",
         function()
             return self._mobLocked == false
         end, ATTACK_BLEND_OUT)
@@ -151,6 +134,34 @@ function init(self)
     AddHitReactionTransitions("Right", "HitRight")
     AddHitReactionTransitions("Back",  "HitBack")
 
+    -- ── 사망 모션 ──────────────────────────────────────────────────
+    -- CombatContext.HandleMobDeath 가 mobContext.Combat.DeathSignal 에 "Front"/"Back" 을 써넣고,
+    -- update() 가 그걸 소비해 self.DeathPending/Direction 으로 변환하면 아래 전이가 발동한다.
+    -- 좌/우 구분 없이 치명타가 앞에서 들어왔으면 Front(Forward), 뒤에서 들어왔으면 Back(Backward) 모션으로 죽는다.
+    -- 사망 후에는 다른 상태로 돌아가지 않는 종료 상태다. (BossAnimation 과 동일 패턴)
+    local death          = MobConfig.DEATH or {}
+    local deathPaths     = death.PATHS or {}
+    local deathPlayRate  = death.PLAY_RATE or 1.0
+    local deathBlendIn   = death.BLEND_IN or 0.15
+    local deathFallback  = ATTACK_PATH   -- 경로 누락 시 안전 폴백
+
+    Anim.sm_add_state(top, "DeathFront", Anim.create_sequence_player(deathPaths.Front or deathFallback, deathPlayRate, false))
+    Anim.sm_add_state(top, "DeathBack",  Anim.create_sequence_player(deathPaths.Back  or deathFallback, deathPlayRate, false))
+
+    local function AddDeathTransition(direction, stateName)
+        Anim.sm_add_transition(top, "AnyState", stateName,
+            function()
+                if not self.DeathPending or self.DeathDirection ~= direction then
+                    return false
+                end
+                self.DeathPending = false
+                return true
+            end, deathBlendIn)
+    end
+
+    AddDeathTransition("Front", "DeathFront")
+    AddDeathTransition("Back",  "DeathBack")
+
     Anim.sm_set_initial_state(top, "Locomotion")
 
     local root = Anim.create_slot("DefaultSlot", top)
@@ -169,15 +180,9 @@ function update(self, dt)
     local mobContext = MobContext.GetByOwner(obj)
     if mobContext == nil then return end
 
-    -- ActionLock 상승 엣지 = 새 공격 시작 → AttackPrep 진입 트리거.
-    local locked = mobContext.Combat.ActionLock
-    if locked and not self.WasLocked then
-        self.AttackTrigger = true
-    end
-    self.WasLocked = locked
-
-    -- transition 클로저가 참조할 코루틴 상태 캐싱
-    self._mobLocked = locked
+    -- transition 클로저가 참조할 코루틴 상태 캐싱.
+    -- (준비동작 제거 후: Locomotion→Attack 은 IsTracking=false(조준 고정) 신호로만 발동한다)
+    self._mobLocked = mobContext.Combat.ActionLock
     self._mobTracking = mobContext.Brain.IsTracking
 
     -- ── 피격 방향 신호 소비 (CombatContext.ApplyHitToMob 가 써넣음) ──
@@ -188,6 +193,14 @@ function update(self, dt)
         self.HitReactDirection = hitSignal
         self.HitReactEnd       = false
         self.HitReactElapsed   = 0.0
+    end
+
+    -- ── 사망 방향 신호 소비 (CombatContext.HandleMobDeath 가 써넣음) ──
+    local deathSignal = mobContext.Combat.DeathSignal
+    if deathSignal ~= nil then
+        mobContext.Combat.DeathSignal = nil
+        self.DeathPending   = true
+        self.DeathDirection = deathSignal
     end
 
     -- 피격 모션 재생 중이면 fallback 복귀용 경과 시간 누적

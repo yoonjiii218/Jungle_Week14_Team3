@@ -36,6 +36,26 @@ local function LookAtPlayer(mobContext, dt)
     ownerActor.Rotation = Vector(0.0, 0.0, currentYaw + step)
 end
 
+-- 주변 잡몹으로부터 멀어지는 반발 벡터(boids separation). 가까울수록 강하게 민다.
+local function ComputeSeparation(mobContext)
+    local sep = Vector(0.0, 0.0, 0.0)
+    local myPos = mobContext.Owner.Location
+    local radius = mobContext.Config.SEPARATION_RADIUS
+
+    MobContext.ForEach(function(other)
+        if other == mobContext then return end
+        local otherPos = other.Owner.Location
+        local away = Vector(myPos.X - otherPos.X, myPos.Y - otherPos.Y, 0.0)
+        local dist = away:Length()
+        if dist > 0.001 and dist < radius then
+            -- 가까울수록(작은 dist) 1.0 에 가깝게, 반경 끝에선 0 에 가깝게.
+            sep = sep + away:Normalized() * ((radius - dist) / radius)
+        end
+    end)
+
+    return sep
+end
+
 local function Chase(mobContext, dt)
     LookAtPlayer(mobContext, dt)
 
@@ -48,7 +68,16 @@ local function Chase(mobContext, dt)
     local toTarget = Vector(targetPos.X - mobPos.X, targetPos.Y - mobPos.Y, 0.0)
     if toTarget:Length() < 0.001 then return end
 
-    Reflection.Call(ownerActor, "AddMovementInput", toTarget:Normalized(), 1.0)
+    -- 추격 방향에 잡몹 간 반발을 섞어 서로 겹치지 않게 한다.
+    local sep = ComputeSeparation(mobContext)
+    local weight = mobContext.Config.SEPARATION_WEIGHT
+    local moveDir = Vector(
+        toTarget.X + sep.X * weight,
+        toTarget.Y + sep.Y * weight,
+        0.0)
+    if moveDir:Length() < 0.001 then moveDir = toTarget end
+
+    Reflection.Call(ownerActor, "AddMovementInput", moveDir:Normalized(), 1.0)
 end
 
 -- =========================================================

@@ -31,6 +31,7 @@ local MobContext = {}
 ---@field HitReactSignal string|nil   피격 방향 1회성 신호 (CombatContext → MobAnimation)
 ---@field HitReactActive boolean      피격 모션 재생 중 (MobAnimation → MobAction 행동 억제)
 ---@field CancelAttack boolean        진행 중인 공격 코루틴 취소 요청
+---@field DeathSignal string|nil      사망 방향 1회성 신호 "Front"/"Back" (CombatContext → MobAnimation)
 
 ---@class MobRuntimeState
 ---@field MovementComp any
@@ -80,6 +81,7 @@ local function CreateCombatState(config)
         HitReactSignal = nil,
         HitReactActive = false,
         CancelAttack = false,
+        DeathSignal = nil,
     }
 end
 
@@ -145,6 +147,15 @@ end
 ---@return MobContext|nil
 function MobContext.GetByOwner(owner)
     return registry[OwnerKey(owner)]
+end
+
+---등록된 모든 잡몹 컨텍스트를 순회한다 (잡몹 간 separation 등에 사용).
+---@param fn fun(mobContext: MobContext)
+---@return nil
+function MobContext.ForEach(fn)
+    for _, ctx in pairs(registry) do
+        fn(ctx)
+    end
 end
 
 ---@param mobContext MobContext

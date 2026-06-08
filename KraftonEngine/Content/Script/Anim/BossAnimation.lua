@@ -23,7 +23,6 @@ local BossConfig = require("Boss/BossBlackboard")
 
 local ANIM_BASE = "Content/Animation/Samurai_Boss/"
 
-local IDLE1_PATH  = ANIM_BASE .. "SamuraiAttack_Idle1.uasset"
 local IDLE2_PATH  = ANIM_BASE .. "SamuraiAttack_Idle2.uasset"  -- 대기 중 idle 루프 변형
 local WALK_PATH   = ANIM_BASE .. "SamuraiAttack_Walk.uasset"
 local SPRINT_PATH = ANIM_BASE .. "SamuraiAttack_Sprint.uasset"
@@ -80,9 +79,6 @@ local function GetComboGap(gaps, index)
     return 0.0
 end
 
--- 준비 모션(Idle1) fallback 최대 시간 — AttackEnd notify 누락 시 강제 전환
-local ATTACK_PREP_DURATION = 2.0
-
 -- 콤보 단별 애니메이션 길이 (초) — 실측값.
 -- "AttackEnd" notify 가 없을 때 이 길이만큼 재생 후 다음 단/복귀시키는 fallback.
 -- (notify 가 심어지면 notify 가 우선; 아래서 PLAY_RATE 로 나눠 실제 재생시간 보정)
@@ -124,11 +120,12 @@ local function ConsumeAnimSignal(self, bossContext)
     if kind == "dash" then
         self.DashSlashPressed = true
     else
-        -- 콤보 직접 진입 대신 AttackPrep(Idle1) 경유
+        -- 준비 모션(AttackPrep) 제거: 신호가 오면 곧장 콤보로 진입한다.
+        -- 장판 리드 타임(ZoneShow→공격)은 BossAttacks 가 이 신호를 늦게 보내는 방식으로 코드에서 제어한다.
         self.PendingAttackKind  = kind
         self.PendingAttackStart = start
         self.PendingAttackHits  = hits
-        self.AttackPrepPressed  = true
+        self.AttackEnd          = false
     end
 end
 
@@ -142,9 +139,6 @@ local function ResetAttack(self)
     self.DashEnd            = false
     self.DashStartDone      = false
     self.AttackTimer        = 0.0
-    self.AttackPrepPressed  = false
-    self.AttackPrepActive   = false
-    self.AttackPrepTimer    = 0.0
     self.PendingAttackKind  = nil
     self.PendingAttackStart = nil
     self.PendingAttackHits  = nil
@@ -220,33 +214,17 @@ function init(self)
             Anim.create_sequence_player(HEAVY_COMBO_PATHS[i], GetComboPlayRate(self.HeavyPlayRates, i, defaultPlayRate), false))
     end
 
-    -- ── 공격 준비 모션 (Idle1): ZoneShow 노티파이로 장판 스폰 타이밍 고정 ──
-    Anim.sm_add_state(top, "AttackPrep",
-        Anim.create_sequence_player(IDLE1_PATH, PLAY_RATE, false))
-
-    -- Locomotion → AttackPrep
-    Anim.sm_add_transition(top, "Locomotion", "AttackPrep",
-        function()
-            if self.AttackPrepPressed then
-                self.AttackPrepPressed = false
-                self.AttackPrepActive  = true
-                self.AttackPrepTimer   = 0.0
-                self.AttackEnd         = false
-                return true
-            end
-            return false
-        end, ATTACK_BLEND_IN)
-
-    -- AttackPrep → LightCombo_i
+    -- ── Locomotion → 콤보 직접 진입 (준비 모션 AttackPrep 제거) ──
+    -- AI(BossAttacks)가 장판 리드 타임을 준 뒤 공격 신호를 보내면 곧장 해당 콤보 단으로 진입한다.
+    -- 슈퍼아머/공격 커밋은 brain.ActionLock 으로 관리되므로 별도 prep 상태가 필요 없다.
     for i = 1, 4 do
-        Anim.sm_add_transition(top, "AttackPrep", "LightCombo" .. i,
+        Anim.sm_add_transition(top, "Locomotion", "LightCombo" .. i,
             function()
-                if self.AttackEnd
-                    and self.PendingAttackKind  == "light"
+                if self.PendingAttackKind  == "light"
                     and self.PendingAttackStart == i then
                     self.MaxLightComboHits  = self.PendingAttackHits
                     self.PendingAttackKind  = nil
-                    self.AttackPrepActive   = false
+                    self.PendingAttackStart = nil
                     BeginLightCombo(self, i)
                     return true
                 end
@@ -254,34 +232,20 @@ function init(self)
             end, ATTACK_BLEND_IN)
     end
 
-    -- AttackPrep → HeavyCombo_i
     for i = 1, 5 do
-        Anim.sm_add_transition(top, "AttackPrep", "HeavyCombo" .. i,
+        Anim.sm_add_transition(top, "Locomotion", "HeavyCombo" .. i,
             function()
-                if self.AttackEnd
-                    and self.PendingAttackKind  == "heavy"
+                if self.PendingAttackKind  == "heavy"
                     and self.PendingAttackStart == i then
                     self.MaxHeavyComboHits  = self.PendingAttackHits
                     self.PendingAttackKind  = nil
-                    self.AttackPrepActive   = false
+                    self.PendingAttackStart = nil
                     BeginHeavyCombo(self, i)
                     return true
                 end
                 return false
             end, ATTACK_BLEND_IN)
     end
-
-    -- AttackPrep → Locomotion: 이상 상태 안전 복귀
-    Anim.sm_add_transition(top, "AttackPrep", "Locomotion",
-        function()
-            if self.AttackEnd then
-                self.AttackPrepActive  = false
-                self.PendingAttackKind = nil
-                ResetAttack(self)
-                return true
-            end
-            return false
-        end, ATTACK_BLEND_OUT)
 
     -- 대시
     Anim.sm_add_state(top, "DashStart",
@@ -417,11 +381,18 @@ function init(self)
     Anim.sm_add_state(top, "HitRight", Anim.create_sequence_player(hitPaths.Right or hitFallbackPath, hitPlayRate, false))
     Anim.sm_add_state(top, "HitBack",  Anim.create_sequence_player(hitPaths.Back  or hitFallbackPath, hitPlayRate, false))
 
-    -- INTERRUPT_ATTACK=false 일 때 공격 중이면 피격 모션을 생략(슈퍼아머)하기 위한 판정
+    -- INTERRUPT_ATTACK=false 일 때 공격 중이면 피격 모션을 생략(슈퍼아머)하기 위한 판정.
+    -- 콤보 중(comboIndex>0)은 항상 슈퍼아머. 준비 모션(AttackPrep) 제거 후 콤보 진입 전의 '리드 타임'
+    -- 구간은 brain.ActionLock 으로 슈퍼아머를 유지하되, 후딜(Recovery = 반격 타임)에는 풀어
+    -- 피격 모션이 나오게 한다. (기존 AttackPrepActive 가 후딜엔 false 였던 동작을 그대로 보존)
     local function IsBossAttacking()
-        return self.LightComboIndex > 0
-            or self.HeavyComboIndex > 0
-            or self.AttackPrepActive == true
+        if self.LightComboIndex > 0 or self.HeavyComboIndex > 0 then
+            return true
+        end
+        local ctx = self.BossContext
+        return ctx ~= nil
+            and ctx.Brain.ActionLock == true
+            and ctx.Attack.CurrentPhase ~= "Recovery"
     end
 
     local function AddHitReactionTransitions(direction, stateName)
@@ -534,18 +505,6 @@ function update(self, dt)
     -- 피격 모션 재생 중이면 fallback 복귀용 경과 시간 누적
     if self.HitReactActive then
         self.HitReactElapsed = (self.HitReactElapsed or 0.0) + dt
-    end
-
-    -- AttackPrep fallback: AttackEnd notify 누락 시 ATTACK_PREP_DURATION 후 강제 전환
-    if self.AttackPrepActive then
-        self.AttackPrepTimer = (self.AttackPrepTimer or 0.0) + dt
-        if not self.AttackEnd then
-            if self.AttackPrepTimer >= ATTACK_PREP_DURATION then
-                self.AttackEnd = true
-            elseif not bossContext.Brain.ActionLock then
-                self.AttackEnd = true
-            end
-        end
     end
 
     -- 콤보 진행 중이면 fallback 으로 단 종료/복귀를 보장한다.
