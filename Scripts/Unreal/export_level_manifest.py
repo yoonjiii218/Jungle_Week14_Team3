@@ -79,9 +79,15 @@ def rotation_degrees(value):
     ]
 
 
-def world_matrix_rows(transform):
+def scale_components(value):
+    if isinstance(value, (list, tuple)) and len(value) >= 3:
+        return float(value[0]), float(value[1]), float(value[2])
+    return float(value.x), float(value.y), float(value.z)
+
+
+def world_matrix_rows(transform, override_scale=None):
     rotation = transform.rotation
-    scale = transform.scale3d
+    scale = override_scale if override_scale is not None else transform.scale3d
     origin = transform.translation
 
     x = float(rotation.x)
@@ -107,9 +113,7 @@ def world_matrix_rows(transform):
     yw = y * w
     zw = z * w
 
-    scale_x = float(scale.x)
-    scale_y = float(scale.y)
-    scale_z = float(scale.z)
+    scale_x, scale_y, scale_z = scale_components(scale)
 
     return [
         [
@@ -258,6 +262,13 @@ def material_library_call(method_name, *args):
         return None
 
 
+def unreal_class_name(obj):
+    try:
+        return obj.get_class().get_name()
+    except Exception:
+        return type(obj).__name__
+
+
 def result_value(result):
     if isinstance(result, tuple):
         for item in result:
@@ -351,6 +362,66 @@ def first_material_property(chain, property_name, default=None):
     return default
 
 
+def expression_textures(material, visited=None):
+    if material is None:
+        return []
+    if visited is None:
+        visited = set()
+
+    try:
+        material_path = material.get_path_name()
+    except Exception:
+        material_path = str(id(material))
+    if material_path in visited:
+        return []
+    visited.add(material_path)
+
+    expressions = material_library_call("get_material_expressions", material)
+    if expressions is None:
+        expressions = safe_property(material, "expressions", [])
+
+    try:
+        expressions = list(expressions)
+    except Exception:
+        return []
+
+    records = []
+    for index, expression in enumerate(expressions):
+        texture = safe_property(expression, "texture")
+        if texture is None:
+            texture = safe_property(expression, "parameter_value")
+
+        function_asset = safe_property(expression, "material_function")
+        if function_asset is None:
+            function_asset = safe_property(expression, "function")
+        if function_asset is not None and hasattr(function_asset, "get_path_name"):
+            records.extend(expression_textures(function_asset, visited))
+
+        if texture is None or not hasattr(texture, "get_path_name"):
+            continue
+
+        name = ""
+        for property_name in ("parameter_name", "desc", "name"):
+            value = safe_property(expression, property_name)
+            if value is not None and str(value).strip():
+                name = str(value).strip()
+                break
+        if not name:
+            try:
+                name = expression.get_name()
+            except Exception:
+                name = f"TextureExpression{index}"
+
+        class_name = unreal_class_name(expression)
+        records.append({
+            "name": name,
+            "texture": texture,
+            "usageHint": f"{class_name} {name}",
+        })
+
+    return records
+
+
 def register_texture(texture, texture_records, texture_assets):
     if texture is None:
         return None
@@ -364,6 +435,47 @@ def register_texture(texture, texture_records, texture_assets):
     }
     texture_assets[key] = texture
     return key
+
+
+def add_texture_parameter(
+    texture_params,
+    name,
+    texture,
+    texture_records,
+    texture_assets,
+    usage_hint="",
+    allow_override=True,
+):
+    texture_param_key = register_texture(
+        texture,
+        texture_records,
+        texture_assets,
+    )
+    if texture_param_key is None:
+        return
+
+    parameter = str(name).strip() if name is not None else ""
+    if not parameter:
+        parameter = texture.get_name()
+
+    if parameter in texture_params and not allow_override:
+        if texture_params[parameter]["texture"] == texture_param_key:
+            return
+
+        base_name = parameter
+        suffix = 2
+        while parameter in texture_params:
+            parameter = f"{base_name}_{suffix}"
+            suffix += 1
+
+    texture_params[parameter] = {
+        "parameter": parameter,
+        "texture": texture_param_key,
+        "usageGuess": texture_usage_guess(
+            f"{parameter} {usage_hint}",
+            texture,
+        ),
+    }
 
 
 def register_material(material, material_records, texture_records, texture_assets):
@@ -388,19 +500,25 @@ def register_material(material, material_records, texture_records, texture_asset
                 continue
 
             name = parameter_name(parameter)
-            texture_param_key = register_texture(
+            add_texture_parameter(
+                texture_params,
+                name,
                 texture,
                 texture_records,
                 texture_assets,
+                allow_override=True,
             )
-            if texture_param_key is None:
-                continue
 
-            texture_params[name] = {
-                "parameter": name,
-                "texture": texture_param_key,
-                "usageGuess": texture_usage_guess(name, texture),
-            }
+        for texture_record in expression_textures(material_node):
+            add_texture_parameter(
+                texture_params,
+                texture_record["name"],
+                texture_record["texture"],
+                texture_records,
+                texture_assets,
+                texture_record["usageHint"],
+                allow_override=False,
+            )
 
         for parameter in editor_array(material_node, "scalar_parameter_values"):
             name = parameter_name(parameter)
@@ -517,6 +635,79 @@ def transform_record(transform):
 
 def component_transform(component):
     return transform_record(component.get_world_transform())
+
+
+def decal_component_material(component):
+    material = safe_property(component, "decal_material")
+    if material is not None:
+        return material
+
+    for method_name in ("get_decal_material", "get_material"):
+        method = getattr(component, method_name, None)
+        if method is None:
+            continue
+
+        try:
+            return method(0)
+        except TypeError:
+            try:
+                return method()
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+    return None
+
+
+def decal_scale_meters(component, transform):
+    scale = transform.scale3d
+    decal_size = safe_property(component, "decal_size")
+    if decal_size is not None and all(
+        hasattr(decal_size, channel)
+        for channel in ("x", "y", "z")
+    ):
+        return [
+            round(float(decal_size.x) * 0.01 * float(scale.x), 6),
+            round(float(decal_size.y) * 0.01 * float(scale.y), 6),
+            round(float(decal_size.z) * 0.01 * float(scale.z), 6),
+        ]
+
+    return vec3(scale)
+
+
+def decal_record(actor, component, material):
+    transform = component.get_world_transform()
+    scale = decal_scale_meters(component, transform)
+    color = safe_property(
+        component,
+        "decal_color",
+        safe_property(component, "color", unreal.LinearColor(1.0, 1.0, 1.0, 1.0)),
+    )
+
+    record = {
+        "id": stable_id(component_identity(actor, component)),
+        "name": actor.get_actor_label(),
+        "actorClass": actor.get_class().get_name(),
+        "component": component.get_name(),
+        "type": "Decal",
+        "material": material.get_path_name() if material else "None",
+        "location": location_meters(transform.translation),
+        "rotation": rotation_degrees(transform.rotation.rotator()),
+        "scale": scale,
+        "worldMatrix": world_matrix_rows(transform, scale),
+        "color": linear_color(color),
+        "visible": bool(safe_property(component, "visible", True)),
+    }
+
+    sort_order = safe_property(component, "sort_order")
+    if sort_order is not None:
+        try:
+            record["sortOrder"] = int(sort_order)
+        except Exception:
+            pass
+
+    return record
 
 
 def is_instanced_static_mesh_component(component):
@@ -746,6 +937,7 @@ world = editor_system.get_editor_world()
 loaded_actors = actor_system.get_all_level_actors()
 
 placements = []
+decal_records = []
 environment = []
 meshes = {}
 mesh_assets = {}
@@ -753,6 +945,7 @@ material_records = {}
 texture_records = {}
 texture_assets = {}
 skipped_unreal_sky_meshes = 0
+decal_component_type = getattr(unreal, "DecalComponent", None)
 
 unreal.log(f"Loaded actor count: {len(loaded_actors)}")
 
@@ -841,6 +1034,18 @@ for actor in loaded_actors:
             if instance_index is not None:
                 record["sourceInstance"] = instance_index
             placements.append(record)
+
+    if decal_component_type is not None:
+        for component in actor.get_components_by_class(decal_component_type):
+            material = decal_component_material(component)
+            if material:
+                register_material(
+                    material,
+                    material_records,
+                    texture_records,
+                    texture_assets,
+                )
+            decal_records.append(decal_record(actor, component, material))
 
     for component in actor.get_components_by_class(
         unreal.DirectionalLightComponent
@@ -996,6 +1201,7 @@ manifest = {
         key=lambda item: item["key"],
     ),
     "actors": placements,
+    "decals": decal_records,
     "environment": environment,
 }
 
@@ -1021,6 +1227,7 @@ unreal.log(
     f"materials: {len(material_records)}, "
     f"exported textures: {exported_textures}, "
     f"placements: {len(placements)}, "
+    f"decals: {len(decal_records)}, "
     f"environment: {len(environment)}, "
     f"skipped sky meshes: {skipped_unreal_sky_meshes}"
 )

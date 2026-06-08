@@ -1,6 +1,7 @@
 #include "Editor/Import/UnrealSceneManifestImporter.h"
 
 #include "Component/Primitive/InstancedStaticMeshComponent.h"
+#include "Component/Primitive/DecalComponent.h"
 #include "Component/Primitive/StaticMeshComponent.h"
 #include "Component/Primitive/HeightFogComponent.h"
 #include "Component/Light/AmbientLightComponent.h"
@@ -11,6 +12,7 @@
 #include "Core/Types/CollisionTypes.h"
 #include "Engine/Platform/Paths.h"
 #include "GameFramework/Actor/StaticMeshActor.h"
+#include "GameFramework/Actor/DecalActor.h"
 #include "GameFramework/AActor.h"
 #include "GameFramework/Actor/HeightFogActor.h"
 #include "GameFramework/Light/AmbientLightActor.h"
@@ -1304,6 +1306,13 @@ namespace
 				OutGraph,
 				MaskPin,
 				FindPinId(Output, "OpacityMask", EMaterialGraphPinKind::Input));
+			if (bDecalMaterial)
+			{
+				AddGraphLink(
+					OutGraph,
+					MaskPin,
+					FindPinId(Output, "Opacity", EMaterialGraphPinKind::Input));
+			}
 		}
 
 		if (bTranslucent || bProceduralMaskedDecalFallback)
@@ -1329,8 +1338,10 @@ namespace
 		const std::filesystem::path& ManifestPath,
 		ID3D11Device* Device,
 		bool bReceiveLighting,
+		const TSet<FString>& DecalMaterialSources,
 		FUnrealSceneImportResult& Result,
-		TMap<FString, UMaterial*>& OutMaterials)
+		TMap<FString, UMaterial*>& OutMaterials,
+		TMap<FString, UMaterial*>* OutDecalMaterials = nullptr)
 	{
 		const std::filesystem::path MaterialsPath =
 			SourceRoot / (ManifestPath.stem().stem().wstring() + L".materials.json");
@@ -1467,6 +1478,9 @@ namespace
 				ReadString(MaterialObject, "baseMaterial") + " " +
 				SourceAsset);
 			const bool bDecalMaterial = IsDecalIdentity(MaterialIdentity);
+			const bool bUsedByDecalActor =
+				DecalMaterialSources.find(SourceAsset) != DecalMaterialSources.end();
+			const bool bNeedsDecalDomainMaterial = bDecalMaterial || bUsedByDecalActor;
 			MaterialJson[MatKeys::ShadingModel] = bDecalMaterial ? "UnLit" : "DefaultLit";
 			MaterialJson[MatKeys::ReceiveLighting] =
 				bReceiveLighting && !bDecalMaterial;
@@ -1503,6 +1517,73 @@ namespace
 
 			OutMaterials[SourceAsset] = Material;
 			++Result.MaterialCount;
+
+			if (bNeedsDecalDomainMaterial && OutDecalMaterials)
+			{
+				FMaterialGraph DecalGraph = Graph;
+				DecalGraph.EnsureOutputPinsForDomain(
+					EMaterialDomain::Decal,
+					EMaterialShadingModel::DefaultLit);
+
+				json::JSON DecalGraphJson;
+				MaterialGraphAsset::SaveToJson(DecalGraph, DecalGraphJson);
+
+				const FString DecalKey = Key + "_Decal";
+				const std::filesystem::path DecalMaterialFile =
+					DestinationMaterials / (FPaths::ToWide(SanitizePathSegment(DecalKey)) + L".mat");
+				const FString ProjectRelativeDecalMaterial = FPaths::MakeProjectRelative(
+					FPaths::ToUtf8(DecalMaterialFile.generic_wstring()));
+
+				json::JSON DecalMaterialJson = json::JSON::Make(json::JSON::Class::Object);
+				DecalMaterialJson[MatKeys::Version] = 2;
+				DecalMaterialJson[MatKeys::MaterialGuid] = MakeMaterialGuid(SourceAsset + "|Decal");
+				DecalMaterialJson[MatKeys::PathFileName] = ProjectRelativeDecalMaterial;
+				DecalMaterialJson[MatKeys::Domain] = "Decal";
+				DecalMaterialJson[MatKeys::RenderPass] = "Decal";
+				DecalMaterialJson[MatKeys::BlendState] = "AlphaBlend";
+				DecalMaterialJson[MatKeys::DepthStencilState] = "DepthReadOnly";
+				DecalMaterialJson[MatKeys::RasterizerState] = RasterState;
+				DecalMaterialJson[MatKeys::GraphShaderMode] = "Generated";
+				DecalMaterialJson[MatKeys::GeneratedShaderPath] = "";
+				DecalMaterialJson[MatKeys::ShadingModel] = "DefaultLit";
+				DecalMaterialJson[MatKeys::ReceiveLighting] = false;
+				DecalMaterialJson[MatKeys::Graph] = std::move(DecalGraphJson);
+				DecalMaterialJson[MatKeys::Compiled] = json::JSON::Make(json::JSON::Class::Object);
+				DecalMaterialJson[MatKeys::Compiled][MatKeys::Parameters] =
+					json::JSON::Make(json::JSON::Class::Object);
+				DecalMaterialJson[MatKeys::Compiled][MatKeys::Textures] =
+					json::JSON::Make(json::JSON::Class::Object);
+
+				FString DecalCompileError;
+				if (!FMaterialManager::Get().CompileMaterialGraph(
+						ProjectRelativeDecalMaterial,
+						DecalMaterialJson,
+						&DecalCompileError) ||
+					!FMaterialManager::Get().SaveMaterialJson(
+						ProjectRelativeDecalMaterial,
+						DecalMaterialJson))
+				{
+					UE_LOG(
+						"UE scene decal material compile failed: %s (%s)",
+						DecalKey.c_str(),
+						DecalCompileError.c_str());
+					++Result.FailedMaterialCount;
+					continue;
+				}
+
+				FMaterialManager::Get().InvalidateMaterial(ProjectRelativeDecalMaterial);
+				UMaterial* DecalMaterial =
+					FMaterialManager::Get().GetOrCreateMaterial(ProjectRelativeDecalMaterial);
+				if (DecalMaterial)
+				{
+					(*OutDecalMaterials)[SourceAsset] = DecalMaterial;
+					++Result.MaterialCount;
+				}
+				else
+				{
+					++Result.FailedMaterialCount;
+				}
+			}
 		}
 
 		return true;
@@ -1549,6 +1630,127 @@ namespace
 				: ResolvedMaterials.back();
 			Component->SetMaterial(SlotIndex, Material);
 			++Result.MaterialAssignmentCount;
+		}
+	}
+
+	UMaterial* ResolveImportedDecalMaterial(
+		const FString& SourceAsset,
+		const TMap<FString, UMaterial*>& ImportedMaterials,
+		const TMap<FString, UMaterial*>& ImportedDecalMaterials)
+	{
+		auto DecalIt = ImportedDecalMaterials.find(SourceAsset);
+		if (DecalIt != ImportedDecalMaterials.end() && DecalIt->second)
+		{
+			return DecalIt->second;
+		}
+
+		auto MaterialIt = ImportedMaterials.find(SourceAsset);
+		if (MaterialIt != ImportedMaterials.end() &&
+			MaterialIt->second &&
+			MaterialIt->second->GetDomain() == EMaterialDomain::Decal)
+		{
+			return MaterialIt->second;
+		}
+
+		return nullptr;
+	}
+
+	void ImportDecalActors(
+		json::JSON& Root,
+		UWorld* World,
+		float LocationScale,
+		const TMap<FString, UMaterial*>& ImportedMaterials,
+		const TMap<FString, UMaterial*>& ImportedDecalMaterials,
+		FUnrealSceneImportResult& Result)
+	{
+		if (!World ||
+			!Root.hasKey("decals") ||
+			Root["decals"].JSONType() != json::JSON::Class::Array)
+		{
+			return;
+		}
+
+		for (json::JSON& DecalObject : Root["decals"].ArrayRange())
+		{
+			FVector Location(0.0f, 0.0f, 0.0f);
+			FVector RotationEuler(0.0f, 0.0f, 0.0f);
+			FVector Scale(1.0f, 1.0f, 1.0f);
+			if (!ReadVector3(DecalObject, "location", Location) ||
+				!ReadVector3(DecalObject, "rotation", RotationEuler) ||
+				!ReadVector3(DecalObject, "scale", Scale))
+			{
+				++Result.SkippedActorCount;
+				continue;
+			}
+
+			Location *= LocationScale;
+			Scale *= LocationScale;
+
+			FMatrix WorldMatrix = FMatrix::Identity;
+			const bool bHasWorldMatrix =
+				ReadMatrix4x4(DecalObject, "worldMatrix", WorldMatrix) ||
+				ReadMatrix4x4(DecalObject, "matrix", WorldMatrix);
+			if (bHasWorldMatrix)
+			{
+				for (int32 Row = 0; Row < 3; ++Row)
+				{
+					for (int32 Column = 0; Column < 3; ++Column)
+					{
+						WorldMatrix.M[Row][Column] *= LocationScale;
+					}
+				}
+				WorldMatrix.M[3][0] *= LocationScale;
+				WorldMatrix.M[3][1] *= LocationScale;
+				WorldMatrix.M[3][2] *= LocationScale;
+			}
+
+			ADecalActor* Actor = World->SpawnActor<ADecalActor>();
+			if (!Actor)
+			{
+				++Result.SkippedActorCount;
+				continue;
+			}
+
+			Actor->InitDefaultComponents();
+			UDecalComponent* Component = Actor->GetDecalComponent();
+			if (!Component)
+			{
+				World->DestroyActor(Actor);
+				++Result.SkippedActorCount;
+				continue;
+			}
+
+			FScenePlacementImportRecord Record;
+			Record.ActorObject = &DecalObject;
+			Record.Location = Location;
+			Record.RotationEuler = RotationEuler;
+			Record.Scale = Scale;
+			Record.WorldMatrix = WorldMatrix;
+			Record.bHasWorldMatrix = bHasWorldMatrix;
+			Record.bVisible = ReadBool(DecalObject, "visible", true);
+
+			Actor->SetFName(FName(BuildActorName(DecalObject)));
+			ApplyPlacementTransform(Actor, Record);
+			Actor->SetVisible(Record.bVisible);
+			Component->SetVisibility(Record.bVisible);
+
+			FVector4 Color(1.0f, 1.0f, 1.0f, 1.0f);
+			ReadVector4(DecalObject, "color", Color);
+			Component->SetColor(Color);
+
+			const FString SourceAsset = ReadString(DecalObject, "material");
+			if (UMaterial* Material = ResolveImportedDecalMaterial(
+					SourceAsset,
+					ImportedMaterials,
+					ImportedDecalMaterials))
+			{
+				Component->SetMaterial(Material);
+				++Result.MaterialAssignmentCount;
+			}
+
+			++Result.ActorCount;
+			++Result.EngineActorCount;
+			++Result.DecalActorCount;
 		}
 	}
 
@@ -1806,15 +2008,31 @@ FUnrealSceneImportResult FUnrealSceneManifestImporter::Import(
 		FPaths::ToUtf8(DestinationRoot.generic_wstring()));
 	CopyOptionalExportMetadata(SourceRoot, DestinationRoot, ManifestFile);
 
+	TSet<FString> DecalMaterialSources;
+	if (Root.hasKey("decals") && Root["decals"].JSONType() == json::JSON::Class::Array)
+	{
+		for (json::JSON& DecalObject : Root["decals"].ArrayRange())
+		{
+			const FString SourceAsset = ReadString(DecalObject, "material");
+			if (!SourceAsset.empty() && SourceAsset != "None")
+			{
+				DecalMaterialSources.insert(SourceAsset);
+			}
+		}
+	}
+
 	TMap<FString, UMaterial*> ImportedMaterials;
+	TMap<FString, UMaterial*> ImportedDecalMaterials;
 	if (!ImportMaterials(
 		SourceRoot,
 		DestinationRoot,
 		ManifestFile,
 		Device,
 		ReadBool(Root, "materialLighting", false),
+		DecalMaterialSources,
 		Result,
-		ImportedMaterials))
+		ImportedMaterials,
+		&ImportedDecalMaterials))
 	{
 		UE_LOG("UE scene material import could not read the optional material metadata.");
 	}
@@ -1999,6 +2217,13 @@ FUnrealSceneImportResult FUnrealSceneManifestImporter::Import(
 				Result);
 		}
 	}
+	ImportDecalActors(
+		Root,
+		World,
+		LocationScale,
+		ImportedMaterials,
+		ImportedDecalMaterials,
+		Result);
 	ImportEnvironmentActors(Root, World, LocationScale, Result);
 	World->EndDeferredPickingBVHUpdate();
 
@@ -2011,7 +2236,7 @@ FUnrealSceneImportResult FUnrealSceneManifestImporter::Import(
 	UE_LOG(
 		"UE scene import complete. Meshes=%d Placements=%d EngineActors=%d InstancedGroups=%d "
 		"InstancedPlacements=%d MatrixTransforms=%d CorrectedMatrixTransforms=%d "
-		"Environment=%d Textures=%d Materials=%d MaterialSlots=%d "
+		"Environment=%d Decals=%d Textures=%d Materials=%d MaterialSlots=%d "
 		"FailedMeshes=%d FailedTextures=%d FailedMaterials=%d SkippedActors=%d NegativeScale=%d",
 		Result.MeshCount,
 		Result.ActorCount,
@@ -2021,6 +2246,7 @@ FUnrealSceneImportResult FUnrealSceneManifestImporter::Import(
 		Result.MatrixTransformCount,
 		Result.CorrectedMatrixTransformCount,
 		Result.EnvironmentActorCount,
+		Result.DecalActorCount,
 		Result.TextureCount,
 		Result.MaterialCount,
 		Result.MaterialAssignmentCount,
