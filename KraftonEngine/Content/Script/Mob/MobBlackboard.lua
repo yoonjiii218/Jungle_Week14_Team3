@@ -31,6 +31,7 @@ MB.FEEDBACK = {
     ZONE_COLOR_IDLE  = { 1.0, 0.0, 0.0, 0.4 },   -- 평소 흐릿한 빨강
     ZONE_COLOR_FLASH = { 1.0, 0.0, 0.0, 0.9 },   -- 번쩍임 (진해짐)
     NO_FADE_DELAY    = 9999.0, -- 자동 페이드 방지용 큰 값 (HideZone 에서 직접 제거)
+    FILL_DURATION    = 1.55,   -- ZoneShow → ZoneFlash 까지 장판이 점점 차오르는 연출 기준 시간 (VFX 튜닝용)
 }
 
 -- ── 방향별 피격 모션 ──────────────────────────

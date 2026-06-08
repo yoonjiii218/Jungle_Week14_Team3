@@ -38,6 +38,18 @@ local function WaitForNotify(bossContext, flag, timeout)
     end
 end
 
+local function RunZoneFill(bossContext, zone)
+    local config = bossContext.Config
+    local attackState = bossContext.Attack
+    StartCoroutine(function()
+        local t = 0.0
+        while attackState.ActiveZone == zone do
+            t = t + WaitFrame()
+            BossFeedback.FillZone(bossContext, zone, math.min(t / config.FEEDBACK.FILL_DURATION, 0.99))
+        end
+    end)
+end
+
 local function BeginPattern(bossContext, attackId)
     local brain = bossContext.Brain
     local attackState = bossContext.Attack
@@ -146,10 +158,13 @@ local function Pattern1(bossContext)
 
     WaitForNotify(bossContext, "ZoneShow", 3.0)
     local zone = BossFeedback.ShowAttackZone(bossContext, { AttackId = "P1", Shape = "P1" })
+    BossFeedback.FillZone(bossContext, zone, 0.0)
     attackState.ActiveZone = zone
     table.insert(attackState.ActiveZones, zone)
+    RunZoneFill(bossContext, zone)
 
     WaitForNotify(bossContext, "ZoneFlash", 3.0)
+    BossFeedback.FillZone(bossContext, zone, 1.0)
     BossFeedback.FlashZone(bossContext, zone)
 
     WaitForNotify(bossContext, "ZoneHide", 3.0)
@@ -179,10 +194,13 @@ local function Pattern2(bossContext)
 
     WaitForNotify(bossContext, "ZoneShow", 3.0)
     local zone1 = BossFeedback.ShowAttackZone(bossContext, { AttackId = "P2-1", Shape = "Fan" })
+    BossFeedback.FillZone(bossContext, zone1, 0.0)
     attackState.ActiveZone = zone1
     table.insert(attackState.ActiveZones, zone1)
+    RunZoneFill(bossContext, zone1)
 
     WaitForNotify(bossContext, "ZoneFlash", 3.0)
+    BossFeedback.FillZone(bossContext, zone1, 1.0)
     BossFeedback.FlashZone(bossContext, zone1)
 
     WaitForNotify(bossContext, "ZoneHide", 3.0)
@@ -200,10 +218,13 @@ local function Pattern2(bossContext)
     BossAttacks.CloseHitWindow(bossContext, { AttackId = "P2-1" })
 
     local zone2 = BossFeedback.ShowAttackZone(bossContext, { AttackId = "P2-2", Shape = "Fan" })
+    BossFeedback.FillZone(bossContext, zone2, 0.0)
     attackState.ActiveZone = zone2
     table.insert(attackState.ActiveZones, zone2)
+    RunZoneFill(bossContext, zone2)
 
     WaitForNotify(bossContext, "ZoneFlash", 3.0)
+    BossFeedback.FillZone(bossContext, zone2, 1.0)
     BossFeedback.FlashZone(bossContext, zone2)
 
     WaitForNotify(bossContext, "ZoneHide", 3.0)
@@ -236,19 +257,13 @@ local function Pattern3(bossContext)
     BossFeedback.FillZone(bossContext, zone, 0.0)
     attackState.ActiveZone = zone
     table.insert(attackState.ActiveZones, zone)
-
-    StartCoroutine(function()
-        local t = 0.0
-        while attackState.ActiveZone == zone do
-            t = t + WaitFrame()
-            BossFeedback.FillZone(bossContext, zone, math.min(t / config.P3.FILL_DURATION, 0.99))
-        end
-    end)
+    RunZoneFill(bossContext, zone)
 
     WaitForNotify(bossContext, "TrackEnd", 3.0)
     bossContext.Brain.IsTracking = false
 
     WaitForNotify(bossContext, "ZoneFlash", 3.0)
+    BossFeedback.FillZone(bossContext, zone, 1.0)
     BossFeedback.FlashZone(bossContext, zone)
 
     WaitForNotify(bossContext, "ZoneHide", 3.0)

@@ -91,6 +91,35 @@ local function ShowZone(mobContext)
     }
 end
 
+-- 장판을 origin 기준으로 length * ratio 만큼만 채워서 보여준다 (0 → 점점 차오름, 1 → 완전히 참).
+local function FillZone(mobContext, zone, ratio)
+    if zone == nil or zone.decal == nil then return end
+
+    local feedback = mobContext.Config.FEEDBACK
+    local length = math.max(0.01, zone.length * ratio)
+    local rad = zone.yaw * math.pi / 180.0
+    local dx, dy = math.cos(rad), math.sin(rad)
+    local cx = zone.origin.X + dx * (length * 0.5)
+    local cy = zone.origin.Y + dy * (length * 0.5)
+    local cz = zone.decal.Location.Z or (zone.origin.Z + feedback.ZONE_Z_OFFSET)
+
+    zone.decal:SetLocation(Vector(cx, cy, cz))
+    zone.decal:SetRelativeScale(Vector(length, zone.width, feedback.ZONE_HEIGHT))
+end
+
+-- ZoneShow 시점부터 장판이 사라질 때까지 점점 차오르는 연출을 굴린다.
+-- ZoneFlash 시점에 FillZone(zone, 1.0) 으로 강제로 100%를 맞추므로, 여기서는 0.99 까지만 채운다.
+local function RunZoneFill(mobContext, zone)
+    local config = mobContext.Config
+    StartCoroutine(function()
+        local t = 0.0
+        while zone.decal ~= nil do
+            t = t + WaitFrame()
+            FillZone(mobContext, zone, math.min(t / config.FEEDBACK.FILL_DURATION, 0.99))
+        end
+    end)
+end
+
 local function FlashZone(mobContext, zone)
     if zone == nil or zone.decal == nil then return end
     local color = mobContext.Config.FEEDBACK.ZONE_COLOR_FLASH
@@ -205,6 +234,8 @@ local function MeleeAttack(mobContext)
     WaitForNotify(mobContext, "ZoneShow", 1.5)
     if IsAttackAborted(mobContext) then return EndAttack(mobContext, zone) end
     zone = ShowZone(mobContext)
+    FillZone(mobContext, zone, 0.0)
+    RunZoneFill(mobContext, zone)
 
     -- prep 애니의 TrackEnd → 추적 종료(조준 고정). 이 신호로 애니가 Attack 상태로 넘어간다.
     WaitForNotify(mobContext, "TrackEnd", 1.5)
@@ -214,6 +245,7 @@ local function MeleeAttack(mobContext)
     -- ── [공격 Attack 애니] ────────────────────────────────────────
     WaitForNotify(mobContext, "ZoneFlash", 1.5)
     if IsAttackAborted(mobContext) then return EndAttack(mobContext, zone) end
+    FillZone(mobContext, zone, 1.0)
     FlashZone(mobContext, zone)
 
     WaitForNotify(mobContext, "ZoneHide", 1.5)

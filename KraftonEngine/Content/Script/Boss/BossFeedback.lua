@@ -363,16 +363,7 @@ function BossFeedback.HideAttackZone(bossContext, args)
     end
 end
 
----@param bossContext BossContext
----@param zone table
----@param ratio number
----@return nil
-function BossFeedback.FillZone(bossContext, zone, ratio)
-    BossContext.Assert(bossContext, "BossFeedback.FillZone")
-    Strict.AssertNumber(ratio, "ratio", "BossFeedback.FillZone")
-    if zone == nil or zone.decals == nil or #zone.decals == 0 then return end
-    if zone.kind ~= "rect" then return end
-
+local function FillRectZone(bossContext, zone, ratio)
     local decal = zone.decals[1]
     if decal == nil then return end
 
@@ -388,6 +379,43 @@ function BossFeedback.FillZone(bossContext, zone, ratio)
 
     decal:SetLocation(Vector(cx, cy, cz))
     decal:SetRelativeScale(Vector(length, width, feedbackConfig.ZONE_HEIGHT))
+end
+
+local function FillFanZone(bossContext, zone, ratio)
+    local feedbackConfig = bossContext.Config.FEEDBACK
+    local segmentCount = feedbackConfig.FAN_SEGMENTS
+    local halfAngle = feedbackConfig.FAN_ANGLE * 0.5
+    local radius = math.max(0.01, feedbackConfig.FAN_RADIUS * ratio)
+    local fallbackZ = zone.origin.Z + feedbackConfig.ZONE_Z_OFFSET
+
+    for i, decal in ipairs(zone.decals) do
+        local offset = -halfAngle + feedbackConfig.FAN_ANGLE * ((i - 1 + 0.5) / segmentCount)
+        local segmentYaw = zone.yaw + offset
+        local rad = segmentYaw * math.pi / 180.0
+        local dx, dy = math.cos(rad), math.sin(rad)
+        local cx = zone.origin.X + dx * (radius * 0.5)
+        local cy = zone.origin.Y + dy * (radius * 0.5)
+        local cz = decal.Location.Z or fallbackZ
+
+        decal:SetLocation(Vector(cx, cy, cz))
+        decal:SetRelativeScale(Vector(radius, feedbackConfig.FAN_SEG_WIDTH, feedbackConfig.ZONE_HEIGHT))
+    end
+end
+
+---@param bossContext BossContext
+---@param zone table
+---@param ratio number
+---@return nil
+function BossFeedback.FillZone(bossContext, zone, ratio)
+    BossContext.Assert(bossContext, "BossFeedback.FillZone")
+    Strict.AssertNumber(ratio, "ratio", "BossFeedback.FillZone")
+    if zone == nil or zone.decals == nil or #zone.decals == 0 then return end
+
+    if zone.kind == "rect" then
+        FillRectZone(bossContext, zone, ratio)
+    elseif zone.kind == "fan" then
+        FillFanZone(bossContext, zone, ratio)
+    end
 end
 
 ---@param bossContext BossContext
