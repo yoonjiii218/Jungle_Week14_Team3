@@ -242,6 +242,33 @@ local function ApplyLocalHitStop(actor, duration)
     end
 end
 
+local function RemoveActorTargetingTags(actor)
+    if not IsValidActor(actor) or actor.RemoveTag == nil then
+        return
+    end
+
+    actor:RemoveTag("HitTarget")
+    actor:RemoveTag("Enemy")
+    actor:RemoveTag("Mob")
+end
+
+local function ClearPlayerTargetAssistForActor(targetActor)
+    if targetActor == nil then
+        return
+    end
+
+    for _, playerContext in pairs(playersByOwner) do
+        if playerContext.Runtime ~= nil and playerContext.Runtime.TargetAssistTarget == targetActor then
+            playerContext.Runtime.TargetAssistTarget = nil
+            playerContext.Runtime.TargetAssistDirection = nil
+            playerContext.Runtime.TargetAssistDistance = nil
+            playerContext.Runtime.TargetAssistLockedDirection = nil
+            playerContext.Runtime.TargetAssistEndTime = 0.0
+            playerContext.Runtime.TargetAssistKeepUntil = 0.0
+        end
+    end
+end
+
 -- Perfect dodge is gameplay time control, not just visual feedback.
 -- TimeRush = world slomo + player custom time dilation compensation.
 local function ApplyCombatTimeRush(actor, duration, worldScale, playerSpeedScale, enemyBrainScale)
@@ -852,6 +879,8 @@ function CombatContext.ApplyHitToBoss(hit)
             AttackIndex = hit.AttackIndex,
             TargetActor = bossRef,
             Damage = damage,
+            HitResult = hit.HitResult,
+            HitLocation = hit.HitResult and hit.HitResult.WorldHitLocation or nil,
             GaugeDelta = hit.GaugeDelta or combatConfig.AttackHitGaugeDelta or 0,
             ComboDelta = hit.ComboDelta or combatConfig.AttackComboGain or 1,
             HP = bossContext.Combat.HP,
@@ -885,6 +914,11 @@ local function HandleMobDeath(mobContext, hit)
     if mobContext.Runtime ~= nil and mobContext.Runtime.MovementComp ~= nil then
         mobContext.Runtime.MovementComp:StopMovementImmediately()
     end
+
+    -- Dead mobs must not be re-selected by attack assist / lock-on.
+    -- Do not disable collision here; corpse collision / death animation can be handled separately.
+    RemoveActorTargetingTags(mobContext.Owner)
+    ClearPlayerTargetAssistForActor(mobContext.Owner)
 
     print("[Mob] ☠ 사망!  attack=" .. tostring(hit and hit.AttackId or nil))
     -- TODO: 사망 애니메이션 / 디스폰 / 보상 (에셋·연출 단계)
@@ -941,6 +975,8 @@ function CombatContext.ApplyHitToMob(mobContext, hitRequest)
             AttackIndex = hit.AttackIndex,
             TargetActor = mobContext.Owner,
             Damage = damage,
+            HitResult = hit.HitResult,
+            HitLocation = hit.HitResult and hit.HitResult.WorldHitLocation or nil,
             GaugeDelta = hit.GaugeDelta or combatConfig.AttackHitGaugeDelta or 0,
             ComboDelta = hit.ComboDelta or combatConfig.AttackComboGain or 1,
             HP = mobContext.Combat.HP,
@@ -1045,7 +1081,7 @@ function CombatContext.ApplyPlayerUltimateDamage(playerContext, centerLocation, 
     end
 
     for _, mobContext in pairs(mobsByOwner) do
-        if mobContext ~= nil then
+        if mobContext ~= nil and (mobContext.Combat == nil or mobContext.Combat.IsDead ~= true) then
             TryApply(mobContext.Owner)
         end
     end
@@ -1210,6 +1246,28 @@ function CombatContext.GetPlayerUltimate(playerContext)
     end
     PlayerContext.Assert(playerContext, "CombatContext.GetPlayerUltimate")
     return playerContext.Combat.UltimateGauge or 0.0, playerContext.Combat.MaxUltimateGauge or 0.0
+end
+
+---@param playerContext PlayerContext|nil
+---@return number, number, number
+function CombatContext.GetPlayerDashCooldown(playerContext)
+    playerContext = playerContext or GetFirstPlayerContext()
+    if playerContext == nil then
+        return 0.0, 0.0, 0.0
+    end
+    PlayerContext.Assert(playerContext, "CombatContext.GetPlayerDashCooldown")
+
+    if PlayerAction.GetDashCooldown ~= nil then
+        return PlayerAction.GetDashCooldown(playerContext)
+    end
+
+    local duration = playerContext.Action.DashCooldownDuration or 0.0
+    local remaining = math.max(0.0, playerContext.Action.DashCooldownRemaining or 0.0)
+    local ratio = 0.0
+    if duration > 0.0 then
+        ratio = Clamp(remaining / duration, 0.0, 1.0)
+    end
+    return remaining, duration, ratio
 end
 
 function CombatContext.SetPlayerUltimate(current, maxGauge, playerContext)

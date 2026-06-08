@@ -114,6 +114,33 @@ local function ClearDashBuffer(playerContext)
     end
 end
 
+local function GetDashCooldownDuration(playerContext)
+    local actionConfig = playerContext.Config.Action or {}
+    return math.max(0.0, actionConfig.DashCooldown or 0.0)
+end
+
+local function IsDashCooldownReady(playerContext)
+    return (playerContext.Action.DashCooldownRemaining or 0.0) <= 0.0
+end
+
+local function UpdateDashCooldown(playerContext, dt)
+    local duration = GetDashCooldownDuration(playerContext)
+    playerContext.Action.DashCooldownDuration = duration
+    if duration <= 0.0 then
+        playerContext.Action.DashCooldownRemaining = 0.0
+        return
+    end
+
+    playerContext.Action.DashCooldownRemaining = math.max(0.0,
+        (playerContext.Action.DashCooldownRemaining or 0.0) - (dt or 0.0))
+end
+
+local function BeginDashCooldown(playerContext)
+    local duration = GetDashCooldownDuration(playerContext)
+    playerContext.Action.DashCooldownDuration = duration
+    playerContext.Action.DashCooldownRemaining = duration
+end
+
 local function ClearInputBuffers(playerContext)
     ClearAttackBuffer(playerContext)
     ClearDashBuffer(playerContext)
@@ -124,6 +151,7 @@ local function ResetDashInput(playerContext)
     playerContext.Input.DashConsumedInput = false
     playerContext.Input.DashChargingConsumedInput = false
     playerContext.Input.DashBlockedUntilReleased = false
+    playerContext.Input.DashPressAccepted = false
 
     playerContext.Input.DashPressed = false
     playerContext.Input.DashChargingPressed = false
@@ -182,6 +210,8 @@ function PlayerAction.Init(playerContext)
     playerContext.Action.DashActive = false
     playerContext.Action.DashElapsed = 0.0
     playerContext.Action.DashEnd = false
+    playerContext.Action.DashCooldownRemaining = 0.0
+    playerContext.Action.DashCooldownDuration = GetDashCooldownDuration(playerContext)
 
     playerContext.Action.DashChargingActive = false
     playerContext.Action.DashChargingElapsed = 0.0
@@ -1325,7 +1355,10 @@ end
 
 local function CanConsumeDash(playerContext)
     local action = playerContext.Action
+    local input = playerContext.Input
     return IsHardActionLocked(playerContext) ~= true
+        and IsDashCooldownReady(playerContext) == true
+        and input.DashBlockedUntilReleased ~= true
         and action.DashActive ~= true
         and action.DashChargingActive ~= true
         and action.DashChargeAttackActive ~= true
@@ -1334,7 +1367,10 @@ end
 
 local function CanEmitDashChargingPressed(playerContext)
     local action = playerContext.Action
+    local input = playerContext.Input
     return IsHardActionLocked(playerContext) ~= true
+        and input.DashBlockedUntilReleased ~= true
+        and input.DashPressAccepted == true
         and action.DashChargingActive ~= true
         and action.DashChargeAttackActive ~= true
         and (action.AttackIndex or 0) == 0
@@ -1348,6 +1384,8 @@ function PlayerAction.ShouldChainDashToCharging(playerContext)
     local action = playerContext.Action
 
     return IsHardActionLocked(playerContext) ~= true
+        and input.DashBlockedUntilReleased ~= true
+        and input.DashPressAccepted == true
         and action.DashActive == true
         and action.DashEnd == true
         and action.DashChargingActive ~= true
@@ -1365,6 +1403,26 @@ function PlayerAction.ConsumeDashChargingInput(playerContext)
     playerContext.Input.DashChargingConsumedInput = true
     playerContext.Input.DashConsumedInput = true
     ClearDashBuffer(playerContext)
+end
+
+---@param playerContext PlayerContext
+---@return number, number, number
+function PlayerAction.GetDashCooldown(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.GetDashCooldown")
+    local duration = playerContext.Action.DashCooldownDuration or GetDashCooldownDuration(playerContext)
+    local remaining = math.max(0.0, playerContext.Action.DashCooldownRemaining or 0.0)
+    local ratio = 0.0
+    if duration > 0.0 then
+        ratio = ClampNumber(remaining / duration, 0.0, 1.0)
+    end
+    return remaining, duration, ratio
+end
+
+---@param playerContext PlayerContext
+---@return boolean
+function PlayerAction.IsDashCooldownReady(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.IsDashCooldownReady")
+    return IsDashCooldownReady(playerContext)
 end
 
 ---@param playerContext PlayerContext
@@ -1404,6 +1462,8 @@ function PlayerAction.UpdateActionInput(playerContext, dt)
     local input = playerContext.Input
     local actionConfig = playerContext.Config.Action
 
+    UpdateDashCooldown(playerContext, dt)
+
     -- These are 1-frame pulses consumed by the animation state machine.
     input.AttackPressed = false
     input.DashPressed = false
@@ -1418,7 +1478,9 @@ function PlayerAction.UpdateActionInput(playerContext, dt)
     local dashStarted = ActionStarted(playerContext, "Dash")
     local dashReleased = ActionCompleted(playerContext, "Dash")
     local secondaryDashStarted = ActionStarted(playerContext, "SecondaryDash")
+    local secondaryDashReleased = ActionCompleted(playerContext, "SecondaryDash")
     local wasDashChargingConsumed = input.DashChargingConsumedInput == true
+    dashReleased = dashReleased or secondaryDashReleased
 
     input.AttackDown = attackDown
     input.DashDown = dashDown
@@ -1436,6 +1498,7 @@ function PlayerAction.UpdateActionInput(playerContext, dt)
         input.DashConsumedInput = false
         input.DashChargingConsumedInput = false
         input.DashBlockedUntilReleased = false
+        input.DashPressAccepted = false
         ClearInputBuffers(playerContext)
         return
     end
@@ -1455,9 +1518,16 @@ function PlayerAction.UpdateActionInput(playerContext, dt)
     end
 
     if dashStarted or secondaryDashStarted then
-        input.DashBuffered = true
-        input.DashBufferTimer = actionConfig.DashInputBufferTime or 0.20
-        input.LastBufferedAction = "Dash"
+        if IsDashCooldownReady(playerContext) == true and input.DashBlockedUntilReleased ~= true then
+            input.DashBuffered = true
+            input.DashBufferTimer = actionConfig.DashInputBufferTime or 0.20
+            input.LastBufferedAction = "Dash"
+            input.DashPressAccepted = true
+        else
+            input.DashBlockedUntilReleased = true
+            input.DashPressAccepted = false
+            ClearDashBuffer(playerContext)
+        end
     end
 
     if dashReleased then
@@ -1466,6 +1536,7 @@ function PlayerAction.UpdateActionInput(playerContext, dt)
         input.DashChargingConsumedInput = false
         input.DashChargingPressed = false
         input.DashBlockedUntilReleased = false
+        input.DashPressAccepted = false
     elseif dashDown then
         input.DashHoldTime = (input.DashHoldTime or 0.0) + (dt or 0.0)
     else
@@ -1549,6 +1620,7 @@ function PlayerAction.BeginDash(playerContext)
     playerContext.Action.DashActive = true
     playerContext.Action.DashElapsed = 0.0
     playerContext.Action.DashEnd = false
+    BeginDashCooldown(playerContext)
 
     PlayerEvents.EmitDashStarted(playerContext, { Dir = dashDir })
 end
@@ -1636,6 +1708,7 @@ function PlayerAction.BeginDashCharging(playerContext)
     playerContext.Action.DashChargeDamageMultiplier = 1.0
     playerContext.Input.DashChargingReleased = false
     playerContext.Runtime.DashChargingTurnTarget = "None"
+    BeginDashCooldown(playerContext)
 
     PlayerEvents.EmitDashChargingStarted(playerContext)
 end

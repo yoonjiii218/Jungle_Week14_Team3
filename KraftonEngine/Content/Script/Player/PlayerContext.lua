@@ -23,6 +23,7 @@ local PlayerContext = {}
 ---@field DashChargingReleased boolean
 ---@field DashChargingConsumedInput boolean
 ---@field DashBlockedUntilReleased boolean
+---@field DashPressAccepted boolean
 ---@field DashBuffered boolean
 ---@field DashBufferTimer number
 ---@field LastBufferedAction string|nil
@@ -44,6 +45,8 @@ local PlayerContext = {}
 ---@field DashActive boolean
 ---@field DashElapsed number
 ---@field DashEnd boolean
+---@field DashCooldownRemaining number
+---@field DashCooldownDuration number
 ---@field DashChargingActive boolean
 ---@field DashChargingElapsed number
 ---@field DashChargingEnd boolean
@@ -141,6 +144,7 @@ local function CreateInputState()
         DashChargingReleased = false,
         DashChargingConsumedInput = false,
         DashBlockedUntilReleased = false,
+        DashPressAccepted = false,
         DashBuffered = false,
         DashBufferTimer = 0.0,
         LastBufferedAction = nil,
@@ -165,6 +169,8 @@ local function CreateActionState()
         DashActive = false,
         DashElapsed = 0.0,
         DashEnd = false,
+        DashCooldownRemaining = 0.0,
+        DashCooldownDuration = 0.0,
         DashChargingActive = false,
         DashChargingElapsed = 0.0,
         DashChargingEnd = false,

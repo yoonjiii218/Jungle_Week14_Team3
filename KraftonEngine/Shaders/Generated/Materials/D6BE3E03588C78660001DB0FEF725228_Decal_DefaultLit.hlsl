@@ -41,15 +41,13 @@ FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)
 {
     float2 n_41 = Input.UV0;
     float4 n_3 = Tex_Diffuse.Sample(LinearWrapSampler, n_41);
-    float4 n_12 = Input.ParticleColor;
-    float3 n_19 = ((n_3).rgb * (n_12).rgb);
     FMaterialResult Result;
-    Result.BaseColor = n_19;
+    Result.BaseColor = (n_3).rgb;
     Result.Normal = float3(0, 0, 1);
     Result.Roughness = 0.5f;
     Result.Metallic = 0.0f;
     Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = (n_3).a;
+    Result.Opacity = (n_3).r;
     return Result;
 }
 
