@@ -121,9 +121,41 @@ namespace
 	}
 }
 
+void UAnimNotify_PlaySound::NormalizePitch()
+{
+	if (Pitch <= 0.0f)
+	{
+		Pitch = 1.0f;
+	}
+}
+
+void UAnimNotify_PlaySound::PreSave()
+{
+	UObject::PreSave();
+	NormalizePitch();
+}
+
+void UAnimNotify_PlaySound::PostLoad()
+{
+	UObject::PostLoad();
+	NormalizePitch();
+}
+
+void UAnimNotify_PlaySound::PreGetEditableProperties()
+{
+	NormalizePitch();
+}
+
+void UAnimNotify_PlaySound::PostEditProperty(const char* PropertyName)
+{
+	UObject::PostEditProperty(PropertyName);
+	NormalizePitch();
+}
+
 void UAnimNotify_PlaySound::Notify(USkeletalMeshComponent* /*MeshComp*/, UAnimSequenceBase* /*Anim*/)
 {
 	if (SoundPath.empty() || SoundPath == "None") return;
+	NormalizePitch();
 
 	// 캐시 key — path 자체. "AnimNotify:" prefix 로 게임 측 pre-loaded key 들과 namespace 분리.
 	const FString Key = FString("AnimNotify:") + SoundPath;
@@ -142,7 +174,7 @@ void UAnimNotify_PlaySound::Notify(USkeletalMeshComponent* /*MeshComp*/, UAnimSe
 		}
 	}
 
-	FAudioManager::Get().PlayAudio(Key, Volume);
+	FAudioManager::Get().PlayAudio(Key, Volume, Pitch);
 }
 
 void UAnimNotify_PlayParticle::PostEditProperty(const char* PropertyName)

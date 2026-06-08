@@ -253,7 +253,34 @@ namespace
 				case EPropertyType::Float:
 				{
 					float* V = static_cast<float*>(Prop.GetValuePtr());
-					if (V) bChanged = ImGui::DragFloat("##v", V, Prop.GetSpeed());
+					if (V)
+					{
+						float NewValue = *V;
+						if (ImGui::InputFloat("##v", &NewValue, 0.0f, 0.0f, "%.3f"))
+						{
+							const float Min = Prop.GetMin();
+							const float Max = Prop.GetMax();
+							const TMap<FString, FString>& Metadata = Prop.GetMetadata();
+							const bool bHasMin =
+								Metadata.find("min") != Metadata.end() ||
+								Metadata.find("clampmin") != Metadata.end() ||
+								Metadata.find("uimin") != Metadata.end();
+							const bool bHasMax =
+								Metadata.find("max") != Metadata.end() ||
+								Metadata.find("clampmax") != Metadata.end() ||
+								Metadata.find("uimax") != Metadata.end();
+							if (bHasMin && NewValue < Min)
+							{
+								NewValue = Min;
+							}
+							if (bHasMax && NewValue > Max)
+							{
+								NewValue = Max;
+							}
+							*V = NewValue;
+							bChanged = true;
+						}
+					}
 					break;
 				}
 				case EPropertyType::Vec3:
