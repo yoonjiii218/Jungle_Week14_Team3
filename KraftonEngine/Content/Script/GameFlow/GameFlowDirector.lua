@@ -1,4 +1,5 @@
 local CombatContext = require("Combat/CombatContext")
+local TutorialEventDebug = require("Tutorial/TutorialEventDebug")
 
 local widgets = {}
 local director = nil
@@ -506,6 +507,12 @@ local function showStartMenu()
             d:StartStoryBoss()
         end)
         menu:bind_click("btn-training", function()
+            local sceneName = "TrainingMap"
+            if d.GetTrainingSceneName ~= nil then
+                sceneName = d:GetTrainingSceneName()
+            end
+            print("[GameFlow] Training button clicked -> " .. tostring(sceneName))
+            TutorialEventDebug.QueueTrainingSession(sceneName)
             d:StartTraining()
         end)
         menu:bind_click("btn-credits", function()
@@ -749,6 +756,9 @@ function BeginPlay()
     elseif startup == "HUD" then
         d:StartCombat()
         showHud()
+        if TutorialEventDebug.BeginIfQueued("TrainingMap") == true then
+            print("[GameFlow] Training event debug enabled after HUD startup")
+        end
     elseif startup == "GameOver" then
         showGameOver()
     elseif startup == "Clear" then
@@ -772,6 +782,7 @@ function Tick(dt)
 end
 
 function EndPlay()
+    TutorialEventDebug.End()
     if Engine.ClearOnEscape ~= nil then
         Engine.ClearOnEscape()
     else

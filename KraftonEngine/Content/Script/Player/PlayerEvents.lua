@@ -23,6 +23,10 @@ PlayerEvents.Type = {
     UltimateEnded = "Player.UltimateEnded",
     Dead = "Player.Dead",
     GaugeChanged = "Player.GaugeChanged",
+    MoveStarted = "Player.MoveStarted",
+    MoveStopped = "Player.MoveStopped",
+    LookStarted = "Player.LookStarted",
+    LookStopped = "Player.LookStopped",
 }
 
 ---@class PlayerEvent
@@ -60,6 +64,14 @@ PlayerEvents.Type = {
 ---@field GaugeDelta number
 ---@field SlomoDuration number
 ---@field SlomoScale number
+
+---@class PlayerMoveInputEvent : PlayerEvent
+---@field AxisX number
+---@field AxisY number
+
+---@class PlayerLookInputEvent : PlayerEvent
+---@field AxisX number
+---@field AxisY number
 
 local function MakeEvent(eventType, args)
     args = args or {}
@@ -197,6 +209,34 @@ end
 ---@return nil
 function PlayerEvents.EmitGaugeChanged(playerContext, args)
     PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.GaugeChanged, args))
+end
+
+---@param playerContext PlayerContext
+---@param args table
+---@return nil
+function PlayerEvents.EmitMoveStarted(playerContext, args)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.MoveStarted, args))
+end
+
+---@param playerContext PlayerContext
+---@param args table|nil
+---@return nil
+function PlayerEvents.EmitMoveStopped(playerContext, args)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.MoveStopped, args))
+end
+
+---@param playerContext PlayerContext
+---@param args table
+---@return nil
+function PlayerEvents.EmitLookStarted(playerContext, args)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.LookStarted, args))
+end
+
+---@param playerContext PlayerContext
+---@param args table|nil
+---@return nil
+function PlayerEvents.EmitLookStopped(playerContext, args)
+    PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.LookStopped, args))
 end
 
 ---@param event PlayerEvent

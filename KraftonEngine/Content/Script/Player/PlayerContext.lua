@@ -108,6 +108,8 @@ local PlayerContext = {}
 ---@field TargetAssistKeepUntil number
 ---@field DashChargingTurnTarget string
 ---@field LastActionInputUpdateTime number|nil
+---@field MoveInputActive boolean
+---@field LookInputActive boolean
 ---@field FlyingSlashes table
 ---@field FlyingSlashSerial integer
 
@@ -232,6 +234,8 @@ local function CreateRuntimeState()
         TargetAssistKeepUntil = 0.0,
         DashChargingTurnTarget = "None",
         LastActionInputUpdateTime = nil,
+        MoveInputActive = false,
+        LookInputActive = false,
         FlyingSlashes = {},
         FlyingSlashSerial = 0,
     }
