@@ -30,6 +30,7 @@ public:
 private:
 	void LoadDefaultAudios();
 	FMOD::Channel* FindPlayingLoopChannel(const FString& LoopName);
+	void CleanupOneShotChannels();
 
 private:
 	FAudioManager() = default;
@@ -41,4 +42,5 @@ private:
 
 	TMap<FString, FMOD::Sound*> Audios;
 	TMap<FString, FMOD::Channel*> LoopChannels;
+	TArray<FMOD::Channel*> OneShotChannels;
 };
