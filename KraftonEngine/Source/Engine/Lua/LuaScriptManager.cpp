@@ -1,4 +1,4 @@
-#include "LuaScriptManager.h"
+﻿#include "LuaScriptManager.h"
 
 #include "Core/Logging/Log.h"
 #include "Core/Logging/Notification.h"
@@ -135,6 +135,10 @@ namespace
 		{
 			return IsPadButtonDown(Snapshot, EGamepadButton::B);
 		}
+		if (ActionName == "Menu")
+		{
+			return IsPadButtonDown(Snapshot, EGamepadButton::Start);
+		}
 
 		return false;
 	}
@@ -161,6 +165,10 @@ namespace
 		{
 			return IsKeyPreviouslyDown(Snapshot, VK_SPACE) || WasPadButtonDown(Snapshot, EGamepadButton::A);
 		}
+		if (ActionName == "Menu")
+		{
+			return WasPadButtonDown(Snapshot, EGamepadButton::Start);
+		}
 
 		return false;
 	}
@@ -183,6 +191,11 @@ namespace
 		if (ActionName == "Ultimate")
 		{
 			return bUseGamepad ? "Y 버튼" : "Q";
+		}
+
+		if (ActionName == "Menu")
+		{
+			return bUseGamepad ? "Start" : "Esc";
 		}
 
 		return ActionName;

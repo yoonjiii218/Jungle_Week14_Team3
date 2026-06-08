@@ -32,7 +32,8 @@ local COMPLETE_ADVANCE_DELAY = 1.20
 local AUTO_COMPLETE_DELAY = 0.80
 local EXIT_CONFIRM_TITLE = "훈련장을 나가시겠습니까?"
 local EXIT_CONFIRM_BODY = "진행 중인 튜토리얼이 중단되고 시작 메뉴로 돌아갑니다."
-local EXIT_CONFIRM_PROMPT = "Enter: 나가기 / Esc: 취소"
+local EXIT_CONFIRM_KEYBOARD_PROMPT = "Enter: 나가기 / Esc: 취소"
+local EXIT_CONFIRM_PAD_PROMPT = "Pad X: 나가기 / Pad Start: 취소"
 local INPUT_LABELS = {
     Move = "W/A/S/D",
     Attack = "좌클릭",
@@ -53,6 +54,19 @@ local function SetHudText(hud, elementId, text)
     end
 end
 
+local function IsGamepadUiActive()
+    return Input ~= nil
+        and Input.GetActionLabel ~= nil
+        and Input.GetActionLabel("Dash") == "RT"
+end
+
+local function GetExitConfirmPrompt()
+    if IsGamepadUiActive() == true then
+        return EXIT_CONFIRM_PAD_PROMPT
+    end
+    return EXIT_CONFIRM_KEYBOARD_PROMPT
+end
+
 local function ApplyHudText(hud)
     if hud == nil then
         return
@@ -63,7 +77,7 @@ local function ApplyHudText(hud)
     if exitConfirmVisible == true then
         SetHudText(hud, "tutorial-title", EXIT_CONFIRM_TITLE)
         SetHudText(hud, "tutorial-body", EXIT_CONFIRM_BODY)
-        SetHudText(hud, "tutorial-status", EXIT_CONFIRM_PROMPT)
+        SetHudText(hud, "tutorial-status", GetExitConfirmPrompt())
         return
     end
 
@@ -471,6 +485,7 @@ function TutorialDirector.Tick(dt, hud)
     end
 
     if exitConfirmVisible == true then
+        ApplyHudText(lastHud)
         return
     end
 
