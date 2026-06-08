@@ -8,8 +8,6 @@ local BossContext = require("Boss/BossContext")
 local BossEvents = require("Boss/BossEvents")
 local Strict = require("Core/Strict")
 
-local COLLISION_QUERY_AND_PHYSICS = 3
-
 local KATANA_MESH_PATH = "Content/Data/scifi-katana_extracted/source/KatanaSwordSketch_StaticMesh.uasset"
 local KATANA_SOCKET_NAME = "pinky_01_r_socket"
 local KATANA_LOCATION = Vector(0.0, 0.0, 0.0)
@@ -152,34 +150,6 @@ local function PlayHitShake(bossContext, event)
     end
 end
 
-local function StartDeathRagdoll(bossContext)
-    local movementComp = bossContext.Runtime.MovementComp
-    if movementComp ~= nil then
-        Reflection.Call(movementComp, "StopMovementImmediately")
-        Reflection.Call(movementComp, "SetMovementInputEnabled", false)
-    end
-
-    local meshComp = bossContext.Runtime.SkeletalMeshComp
-    if meshComp == nil then
-        local ownerActor = bossContext.Owner
-        meshComp = ownerActor.GetSkeletalMeshComponent and ownerActor:GetSkeletalMeshComponent() or nil
-    end
-
-    if meshComp == nil then
-        return
-    end
-
-    local ok, err = pcall(function()
-        meshComp:SetCollisionEnabled(COLLISION_QUERY_AND_PHYSICS)
-        meshComp:SetEnableGravity(true)
-        meshComp:StartRagdoll()
-    end)
-
-    if not ok then
-        print("[BossFeedback] StartDeathRagdoll failed: " .. tostring(err))
-    end
-end
-
 local function ResolveDirection(bossContext, targetActor)
     local bossPos = bossContext.Owner.Location
     if targetActor and targetActor:IsValid() then
@@ -196,7 +166,7 @@ local function ResolveDirection(bossContext, targetActor)
     return forward, yaw
 end
 
-local function SpawnPiece(feedbackConfig, centerX, centerY, centerZ, yaw, length, width)
+local function SpawnPiece(feedbackConfig, centerX, centerY, centerZ, yaw, length, width, color)
     local decal = VFX.SpawnGroundCrackDecal(
         feedbackConfig.DECAL_MATERIAL,
         Vector(centerX, centerY, centerZ),
@@ -206,8 +176,8 @@ local function SpawnPiece(feedbackConfig, centerX, centerY, centerZ, yaw, length
     )
     if decal then
         decal:SetRotation(Vector(0.0, 0.0, yaw))
-        local color = feedbackConfig.ZONE_COLOR_IDLE
-        decal:SetColorRGBA(color[1], color[2], color[3], color[4])
+        local c = color or feedbackConfig.ZONE_COLOR_IDLE
+        decal:SetColorRGBA(c[1], c[2], c[3], c[4])
     end
     return decal
 end
@@ -219,15 +189,22 @@ local function ShowRectZone(bossContext, args)
     local length = args.Length or feedbackConfig.ZONE_LENGTH
     local width = args.Width or feedbackConfig.ZONE_WIDTH
     local spawnZ = bossPos.Z + feedbackConfig.ZONE_Z_OFFSET
+    local centerX = bossPos.X + dir.X * (length * 0.5)
+    local centerY = bossPos.Y + dir.Y * (length * 0.5)
+
+    -- 전체 범위를 아주 흐릿하게 미리 보여주는 윤곽 데칼 (차오름과 무관하게 고정 크기)
+    local outlineDecals = {}
+    local outlineDecal = SpawnPiece(
+        feedbackConfig, centerX, centerY, spawnZ, yaw, length, width,
+        feedbackConfig.ZONE_COLOR_OUTLINE
+    )
+    if outlineDecal then
+        table.insert(outlineDecals, outlineDecal)
+    end
 
     local decal = SpawnPiece(
-        feedbackConfig,
-        bossPos.X + dir.X * (length * 0.5),
-        bossPos.Y + dir.Y * (length * 0.5),
-        spawnZ,
-        yaw,
-        length,
-        width
+        feedbackConfig, centerX, centerY, spawnZ, yaw, length, width,
+        feedbackConfig.ZONE_COLOR_IDLE
     )
 
     local decals = {}
@@ -241,6 +218,7 @@ local function ShowRectZone(bossContext, args)
 
     return {
         decals = decals,
+        outlineDecals = outlineDecals,
         kind = "rect",
         origin = Vector(bossPos.X, bossPos.Y, bossPos.Z),
         yaw = yaw,
@@ -250,42 +228,67 @@ local function ShowRectZone(bossContext, args)
     }
 end
 
+local function SpawnFanPiece(feedbackConfig, centerX, centerY, centerZ, yaw, length, width, color)
+    local decal = VFX.SpawnGroundCrackDecal(
+        feedbackConfig.FAN_DECAL_MATERIAL,
+        Vector(centerX, centerY, centerZ),
+        Vector(length, width, feedbackConfig.ZONE_HEIGHT),
+        feedbackConfig.NO_FADE_DELAY,
+        0.2
+    )
+    if decal then
+        decal:SetRotation(Vector(0.0, 0.0, yaw + (feedbackConfig.FAN_YAW_OFFSET or 0.0)))
+        local c = color or feedbackConfig.ZONE_COLOR_IDLE
+        decal:SetColorRGBA(c[1], c[2], c[3], c[4])
+    end
+    return decal
+end
+
+-- CircleZone.png decal: fixed translucent guide plus an opaque fill growing from the center.
 local function ShowFanZone(bossContext)
     local feedbackConfig = bossContext.Config.FEEDBACK
     local bossPos = bossContext.Owner.Location
     local _, baseYaw = ResolveDirection(bossContext, bossContext.Brain.TargetActor)
-    local decals = {}
-    local segmentCount = feedbackConfig.FAN_SEGMENTS
-    local halfAngle = feedbackConfig.FAN_ANGLE * 0.5
+    local radius = feedbackConfig.FAN_RADIUS
+    local diameter = radius * 2.0
+    local spawnZ = bossPos.Z + feedbackConfig.ZONE_Z_OFFSET
+    local centerX = bossPos.X
+    local centerY = bossPos.Y
 
-    for i = 0, segmentCount - 1 do
-        local offset = -halfAngle + feedbackConfig.FAN_ANGLE * ((i + 0.5) / segmentCount)
-        local segmentYaw = baseYaw + offset
-        local rad = segmentYaw * math.pi / 180.0
-        local dx, dy = math.cos(rad), math.sin(rad)
-        local decal = SpawnPiece(
-            feedbackConfig,
-            bossPos.X + dx * (feedbackConfig.FAN_RADIUS * 0.5),
-            bossPos.Y + dy * (feedbackConfig.FAN_RADIUS * 0.5),
-            bossPos.Z + feedbackConfig.ZONE_Z_OFFSET,
-            segmentYaw,
-            feedbackConfig.FAN_RADIUS,
-            feedbackConfig.FAN_SEG_WIDTH
-        )
-        if decal then
-            table.insert(decals, decal)
-        end
+    -- 전체 범위를 아주 흐릿하게 미리 보여주는 윤곽 데칼 (차오름과 무관하게 고정 크기)
+    local outlineDecals = {}
+    local outlineDecal = SpawnFanPiece(
+        feedbackConfig, centerX, centerY, spawnZ, baseYaw, diameter, diameter,
+        feedbackConfig.ZONE_COLOR_OUTLINE
+    )
+    if outlineDecal then
+        table.insert(outlineDecals, outlineDecal)
     end
 
-    if #decals == 0 and bossContext.Config.DEBUG then
+    local decal = SpawnFanPiece(
+        feedbackConfig, centerX, centerY, spawnZ, baseYaw, diameter, diameter,
+        feedbackConfig.ZONE_COLOR_IDLE
+    )
+
+    local decals = {}
+    local decalZ = spawnZ
+    if decal then
+        table.insert(decals, decal)
+        decalZ = decal.Location.Z
+    elseif bossContext.Config.DEBUG then
         print("[BossFeedback] ShowFanZone decal spawn failed")
     end
 
     return {
         decals = decals,
-        kind = "fan",
+        outlineDecals = outlineDecals,
+        kind = "circle",
         origin = Vector(bossPos.X, bossPos.Y, bossPos.Z),
         yaw = baseYaw,
+        radius = radius,
+        length = diameter,
+        width = diameter,
+        decalZ = decalZ,
     }
 end
 
@@ -316,8 +319,6 @@ function BossFeedback.ProcessEvents(bossContext, events)
         if BossEvents.Is(event, BossEvents.Type.Hit) then
             PlayHitSquash(bossContext, event)
             PlayHitShake(bossContext, event)
-        elseif BossEvents.Is(event, BossEvents.Type.Dead) then
-            StartDeathRagdoll(bossContext)
         end
     end
 end
@@ -353,11 +354,19 @@ function BossFeedback.HideAttackZone(bossContext, args)
     BossContext.Assert(bossContext, "BossFeedback.HideAttackZone")
     Strict.AssertTable(args, "args", "BossFeedback.HideAttackZone")
     local zone = args.Zone
-    if zone == nil or zone.decals == nil then return end
-    for _, decal in ipairs(zone.decals) do
-        decal:SetFadeOut(0.0, 0.15)
+    if zone == nil then return end
+    if zone.decals ~= nil then
+        for _, decal in ipairs(zone.decals) do
+            decal:SetFadeOut(0.0, 0.15)
+        end
+        zone.decals = {}
     end
-    zone.decals = {}
+    if zone.outlineDecals ~= nil then
+        for _, decal in ipairs(zone.outlineDecals) do
+            decal:SetFadeOut(0.0, 0.15)
+        end
+        zone.outlineDecals = {}
+    end
     if bossContext.Feedback.CurrentTelegraph == zone then
         bossContext.Feedback.CurrentTelegraph = nil
     end
@@ -381,25 +390,21 @@ local function FillRectZone(bossContext, zone, ratio)
     decal:SetRelativeScale(Vector(length, width, feedbackConfig.ZONE_HEIGHT))
 end
 
+-- Grow the filled circle from the same center as the guide.
 local function FillFanZone(bossContext, zone, ratio)
+    local decal = zone.decals[1]
+    if decal == nil then return end
+
     local feedbackConfig = bossContext.Config.FEEDBACK
-    local segmentCount = feedbackConfig.FAN_SEGMENTS
-    local halfAngle = feedbackConfig.FAN_ANGLE * 0.5
-    local radius = math.max(0.01, feedbackConfig.FAN_RADIUS * ratio)
-    local fallbackZ = zone.origin.Z + feedbackConfig.ZONE_Z_OFFSET
+    local fullDiameter = (zone.radius or feedbackConfig.FAN_RADIUS) * 2.0
+    local fill = math.max(0.0, math.min(ratio, 1.0))
+    local diameter = math.max(0.01, fullDiameter * fill)
+    local cx = zone.origin.X
+    local cy = zone.origin.Y
+    local cz = zone.decalZ or decal.Location.Z or (zone.origin.Z + feedbackConfig.ZONE_Z_OFFSET)
 
-    for i, decal in ipairs(zone.decals) do
-        local offset = -halfAngle + feedbackConfig.FAN_ANGLE * ((i - 1 + 0.5) / segmentCount)
-        local segmentYaw = zone.yaw + offset
-        local rad = segmentYaw * math.pi / 180.0
-        local dx, dy = math.cos(rad), math.sin(rad)
-        local cx = zone.origin.X + dx * (radius * 0.5)
-        local cy = zone.origin.Y + dy * (radius * 0.5)
-        local cz = decal.Location.Z or fallbackZ
-
-        decal:SetLocation(Vector(cx, cy, cz))
-        decal:SetRelativeScale(Vector(radius, feedbackConfig.FAN_SEG_WIDTH, feedbackConfig.ZONE_HEIGHT))
-    end
+    decal:SetLocation(Vector(cx, cy, cz))
+    decal:SetRelativeScale(Vector(diameter, diameter, feedbackConfig.ZONE_HEIGHT))
 end
 
 ---@param bossContext BossContext
@@ -413,20 +418,8 @@ function BossFeedback.FillZone(bossContext, zone, ratio)
 
     if zone.kind == "rect" then
         FillRectZone(bossContext, zone, ratio)
-    elseif zone.kind == "fan" then
+    elseif zone.kind == "fan" or zone.kind == "circle" then
         FillFanZone(bossContext, zone, ratio)
-    end
-end
-
----@param bossContext BossContext
----@param zone table
----@return nil
-function BossFeedback.FlashZone(bossContext, zone)
-    BossContext.Assert(bossContext, "BossFeedback.FlashZone")
-    if zone == nil or zone.decals == nil then return end
-    local color = bossContext.Config.FEEDBACK.ZONE_COLOR_FLASH
-    for _, decal in ipairs(zone.decals) do
-        decal:SetColorRGBA(color[1], color[2], color[3], color[4])
     end
 end
 

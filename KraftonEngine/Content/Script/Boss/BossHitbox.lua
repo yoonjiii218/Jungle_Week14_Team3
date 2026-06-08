@@ -77,9 +77,30 @@ end
 ---@param px number
 ---@param py number
 ---@return boolean
+function BossHitbox.CheckCircleXY(bossContext, zone, px, py)
+    BossContext.Assert(bossContext, "BossHitbox.CheckCircleXY")
+    Strict.AssertNumber(px, "px", "BossHitbox.CheckCircleXY")
+    Strict.AssertNumber(py, "py", "BossHitbox.CheckCircleXY")
+    if zone == nil or zone.origin == nil then return false end
+
+    local feedbackConfig = bossContext.Config.FEEDBACK
+    local radius = zone.radius or feedbackConfig.FAN_RADIUS
+    local dx = px - zone.origin.X
+    local dy = py - zone.origin.Y
+    return dx * dx + dy * dy <= radius * radius
+end
+
+---@param bossContext BossContext
+---@param zone table
+---@param px number
+---@param py number
+---@return boolean
 function BossHitbox.CheckXY(bossContext, zone, px, py)
     BossContext.Assert(bossContext, "BossHitbox.CheckXY")
     if zone == nil then return false end
+    if zone.kind == "circle" then
+        return BossHitbox.CheckCircleXY(bossContext, zone, px, py)
+    end
     if zone.kind == "fan" then
         return BossHitbox.CheckFanXY(bossContext, zone, px, py)
     end

@@ -2,6 +2,7 @@
 -- ULuaScriptComponent entry point for the rusher mob actor.
 -- Owns MobContext and wires explicit mob module calls (mirrors Boss/BossCharacter).
 
+local CoroutineManager = require("CoroutineManager")
 local MobConfig  = require("Mob/MobBlackboard")
 local MobContext = require("Mob/MobContext")
 local MobAction  = require("Mob/MobAction")
@@ -90,6 +91,10 @@ function Tick(dt)
         return
     end
 
+    -- Own coroutine pool: this mob's coroutines must only ever advance by
+    -- this mob's scaledDt, never another actor's (see CoroutineManager.lua).
+    CoroutineManager.Begin(obj.UUID)
+
     local brain = mobContext.Brain
     local scaledDt = dt * brain.TimeScale
     brain.PatternCooldown = math.max(0.0, brain.PatternCooldown - scaledDt)
@@ -104,9 +109,12 @@ function Tick(dt)
     UpdateCoroutines(scaledDt)
     MobAction.Update(mobContext, dt)
     MobAttacks.Update(mobContext, scaledDt)
+
+    CoroutineManager.End()
 end
 
 function EndPlay()
+    CoroutineManager.Destroy(obj.UUID)
     if mobContext ~= nil then
         MobContext.Unregister(mobContext)
         CombatContext.UnregisterMob(mobContext)
