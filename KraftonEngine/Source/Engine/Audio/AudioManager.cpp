@@ -208,6 +208,12 @@ bool FAudioManager::IsLoopPlaying(const FString& LoopName)
 	return FindPlayingLoopChannel(LoopName) != nullptr;
 }
 
+bool FAudioManager::IsAudioLoaded(const FString& Key) const
+{
+	const auto It = Audios.find(Key);
+	return It != Audios.end() && It->second != nullptr;
+}
+
 FMOD::Channel* FAudioManager::FindPlayingLoopChannel(const FString& LoopName)
 {
 	if (!LoopChannels.contains(LoopName))

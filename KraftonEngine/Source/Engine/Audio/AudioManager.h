@@ -23,6 +23,7 @@ public:
 	void SetLoopVolume(const FString& LoopName, float Volume);
 	void SetLoopPitch(const FString& LoopName, float Pitch);
 	bool IsLoopPlaying(const FString& LoopName);
+	bool IsAudioLoaded(const FString& Key) const;
 
 	void SetMasterVolume(float Volume);
 
