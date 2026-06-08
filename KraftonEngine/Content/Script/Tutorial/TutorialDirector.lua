@@ -354,12 +354,12 @@ local TutorialSteps = {
         Status = "DONE",
 
         OnEnter = function()
-            SetMessage("튜토리얼 종료", "기본 조작 튜토리얼이 끝났습니다. 이제 자유롭게 진행하세요.", "DONE")
+            SetMessage("튜토리얼 종료", "기본 조작 튜토리얼이 끝났습니다.", "DONE")
             CompleteCurrentStepSoon("Tutorial.Finish")
         end,
 
         OnComplete = function()
-            SetMessage("튜토리얼 완료", "모든 튜토리얼 단계를 완료했습니다. 자유롭게 진행하세요.", "FREE")
+            SetMessage("튜토리얼 완료", "자유롭게 진행하세요.", "FREE")
         end,
     },
 }
@@ -375,7 +375,7 @@ local function EnterFreePlay()
     advanceDelay = 0.0
 
     TutorialSpawner.EndSession()
-    SetMessage("튜토리얼 완료", "다음 튜토리얼 단계가 없습니다. 이제 자유롭게 진행하세요.", "FREE")
+    SetMessage("튜토리얼 완료", "자유롭게 진행하세요.", "FREE")
     print("[Tutorial] enter free play label=" .. tostring(activeLabel))
 end
 
