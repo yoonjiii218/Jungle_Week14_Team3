@@ -437,6 +437,36 @@ local function ApplyBossHit(playerContext, projectile, bossActor)
     return applied
 end
 
+local function ApplyMobHit(playerContext, projectile, mobActor)
+    if mobActor == nil then
+        return false
+    end
+
+    local key = SafeActorKey(mobActor)
+    if key ~= nil and projectile.HitActors[key] == true then
+        return false
+    end
+
+    if key ~= nil then
+        projectile.HitActors[key] = true
+    end
+
+    local hit = HitTypes.CreatePlayerAttack({
+        SourceActor = playerContext.Owner,
+        TargetActor = mobActor,
+        AttackId = projectile.AttackId,
+        AttackInstanceId = projectile.AttackInstanceId,
+        Damage = projectile.Damage,
+        GaugeDelta = projectile.GaugeDelta,
+        HitStopDuration = projectile.HitStopDuration,
+    })
+
+    local result = GetCombatContext().ApplyHit(hit)
+    local applied = result ~= nil and result.Applied == true
+    DebugLog(playerContext, "hit mob applied=" .. tostring(applied) .. " reason=" .. tostring(result and result.Reason or "None"))
+    return applied
+end
+
 local function CheckBossHit(playerContext, projectile)
     local bossActor = ResolveBossActor()
     if bossActor == nil then
@@ -454,6 +484,41 @@ local function CheckBossHit(playerContext, projectile)
     end
 
     return ApplyBossHit(playerContext, projectile, bossActor)
+end
+
+local function CheckMobHits(playerContext, projectile)
+    if World == nil or World.FindActorsByTag == nil then
+        return false
+    end
+
+    local combatContext = GetCombatContext()
+    if combatContext == nil or combatContext.GetMobByOwner == nil then
+        return false
+    end
+
+    local actors = World.FindActorsByTag("HitTarget")
+    if actors == nil then
+        return false
+    end
+
+    local hitAny = false
+    for _, actor in ipairs(actors) do
+        if IsValidObject(actor)
+            and actor ~= playerContext.Owner
+            and combatContext.GetMobByOwner(actor) ~= nil then
+            local actorLocation = GetActorLocation(actor)
+            local distance = DistancePointToSegment(actorLocation, projectile.PrevPosition, projectile.Position)
+            if distance <= (projectile.Radius or 0.0) then
+                local applied = ApplyMobHit(playerContext, projectile, actor)
+                hitAny = hitAny or applied
+                if applied == true and projectile.Pierce ~= true then
+                    return true
+                end
+            end
+        end
+    end
+
+    return hitAny
 end
 
 -- =========================================================
@@ -587,6 +652,7 @@ function PlayerProjectile.Update(playerContext, dt)
             SetVisualTransform(projectile)
 
             local hit = CheckBossHit(playerContext, projectile)
+            hit = CheckMobHits(playerContext, projectile) or hit
             if hit == true and projectile.Pierce ~= true then
                 DestroyProjectile(projectile)
                 table.remove(projectiles, index)
