@@ -54,6 +54,22 @@ end
 
 -- 장판 연출은 별도 Feedback 모듈 없이 여기서 직접 호출한다 (가상 함수 호출 구조).
 -- 추후 비주얼 교체가 필요하면 ShowZone/FlashZone/HideZone 세 곳만 바꾸면 된다.
+local function SpawnPiece(feedback, centerX, centerY, centerZ, yaw, length, width, color)
+    local decal = VFX.SpawnGroundCrackDecal(
+        feedback.DECAL_MATERIAL,
+        Vector(centerX, centerY, centerZ),
+        Vector(length, width, feedback.ZONE_HEIGHT),
+        feedback.NO_FADE_DELAY,
+        0.2
+    )
+    if decal then
+        decal:SetRotation(Vector(0.0, 0.0, yaw))
+        local c = color or feedback.ZONE_COLOR_IDLE
+        decal:SetColorRGBA(c[1], c[2], c[3], c[4])
+    end
+    return decal
+end
+
 local function ShowZone(mobContext)
     local config = mobContext.Config
     local feedback = config.FEEDBACK
@@ -65,25 +81,28 @@ local function ShowZone(mobContext)
     local length = config.ZONE_LENGTH
     local width = config.ZONE_WIDTH
     local spawnZ = mobPos.Z + feedback.ZONE_Z_OFFSET
+    local centerX = mobPos.X + dirX * (length * 0.5)
+    local centerY = mobPos.Y + dirY * (length * 0.5)
 
-    local decal = VFX.SpawnGroundCrackDecal(
-        feedback.DECAL_MATERIAL,
-        Vector(mobPos.X + dirX * (length * 0.5), mobPos.Y + dirY * (length * 0.5), spawnZ),
-        Vector(length, width, feedback.ZONE_HEIGHT),
-        feedback.NO_FADE_DELAY,
-        0.2
+    -- 전체 범위를 아주 흐릿하게 미리 보여주는 윤곽 데칼 (차오름과 무관하게 고정 크기) — 보스와 동일
+    local outlineDecal = SpawnPiece(
+        feedback, centerX, centerY, spawnZ, yaw, length, width,
+        feedback.ZONE_COLOR_OUTLINE
     )
 
-    if decal then
-        decal:SetRotation(Vector(0.0, 0.0, yaw))
-        local color = feedback.ZONE_COLOR_IDLE
-        decal:SetColorRGBA(color[1], color[2], color[3], color[4])
-    elseif config.DEBUG then
+    -- 그 위로 origin 에서부터 점점 차오르는 불투명 데칼 (FillZone 이 스케일 조절)
+    local decal = SpawnPiece(
+        feedback, centerX, centerY, spawnZ, yaw, length, width,
+        feedback.ZONE_COLOR_IDLE
+    )
+
+    if decal == nil and config.DEBUG then
         print("[MobAttacks] ShowZone decal spawn failed")
     end
 
     return {
         decal = decal,
+        outlineDecal = outlineDecal,
         origin = Vector(mobPos.X, mobPos.Y, mobPos.Z),
         yaw = yaw,
         length = length,
@@ -127,7 +146,12 @@ local function FlashZone(mobContext, zone)
 end
 
 local function HideZone(mobContext, zone)
-    if zone == nil or zone.decal == nil then return end
+    if zone == nil then return end
+    if zone.outlineDecal ~= nil then
+        zone.outlineDecal:SetFadeOut(0.0, 0.15)
+        zone.outlineDecal = nil
+    end
+    if zone.decal == nil then return end
     zone.decal:SetFadeOut(0.0, 0.15)
     zone.decal = nil
 end
@@ -214,9 +238,8 @@ local function MeleeAttack(mobContext)
     local zone = nil
 
     -- 지난 공격에서 남았을 수 있는 notify 플래그를 초기화한다.
-    -- StartCoroutine 은 코루틴을 생성 즉시 1회 실행하는데, 잔류 플래그가 있으면
-    -- WaitForNotify 가 곧장 통과해 prep(준비동작)을 건너뛰고 같은 프레임에 IsTracking=false 가 되어
-    -- 애니가 AttackPrep 을 0프레임 만에 지나쳐 버린다 → 준비 모션이 안 보이고 즉발 공격처럼 느껴짐.
+    -- 공격 애니의 ZoneFlash/ZoneHide/HitboxOpen/HitboxClose 가 다음 공격까지 잔류하면
+    -- WaitForNotify 가 곧장 통과해 판정 단계가 한 프레임에 뭉개질 수 있으므로 시작 시 비운다.
     attack.ZoneShow   = false
     attack.ZoneFlash  = false
     attack.ZoneHide   = false
@@ -229,17 +252,21 @@ local function MeleeAttack(mobContext)
     end
 
     -- 각 단계 사이에서 피격 캔슬(IsAttackAborted)을 감지하면 즉시 정리하고 빠져나간다.
-    -- ── [준비동작 Prep / Idle1 애니] ──────────────────────────────
-    -- prep 애니(Idle1)에 심어둔 ZoneShow → 장판 예고 생성
-    WaitForNotify(mobContext, "ZoneShow", 1.5)
-    if IsAttackAborted(mobContext) then return EndAttack(mobContext, zone) end
+    -- ── [준비동작 없이 장판 리드 타임] (보스와 동일) ───────────────
+    -- 준비 모션(Idle1)을 없애고, 코드가 먼저 장판을 띄워 리드 타임(ZONE_LEAD)동안 차오르게 한 뒤
+    -- 공격 애니를 트리거한다. 리드 타임 동안 mob 은 Locomotion(서있기)으로 장판만 띄운다.
     zone = ShowZone(mobContext)
     FillZone(mobContext, zone, 0.0)
     RunZoneFill(mobContext, zone)
 
-    -- prep 애니의 TrackEnd → 추적 종료(조준 고정). 이 신호로 애니가 Attack 상태로 넘어간다.
-    WaitForNotify(mobContext, "TrackEnd", 1.5)
-    if IsAttackAborted(mobContext) then return EndAttack(mobContext, zone) end
+    local lead = config.ZONE_LEAD or 0.35
+    local leadElapsed = 0.0
+    while leadElapsed < lead do
+        if IsAttackAborted(mobContext) then return EndAttack(mobContext, zone) end
+        leadElapsed = leadElapsed + WaitFrame()
+    end
+
+    -- 리드 타임 종료 → 조준 고정(IsTracking=false). 이 신호로 애니가 Locomotion → Attack 으로 바로 넘어간다.
     mobContext.Brain.IsTracking = false
 
     -- ── [공격 Attack 애니] ────────────────────────────────────────
@@ -301,7 +328,7 @@ function MobAttacks.StartAttack(mobContext)
     MobContext.Assert(mobContext, "MobAttacks.StartAttack")
 
     mobContext.Combat.ActionLock = true
-    mobContext.Brain.IsTracking = true   -- prep 동안 TrackEnd notify 가 올 때까지 추적 상태
+    mobContext.Brain.IsTracking = true   -- 리드 타임 동안 조준 유지(코루틴이 끝에서 false 로 고정)
     StartCoroutine(function() MeleeAttack(mobContext) end)
 
     if mobContext.Config.DEBUG then

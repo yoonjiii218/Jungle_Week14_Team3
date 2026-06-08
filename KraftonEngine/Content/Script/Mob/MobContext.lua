@@ -31,6 +31,7 @@ local MobContext = {}
 ---@field HitReactSignal string|nil   피격 방향 1회성 신호 (CombatContext → MobAnimation)
 ---@field HitReactActive boolean      피격 모션 재생 중 (MobAnimation → MobAction 행동 억제)
 ---@field CancelAttack boolean        진행 중인 공격 코루틴 취소 요청
+---@field DeathSignal string|nil      사망 방향 1회성 신호 "Front"/"Back" (CombatContext → MobAnimation)
 
 ---@class MobRuntimeState
 ---@field MovementComp any
@@ -80,6 +81,7 @@ local function CreateCombatState(config)
         HitReactSignal = nil,
         HitReactActive = false,
         CancelAttack = false,
+        DeathSignal = nil,
     }
 end
 
