@@ -14,6 +14,7 @@ local BossEvents = require("Boss/BossEvents")
 local BossFeedback = require("Boss/BossFeedback")
 local MobContext = require("Mob/MobContext")
 local Strict = require("Core/Strict")
+local GameplayEventBus = require("Core/GameplayEventBus")
 
 local playersByOwner = {}
 local mobsByOwner = {}
@@ -815,6 +816,9 @@ local function HandleBossDeath(bossContext, hit)
         AttackId = hit and hit.AttackId or nil,
     })
 
+    -- 외부 시스템(WaveDirector 등)이 소비하는 사망 신호.
+    GameplayEventBus.Publish({ Type = "BossDead", Owner = bossRef })
+
     print("[Boss] ☠ 사망!")
     -- TODO: 전투 종료 이벤트, 보상 등 (에셋/연출 단계)
 end
@@ -907,6 +911,10 @@ local function HandleMobDeath(mobContext, hit)
     -- 락을 풀어 "맞고 굳어버리는" 상태를 방지 (MobAction.Update 는 IsDead 면 어차피 조기 반환).
     mobContext.Combat.ActionLock = false
 
+    -- 진행 중이던 공격 코루틴은 직접 죽이지 않는다. MobAttacks 의 IsAttackAborted 가 IsDead 를
+    -- 감지해 EndAttack 으로 IsTracking=true / ActionLock=false 로 플래그를 중립화하며 스스로 종료한다.
+    -- (코루틴을 강제로 Destroy 하면 그 정리가 안 돌아 플래그가 "공격 중"으로 얼어붙어 공격 모션이 반복된다.)
+
     -- 사망 모션 방향 신호 (MobAnimation 이 소비해 Death_Forward/Backward 재생)
     -- 보스의 HandleBossDeath 와 동일하게, 치명타가 앞에서 들어왔으면 "Front", 뒤에서 들어왔으면 "Back".
     mobContext.Combat.DeathSignal = ResolveDeathDirection(mobContext.Owner, hit and hit.SourceActor or nil)
@@ -921,6 +929,9 @@ local function HandleMobDeath(mobContext, hit)
     ClearPlayerTargetAssistForActor(mobContext.Owner)
 
     print("[Mob] ☠ 사망!  attack=" .. tostring(hit and hit.AttackId or nil))
+
+    -- 외부 시스템(WaveDirector 등)이 소비하는 사망 신호.
+    GameplayEventBus.Publish({ Type = "MobDead", Owner = mobContext.Owner })
     -- TODO: 사망 애니메이션 / 디스폰 / 보상 (에셋·연출 단계)
 end
 

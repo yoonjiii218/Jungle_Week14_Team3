@@ -55,6 +55,7 @@ function init(self)
     -- 사망 모션 상태 플래그 (BossAnimation 과 동일 패턴)
     self.DeathPending   = false
     self.DeathDirection = nil
+    self.DeathPlayed    = false   -- 사망 전이가 실제 발동했는지(재무장/재발동 방지)
 
     -- 이동 블렌드스페이스 (Idle → Walk → Sprint)
     local loco = Anim.create_blend_space_1d(0.0)
@@ -151,10 +152,12 @@ function init(self)
     local function AddDeathTransition(direction, stateName)
         Anim.sm_add_transition(top, "AnyState", stateName,
             function()
+                if self.DeathPlayed then return false end
                 if not self.DeathPending or self.DeathDirection ~= direction then
                     return false
                 end
                 self.DeathPending = false
+                self.DeathPlayed  = true
                 return true
             end, deathBlendIn)
     end
@@ -201,6 +204,17 @@ function update(self, dt)
         mobContext.Combat.DeathSignal = nil
         self.DeathPending   = true
         self.DeathDirection = deathSignal
+    end
+
+    -- ── 방어: 1회성 DeathSignal 을 (공격/피격 블렌드 도중 사망 등으로) 놓쳐도
+    --    영속 플래그 IsDead 로 사망 전이를 매 프레임 재무장한다. 실제 전이가 발동하면
+    --    DeathPlayed 가 켜져 재무장/재발동을 멈춘다. (idle 굳음 방지)
+    if mobContext.Combat.IsDead and not self.DeathPlayed then
+        self.DeathDirection = self.DeathDirection or "Front"
+        self.DeathPending   = true
+        -- 죽은 뒤 피격 리액션은 의미 없고 사망 전이를 방해하므로 정리.
+        self.HitReactActive  = false
+        self.HitReactPending = false
     end
 
     -- 피격 모션 재생 중이면 fallback 복귀용 경과 시간 누적
