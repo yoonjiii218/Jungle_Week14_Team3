@@ -175,6 +175,32 @@ PlayerConfig.Default = {
         UltimateHitStopDuration = 0.08,
         UltimateDuplicateHitLifetime = 1.2,
 
+        -- Multi-hit policy for AttackHitWindow.
+        -- C++ notify-state Hit Count/Interval are edit-only hot overrides; keep
+        -- persistent defaults here to avoid changing existing AnimSequence binary payloads.
+        AttackHitCounts = {
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+        },
+        AttackHitIntervals = {
+            0.06,
+            0.06,
+            0.06,
+            0.06,
+            0.06,
+            0.06,
+            0.06,
+        },
+        DashChargeAttackHitCount = 1,
+        DashChargeAttackHitInterval = 0.06,
+        UltimateHitCount = 1,
+        UltimateHitInterval = 0.06,
+
         -- Gauge/anti-duplicate policy.
         AttackHitGaugeDelta = 10,
         AttackGaugeGain = 10,

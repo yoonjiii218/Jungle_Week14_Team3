@@ -9,6 +9,7 @@ local PlayerContext = require("Player/PlayerContext")
 local PlayerConfig = require("Config/PlayerConfig")
 local PlayerEvents = require("Player/PlayerEvents")
 local PlayerFeedback = require("Player/PlayerFeedback")
+local CoroutineManager = require("CoroutineManager")
 
 local function GetAttackPlayRate(samuraiConfig, attackIndex)
     return samuraiConfig.AttackPlayRates[attackIndex] or samuraiConfig.AttackPlayRate
@@ -27,6 +28,128 @@ local function GetPostDashAttackPlayRate(samuraiConfig, variant)
         return samuraiConfig.PostDashAttackPlayRate
     end
     return GetAttackPlayRate(samuraiConfig, variant)
+end
+
+local function IsValidActor(actor)
+    if actor == nil then
+        return false
+    end
+    if actor.IsValid ~= nil then
+        return actor:IsValid()
+    end
+    return true
+end
+
+local function GetActorName(actor)
+    if actor ~= nil and actor.GetName ~= nil then
+        return actor:GetName()
+    end
+    return tostring(actor)
+end
+
+local function GetOwnerKey(owner)
+    if owner == nil then
+        return nil
+    end
+    return owner.UUID or tostring(owner)
+end
+
+local function ShouldStopRepeatedAttackHit(result)
+    if result == nil then
+        return true
+    end
+
+    -- If the C++ notify window calls Lua again in the same animation window,
+    -- CombatContext will reject the stable first-hit AttackInstanceId as DuplicateHit.
+    -- Do not schedule another multi-hit coroutine from such duplicate callbacks.
+    if result.Applied ~= true then
+        return true
+    end
+
+    local reason = result.Reason
+    return reason == "MobDead"
+        or reason == "BossDead"
+        or reason == "MissingTarget"
+        or reason == "NoCombatTarget"
+        or reason == "PlayerMissing"
+end
+
+local function ResolveAttackHitRepeat(playerContext, notifyHitCount, notifyHitInterval)
+    local combatConfig = playerContext.Config and playerContext.Config.Combat or PlayerConfig.Combat or {}
+    local action = playerContext.Action or {}
+
+    local count = tonumber(notifyHitCount) or 1
+    local interval = tonumber(notifyHitInterval) or 0.0
+
+    -- NotifyState values are intentionally edit-only hot overrides. When left at
+    -- the safe default 1, use persistent Lua config instead.
+    if count <= 1 then
+        if action.DashChargeAttackActive == true then
+            count = tonumber(combatConfig.DashChargeAttackHitCount) or count
+            interval = tonumber(combatConfig.DashChargeAttackHitInterval) or interval
+        elseif action.IsInUltimateMode == true then
+            count = tonumber(combatConfig.UltimateHitCount) or count
+            interval = tonumber(combatConfig.UltimateHitInterval) or interval
+        else
+            local attackIndex = action.AttackIndex or 1
+            if combatConfig.AttackHitCounts ~= nil then
+                count = tonumber(combatConfig.AttackHitCounts[attackIndex]) or count
+            end
+            if combatConfig.AttackHitIntervals ~= nil then
+                interval = tonumber(combatConfig.AttackHitIntervals[attackIndex]) or interval
+            end
+        end
+    end
+
+    count = math.max(1, math.min(8, math.floor(count or 1)))
+    interval = math.max(0.0, tonumber(interval) or 0.0)
+    return count, interval
+end
+
+
+local function ApplyAttackHitOnce(playerContext, targetActor, hitboxComponent, targetComponent, hitResult,
+    hitStopDuration, hitIndex)
+    local requestHitStop = hitStopDuration
+    if hitIndex ~= nil and hitIndex > 1 then
+        -- Prevent repeated local hit-stop from making the game look permanently frozen.
+        requestHitStop = 0.0
+    end
+
+    local hitRequest = HitTypes.CreatePlayerAttackFromState({
+        PlayerContext = playerContext,
+        TargetActor = targetActor,
+        HitboxComponent = hitboxComponent,
+        TargetComponent = targetComponent,
+        HitResult = hitResult,
+        HitStopDuration = requestHitStop,
+    })
+
+    if hitIndex ~= nil and hitIndex > 1 then
+        -- Keep the first hit on the original attack instance so the existing
+        -- duplicate-hit table still filters repeated notify ticks. Only follow-up
+        -- multi-hit applications get a deterministic per-hit suffix.
+        hitRequest.AttackInstanceId = tostring(hitRequest.AttackInstanceId or hitRequest.AttackId or "PlayerAttack")
+            .. "_MH" .. tostring(hitIndex)
+    end
+
+    return CombatContext.ApplyHit(hitRequest)
+end
+
+local function LogAttackHitResult(targetActor, result, hitIndex, hitCount)
+    local prefix = "on attack hit"
+    if hitCount ~= nil and hitCount > 1 then
+        prefix = string.format("on attack hit [%d/%d]", hitIndex or 1, hitCount)
+    end
+
+    if result ~= nil and result.Applied == true then
+        print(prefix .. " " .. GetActorName(targetActor) .. " damage=" .. tostring(result.Damage))
+    elseif result ~= nil and result.Reason == "DuplicateHit" then
+        -- NotifyTick can still invoke the callback more than once in this engine.
+        -- The combat layer correctly filters it; keep logs focused on real hits.
+        return
+    else
+        print(prefix .. " ignored " .. GetActorName(targetActor) .. " reason=" .. tostring(result and result.Reason or "nil"))
+    end
 end
 
 local function ResetAttack(self, unlockMovement)
@@ -762,28 +885,53 @@ end
 ---@param targetComponent any
 ---@param hitResult any
 ---@param hitStopDuration number
+---@param hitCount integer|nil
+---@param hitInterval number|nil
+---@param hitWindowSerial integer|nil
 ---@return nil
-function on_attack_hit(self, targetActor, hitboxComponent, targetComponent, hitResult, hitStopDuration)
+function on_attack_hit(self, targetActor, hitboxComponent, targetComponent, hitResult, hitStopDuration,
+    hitCount, hitInterval, hitWindowSerial)
     self.PlayerContext = CombatContext.GetPlayerByOwner(obj)
     local playerContext = self.PlayerContext
     if playerContext == nil then return end
     PlayerContext.Assert(playerContext, "PlayerAnimation.on_attack_hit")
-    local hitRequest = HitTypes.CreatePlayerAttackFromState({
-        PlayerContext = playerContext,
-        TargetActor = targetActor,
-        HitboxComponent = hitboxComponent,
-        TargetComponent = targetComponent,
-        HitResult = hitResult,
-        HitStopDuration = hitStopDuration,
-    })
 
-    local hitResultInfo = CombatContext.ApplyHit(hitRequest)
+    local resolvedHitCount, resolvedHitInterval = ResolveAttackHitRepeat(playerContext, hitCount, hitInterval)
 
-    if hitResultInfo.Applied == true then
-        print("on attack hit " .. targetActor:GetName() .. " damage=" .. tostring(hitResultInfo.Damage))
-    else
-        print("on attack hit ignored " .. targetActor:GetName() .. " reason=" .. tostring(hitResultInfo.Reason))
+    -- Preserve the original stable behavior for the first hit: apply it immediately
+    -- inside the notify callback. Only follow-up hits are deferred to the owner
+    -- coroutine pool so damage/death/collision changes do not recurse inside the
+    -- C++ overlap traversal.
+    local firstHitResult = ApplyAttackHitOnce(playerContext, targetActor, hitboxComponent, targetComponent,
+        hitResult, hitStopDuration, nil)
+    LogAttackHitResult(targetActor, firstHitResult, 1, resolvedHitCount)
+
+    if resolvedHitCount <= 1 or ShouldStopRepeatedAttackHit(firstHitResult) == true then
+        return
     end
+
+    local ownerKey = GetOwnerKey(playerContext.Owner)
+    CoroutineManager.StartForOwner(ownerKey, function()
+        for hitIndex = 2, resolvedHitCount do
+            if resolvedHitInterval > 0.0 then
+                Wait(resolvedHitInterval)
+            else
+                WaitFrame()
+            end
+
+            if IsValidActor(targetActor) ~= true then
+                break
+            end
+
+            local repeatedHitResult = ApplyAttackHitOnce(playerContext, targetActor, hitboxComponent, targetComponent,
+                hitResult, 0.0, hitIndex)
+            LogAttackHitResult(targetActor, repeatedHitResult, hitIndex, resolvedHitCount)
+
+            if ShouldStopRepeatedAttackHit(repeatedHitResult) == true then
+                break
+            end
+        end
+    end)
 end
 
 function on_dash_vanish_begin(self)

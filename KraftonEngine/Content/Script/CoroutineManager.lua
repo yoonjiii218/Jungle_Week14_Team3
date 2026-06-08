@@ -74,6 +74,21 @@ function StopAllCoroutines()
     CurrentPool("StopAllCoroutines"):StopAll()
 end
 
+---@param ownerKey any
+---@param func function
+---@return table|nil
+function CoroutineManager.StartForOwner(ownerKey, func)
+    if ownerKey == nil or func == nil then
+        return nil
+    end
+
+    -- Queue the coroutine into the owner's pool, but do not resume it immediately.
+    -- Attack notifies can be fired while the engine is iterating collision targets;
+    -- deferred follow-up hits run during the owner's next coroutine tick instead
+    -- of recursively mutating combat / collision state in that C++ traversal.
+    return GetOrCreatePool(ownerKey):Create(func, false)
+end
+
 function Wait(seconds)
     CurrentPool("Wait"):Wait(seconds)
 end
@@ -90,7 +105,7 @@ function UpdateCoroutines(dt)
     CurrentPool("UpdateCoroutines"):Update(dt)
 end
 
-function CoroutineManager:Create(func)
+function CoroutineManager:Create(func, resumeImmediately)
     local routine = {
         co = coroutine.create(func),
         wait = nil,
@@ -98,7 +113,9 @@ function CoroutineManager:Create(func)
     }
 
     table.insert(self.coroutines, routine)
-    self:Resume(routine, 0)
+    if resumeImmediately ~= false then
+        self:Resume(routine, 0)
+    end
 
     return routine
 end
