@@ -149,6 +149,15 @@ function MobContext.GetByOwner(owner)
     return registry[OwnerKey(owner)]
 end
 
+---등록된 모든 잡몹 컨텍스트를 순회한다 (잡몹 간 separation 등에 사용).
+---@param fn fun(mobContext: MobContext)
+---@return nil
+function MobContext.ForEach(fn)
+    for _, ctx in pairs(registry) do
+        fn(ctx)
+    end
+end
+
 ---@param mobContext MobContext
 ---@param caller string
 ---@return MobContext
