@@ -203,6 +203,151 @@ PlayerConfig.Default = {
             CameraShakeScale = 0.25,
         },
 
+        -- Screen-edge vignette feedback. These are named camera-manager layers, so low HP,
+        -- hit flash, dash, and ultimate pulses can overlap without overwriting each other.
+        Vignette = {
+            Enabled = true,
+
+            LowHP = {
+                Enabled = true,
+                StartRatio = 0.45,
+                CriticalRatio = 0.18,
+                MinIntensity = 0.08,
+                MaxIntensity = 0.62,
+                Radius = 0.66,
+                Softness = 0.42,
+                BlendOut = 0.35,
+                R = 0.62,
+                G = 0.0,
+                B = 0.0,
+                A = 1.0,
+            },
+
+            HitReact = {
+                Intensity = 0.62,
+                Radius = 0.56,
+                Softness = 0.38,
+                Duration = 0.44,
+                BlendIn = 0.02,
+                BlendOut = 0.34,
+                R = 0.85,
+                G = 0.02,
+                B = 0.0,
+                A = 1.0,
+            },
+
+            Dash = {
+                Intensity = 0.18,
+                Radius = 0.9,
+                Softness = 0.36,
+                BlendOut = 0.18,
+                R = 0.18,
+                G = 0.02,
+                B = 0.02,
+                A = 1.0,
+            },
+
+            DashCharging = {
+                Intensity = 0.0,
+                Radius = 0.68,
+                Softness = 0.38,
+                BlendOut = 0.20,
+                R = 0.02,
+                G = 0.10,
+                B = 0.20,
+                A = 1.0,
+            },
+
+            DashChargeAttack = {
+                Intensity = 0.0,
+                Radius = 0.62,
+                Softness = 0.36,
+                BlendOut = 0.24,
+                R = 0.12,
+                G = 0.02,
+                B = 0.02,
+                A = 1.0,
+            },
+
+            AttackHit = {
+                Intensity = 0.10,
+                Radius = 0.70,
+                Softness = 0.36,
+                Duration = 0.16,
+                BlendIn = 0.01,
+                BlendOut = 0.11,
+                R = 0.18,
+                G = 0.02,
+                B = 0.02,
+                A = 1.0,
+            },
+
+            PerfectDodge = {
+                Intensity = 0.22,
+                Radius = 0.68,
+                Softness = 0.40,
+                Duration = 0.62,
+                BlendIn = 0.04,
+                BlendOut = 0.46,
+                R = 0.02,
+                G = 0.18,
+                B = 0.42,
+                A = 1.0,
+            },
+
+            UltimateStart = {
+                Intensity = 0.30,
+                Radius = 0.66,
+                Softness = 0.42,
+                Duration = 0.55,
+                BlendIn = 0.06,
+                BlendOut = 0.36,
+                R = 0.12,
+                G = 0.0,
+                B = 0.0,
+                A = 1.0,
+            },
+
+            UltimateImpact = {
+                Intensity = 0.52,
+                Radius = 0.52,
+                Softness = 0.34,
+                Duration = 0.38,
+                BlendIn = 0.015,
+                BlendOut = 0.30,
+                R = 0.70,
+                G = 0.02,
+                B = 0.0,
+                A = 1.0,
+            },
+
+            UltimateRecover = {
+                Intensity = 0.18,
+                Radius = 0.72,
+                Softness = 0.42,
+                Duration = 0.50,
+                BlendIn = 0.04,
+                BlendOut = 0.34,
+                R = 0.02,
+                G = 0.02,
+                B = 0.02,
+                A = 1.0,
+            },
+
+            Death = {
+                Intensity = 0.80,
+                Radius = 0.50,
+                Softness = 0.45,
+                Duration = 1.25,
+                BlendIn = 0.04,
+                BlendOut = 0.90,
+                R = 0.75,
+                G = 0.0,
+                B = 0.0,
+                A = 1.0,
+            },
+        },
+
         -- Transient FOV pulses. DeltaDegrees > 0 widens the view; < 0 pulls in.
         -- These are camera-manager modifiers, so the active camera component's base FOV is not overwritten.
         FOV = {

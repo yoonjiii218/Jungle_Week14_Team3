@@ -2137,6 +2137,85 @@ void FLuaScriptManager::RegisterCoreBindings(sol::state& Lua)
 			Manager->ClearCameraVignette();
 		}
 	});
+	CameraManager.set_function("SetVignetteLayer", [](
+		const FString& Name,
+		float Intensity,
+		float Radius,
+		float Softness,
+		sol::optional<float> R,
+		sol::optional<float> G,
+		sol::optional<float> B,
+		sol::optional<float> A)
+	{
+		if (!GEngine || !GEngine->GetWorld()) return;
+		APlayerController* PC = GEngine->GetWorld()->GetFirstPlayerController();
+		APlayerCameraManager* Manager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		if (Manager)
+		{
+			Manager->SetVignetteLayer(
+				Name,
+				Intensity,
+				Radius,
+				Softness,
+				FLinearColor(R.value_or(0.0f), G.value_or(0.0f), B.value_or(0.0f), A.value_or(1.0f)));
+		}
+	});
+	CameraManager.set_function("StartVignettePulse", [](
+		const FString& Name,
+		float Intensity,
+		float Radius,
+		float Softness,
+		float Duration,
+		sol::optional<float> BlendInTime,
+		sol::optional<float> BlendOutTime,
+		sol::optional<float> R,
+		sol::optional<float> G,
+		sol::optional<float> B,
+		sol::optional<float> A)
+	{
+		if (!GEngine || !GEngine->GetWorld()) return;
+		APlayerController* PC = GEngine->GetWorld()->GetFirstPlayerController();
+		APlayerCameraManager* Manager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		if (Manager)
+		{
+			Manager->StartVignettePulse(
+				Name,
+				Intensity,
+				Radius,
+				Softness,
+				Duration,
+				BlendInTime.value_or(0.0f),
+				BlendOutTime.value_or(0.0f),
+				FLinearColor(R.value_or(0.0f), G.value_or(0.0f), B.value_or(0.0f), A.value_or(1.0f)));
+		}
+	});
+	CameraManager.set_function("StopVignetteLayer", [](const FString& Name, sol::optional<float> BlendOutTime)
+	{
+		if (!GEngine || !GEngine->GetWorld()) return;
+		APlayerController* PC = GEngine->GetWorld()->GetFirstPlayerController();
+		APlayerCameraManager* Manager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		if (Manager)
+		{
+			Manager->StopVignetteLayer(Name, BlendOutTime.value_or(0.0f));
+		}
+	});
+	CameraManager.set_function("ClearVignetteLayers", []()
+	{
+		if (!GEngine || !GEngine->GetWorld()) return;
+		APlayerController* PC = GEngine->GetWorld()->GetFirstPlayerController();
+		APlayerCameraManager* Manager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		if (Manager)
+		{
+			Manager->ClearVignetteLayers();
+		}
+	});
+	CameraManager.set_function("GetActiveVignetteLayerCount", []()
+	{
+		if (!GEngine || !GEngine->GetWorld()) return 0;
+		APlayerController* PC = GEngine->GetWorld()->GetFirstPlayerController();
+		APlayerCameraManager* Manager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		return Manager ? Manager->GetActiveVignetteLayerCount() : 0;
+	});
 	CameraManager.set_function("StartPerfectDodgeEffect", [](sol::optional<float> Duration, sol::optional<float> Intensity, sol::optional<float> FocusHighlightStrength)
 	{
 		if (!GEngine || !GEngine->GetWorld()) return;

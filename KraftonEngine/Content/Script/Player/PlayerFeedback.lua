@@ -65,6 +65,136 @@ local function GetFOVConfig(playerContext, key)
     return fovConfig[key]
 end
 
+local function CanUseVignette(playerContext)
+    local feedbackConfig = playerContext.Config.Feedback or {}
+    local vignetteConfig = feedbackConfig.Vignette
+    return vignetteConfig ~= nil
+        and vignetteConfig.Enabled ~= false
+        and CameraManager ~= nil
+        and CameraManager.SetVignetteLayer ~= nil
+        and CameraManager.StartVignettePulse ~= nil
+        and CameraManager.StopVignetteLayer ~= nil
+end
+
+local function GetVignetteConfig(playerContext, key)
+    local feedbackConfig = playerContext.Config.Feedback or {}
+    local vignetteConfig = feedbackConfig.Vignette or {}
+    return vignetteConfig[key]
+end
+
+local function GetVignetteColor(config)
+    if config == nil then
+        return 0.0, 0.0, 0.0, 1.0
+    end
+
+    return config.R or 0.0,
+        config.G or 0.0,
+        config.B or 0.0,
+        config.A or 1.0
+end
+
+local function StartVignettePulse(playerContext, name, pulseConfig)
+    if CanUseVignette(playerContext) ~= true then
+        return
+    end
+
+    if pulseConfig == nil or pulseConfig.Enabled == false then
+        return
+    end
+
+    local intensity = pulseConfig.Intensity or 0.0
+    local duration = pulseConfig.Duration or 0.0
+    if intensity <= 0.0 or duration <= 0.0 then
+        return
+    end
+
+    local r, g, b, a = GetVignetteColor(pulseConfig)
+    CameraManager.StartVignettePulse(
+        name,
+        intensity,
+        pulseConfig.Radius or 0.75,
+        pulseConfig.Softness or 0.35,
+        duration,
+        pulseConfig.BlendIn or 0.0,
+        pulseConfig.BlendOut or 0.0,
+        r, g, b, a
+    )
+end
+
+local function SetVignetteLayer(playerContext, name, layerConfig, intensityOverride)
+    if CanUseVignette(playerContext) ~= true then
+        return
+    end
+
+    if layerConfig == nil or layerConfig.Enabled == false then
+        return
+    end
+
+    local intensity = intensityOverride or layerConfig.Intensity or 0.0
+    if intensity <= 0.0 then
+        CameraManager.StopVignetteLayer(name, 0.0)
+        return
+    end
+
+    local r, g, b, a = GetVignetteColor(layerConfig)
+    CameraManager.SetVignetteLayer(
+        name,
+        intensity,
+        layerConfig.Radius or 0.75,
+        layerConfig.Softness or 0.35,
+        r, g, b, a
+    )
+end
+
+local function StopVignetteLayer(playerContext, name, layerConfig)
+    if CameraManager == nil or CameraManager.StopVignetteLayer == nil then
+        return
+    end
+
+    local blendOut = 0.0
+    if layerConfig ~= nil then
+        blendOut = layerConfig.BlendOut or 0.0
+    end
+
+    CameraManager.StopVignetteLayer(name, blendOut)
+end
+
+local function UpdateLowHPVignette(playerContext)
+    if CanUseVignette(playerContext) ~= true then
+        return
+    end
+
+    local lowHPConfig = GetVignetteConfig(playerContext, "LowHP")
+    if lowHPConfig == nil or lowHPConfig.Enabled == false then
+        StopVignetteLayer(playerContext, "Player.LowHPVignette", lowHPConfig)
+        return
+    end
+
+    local combat = playerContext.Combat or {}
+    local hp = combat.HP or 0.0
+    local maxHP = combat.MaxHP or 0.0
+    if maxHP <= 0.0 or combat.IsDead == true then
+        StopVignetteLayer(playerContext, "Player.LowHPVignette", lowHPConfig)
+        return
+    end
+
+    local ratio = Clamp(hp / maxHP, 0.0, 1.0)
+    local startRatio = lowHPConfig.StartRatio or 0.45
+    local criticalRatio = lowHPConfig.CriticalRatio or 0.18
+
+    if ratio >= startRatio then
+        StopVignetteLayer(playerContext, "Player.LowHPVignette", lowHPConfig)
+        return
+    end
+
+    local denom = math.max(startRatio - criticalRatio, 0.001)
+    local t = Clamp((startRatio - ratio) / denom, 0.0, 1.0)
+    local minIntensity = lowHPConfig.MinIntensity or 0.0
+    local maxIntensity = lowHPConfig.MaxIntensity or lowHPConfig.Intensity or 0.55
+    local intensity = minIntensity + (maxIntensity - minIntensity) * t
+    SetVignetteLayer(playerContext, "Player.LowHPVignette", lowHPConfig, intensity)
+end
+
 local function Bezier2(a, b, c, t)
     local u = 1.0 - t
     return a * (u * u) + b * (2.0 * u * t) + c * (t * t)
@@ -106,6 +236,7 @@ local function PlayPerfectDodgeFeedback(playerContext, event)
     end
 
     StartFOVPulse(playerContext, "Player.PerfectDodgeFOV", GetFOVConfig(playerContext, "PerfectDodge"))
+    StartVignettePulse(playerContext, "Player.PerfectDodgeVignette", GetVignetteConfig(playerContext, "PerfectDodge"))
 
     print("Perfect Dodge")
 end
@@ -120,32 +251,41 @@ local function PlayAttackHitFeedback(playerContext, event)
     end
 
     StartFOVPulse(playerContext, "Player.AttackHitFOV", GetFOVConfig(playerContext, "AttackHit"))
+    StartVignettePulse(playerContext, "Player.AttackHitVignette", GetVignetteConfig(playerContext, "AttackHit"))
 end
 
 local function PlayDashStartedFeedback(playerContext, event)
     StartFOVPulse(playerContext, "Player.DashFOV", GetFOVConfig(playerContext, "Dash"))
+    SetVignetteLayer(playerContext, "Player.DashVignette", GetVignetteConfig(playerContext, "Dash"))
 end
 
 local function PlayDashEndedFeedback(playerContext, event)
     StopFOVPulse("Player.DashFOV")
+    StopVignetteLayer(playerContext, "Player.DashVignette", GetVignetteConfig(playerContext, "Dash"))
 end
 
 local function PlayDashChargingStartedFeedback(playerContext, event)
     StopFOVPulse("Player.DashFOV")
+    StopVignetteLayer(playerContext, "Player.DashVignette", GetVignetteConfig(playerContext, "Dash"))
     StartFOVPulse(playerContext, "Player.DashChargingFOV", GetFOVConfig(playerContext, "DashCharging"))
+    SetVignetteLayer(playerContext, "Player.DashChargingVignette", GetVignetteConfig(playerContext, "DashCharging"))
 end
 
 local function PlayDashChargingEndedFeedback(playerContext, event)
     StopFOVPulse("Player.DashChargingFOV")
+    StopVignetteLayer(playerContext, "Player.DashChargingVignette", GetVignetteConfig(playerContext, "DashCharging"))
 end
 
 local function PlayDashChargeAttackStartedFeedback(playerContext, event)
     StopFOVPulse("Player.DashChargingFOV")
+    StopVignetteLayer(playerContext, "Player.DashChargingVignette", GetVignetteConfig(playerContext, "DashCharging"))
     StartFOVPulse(playerContext, "Player.DashChargeAttackFOV", GetFOVConfig(playerContext, "DashChargeAttack"))
+    SetVignetteLayer(playerContext, "Player.DashChargeAttackVignette", GetVignetteConfig(playerContext, "DashChargeAttack"))
 end
 
 local function PlayDashChargeAttackEndedFeedback(playerContext, event)
     StopFOVPulse("Player.DashChargeAttackFOV")
+    StopVignetteLayer(playerContext, "Player.DashChargeAttackVignette", GetVignetteConfig(playerContext, "DashChargeAttack"))
 end
 
 local function PlayAttackStartedFeedback(playerContext, event)
@@ -195,6 +335,7 @@ local function PlayHitReactFeedback(playerContext, event)
     end
 
     StartFOVPulse(playerContext, "Player.HitReactFOV", GetFOVConfig(playerContext, "HitReact"))
+    StartVignettePulse(playerContext, "Player.HitReactVignette", GetVignetteConfig(playerContext, "HitReact"))
 
     local owner = playerContext.Owner
     local meshComp = ResolvePlayerMeshComponent(playerContext)
@@ -482,6 +623,10 @@ end
 ---@return nil
 function PlayerFeedback.Shutdown(playerContext)
     PlayerContext.Assert(playerContext, "PlayerFeedback.Shutdown")
+    StopVignetteLayer(playerContext, "Player.LowHPVignette", nil)
+    StopVignetteLayer(playerContext, "Player.DashVignette", nil)
+    StopVignetteLayer(playerContext, "Player.DashChargingVignette", nil)
+    StopVignetteLayer(playerContext, "Player.DashChargeAttackVignette", nil)
     playerContext.Feedback.KatanaComponent = nil
     playerContext.Feedback.KatanaPSC = nil
 end
@@ -556,6 +701,7 @@ function PlayerFeedback.BeginUltimate(playerContext)
 
     CameraManager.ToggleOwnerCamera(ultimateCamera, 0)
     StartFOVPulse(playerContext, "Player.UltimateStartFOV", fovConfig.UltimateStart)
+    StartVignettePulse(playerContext, "Player.UltimateStartVignette", GetVignetteConfig(playerContext, "UltimateStart"))
     Reflection.Call(movementComp, "StopMovementImmediately")
     Reflection.Call(movementComp, "SetMovementInputEnabled", false)
 
@@ -684,11 +830,13 @@ function PlayerFeedback.BeginUltimate(playerContext)
     Reflection.Call(owner, "SetActorLocation", cinematicEndPos)
     CameraManager.StartWaveShake(1.0)
     StartFOVPulse(playerContext, "Player.UltimateImpactFOV", fovConfig.UltimateImpact)
+    StartVignettePulse(playerContext, "Player.UltimateImpactVignette", GetVignetteConfig(playerContext, "UltimateImpact"))
 
     Wait(0.4)
 
     Reflection.Call(movementComp, "SetMovementInputEnabled", true)
     StartFOVPulse(playerContext, "Player.UltimateRecoverFOV", fovConfig.UltimateRecover)
+    StartVignettePulse(playerContext, "Player.UltimateRecoverVignette", GetVignetteConfig(playerContext, "UltimateRecover"))
     CameraManager.ToggleOwnerCamera(owner, 0.4)
 
     if PrimComp ~= nil then
@@ -700,6 +848,14 @@ function PlayerFeedback.BeginUltimate(playerContext)
     PlayerEvents.EmitUltimateEnded(playerContext)
 
     print("End Ultimate")
+end
+
+---@param playerContext PlayerContext
+---@param dt number
+---@return nil
+function PlayerFeedback.Update(playerContext, dt)
+    PlayerContext.Assert(playerContext, "PlayerFeedback.Update")
+    UpdateLowHPVignette(playerContext)
 end
 
 ---@param playerContext PlayerContext
@@ -732,6 +888,8 @@ function PlayerFeedback.ProcessEvents(playerContext, events)
             -- 여기서는 이후 피격 VFX/UI/사운드를 붙일 수 있도록 이벤트만 한 곳에서 받는다.
         elseif PlayerEvents.Is(event, PlayerEvents.Type.Dead) then
             StartDeathRagdoll(playerContext)
+            StopVignetteLayer(playerContext, "Player.LowHPVignette", nil)
+            StartVignettePulse(playerContext, "Player.DeathVignette", GetVignetteConfig(playerContext, "Death"))
             if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
                 CameraManager.StartWaveShake(0.8)
             end

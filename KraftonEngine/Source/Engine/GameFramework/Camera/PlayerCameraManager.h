@@ -135,12 +135,33 @@ public:
 	virtual void SetCameraVignette(float Intensity, float Radius, float Softness, FLinearColor Color);
 	virtual void ClearCameraVignette();
 
+	// Named vignette layers let gameplay stack low-HP, hit, dash, and ultimate edge effects
+	// without fighting over the single post-process constant buffer.
+	virtual void SetVignetteLayer(
+		const FString& Name,
+		float Intensity,
+		float Radius,
+		float Softness,
+		FLinearColor Color);
+	virtual void StartVignettePulse(
+		const FString& Name,
+		float Intensity,
+		float Radius,
+		float Softness,
+		float Duration,
+		float BlendInTime = 0.0f,
+		float BlendOutTime = 0.0f,
+		FLinearColor Color = FLinearColor::Black());
+	virtual void StopVignetteLayer(const FString& Name, float BlendOutTime = 0.0f);
+	virtual void ClearVignetteLayers();
+
 	// 현재 vignette 상태 — RenderPass(B) 가 PostProcess 에 전달.
 	bool IsVignetteEnabled() const { return bEnableVignette; }
 	float GetVignetteIntensity() const { return VignetteIntensity; }
 	float GetVignetteRadius() const { return VignetteRadius; }
 	float GetVignetteSoftness() const { return VignetteSoftness; }
 	FLinearColor GetVignetteColor() const { return VignetteColor; }
+	int32 GetActiveVignetteLayerCount() const { return static_cast<int32>(VignetteLayers.size()); }
 
 	// ─── Perfect Dodge PostProcess ─────────────────────────────────
 	virtual void StartPerfectDodgePostProcess(float Duration, float Intensity = 1.0f, float FocusHighlightStrength = -1.0f);
@@ -197,9 +218,31 @@ private:
 		float BlendOutTime = 0.0f;
 	};
 
+	struct FVignetteLayer
+	{
+		FString Name;
+		float Intensity = 0.0f;
+		float Radius = 0.75f;
+		float Softness = 0.35f;
+		float Duration = 0.0f;
+		float ElapsedTime = 0.0f;
+		float BlendInTime = 0.0f;
+		float BlendOutTime = 0.0f;
+		FLinearColor Color = FLinearColor::Black();
+		bool bPersistent = false;
+		bool bStopping = false;
+		float StopElapsedTime = 0.0f;
+		float StopDuration = 0.0f;
+		float StopStartWeight = 0.0f;
+	};
+
 	void UpdateFOVPulses(float DeltaTime);
 	void ApplyFOVPulses(FMinimalViewInfo& InOutPOV) const;
 	float EvaluateFOVPulse(const FFOVPulse& Pulse) const;
+
+	void UpdateVignetteLayers(float DeltaTime);
+	void ComposeVignetteLayers();
+	float EvaluateVignetteLayer(const FVignetteLayer& Layer) const;
 
 private:
 	TSet<UCameraComponent*> RegisteredCameras;
@@ -250,8 +293,9 @@ private:
 	// Perfect dodge / TimeRush postprocess state. Updated with raw camera delta.
 	FPerfectDodgePostProcessState PerfectDodgePostProcess;
 
-	// Named transient FOV pulses. Updated with raw camera delta so slomo does not stretch them.
+	// Named transient camera feedback. Updated with raw camera delta so slomo does not stretch them.
 	TArray<FFOVPulse> FOVPulses;
+	TArray<FVignetteLayer> VignetteLayers;
 
 	// POV cache — UpdateCamera 가 채우고, 외부는 GetCameraCachePOV 로 read.
 	// ActiveCamera 가 한 번도 없었으면 bCameraCacheValid=false → caller 가 fallback 처리.
