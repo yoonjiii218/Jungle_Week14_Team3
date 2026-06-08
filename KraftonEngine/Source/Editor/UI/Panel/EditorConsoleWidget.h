@@ -122,6 +122,7 @@ private:
 	void HandleShadowBias(const TArray<FString>& Args);
 	void HandleShadowFilter(const TArray<FString>& Args);
 	void HandleSkinningMode(const TArray<FString>& Args);
+	void HandlePerfectDodgePostProcessDebug(const TArray<FString>& Args);
 	void HandleExecReflection(const TArray<FString>& Args);
 	bool TryExecReflectedShortcut(const FString& CommandLine);
 	void PrintCSMCascadeRanges();

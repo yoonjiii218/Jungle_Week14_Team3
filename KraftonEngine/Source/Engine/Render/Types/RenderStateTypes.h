@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Core/Types/CoreTypes.h"
 
@@ -12,6 +12,8 @@ enum class EDepthStencilState
 	DepthGreaterEqual,	// Reversed-Z: GREATER_EQUAL + depth write (PreDepth 후 Opaque에서 Early-Z용)
 	DepthReadOnly,
 	StencilWrite,
+	StencilWriteDepthTest,
+	StencilWriteDepthTestGameplayFocus,
 	StencilWriteOnlyEqual,
 	NoDepth,
 
@@ -65,6 +67,8 @@ namespace RenderStateStrings
 		{ "DepthGreaterEqual",    (int)EDepthStencilState::DepthGreaterEqual },
 		{ "DepthReadOnly",        (int)EDepthStencilState::DepthReadOnly },
 		{ "StencilWrite",         (int)EDepthStencilState::StencilWrite },
+		{ "StencilWriteDepthTest",(int)EDepthStencilState::StencilWriteDepthTest },
+		{ "StencilWriteDepthTestGameplayFocus",(int)EDepthStencilState::StencilWriteDepthTestGameplayFocus },
 		{ "StencilWriteOnlyEqual",(int)EDepthStencilState::StencilWriteOnlyEqual },
 		{ "NoDepth",              (int)EDepthStencilState::NoDepth },
 		{ "GizmoInside",          (int)EDepthStencilState::GizmoInside },

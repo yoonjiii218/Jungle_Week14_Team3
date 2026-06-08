@@ -72,6 +72,15 @@ void UActionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		}
 	}
 
+	if (TimeRushAction.bActive)
+	{
+		TimeRushAction.RemainingTime -= RawDeltaTime;
+		if (TimeRushAction.RemainingTime <= 0.0f)
+		{
+			StopTimeRush();
+		}
+	}
+
 	RequestDesiredGlobalTimeDilation();
 
 	if (HitSquashAction.bActive)
@@ -198,15 +207,16 @@ void UActionComponent::LocalHitStop(float Duration)
 	{
 		LocalHitStopAction.RemainingTime = (std::max)(LocalHitStopAction.RemainingTime, Duration);
 		LocalHitStopAction.Duration = (std::max)(LocalHitStopAction.Duration, Duration);
-		OwnerActor->SetCustomTimeDilation(0.0f);
+		RebuildOwnerCustomTimeDilation();
 		return;
 	}
 
+	CaptureOwnerCustomTimeDilationBase();
 	LocalHitStopAction.bActive = true;
 	LocalHitStopAction.Duration = Duration;
 	LocalHitStopAction.RemainingTime = Duration;
 	LocalHitStopAction.PreviousCustomTimeDilation = OwnerActor->GetCustomTimeDilation();
-	OwnerActor->SetCustomTimeDilation(0.0f);
+	RebuildOwnerCustomTimeDilation();
 }
 
 void UActionComponent::HitSquash(const FVector& SquashedScale, float SquashInDuration, float RecoverDuration)
@@ -345,6 +355,25 @@ void UActionComponent::Slomo(float Duration, float TimeDilation)
 	RequestDesiredGlobalTimeDilation();
 }
 
+void UActionComponent::TimeRush(float Duration, float WorldTimeDilation, float PlayerSpeedScale)
+{
+	if (Duration <= 0.0f)
+	{
+		return;
+	}
+
+	CaptureOwnerCustomTimeDilationBase();
+
+	TimeRushAction.bActive = true;
+	TimeRushAction.Duration = Duration;
+	TimeRushAction.RemainingTime = Duration;
+	TimeRushAction.TimeDilation = FMath::Clamp(WorldTimeDilation, 0.001f, 1.0f);
+	TimeRushPlayerSpeedScale = (std::max)(0.0f, PlayerSpeedScale);
+
+	RebuildOwnerCustomTimeDilation();
+	RequestDesiredGlobalTimeDilation();
+}
+
 void UActionComponent::StopHitStop()
 {
 	HitStopAction = FTimedDilationAction();
@@ -358,12 +387,8 @@ void UActionComponent::StopLocalHitStop()
 		return;
 	}
 
-	if (AActor* OwnerActor = GetOwner())
-	{
-		OwnerActor->SetCustomTimeDilation(LocalHitStopAction.PreviousCustomTimeDilation);
-	}
-
 	LocalHitStopAction = FLocalHitStopAction();
+	RebuildOwnerCustomTimeDilation();
 }
 
 void UActionComponent::StopHitSquash()
@@ -403,6 +428,14 @@ void UActionComponent::StopSlomo()
 	RequestDesiredGlobalTimeDilation();
 }
 
+void UActionComponent::StopTimeRush()
+{
+	TimeRushAction = FTimedDilationAction();
+	TimeRushPlayerSpeedScale = 1.0f;
+	RebuildOwnerCustomTimeDilation();
+	RequestDesiredGlobalTimeDilation();
+}
+
 void UActionComponent::StopAllActions()
 {
 	StopLocalHitStop();
@@ -411,6 +444,7 @@ void UActionComponent::StopAllActions()
 	StopKnockback();
 	HitStopAction = FTimedDilationAction();
 	SlomoAction = FTimedDilationAction();
+	StopTimeRush();
 	RequestDesiredGlobalTimeDilation();
 }
 
@@ -442,6 +476,11 @@ float UActionComponent::GetDesiredGlobalTimeDilation() const
 		DesiredDilation = (std::min)(DesiredDilation, SlomoAction.TimeDilation);
 	}
 
+	if (HasActiveTimeDilationAction(TimeRushAction))
+	{
+		DesiredDilation = (std::min)(DesiredDilation, TimeRushAction.TimeDilation);
+	}
+
 	return DesiredDilation;
 }
 
@@ -458,6 +497,68 @@ void UActionComponent::RequestDesiredGlobalTimeDilation() const
 	}
 }
 
+void UActionComponent::CaptureOwnerCustomTimeDilationBase()
+{
+	if (bHasOwnerCustomTimeDilationBase)
+	{
+		return;
+	}
+
+	AActor* OwnerActor = GetOwner();
+	if (!OwnerActor)
+	{
+		return;
+	}
+
+	OwnerCustomTimeDilationBase = OwnerActor->GetCustomTimeDilation();
+	bHasOwnerCustomTimeDilationBase = true;
+}
+
+float UActionComponent::GetTimeRushOwnerCustomTimeDilationScale() const
+{
+	if (!HasActiveTimeDilationAction(TimeRushAction))
+	{
+		return 1.0f;
+	}
+
+	const float WorldScale = (std::max)(0.001f, TimeRushAction.TimeDilation);
+	return TimeRushPlayerSpeedScale / WorldScale;
+}
+
+bool UActionComponent::HasActiveOwnerCustomTimeDilationLayer() const
+{
+	return LocalHitStopAction.bActive || HasActiveTimeDilationAction(TimeRushAction);
+}
+
+void UActionComponent::RebuildOwnerCustomTimeDilation()
+{
+	AActor* OwnerActor = GetOwner();
+	if (!OwnerActor)
+	{
+		return;
+	}
+
+	if (!HasActiveOwnerCustomTimeDilationLayer())
+	{
+		if (bHasOwnerCustomTimeDilationBase)
+		{
+			OwnerActor->SetCustomTimeDilation(OwnerCustomTimeDilationBase);
+			bHasOwnerCustomTimeDilationBase = false;
+		}
+		return;
+	}
+
+	CaptureOwnerCustomTimeDilationBase();
+
+	float DesiredCustomDilation = OwnerCustomTimeDilationBase * GetTimeRushOwnerCustomTimeDilationScale();
+	if (LocalHitStopAction.bActive)
+	{
+		DesiredCustomDilation = 0.0f;
+	}
+
+	OwnerActor->SetCustomTimeDilation(DesiredCustomDilation);
+}
+
 bool UActionComponent::HasActiveTimeDilationAction(const FTimedDilationAction& Action) const
 {
 	return Action.bActive && Action.RemainingTime > 0.0f;
@@ -465,5 +566,7 @@ bool UActionComponent::HasActiveTimeDilationAction(const FTimedDilationAction& A
 
 bool UActionComponent::HasActiveTimeDilation() const
 {
-	return HasActiveTimeDilationAction(HitStopAction) || HasActiveTimeDilationAction(SlomoAction);
+	return HasActiveTimeDilationAction(HitStopAction)
+		|| HasActiveTimeDilationAction(SlomoAction)
+		|| HasActiveTimeDilationAction(TimeRushAction);
 }

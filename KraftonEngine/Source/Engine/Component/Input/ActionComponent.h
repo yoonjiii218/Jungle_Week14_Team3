@@ -27,6 +27,7 @@ public:
 	void HitShakeComponent(USceneComponent* TargetComponent, float Amplitude, float Duration, float Frequency);
 	void Knockback(const FVector& Direction, float Distance, float Duration);
 	void Slomo(float Duration, float TimeDilation);
+	void TimeRush(float Duration, float WorldTimeDilation, float PlayerSpeedScale);
 
 	void StopHitStop();
 	void StopLocalHitStop();
@@ -34,6 +35,7 @@ public:
 	void StopHitShake();
 	void StopKnockback();
 	void StopSlomo();
+	void StopTimeRush();
 	void StopAllActions();
 
 	// 넉백 면역. true 면 Knockback() 호출이 무시된다. (예: 보스는 넉백을 받지 않음)
@@ -45,6 +47,10 @@ private:
 	USceneComponent* GetTargetSceneComponent() const;
 	float GetDesiredGlobalTimeDilation() const;
 	void RequestDesiredGlobalTimeDilation() const;
+	void CaptureOwnerCustomTimeDilationBase();
+	void RebuildOwnerCustomTimeDilation();
+	float GetTimeRushOwnerCustomTimeDilationScale() const;
+	bool HasActiveOwnerCustomTimeDilationLayer() const;
 
 	struct FTimedDilationAction
 	{
@@ -97,6 +103,10 @@ private:
 
 	FTimedDilationAction HitStopAction;
 	FTimedDilationAction SlomoAction;
+	FTimedDilationAction TimeRushAction;
+	float TimeRushPlayerSpeedScale = 1.0f;
+	float OwnerCustomTimeDilationBase = 1.0f;
+	bool bHasOwnerCustomTimeDilationBase = false;
 	FHitSquashAction HitSquashAction;
 	FHitShakeAction HitShakeAction;
 	FLocalHitStopAction LocalHitStopAction;

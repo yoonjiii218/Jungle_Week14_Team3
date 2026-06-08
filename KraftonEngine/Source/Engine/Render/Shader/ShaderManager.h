@@ -171,6 +171,7 @@ namespace EShaderPath
 	inline constexpr const char* CameraFade = "Shaders/PostProcess/CameraFade.hlsl";
 	inline constexpr const char* CameraVignette = "Shaders/PostProcess/CameraVignette.hlsl";
 	inline constexpr const char* CameraLetterbox = "Shaders/PostProcess/CameraLetterbox.hlsl";
+	inline constexpr const char* PerfectDodgePostProcess = "Shaders/PostProcess/PerfectDodgePostProcess.hlsl";
 
 	inline constexpr const char* ParticleSprite = "Shaders/Particle/Sprite.hlsl";
 	inline constexpr const char* ParticleMesh  = "Shaders/Particle/Mesh.hlsl";
