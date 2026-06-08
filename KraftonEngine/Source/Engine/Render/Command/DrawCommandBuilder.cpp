@@ -19,6 +19,7 @@
 #include "Texture/Texture2D.h"
 #include "Profiling/Stats/ParticleStats.h"
 #include "Core/Logging/Log.h"
+#include <algorithm>
 
 // UpdateProxyLOD defined in RenderCollector.cpp (shared)
 extern void UpdateProxyLOD(FPrimitiveSceneProxy* Proxy, const FLODUpdateContext& LODCtx);
@@ -48,6 +49,7 @@ void FDrawCommandBuilder::Create(ID3D11Device* InDevice, ID3D11DeviceContext* In
 	CameraFadeCB.Create(InDevice, sizeof(FCameraFadeConstants), "CameraFadeCB");
 	CameraVignetteCB.Create(InDevice, sizeof(FCameraVignetteConstants), "CameraVignetteCB");
 	CameraLetterboxCB.Create(InDevice, sizeof(FCameraLetterboxConstants), "CameraLetterboxCB");
+	PerfectDodgePostProcessCB.Create(InDevice, sizeof(FPerfectDodgePostProcessConstants), "PerfectDodgePostProcessCB");
 	BoneHeatMapCB.Create(InDevice, sizeof(FBoneHeatMapConstants), "BoneHeatMapCB");
 }
 
@@ -78,6 +80,7 @@ void FDrawCommandBuilder::Release()
 	CameraFadeCB.Release();
 	CameraVignetteCB.Release();
 	CameraLetterboxCB.Release();
+	PerfectDodgePostProcessCB.Release();
 	BoneHeatMapCB.Release();
 }
 
@@ -850,6 +853,61 @@ void FDrawCommandBuilder::BuildPostProcessCommands(const FFrameContext& Frame, c
 			Cmd.InitFullscreenTriangle(LetterboxShader, ERenderPass::PostProcessOverlay, OverlayPPRS);
 			Cmd.Bindings.PerShaderCB[0] = &CameraLetterboxCB;
 			Cmd.BuildSortKey(7);
+		}
+	}
+
+	// PerfectDodge — SceneColor를 읽어 radial focus, color grading, glitch를 합성한다.
+	if (PerfectDodgePostProcessDebug::IsPostProcessEnabled()
+		&& Frame.PerfectDodgePostProcess.bEnabled
+		&& Frame.PerfectDodgePostProcess.Intensity > 0.0f)
+	{
+		FShader* PerfectDodgeShader = FShaderManager::Get().GetOrCreate(EShaderPath::PerfectDodgePostProcess);
+		if (PerfectDodgeShader)
+		{
+			const FPerfectDodgePostProcessState& Effect = Frame.PerfectDodgePostProcess;
+		auto ClampFloat = [](float V, float MinValue, float MaxValue)
+			{
+				return (std::max)(MinValue, (std::min)(MaxValue, V));
+			};
+			const float Duration = (std::max)(0.001f, Effect.Duration);
+			const float Elapsed = ClampFloat(Effect.ElapsedTime, 0.0f, Duration);
+			const float EnterDuration = (std::max)(0.001f, Effect.EnterDuration);
+			const float ExitDuration = (std::max)(0.001f, Effect.ExitDuration);
+			const float FadeIn = ClampFloat(Elapsed / EnterDuration, 0.0f, 1.0f);
+			const float FadeOut = ClampFloat((Duration - Elapsed) / ExitDuration, 0.0f, 1.0f);
+			const float Intensity = ClampFloat(Effect.Intensity, 0.0f, 4.0f);
+			const float EffectAmount = Intensity * (std::min)(FadeIn, FadeOut);
+
+			FPerfectDodgePostProcessConstants Data = {};
+			Data.BlueTintColor = Effect.BlueTintColor.ToVector4();
+			Data.GridColor = Effect.GridColor.ToVector4();
+			Data.EffectAmount = EffectAmount;
+			Data.EnterAmount = Intensity * (1.0f - FadeIn);
+			Data.SustainAmount = EffectAmount;
+			Data.ExitAmount = 1.0f - FadeOut;
+			Data.RadialBlurStrength = Effect.RadialBlurStrength;
+			Data.FocusFlashStrength = Effect.FocusFlashStrength;
+			Data.BlueTintStrength = Effect.BlueTintStrength;
+			Data.GridIntensity = Effect.GridIntensity;
+			Data.GlitchIntensity = Effect.GlitchIntensity;
+			Data.VignetteIntensity = Effect.VignetteIntensity;
+			Data.ElapsedTime = Elapsed;
+			Data.Duration = Duration;
+			Data.WorldGridIntensity = Effect.WorldGridIntensity;
+			Data.WorldGridScale = Effect.WorldGridScale;
+			Data.WorldGridThickness = Effect.WorldGridThickness;
+			Data.WorldGridDepthFadeDistance = Effect.WorldGridDepthFadeDistance;
+			Data.SceneDarkening = Effect.SceneDarkening;
+			Data.GammaPower = Effect.GammaPower;
+			Data.WorldGridSurfaceBias = Effect.WorldGridSurfaceBias;
+			Data.ScreenGridIntensity = Effect.ScreenGridIntensity;
+			PerfectDodgePostProcessCB.Update(Ctx, &Data, sizeof(Data));
+
+			const FDrawCommandRenderState PerfectDodgeRS = PassRenderStateTable->ToDrawCommandState(ERenderPass::PerfectDodge, ViewMode);
+			FDrawCommand& Cmd = DrawCommandList.AddCommand();
+			Cmd.InitFullscreenTriangle(PerfectDodgeShader, ERenderPass::PerfectDodge, PerfectDodgeRS);
+			Cmd.Bindings.PerShaderCB[0] = &PerfectDodgePostProcessCB;
+			Cmd.BuildSortKey(0);
 		}
 	}
 

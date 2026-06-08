@@ -142,6 +142,12 @@ public:
 	float GetVignetteSoftness() const { return VignetteSoftness; }
 	FLinearColor GetVignetteColor() const { return VignetteColor; }
 
+	// ─── Perfect Dodge PostProcess ─────────────────────────────────
+	virtual void StartPerfectDodgePostProcess(float Duration, float Intensity = 1.0f);
+	virtual void StopPerfectDodgePostProcess();
+	const FPerfectDodgePostProcessState& GetPerfectDodgePostProcessState() const { return PerfectDodgePostProcess; }
+	bool IsPerfectDodgePostProcessEnabled() const { return PerfectDodgePostProcess.bEnabled; }
+
 	// ─── Camera Blend ──────────────────────────────────────────────
 	bool GetCameraView(FMinimalViewInfo& OutPOV) const;
 
@@ -166,6 +172,7 @@ private:
 	// ModifierList 를 priority 순으로 순회하며 ModifyCamera 호출 — UpdateCamera 가 base+blend
 	// POV 산출 후 1회 호출.
 	void ApplyCameraModifiers(float DeltaTime, FMinimalViewInfo& InOutPOV);
+	void UpdatePerfectDodgePostProcess(float DeltaTime);
 
 private:
 	TSet<UCameraComponent*> RegisteredCameras;
@@ -212,6 +219,9 @@ private:
 	float VignetteRadius = 0.75f;
 	float VignetteSoftness = 0.35f;
 	FLinearColor VignetteColor = FLinearColor::Black();
+
+	// Perfect dodge / TimeRush postprocess state. Updated with raw camera delta.
+	FPerfectDodgePostProcessState PerfectDodgePostProcess;
 
 	// POV cache — UpdateCamera 가 채우고, 외부는 GetCameraCachePOV 로 read.
 	// ActiveCamera 가 한 번도 없었으면 bCameraCacheValid=false → caller 가 fallback 처리.

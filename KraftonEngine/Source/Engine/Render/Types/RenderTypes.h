@@ -47,6 +47,7 @@ enum class ERenderPass : uint32
 	DOFGather,		// Depth of Field gather — blur 생성
 	DOFRecombine,	// Depth of Field recombine — 원본과 blur 합성
 	PostProcessOverlay, // Outline, Fade, Vignette, Letterbox 등 DOF 뒤 overlay 계열
+	PerfectDodge,	// Perfect Dodge / TimeRush fullscreen distortion and color grading
 	EditorLines,	// 디버그 라인 + 그리드 (LINELIST)
 	FXAA,			// FXAA 안티앨리어싱 (SceneColor 복사 후 실행)
 	GizmoOuter,		// 기즈모 외곽 (깊이 테스트 O)
@@ -75,6 +76,7 @@ inline const char* GetRenderPassName(ERenderPass Pass)
 		"RenderPass::DOFGather",
 		"RenderPass::DOFRecombine",
 		"RenderPass::PostProcessOverlay",
+		"RenderPass::PerfectDodge",
 		"RenderPass::EditorLines",
 		"RenderPass::FXAA",
 		"RenderPass::GizmoOuter",
@@ -106,6 +108,7 @@ namespace RenderStateStrings
 		{ "DOFGather",     (int)ERenderPass::DOFGather },
 		{ "DOFRecombine",  (int)ERenderPass::DOFRecombine },
 		{ "PostProcessOverlay", (int)ERenderPass::PostProcessOverlay },
+		{ "PerfectDodge",  (int)ERenderPass::PerfectDodge },
 		{ "EditorLines",   (int)ERenderPass::EditorLines },
 		{ "FXAA",          (int)ERenderPass::FXAA },
 		{ "GizmoOuter",    (int)ERenderPass::GizmoOuter },

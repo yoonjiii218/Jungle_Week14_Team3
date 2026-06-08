@@ -11,6 +11,8 @@
 #include "Render/Types/MinimalViewInfo.h"
 #include "Engine/Platform/CrashDump.h"
 #include "GameFramework/World.h"
+#include "GameFramework/GameMode/PlayerController.h"
+#include "GameFramework/Camera/PlayerCameraManager.h"
 #include "Render/Scene/FScene.h"
 #include "Object/Reflection/UClass.h"
 #include "Core/Property/ClassProperty.h"
@@ -630,6 +632,10 @@ void FEditorConsoleWidget::RegisterRenderCommands()
 		"Render", "shadow filter hard|pcf|vsm|reset", "Overrides shadow filter mode.");
 	RegisterCommand("skinning", [this](const TArray<FString>& Args) { HandleSkinningMode(Args); },
 		"Render", "skinning cpu|gpu", "Sets skeletal mesh skinning mode.");
+	RegisterCommand("perfectdodge pp", [this](const TArray<FString>& Args) { HandlePerfectDodgePostProcessDebug(Args); },
+		"Render", "perfectdodge pp on|off|toggle|status|test [duration] [intensity]", "Toggles or previews the Perfect Dodge post-process effect.");
+	RegisterCommand("pd pp", [this](const TArray<FString>& Args) { HandlePerfectDodgePostProcessDebug(Args); },
+		"Render", "pd pp on|off|toggle|status|test [duration] [intensity]", "Alias for perfectdodge pp.");
 }
 
 void FEditorConsoleWidget::Shutdown()
@@ -1909,6 +1915,77 @@ void FEditorConsoleWidget::HandleSkinningMode(const TArray<FString>& Args)
 	SkinningModeRuntime::Set(NewMode);
 
 	AddLog("Skinning mode set to %s.\n", NewMode == ESkinningMode::GPU ? "GPU" : "CPU");
+}
+
+void FEditorConsoleWidget::HandlePerfectDodgePostProcessDebug(const TArray<FString>& Args)
+{
+	if (Args.empty() || Args[0] == "status")
+	{
+		AddLog("PerfectDodge post-process: %s\n",
+			PerfectDodgePostProcessDebug::IsPostProcessEnabled() ? "enabled" : "disabled");
+		AddLog("Usage: perfectdodge pp on|off|toggle|status|test [duration] [intensity]\n");
+		return;
+	}
+
+	const FString Mode = ToLower(Args[0]);
+	if (Mode == "on")
+	{
+		PerfectDodgePostProcessDebug::SetPostProcessEnabled(true);
+		AddLog("PerfectDodge post-process enabled.\n");
+		return;
+	}
+	if (Mode == "off")
+	{
+		PerfectDodgePostProcessDebug::SetPostProcessEnabled(false);
+		AddLog("PerfectDodge post-process disabled. TimeRush gameplay still runs.\n");
+		return;
+	}
+	if (Mode == "toggle")
+	{
+		const bool bEnabled = PerfectDodgePostProcessDebug::TogglePostProcessEnabled();
+		AddLog("PerfectDodge post-process %s.\n", bEnabled ? "enabled" : "disabled");
+		return;
+	}
+	if (Mode == "test")
+	{
+		PerfectDodgePostProcessDebug::SetPostProcessEnabled(true);
+
+		float Duration = 1.5f;
+		float Intensity = 1.0f;
+		if (Args.size() > 1)
+		{
+			Duration = static_cast<float>(std::atof(Args[1].c_str()));
+		}
+		if (Args.size() > 2)
+		{
+			Intensity = static_cast<float>(std::atof(Args[2].c_str()));
+		}
+
+		UWorld* World = nullptr;
+		if (EditorEngine)
+		{
+			World = EditorEngine->GetPlayInEditorWorld();
+			if (!World)
+			{
+				World = EditorEngine->GetWorld();
+			}
+		}
+
+		APlayerController* PC = World ? World->GetFirstPlayerController() : nullptr;
+		APlayerCameraManager* CameraManager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		if (!CameraManager)
+		{
+			AddLog("[ERROR] No PlayerCameraManager found. Run this during PIE/gameplay.\n");
+			return;
+		}
+
+		CameraManager->StartPerfectDodgePostProcess(Duration, Intensity);
+		AddLog("PerfectDodge post-process test started. duration=%.2f intensity=%.2f\n", Duration, Intensity);
+		return;
+	}
+
+	AddLog("[ERROR] Unknown perfectdodge pp mode: '%s'\n", Args[0].c_str());
+	AddLog("Usage: perfectdodge pp on|off|toggle|status|test [duration] [intensity]\n");
 }
 
 // History & Tab-Completion Callback____________________________________________________________

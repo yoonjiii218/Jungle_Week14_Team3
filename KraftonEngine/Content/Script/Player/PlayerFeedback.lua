@@ -53,6 +53,12 @@ local function PlayPerfectDodgeFeedback(playerContext, event)
         CameraManager.StartWaveShake(shakeScale)
     end
 
+    if CameraManager ~= nil and CameraManager.StartPerfectDodgeEffect ~= nil then
+        local duration = event.SlomoDuration or perfectDodgeConfig.PostProcessDuration or 1.5
+        local intensity = perfectDodgeConfig.PostProcessIntensity or 1.0
+        CameraManager.StartPerfectDodgeEffect(duration, intensity)
+    end
+
     print("Perfect Dodge")
 end
 

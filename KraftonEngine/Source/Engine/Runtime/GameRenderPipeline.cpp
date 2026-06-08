@@ -123,7 +123,11 @@ void FGameRenderPipeline::BuildFrame(FViewport* VP, const FMinimalViewInfo& POV,
 		Frame.CameraVignette.Intensity = CamManager->GetVignetteIntensity();
 		Frame.CameraVignette.Radius = CamManager->GetVignetteRadius();
 		Frame.CameraVignette.Softness = CamManager->GetVignetteSoftness();
+		Frame.CameraVignette.Color = CamManager->GetVignetteColor();
 	}
+	Frame.PerfectDodgePostProcess = CamManager
+		? CamManager->GetPerfectDodgePostProcessState()
+		: FPerfectDodgePostProcessState();
 
 	UCameraComponent* ActiveCamera = CamManager ? CamManager->GetActiveCamera() : nullptr;
 	if (UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(ActiveCamera))

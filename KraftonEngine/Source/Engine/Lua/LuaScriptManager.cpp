@@ -2137,6 +2137,26 @@ void FLuaScriptManager::RegisterCoreBindings(sol::state& Lua)
 			Manager->ClearCameraVignette();
 		}
 	});
+	CameraManager.set_function("StartPerfectDodgeEffect", [](sol::optional<float> Duration, sol::optional<float> Intensity)
+	{
+		if (!GEngine || !GEngine->GetWorld()) return;
+		APlayerController* PC = GEngine->GetWorld()->GetFirstPlayerController();
+		APlayerCameraManager* Manager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		if (Manager)
+		{
+			Manager->StartPerfectDodgePostProcess(Duration.value_or(1.5f), Intensity.value_or(1.0f));
+		}
+	});
+	CameraManager.set_function("StopPerfectDodgeEffect", []()
+	{
+		if (!GEngine || !GEngine->GetWorld()) return;
+		APlayerController* PC = GEngine->GetWorld()->GetFirstPlayerController();
+		APlayerCameraManager* Manager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		if (Manager)
+		{
+			Manager->StopPerfectDodgePostProcess();
+		}
+	});
 	CameraManager.set_function("SetViewTargetWithBlend", [](AActor* Target, float BlendTime)
 	{
 		if (!GEngine || !GEngine->GetWorld() || !IsValid(Target)) return;

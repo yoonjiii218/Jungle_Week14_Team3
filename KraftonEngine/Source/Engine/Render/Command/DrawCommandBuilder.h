@@ -95,6 +95,7 @@ private:
 	FConstantBuffer CameraFadeCB;
 	FConstantBuffer CameraVignetteCB;
 	FConstantBuffer CameraLetterboxCB;
+	FConstantBuffer PerfectDodgePostProcessCB;
 	FConstantBuffer DOFCB;
 	FConstantBuffer BoneHeatMapCB;
 

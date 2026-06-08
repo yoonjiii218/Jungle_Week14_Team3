@@ -257,6 +257,9 @@ void FEditorRenderPipeline::BuildFrame(FLevelEditorViewportClient* VC, const FMi
 		Frame.CameraVignette.Softness = CamManager->GetVignetteSoftness();
 		Frame.CameraVignette.Color = CamManager->GetVignetteColor();
 	}
+	Frame.PerfectDodgePostProcess = CamManager
+		? CamManager->GetPerfectDodgePostProcessState()
+		: FPerfectDodgePostProcessState();
 
 	UCameraComponent* ActiveCamera = CamManager ? CamManager->GetActiveCamera() : nullptr;
 	if (UCineCameraComponent* CineCamera = Cast<UCineCameraComponent>(ActiveCamera))

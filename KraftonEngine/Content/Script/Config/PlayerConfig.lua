@@ -155,7 +155,7 @@ PlayerConfig.Default = {
         HitInvincibleDuration = 0.5,
         DashPerfectDodgeDuration = 0.2,
         PerfectDodgeGraceAfterDash = 0.05,
-        PerfectDodgeSlomoDuration = 1.5,
+        PerfectDodgeSlomoDuration = 5.0,
         PerfectDodgeSlomoScale = 0.1,
         -- World is slowed by SlomoScale. PlayerSpeedScale is the player's final speed
         -- relative to real/raw time while TimeRush is active. 1.0 = normal, 1.2 = 20% faster.
@@ -183,6 +183,7 @@ PlayerConfig.Default = {
 
         PerfectDodge = {
             CameraShakeScale = 0.5,
+            PostProcessIntensity = 1.0,
         },
 
         AttackHit = {

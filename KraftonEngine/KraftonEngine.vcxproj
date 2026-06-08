@@ -707,6 +707,7 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
     <ClCompile Include="Source\Engine\Render\RenderPass\OpaquePass.cpp" />
     <ClCompile Include="Source\Engine\Render\RenderPass\OverlayFontPass.cpp" />
     <ClCompile Include="Source\Engine\Render\RenderPass\PassRenderStateTable.cpp" />
+    <ClCompile Include="Source\Engine\Render\RenderPass\PerfectDodgePostProcessPass.cpp" />
     <ClCompile Include="Source\Engine\Render\RenderPass\PostProcessPass.cpp" />
     <ClCompile Include="Source\Engine\Render\RenderPass\PreDepthPass.cpp" />
     <ClCompile Include="Source\Engine\Render\RenderPass\RenderPassBase.cpp" />
@@ -1187,6 +1188,7 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
     <ClInclude Include="Source\Engine\Render\RenderPass\OpaquePass.h" />
     <ClInclude Include="Source\Engine\Render\RenderPass\OverlayFontPass.h" />
     <ClInclude Include="Source\Engine\Render\RenderPass\PassRenderStateTable.h" />
+    <ClInclude Include="Source\Engine\Render\RenderPass\PerfectDodgePostProcessPass.h" />
     <ClInclude Include="Source\Engine\Render\RenderPass\PostProcessPass.h" />
     <ClInclude Include="Source\Engine\Render\RenderPass\PreDepthPass.h" />
     <ClInclude Include="Source\Engine\Render\RenderPass\RenderPassBase.h" />
@@ -2044,6 +2046,12 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Demo|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Shaders\PostProcess\FXAA.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Game|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Demo|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Shaders\PostProcess\PerfectDodgePostProcess.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Game|x64'">true</ExcludedFromBuild>
