@@ -260,7 +260,7 @@ PlayerConfig.Default = {
             RiseDistance = 1.65,
             HorizontalJitter = 0.35,
             DriftDistance = 0.25,
-            Color = { R = 1.0, G = 0.3, B = 0.08, A = 1.0 },
+            Color = { R = 1.0, G = 0.08, B = 0.08, A = 1.0 },
         },
 
         -- Screen-edge vignette feedback. These are named camera-manager layers, so low HP,

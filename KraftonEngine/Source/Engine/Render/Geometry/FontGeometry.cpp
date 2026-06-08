@@ -107,6 +107,7 @@ void FFontGeometry::AddWorldText(const FString& Text,
 	const FVector& CamUp,
 	const FVector& WorldScale,
 	float Scale,
+	const FVector4& Color,
 	bool bDisableDepthTest)
 {
 	if (Text.empty()) return;
@@ -147,10 +148,10 @@ void FFontGeometry::AddWorldText(const FString& Text,
 
 		const FVector Center = WorldPos + CamRight * CharCursorX;
 
-		pV[0] = { Center                 + HalfUp, { UVMin.X, UVMin.Y } };
-		pV[1] = { Center + HalfRight * 2 + HalfUp, { UVMax.X, UVMin.Y } };
-		pV[2] = { Center                 - HalfUp, { UVMin.X, UVMax.Y } };
-		pV[3] = { Center + HalfRight * 2 - HalfUp, { UVMax.X, UVMax.Y } };
+		pV[0] = { Center                 + HalfUp, Color, { UVMin.X, UVMin.Y } };
+		pV[1] = { Center + HalfRight * 2 + HalfUp, Color, { UVMax.X, UVMin.Y } };
+		pV[2] = { Center                 - HalfUp, Color, { UVMin.X, UVMax.Y } };
+		pV[3] = { Center + HalfRight * 2 - HalfUp, Color, { UVMax.X, UVMax.Y } };
 
 		const uint32 Vi = Base + CharIdx * 4;
 		pI[0] = Vi;     pI[1] = Vi + 1; pI[2] = Vi + 2;
@@ -221,10 +222,11 @@ void FFontGeometry::AddScreenText(const FString& Text,
 		const float Top = PixelToClipY(ScreenY);
 		const float Bottom = PixelToClipY(ScreenY + CharH);
 
-		pV[0] = { FVector(Left,  Top,    0.0f), FVector2(UVMin.X, UVMin.Y) };
-		pV[1] = { FVector(Right, Top,    0.0f), FVector2(UVMax.X, UVMin.Y) };
-		pV[2] = { FVector(Left,  Bottom, 0.0f), FVector2(UVMin.X, UVMax.Y) };
-		pV[3] = { FVector(Right, Bottom, 0.0f), FVector2(UVMax.X, UVMax.Y) };
+		const FVector4 Color = FVector4(0.6f, 1.0f, 1.0f, 1.0f);
+		pV[0] = { FVector(Left,  Top,    0.0f), Color, FVector2(UVMin.X, UVMin.Y) };
+		pV[1] = { FVector(Right, Top,    0.0f), Color, FVector2(UVMax.X, UVMin.Y) };
+		pV[2] = { FVector(Left,  Bottom, 0.0f), Color, FVector2(UVMin.X, UVMax.Y) };
+		pV[3] = { FVector(Right, Bottom, 0.0f), Color, FVector2(UVMax.X, UVMax.Y) };
 
 		const uint32 Vi = Base + CharIdx * 4;
 		pI[0] = Vi;     pI[1] = Vi + 1; pI[2] = Vi + 2;

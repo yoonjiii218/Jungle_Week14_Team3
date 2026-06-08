@@ -44,11 +44,12 @@ struct VS_Input_PNCTTBB
     float4 boneWeights : BONEWEIGHT;
 };
 
-// FTextureVertex (Position + TexCoord)
+// FTextureVertex (Position + Color + TexCoord)
 // 사용: Font, SubUV, OverlayFont
 struct VS_Input_PT
 {
     float3 position : POSITION;
+    float4 color : COLOR;
     float2 texcoord : TEXCOORD;
 };
 
@@ -114,6 +115,7 @@ struct PS_Input_Color
 struct PS_Input_Tex
 {
     float4 position : SV_POSITION;
+    float4 color : COLOR;
     float2 texcoord : TEXCOORD;
 };
 

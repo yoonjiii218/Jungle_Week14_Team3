@@ -435,6 +435,7 @@ void FDrawCommandBuilder::AddWorldText(const FTextRenderSceneProxy* TextProxy, c
 		Frame.CameraUp,
 		TextProxy->CachedBillboardMatrix.GetScale(),
 		TextProxy->CachedFontScale,
+		TextProxy->CachedColor,
 		TextProxy->bCachedDisableDepthTest
 	);
 }

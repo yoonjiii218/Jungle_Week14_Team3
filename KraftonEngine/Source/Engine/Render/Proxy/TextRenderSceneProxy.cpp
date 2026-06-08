@@ -73,6 +73,7 @@ void FTextRenderSceneProxy::UpdateMesh()
 	}
 	CachedText = TextComp->GetText();
 	CachedFontScale = TextComp->GetFontSize();
+	CachedColor = TextComp->GetColor();
 	CachedFont = TextComp->GetFont();
 	bCachedDisableDepthTest = TextComp->GetDisableDepthTest();
 	CachedCharWidth = TextComp->GetCharWidth();

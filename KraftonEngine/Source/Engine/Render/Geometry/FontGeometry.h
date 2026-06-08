@@ -30,6 +30,7 @@ public:
 		const FVector& CamUp,
 		const FVector& WorldScale,
 		float Scale = 1.0f,
+		const FVector4& Color = FVector4(1.0f, 1.0f, 1.0f, 1.0f),
 		bool bDisableDepthTest = false);
 
 	// 스크린 공간 오버레이 텍스트
