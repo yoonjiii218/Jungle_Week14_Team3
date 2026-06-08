@@ -20,6 +20,60 @@ local function EaseOutCubic(t)
     return 1.0 - u * u * u
 end
 
+
+local function IsValidObject(obj)
+    return obj ~= nil and (obj.IsValid == nil or obj:IsValid() == true)
+end
+
+local function GetOwnerLocation(playerContext)
+    local owner = playerContext.Owner
+    if owner == nil then
+        return nil
+    end
+
+    if owner.Location ~= nil then
+        return owner.Location
+    end
+
+    return Reflection.Call(owner, "GetActorLocation")
+end
+
+local function GetDashChargeConfig(playerContext)
+    local feedbackConfig = playerContext.Config.Feedback or {}
+    return feedbackConfig.DashCharge or {}
+end
+
+local function GetDashChargeRatio(playerContext)
+    local action = playerContext.Action or {}
+    return Clamp(action.DashChargeRatio or 0.0, 0.0, 1.0)
+end
+
+local function SpawnParticleSystem(path, location, rotation, scale, life, materialPath)
+    if VFX == nil or VFX.SpawnParticleSystem == nil then
+        return nil
+    end
+
+    if path == nil or path == "" or path == "None" then
+        return nil
+    end
+
+    return VFX.SpawnParticleSystem(
+        path,
+        location,
+        rotation or Vector(0.0, 0.0, 0.0),
+        scale or Vector(1.0, 1.0, 1.0),
+        life or 1.0,
+        materialPath or "None"
+    )
+end
+
+local function ResetDashChargeFeedbackState(playerContext)
+    playerContext.Feedback.DashChargeGroundPSC = nil
+    playerContext.Feedback.DashChargeReadyBursted = false
+    playerContext.Feedback.DashChargeVFXTimer = 0.0
+    playerContext.Feedback.DashChargeShakeTimer = 0.0
+end
+
 local function CanUseFOVPulse(playerContext)
     local feedbackConfig = playerContext.Config.Feedback or {}
     local fovConfig = feedbackConfig.FOV
@@ -269,11 +323,41 @@ local function PlayDashChargingStartedFeedback(playerContext, event)
     StopVignetteLayer(playerContext, "Player.DashVignette", GetVignetteConfig(playerContext, "Dash"))
     StartFOVPulse(playerContext, "Player.DashChargingFOV", GetFOVConfig(playerContext, "DashCharging"))
     SetVignetteLayer(playerContext, "Player.DashChargingVignette", GetVignetteConfig(playerContext, "DashCharging"))
+
+    ResetDashChargeFeedbackState(playerContext)
+
+    local config = GetDashChargeConfig(playerContext)
+    local loc = GetOwnerLocation(playerContext)
+    if loc ~= nil then
+        local scaleValue = config.GroundRingScale or 1.0
+        local ground = Vector(loc.X, loc.Y, loc.Z + 0.05)
+        local psc = SpawnParticleSystem(
+            config.GroundRingPath,
+            ground,
+            Vector(0.0, 0.0, 0.0),
+            Vector(scaleValue, scaleValue, scaleValue),
+            30.0,
+            config.GroundRingMaterialPath)
+        playerContext.Feedback.DashChargeGroundPSC = psc
+    end
 end
 
 local function PlayDashChargingEndedFeedback(playerContext, event)
     StopFOVPulse("Player.DashChargingFOV")
     StopVignetteLayer(playerContext, "Player.DashChargingVignette", GetVignetteConfig(playerContext, "DashCharging"))
+
+    local psc = playerContext.Feedback.DashChargeGroundPSC
+    if IsValidObject(psc) then
+        if psc.StopSpawning ~= nil then
+            psc:StopSpawning()
+        else
+            psc:Deactivate()
+        end
+        if psc.SetAutoDestroyOwnerAfter ~= nil then
+            psc:SetAutoDestroyOwnerAfter(0.35)
+        end
+    end
+    ResetDashChargeFeedbackState(playerContext)
 end
 
 local function PlayDashChargeAttackStartedFeedback(playerContext, event)
@@ -615,6 +699,7 @@ end
 ---@return nil
 function PlayerFeedback.Init(playerContext)
     PlayerContext.Assert(playerContext, "PlayerFeedback.Init")
+    ResetDashChargeFeedbackState(playerContext)
     PlayerFeedback.AttachKatanaToWeaponSocket(playerContext)
     PlayerFeedback.AttachPSCToWeaponSocket(playerContext)
 end
@@ -627,6 +712,14 @@ function PlayerFeedback.Shutdown(playerContext)
     StopVignetteLayer(playerContext, "Player.DashVignette", nil)
     StopVignetteLayer(playerContext, "Player.DashChargingVignette", nil)
     StopVignetteLayer(playerContext, "Player.DashChargeAttackVignette", nil)
+    local dashChargePSC = playerContext.Feedback.DashChargeGroundPSC
+    if IsValidObject(dashChargePSC) then
+        dashChargePSC:Deactivate()
+        if dashChargePSC.SetAutoDestroyOwnerAfter ~= nil then
+            dashChargePSC:SetAutoDestroyOwnerAfter(0.1)
+        end
+    end
+    ResetDashChargeFeedbackState(playerContext)
     playerContext.Feedback.KatanaComponent = nil
     playerContext.Feedback.KatanaPSC = nil
 end
@@ -850,12 +943,105 @@ function PlayerFeedback.BeginUltimate(playerContext)
     print("End Ultimate")
 end
 
+local function SpawnDashChargeInwardParticle(playerContext, config, ratio)
+    local ownerLoc = GetOwnerLocation(playerContext)
+    if ownerLoc == nil then
+        return
+    end
+
+    local minRadius = config.InwardMinRadius or 2.0
+    local maxRadius = config.InwardMaxRadius or 4.5
+    local radius = minRadius + (maxRadius - minRadius) * ratio
+    local angle = math.random() * math.pi * 2.0
+    local spawn = Vector(
+        ownerLoc.X + math.cos(angle) * radius,
+        ownerLoc.Y + math.sin(angle) * radius,
+        ownerLoc.Z + (config.InwardHeight or 0.75))
+
+    local target = Vector(ownerLoc.X, ownerLoc.Y, ownerLoc.Z + (config.InwardTargetHeight or 1.05))
+    local toTarget = target - spawn
+    local yaw = 0.0
+    local pitch = 0.0
+    if toTarget:Length() > 0.001 then
+        local n = toTarget:Normalized()
+        yaw = math.atan2(n.Y, n.X) * 180.0 / math.pi
+        pitch = math.atan2(n.Z, math.sqrt(n.X * n.X + n.Y * n.Y)) * 180.0 / math.pi
+    end
+
+    local minScale = config.InwardMinScale or 0.35
+    local maxScale = config.InwardMaxScale or 1.0
+    local scaleValue = minScale + (maxScale - minScale) * ratio
+    SpawnParticleSystem(
+        config.InwardParticlePath,
+        spawn,
+        Vector(pitch, 0.0, yaw),
+        Vector(scaleValue, scaleValue, scaleValue),
+        config.InwardLife or 0.32,
+        config.InwardMaterialPath)
+end
+
+local function UpdateDashChargeFeedback(playerContext, dt)
+    if playerContext.Action.DashChargingActive ~= true then
+        return
+    end
+
+    local config = GetDashChargeConfig(playerContext)
+    local ratio = GetDashChargeRatio(playerContext)
+
+    playerContext.Feedback.DashChargeVFXTimer = (playerContext.Feedback.DashChargeVFXTimer or 0.0) - (dt or 0.0)
+    if playerContext.Feedback.DashChargeVFXTimer <= 0.0 then
+        SpawnDashChargeInwardParticle(playerContext, config, ratio)
+        local interval = config.InwardSpawnInterval or 0.06
+        playerContext.Feedback.DashChargeVFXTimer = math.max(0.01, interval * (1.0 - ratio * 0.55))
+    end
+
+    if config.CameraShakeEnabled ~= false and CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
+        playerContext.Feedback.DashChargeShakeTimer = (playerContext.Feedback.DashChargeShakeTimer or 0.0) - (dt or 0.0)
+        if playerContext.Feedback.DashChargeShakeTimer <= 0.0 then
+            local minScale = config.CameraShakeMinScale or 0.08
+            local maxScale = config.CameraShakeMaxScale or 0.35
+            CameraManager.StartWaveShake(minScale + (maxScale - minScale) * ratio)
+            playerContext.Feedback.DashChargeShakeTimer = config.CameraShakeInterval or 0.16
+        end
+    end
+
+    if ratio >= 1.0 and playerContext.Feedback.DashChargeReadyBursted ~= true then
+        local loc = GetOwnerLocation(playerContext)
+        if loc ~= nil then
+            local scaleValue = config.ReadyBurstScale or 1.5
+            SpawnParticleSystem(
+                config.ReadyBurstPath,
+                Vector(loc.X, loc.Y, loc.Z + 0.1),
+                Vector(0.0, 0.0, 0.0),
+                Vector(scaleValue, scaleValue, scaleValue),
+                0.75,
+                config.ReadyBurstMaterialPath)
+        end
+        if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
+            CameraManager.StartWaveShake(config.CameraShakeMaxScale or 0.45)
+        end
+        playerContext.Feedback.DashChargeReadyBursted = true
+    end
+
+    local ground = playerContext.Feedback.DashChargeGroundPSC
+    local loc = GetOwnerLocation(playerContext)
+    if IsValidObject(ground) and loc ~= nil then
+        ground.Location = Vector(loc.X, loc.Y, loc.Z + 0.05)
+        if ground.SetParticleSizeScale ~= nil then
+            local baseScale = config.GroundRingScale or 1.0
+            local scaleValue = baseScale * (0.8 + 0.45 * ratio)
+            ground:SetParticleSizeScale(Vector(scaleValue, scaleValue, scaleValue))
+        end
+    end
+end
+
 ---@param playerContext PlayerContext
 ---@param dt number
 ---@return nil
 function PlayerFeedback.Update(playerContext, dt)
     PlayerContext.Assert(playerContext, "PlayerFeedback.Update")
     UpdateLowHPVignette(playerContext)
+    UpdateDashChargeFeedback(playerContext, dt)
 end
 
 ---@param playerContext PlayerContext
