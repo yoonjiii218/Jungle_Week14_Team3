@@ -90,6 +90,7 @@ public:
 	void           Jump();
 
 	// UMovementComponent:
+	void BeginPlay() override;
 	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction& ThisTickFunction) override;
 	void Serialize(FArchive& Ar) override;
 
@@ -106,6 +107,13 @@ public:
 	float FloorProbeDistance = 0.1f;     // capsule HalfHeight 아래 추가 probe 거리
 	UPROPERTY(Edit, Save, Category="CharacterMovement", DisplayName="Jump Z Velocity", Min=0.0f, Max=50.0f, Speed=0.1f)
 	float JumpZVelocity      = 6.0f;     // m/s — Jump 시 Velocity.Z 에 박는 값
+
+	// 큰 씬 로딩 중 WorldStatic collision 이 아직 준비되지 않아 첫 floor trace 가 실패하는 경우,
+	// 캐릭터가 바닥 아래로 떨어져 이후 floor probe 범위를 벗어나는 것을 막는 임시 spawn guard.
+	// true 면 BeginPlay 이후 최초 floor 를 찾을 때까지 Falling gravity / XY 이동 / root motion 을 정지하고,
+	// floor 가 잡히는 frame 에 capsule 을 floor + HalfHeight 로 스냅한 뒤 Walking 으로 전환한다.
+	UPROPERTY(Edit, Save, Category="CharacterMovement", DisplayName="Wait For Initial Floor")
+	bool bWaitForInitialFloor = false;
 
 	// UE 패턴 — true 면 매 frame Updated 의 yaw 를 현재 Velocity.XY 방향으로 lerp 회전.
 	// 이동 중에만 회전 (정지 시 마지막 facing 유지). Pawn::bUseControllerRotationYaw 와 동시
@@ -128,6 +136,7 @@ protected:
 	// capsule 중심에서 down raycast — bHit + WorldHitLocation 사용.
 	bool  TraceFloor(FHitResult& OutHit) const;
 	float GetCapsuleHalfHeight() const;
+	bool  TryResolveInitialFloorWait();
 
 	FVector       AccumulatedInput = FVector(0.0f, 0.0f, 0.0f);
 	FVector       Velocity         = FVector(0.0f, 0.0f, 0.0f);
@@ -146,6 +155,7 @@ protected:
 	// 매 Tick 시작에 reset 후 yaw 적용 시 true.
 	bool          bAppliedRootMotionYawThisFrame = false;
 	bool bMovementInputEnabled = true;
+	bool bInitialFloorResolved = false;
 
 	// 평면 속도 기준 yaw 를 RotationYawRate * dt 로 lerp. TickComponent 끝에서 적용.
 	void  PhysOrientToMovement(float DeltaTime);

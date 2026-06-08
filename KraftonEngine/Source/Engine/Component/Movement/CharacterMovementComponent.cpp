@@ -28,6 +28,17 @@ UCharacterMovementComponent::UCharacterMovementComponent()
 	PrimaryComponentTick.SetEndTickGroup(TG_DuringPhysics);
 }
 
+void UCharacterMovementComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	bInitialFloorResolved = false;
+	if (bWaitForInitialFloor)
+	{
+		Velocity = FVector::ZeroVector;
+		MovementMode = EMovementMode::Falling;
+	}
+}
+
 void UCharacterMovementComponent::AddInputVector(const FVector& WorldDirection, float ScaleValue)
 {
 	if (!bMovementInputEnabled) return;
@@ -103,6 +114,22 @@ void UCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	// 매 Tick 회전 적용 상태 reset — 이번 frame 에 root motion 이 yaw 를 적용했는지를
 	// 외부 (Character::Tick) 가 query 할 수 있어야 yaw 충돌 회피 가능.
 	bAppliedRootMotionYawThisFrame = false;
+
+	// 큰 맵 로딩 중 WorldStatic collision 이 아직 등록되지 않았으면 첫 floor trace 가 실패하고
+	// 캐릭터가 중력으로 내려가기 시작한다. 이후 바닥 collider 가 준비되어도 이미 floor probe
+	// 범위를 벗어나 복구되지 않는 문제가 있어, 옵션이 켜진 캐릭터는 최초 floor 가 잡힐 때까지
+	// 위치/속도/root motion 을 정지한다. floor 가 잡히는 frame 에 Walking 으로 전환하고 정상 Tick 진행.
+	if (bWaitForInitialFloor && !bInitialFloorResolved && MovementMode == EMovementMode::Falling)
+	{
+		if (!TryResolveInitialFloorWait())
+		{
+			AccumulatedInput = FVector::ZeroVector;
+			Velocity = FVector::ZeroVector;
+			PendingRootMotion = FTransform();
+			bHasPendingRootMotion = false;
+			return;
+		}
+	}
 
 	FVector Input;
 	ConsumeInputVector(Input);
@@ -365,6 +392,29 @@ float UCharacterMovementComponent::GetCapsuleHalfHeight() const
 	return 0.0f;
 }
 
+bool UCharacterMovementComponent::TryResolveInitialFloorWait()
+{
+	FHitResult Floor;
+	if (!TraceFloor(Floor))
+	{
+		return false;
+	}
+
+	USceneComponent* Updated = GetUpdatedComponent();
+	if (!Updated)
+	{
+		return false;
+	}
+
+	FVector NewLoc = Updated->GetWorldLocation();
+	NewLoc.Z = Floor.WorldHitLocation.Z + GetCapsuleHalfHeight();
+	Updated->SetWorldLocation(NewLoc);
+	Velocity = FVector::ZeroVector;
+	SetMovementMode(EMovementMode::Walking);
+	bInitialFloorResolved = true;
+	return true;
+}
+
 void UCharacterMovementComponent::Serialize(FArchive& Ar)
 {
 	Super::Serialize(Ar);
@@ -374,6 +424,7 @@ void UCharacterMovementComponent::Serialize(FArchive& Ar)
 	Ar << Gravity;
 	Ar << FloorProbeDistance;
 	Ar << JumpZVelocity;
+	Ar << bWaitForInitialFloor;
 	Ar << bOrientRotationToMovement;
 	Ar << RotationYawRate;
 }
