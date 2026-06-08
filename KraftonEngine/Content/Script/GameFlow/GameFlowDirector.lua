@@ -26,6 +26,7 @@ local CREDITS_ROLL_START_PADDING = 120.0
 local CREDITS_ROLL_END_OFFSET = 1080.0
 local BOSS_HP_PANEL_WIDGET_PATH = "Content/UI/GameFlow/BossHPPanel.uasset"
 local BOSS_DAMAGE_LAG_RATIO_PER_SECOND = 0.72
+local COMBO_HOLD_DURATION = 3.0
 local START_MENU_BOOT_ELEMENT_IDS = {
     "boot-black",
     "boot-shutter-top",
@@ -57,6 +58,8 @@ local bossHudWasVisible = false
 local bossHudHP = nil
 local bossDamageHP = nil
 local bossPanelCreateFailed = false
+local comboHoldRemaining = 0.0
+local lastComboCount = 0
 local startHudFlow = nil
 local showCredits = nil
 
@@ -213,6 +216,11 @@ local function resetBossHudAnimation()
     bossDamageHP = nil
 end
 
+local function resetComboHoldTimer()
+    comboHoldRemaining = 0.0
+    lastComboCount = 0
+end
+
 local function ensureBossPanelWidget()
     if widgets.BossPanel ~= nil then
         return widgets.BossPanel
@@ -273,11 +281,48 @@ local function setUltimateForTest(d, current, maxValue)
     d:SetUltimateGauge(current, maxValue)
 end
 
-local function setComboForTest(d, count)
-    if CombatContext.SetPlayerCombo ~= nil and CombatContext.SetPlayerCombo(count) == true then
-        return
+local function setComboSynced(d, count)
+    local safeCount = math.max(0, math.floor((count or 0) + 0.5))
+    local bSetCombatContext = false
+    if CombatContext.SetPlayerCombo ~= nil then
+        bSetCombatContext = CombatContext.SetPlayerCombo(safeCount) == true
     end
-    d:SetComboCount(count)
+    if d ~= nil then
+        d:SetComboCount(safeCount)
+    end
+    return bSetCombatContext
+end
+
+local function setComboForTest(d, count)
+    setComboSynced(d, count)
+    if count == nil or count <= 0 then
+        resetComboHoldTimer()
+    end
+end
+
+local function updateComboHold(d, combo, dt)
+    local currentCombo = math.max(0, math.floor((combo or 0) + 0.5))
+    local frameDt = math.max(dt or 0.0, 0.0)
+
+    if currentCombo <= 0 then
+        resetComboHoldTimer()
+        return 0, 0.0, 0.0
+    end
+
+    if currentCombo ~= lastComboCount then
+        comboHoldRemaining = COMBO_HOLD_DURATION
+        lastComboCount = currentCombo
+    else
+        comboHoldRemaining = math.max(0.0, comboHoldRemaining - frameDt)
+    end
+
+    if comboHoldRemaining <= 0.0 then
+        setComboSynced(d, 0)
+        resetComboHoldTimer()
+        return 0, 0.0, 0.0
+    end
+
+    return currentCombo, comboHoldRemaining, comboHoldRemaining / COMBO_HOLD_DURATION
 end
 
 local function printTestHotkeyHelp()
@@ -580,6 +625,7 @@ local function showHud()
     removeWidget("BossPanel")
     bossPanelCreateFailed = false
     resetBossHudAnimation()
+    resetComboHoldTimer()
 
     local hud = createWidget("HUD", d:GetHudWidgetPath(), false, 0)
     addToViewport(hud, 0)
@@ -1235,7 +1281,7 @@ local function updateHud(dt)
     local syncedBossMaxHP = hasBoss and d:GetBossMaxHP() or 0.0
     local ultimate = d:GetUltimateGauge()
     local ultimateMax = d:GetUltimateMaxGauge()
-    local combo = d:GetComboCount()
+    local combo, comboTimeRemaining, comboTimeRatio = updateComboHold(d, d:GetComboCount(), dt)
 
     setText(hud, "player-hp-text", "HP " .. whole(playerHP) .. "/" .. whole(playerMaxHP))
     setText(hud, "player-state", percent(playerHP, playerMaxHP) .. "% STRUCT")
@@ -1245,7 +1291,7 @@ local function updateHud(dt)
     setText(hud, "combo-cyan", comboText)
     setText(hud, "combo-pink", comboText)
     setText(hud, "combo-text", comboText)
-    setText(hud, "combo-readout", combo > 0 and ("x" .. tostring(combo)) or "FLOW")
+    setText(hud, "combo-readout", combo > 0 and string.format("%.1fs", comboTimeRemaining) or "FLOW")
 
     setBar(hud, "player-hp-fill", playerHP, playerMaxHP)
     if hasBoss and syncedBossMaxHP > 0.0 then
@@ -1264,7 +1310,7 @@ local function updateHud(dt)
         resetBossHudAnimation()
     end
     setBar(hud, "ultimate-fill", ultimate, ultimateMax)
-    setBar(hud, "combo-fill", combo, 12.0)
+    setBar(hud, "combo-fill", comboTimeRatio, 1.0)
 end
 
 local function updateTerminalFlow()
