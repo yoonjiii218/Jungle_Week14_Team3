@@ -236,6 +236,31 @@ local function setText(widget, id, text)
     end
 end
 
+local function isGamepadUiActive()
+    return Input ~= nil
+        and Input.GetActionLabel ~= nil
+        and Input.GetActionLabel("Dash") == "RT"
+end
+
+local function padHintLabel(baseLabel, padLabel)
+    if isGamepadUiActive() == true then
+        return baseLabel .. " [Pad " .. padLabel .. "]"
+    end
+    return baseLabel
+end
+
+local function updateStartMenuPadHints(widget)
+    setText(widget, "btn-story-boss", padHintLabel("Start Game", "X"))
+    setText(widget, "btn-training", padHintLabel("Training Map", "RT"))
+    setText(widget, "btn-credits", padHintLabel("Credits", "Y"))
+    setText(widget, "btn-exit", padHintLabel("Exit", "B"))
+end
+
+local function updateCreditsPadHints(widget)
+    setText(widget, "btn-main-menu", padHintLabel("Main Menu", "X"))
+    setText(widget, "btn-exit", padHintLabel("Exit", "B"))
+end
+
 local function setBar(widget, id, current, maxValue)
     if widget == nil then
         return
@@ -1298,6 +1323,9 @@ local function showFilmCountdown()
     updateFilmCountdown(0.0)
 end
 
+local startStoryBossFromMenu = nil
+local startTrainingFromMenu = nil
+
 local function showStartMenu()
     local d = getDirector()
     if d == nil then return end
@@ -1308,22 +1336,13 @@ local function showStartMenu()
 
     local menu = createWidget("StartMenu", d:GetStartMenuWidgetPath(), true, 100)
     if menu ~= nil then
+        updateStartMenuPadHints(menu)
         bindButtonAudio(menu, { "btn-story-boss", "btn-training", "btn-credits", "btn-exit" })
         menu:bind_click("btn-story-boss", function()
-            triggerTransitionWithCountdown(function()
-                d:StartStoryBoss()
-            end)
+            startStoryBossFromMenu(d)
         end)
         menu:bind_click("btn-training", function()
-            local sceneName = "TrainingMap"
-            if d.GetTrainingSceneName ~= nil then
-                sceneName = d:GetTrainingSceneName()
-            end
-            print("[GameFlow] Training button clicked -> " .. tostring(sceneName))
-            TutorialDirector.QueueTrainingSession(sceneName)
-            triggerTransitionWithCountdown(function()
-                d:StartTraining()
-            end)
+            startTrainingFromMenu(d)
         end)
         menu:bind_click("btn-credits", function()
             d:RequestCredits()
@@ -1336,6 +1355,47 @@ local function showStartMenu()
     currentScreen = "StartMenu"
     startStartMenuBoot(menu)
     printStartMenuHotkeyHelp()
+end
+
+startStoryBossFromMenu = function(d)
+    triggerTransitionWithCountdown(function()
+        d:StartStoryBoss()
+    end)
+end
+
+startTrainingFromMenu = function(d)
+    local sceneName = "TrainingMap"
+    if d.GetTrainingSceneName ~= nil then
+        sceneName = d:GetTrainingSceneName()
+    end
+    print("[GameFlow] Training button clicked -> " .. tostring(sceneName))
+    TutorialDirector.QueueTrainingSession(sceneName)
+    triggerTransitionWithCountdown(function()
+        d:StartTraining()
+    end)
+end
+
+local function applyStartMenuPadActions()
+    if currentScreen ~= "StartMenu" or isGamepadUiActive() ~= true or Input == nil or Input.WasActionStarted == nil then
+        return
+    end
+
+    local d = getDirector()
+    if d == nil then return end
+
+    if Input.WasActionStarted("Attack") then
+        playButtonDown()
+        startStoryBossFromMenu(d)
+    elseif Input.WasActionStarted("Dash") then
+        playButtonDown()
+        startTrainingFromMenu(d)
+    elseif Input.WasActionStarted("Ultimate") then
+        playButtonDown()
+        d:RequestCredits()
+    elseif Input.WasActionStarted("SecondaryDash") then
+        playButtonDown()
+        d:ExitGame()
+    end
 end
 
 local function applyStartMenuHotkeys()
@@ -1374,6 +1434,13 @@ local function cancelTrainingExitConfirm()
     return TutorialDirector.HideExitConfirm()
 end
 
+local function wasPadMenuStarted()
+    return isGamepadUiActive() == true
+        and Input ~= nil
+        and Input.WasActionStarted ~= nil
+        and Input.WasActionStarted("Menu")
+end
+
 local function leaveTrainingForMainMenu()
     local d = getDirector()
     if d == nil then
@@ -1404,12 +1471,18 @@ local function applyTrainingExitConfirmHotkeys()
     if TutorialDirector.IsExitConfirmVisible == nil or TutorialDirector.IsExitConfirmVisible() ~= true then
         return false
     end
-    if Input == nil or Input.GetKeyDown == nil then
+    if Input == nil then
         return true
     end
 
-    if Input.GetKeyDown(KEY_ENTER) then
+    if (Input.GetKeyDown ~= nil and Input.GetKeyDown(KEY_ENTER))
+        or (isGamepadUiActive() == true and Input.WasActionStarted ~= nil and Input.WasActionStarted("Attack")) then
+        playButtonDown()
         leaveTrainingForMainMenu()
+    elseif wasPadMenuStarted() == true
+        or (isGamepadUiActive() == true and Input.WasActionStarted ~= nil and Input.WasActionStarted("SecondaryDash")) then
+        playButtonDown()
+        cancelTrainingExitConfirm()
     end
     return true
 end
@@ -1610,6 +1683,7 @@ showCredits = function()
 
     local screen = createWidget("Credits", d:GetCreditsWidgetPath(), true, 100)
     if screen ~= nil then
+        updateCreditsPadHints(screen)
         bindButtonAudio(screen, { "btn-main-menu", "btn-exit" })
         setCreditsOpacity(screen, "control-panel", 0.0)
         setCreditsProperty(screen, "control-panel", "display", "none")
@@ -1623,6 +1697,26 @@ showCredits = function()
     addToViewport(screen, 100)
     currentScreen = "Credits"
     updateCreditsRoll(0.0)
+end
+
+local function applyCreditsPadActions()
+    if currentScreen ~= "Credits" or isGamepadUiActive() ~= true or Input == nil or Input.WasActionStarted == nil then
+        return
+    end
+    if creditsRollTime < CREDITS_ROLL_DURATION - 1.2 then
+        return
+    end
+
+    local d = getDirector()
+    if d == nil then return end
+
+    if Input.WasActionStarted("Attack") then
+        playButtonDown()
+        d:RequestMainMenu()
+    elseif Input.WasActionStarted("SecondaryDash") then
+        playButtonDown()
+        d:ExitGame()
+    end
 end
 
 local function updateHud(dt)
@@ -1766,6 +1860,23 @@ function BeginPlay()
 end
 
 function Tick(dt)
+    if pendingTransitionAction ~= nil then
+        pendingTransitionFrameDelay = pendingTransitionFrameDelay - 1
+        if pendingTransitionFrameDelay <= 0 then
+            local action = pendingTransitionAction
+            pendingTransitionAction = nil
+            action()
+        end
+        return
+    end
+
+    if wasPadMenuStarted() == true then
+        if handleTrainingEscape() ~= true then
+            togglePauseMenu()
+        end
+        return
+    end
+
     if currentScreen == "HUD" then
         if applyTrainingExitConfirmHotkeys() == true then
             TutorialDirector.Tick(dt, widgets.TutorialHUD)
@@ -1777,12 +1888,16 @@ function Tick(dt)
         updateTerminalFlow()
     elseif currentScreen == "StartMenu" then
         applyStartMenuHotkeys()
+        updateStartMenuPadHints(widgets.StartMenu)
+        applyStartMenuPadActions()
         updateStartMenuBoot(dt)
     elseif currentScreen == "Countdown" then
         updateFilmCountdown(dt)
     elseif currentScreen == "Clear" then
         updateClearOutro(dt)
     elseif currentScreen == "Credits" then
+        updateCreditsPadHints(widgets.Credits)
+        applyCreditsPadActions()
         updateCreditsRoll(dt)
     end
 end
