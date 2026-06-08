@@ -148,6 +148,12 @@ void AGameFlowDirector::RequestScene(const FString& SceneName)
 	GEngine->RequestTransitionToScene(SceneName);
 }
 
+FString AGameFlowDirector::GetCurrentSceneName() const
+{
+	const UWorld* World = GetWorld();
+	return World && World->GetFName().IsValid() ? World->GetFName().ToString() : FString();
+}
+
 void AGameFlowDirector::StartTraining()
 {
 	UE_LOG("[GameFlowDirector] StartTraining -> %s", TrainingSceneName.c_str());
