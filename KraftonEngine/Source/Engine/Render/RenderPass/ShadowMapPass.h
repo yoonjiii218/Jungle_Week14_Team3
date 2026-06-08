@@ -51,8 +51,8 @@ private:
 	void RenderPointShadows(const FPassContext& Ctx, FShadowMapResources& Res);
 
 	// ── 공용: frustum culling + depth-only draw ──
-	void DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, FSystemResources& Resources, const FConvexVolume& LightFrustum, bool bUseGpuSkinning, FSpatialPartition* Partition = nullptr);
-	void DrawShadowCasters(const FPassContext& Ctx, const FConvexVolume& LightFrustum);
+	void DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, FSystemResources& Resources, const FConvexVolume& LightFrustum, bool bUseGpuSkinning, FSpatialPartition* Partition = nullptr, bool bCullToLightFrustum = true);
+	void DrawShadowCasters(const FPassContext& Ctx, const FConvexVolume& LightFrustum, bool bCullToLightFrustum = true);
 
 	// ── 리소스 Ensure: FilterMode에 따라 depth-only / VSM moment 리소스 분기 ──
 	void EnsureResources(const FPassContext& Ctx);

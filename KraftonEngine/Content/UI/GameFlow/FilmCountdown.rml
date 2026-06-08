@@ -1,0 +1,135 @@
+<rml>
+<head>
+    <title>Film Countdown</title>
+    <style>
+        body { width: 100%; height: 100%; margin: 0; font-family: Maplestory; color: #2a1d11; pointer-events: none; }
+        #screen { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; opacity: 1; }
+        #gate { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #d5c49a; opacity: 1; }
+        #film-left { position: absolute; left: 0px; top: 0px; width: 92px; height: 100%; background-color: #8e8368; opacity: 0.46; }
+        #film-right { position: absolute; right: 0px; top: 0px; width: 92px; height: 100%; background-color: #8e8368; opacity: 0.46; }
+        #film-left-edge { position: absolute; left: 92px; top: 0px; width: 3px; height: 100%; background-color: #4b3219; opacity: 0.36; }
+        #film-right-edge { position: absolute; right: 92px; top: 0px; width: 3px; height: 100%; background-color: #4b3219; opacity: 0.36; }
+        #film-noise { position: absolute; left: 0px; top: 0px; width: 1280px; height: 720px; opacity: 0.16; }
+        #grain-a { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #fff6d6; opacity: 0.10; }
+        #grain-b { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #291b0e; opacity: 0.05; }
+        #vignette { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #1b1208; opacity: 0.34; }
+        #frame-top { position: absolute; left: 0px; top: 0px; width: 100%; height: 42px; background-color: #130d08; opacity: 0.46; }
+        #frame-bottom { position: absolute; left: 0px; bottom: 0px; width: 100%; height: 42px; background-color: #130d08; opacity: 0.46; }
+        #outer-circle { position: absolute; left: 433px; top: 153px; width: 414px; height: 414px; border-width: 5px; border-color: #65471f; border-radius: 240px; opacity: 0.90; }
+        #inner-circle { position: absolute; left: 490px; top: 210px; width: 300px; height: 300px; border-width: 3px; border-color: #846135; border-radius: 180px; opacity: 0.66; }
+        #cross-h { position: absolute; left: 408px; top: 359px; width: 464px; height: 3px; background-color: #60431f; opacity: 0.54; }
+        #cross-v { position: absolute; left: 639px; top: 128px; width: 3px; height: 464px; background-color: #60431f; opacity: 0.54; }
+        .sweep-bright { position: absolute; left: 630px; top: 154px; width: 20px; height: 206px; background-color: #fff1c2; opacity: 0; transform-origin: 10px 206px; }
+        #sweep-glow { position: absolute; left: 632px; top: 154px; width: 17px; height: 206px; background-color: #fff1c2; opacity: 0; transform-origin: 8px 206px; }
+        #sweep { position: absolute; left: 637px; top: 154px; width: 7px; height: 206px; background-color: #4b351d; opacity: 0.42; transform-origin: 3px 206px; }
+        #leader-text { position: absolute; left: 472px; top: 108px; width: 336px; height: 24px; font-size: 22px; color: #3c2b19; text-align: center; opacity: 0.76; }
+        #countdown-number-cyan { position: absolute; left: 543px; top: 268px; width: 190px; height: 184px; font-size: 150px; line-height: 184px; color: #f1ddb0; text-align: center; opacity: 0.10; }
+        #countdown-number-pink { position: absolute; left: 548px; top: 271px; width: 190px; height: 184px; font-size: 150px; line-height: 184px; color: #5b3f24; text-align: center; opacity: 0.16; }
+        #countdown-number-main { position: absolute; left: 545px; top: 268px; width: 190px; height: 184px; font-size: 150px; line-height: 184px; color: #24170c; text-align: center; opacity: 0.88; }
+        #scanline { position: absolute; left: 0px; top: 180px; width: 1280px; height: 6px; background-color: #fff1c2; opacity: 0.10; }
+        #scratch-a { position: absolute; left: 226px; top: 0px; width: 2px; height: 720px; background-color: #fff1c2; opacity: 0.16; }
+        #scratch-b { position: absolute; left: 846px; top: 0px; width: 1px; height: 720px; background-color: #2e1e0f; opacity: 0.10; }
+        #flash { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #fff1c2; opacity: 0; }
+        #flicker { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #080604; opacity: 0; }
+        .sprocket { position: absolute; width: 34px; height: 52px; background-color: #0d0905; opacity: 0.78; }
+        #sp-l-0 { left: 28px; top: 82px; }
+        #sp-l-1 { left: 28px; top: 154px; }
+        #sp-l-2 { left: 28px; top: 226px; }
+        #sp-l-3 { left: 28px; top: 298px; }
+        #sp-l-4 { left: 28px; top: 370px; }
+        #sp-l-5 { left: 28px; top: 442px; }
+        #sp-l-6 { left: 28px; top: 514px; }
+        #sp-l-7 { left: 28px; top: 586px; }
+        #sp-l-8 { left: 28px; top: 658px; }
+        #sp-l-9 { left: 28px; top: 730px; }
+        #sp-l-10 { left: 28px; top: -62px; }
+        #sp-r-0 { right: 28px; top: 82px; }
+        #sp-r-1 { right: 28px; top: 154px; }
+        #sp-r-2 { right: 28px; top: 226px; }
+        #sp-r-3 { right: 28px; top: 298px; }
+        #sp-r-4 { right: 28px; top: 370px; }
+        #sp-r-5 { right: 28px; top: 442px; }
+        #sp-r-6 { right: 28px; top: 514px; }
+        #sp-r-7 { right: 28px; top: 586px; }
+        #sp-r-8 { right: 28px; top: 658px; }
+        #sp-r-9 { right: 28px; top: 730px; }
+        #sp-r-10 { right: 28px; top: -62px; }
+    </style>
+</head>
+<body>
+        <div id="screen" data-ue-anchors="0 0 1 1" data-ue-offsets="0 0 0 0" data-ue-alignment="0 0">
+        <div id="gate"></div>
+        <div id="film-left"></div>
+        <div id="film-right"></div>
+        <div id="film-left-edge"></div>
+        <div id="film-right-edge"></div>
+        <img id="film-noise" src="Images/film_noise_overlay.png" />
+        <div id="grain-a"></div>
+        <div id="grain-b"></div>
+        <div id="vignette"></div>
+        <div id="frame-top"></div>
+        <div id="frame-bottom"></div>
+        <div id="sp-l-0" class="sprocket"></div>
+        <div id="sp-l-1" class="sprocket"></div>
+        <div id="sp-l-2" class="sprocket"></div>
+        <div id="sp-l-3" class="sprocket"></div>
+        <div id="sp-l-4" class="sprocket"></div>
+        <div id="sp-l-5" class="sprocket"></div>
+        <div id="sp-l-6" class="sprocket"></div>
+        <div id="sp-l-7" class="sprocket"></div>
+        <div id="sp-l-8" class="sprocket"></div>
+        <div id="sp-l-9" class="sprocket"></div>
+        <div id="sp-l-10" class="sprocket"></div>
+        <div id="sp-r-0" class="sprocket"></div>
+        <div id="sp-r-1" class="sprocket"></div>
+        <div id="sp-r-2" class="sprocket"></div>
+        <div id="sp-r-3" class="sprocket"></div>
+        <div id="sp-r-4" class="sprocket"></div>
+        <div id="sp-r-5" class="sprocket"></div>
+        <div id="sp-r-6" class="sprocket"></div>
+        <div id="sp-r-7" class="sprocket"></div>
+        <div id="sp-r-8" class="sprocket"></div>
+        <div id="sp-r-9" class="sprocket"></div>
+        <div id="sp-r-10" class="sprocket"></div>
+        <div id="outer-circle"></div>
+        <div id="inner-circle"></div>
+        <div id="cross-h"></div>
+        <div id="cross-v"></div>
+        <div id="sweep-bright-0" class="sweep-bright"></div>
+        <div id="sweep-bright-1" class="sweep-bright"></div>
+        <div id="sweep-bright-2" class="sweep-bright"></div>
+        <div id="sweep-bright-3" class="sweep-bright"></div>
+        <div id="sweep-bright-4" class="sweep-bright"></div>
+        <div id="sweep-bright-5" class="sweep-bright"></div>
+        <div id="sweep-bright-6" class="sweep-bright"></div>
+        <div id="sweep-bright-7" class="sweep-bright"></div>
+        <div id="sweep-bright-8" class="sweep-bright"></div>
+        <div id="sweep-bright-9" class="sweep-bright"></div>
+        <div id="sweep-bright-10" class="sweep-bright"></div>
+        <div id="sweep-bright-11" class="sweep-bright"></div>
+        <div id="sweep-bright-12" class="sweep-bright"></div>
+        <div id="sweep-bright-13" class="sweep-bright"></div>
+        <div id="sweep-bright-14" class="sweep-bright"></div>
+        <div id="sweep-bright-15" class="sweep-bright"></div>
+        <div id="sweep-bright-16" class="sweep-bright"></div>
+        <div id="sweep-bright-17" class="sweep-bright"></div>
+        <div id="sweep-bright-18" class="sweep-bright"></div>
+        <div id="sweep-bright-19" class="sweep-bright"></div>
+        <div id="sweep-bright-20" class="sweep-bright"></div>
+        <div id="sweep-bright-21" class="sweep-bright"></div>
+        <div id="sweep-bright-22" class="sweep-bright"></div>
+        <div id="sweep-bright-23" class="sweep-bright"></div>
+        <div id="sweep-glow"></div>
+        <div id="sweep"></div>
+        <div id="leader-text">PICTURE START // 3</div>
+        <div id="countdown-number-cyan">3</div>
+        <div id="countdown-number-pink">3</div>
+        <div id="countdown-number-main">3</div>
+        <div id="scanline"></div>
+        <div id="scratch-a"></div>
+        <div id="scratch-b"></div>
+        <div id="flash"></div>
+        <div id="flicker"></div>
+    </div>
+</body>
+</rml>

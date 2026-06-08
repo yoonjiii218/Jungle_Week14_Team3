@@ -13,6 +13,13 @@ local KEY_ENTER = 13
 local START_MENU_BOOT_DURATION = 1.50
 local START_MENU_BOOT_BASE_WIDTH = 1280.0
 local START_MENU_BOOT_BASE_HEIGHT = 720.0
+local FILM_COUNTDOWN_WIDGET_FALLBACK = "Content/UI/GameFlow/FilmCountdown.uasset"
+local FILM_COUNTDOWN_DURATION = 3.35
+local FILM_COUNTDOWN_PLAY_SECONDS = 3.0
+local FILM_SPROCKET_COUNT = 11
+local FILM_SPROCKET_SPACING = 86.0
+local FILM_SPROCKET_SPEED = 210.0
+local FILM_SWEEP_BRIGHT_COUNT = 24
 local START_MENU_BOOT_ELEMENT_IDS = {
     "boot-black",
     "boot-shutter-top",
@@ -37,6 +44,8 @@ local START_MENU_BOOT_ELEMENT_IDS = {
     "boot-noise-c",
 }
 local startMenuBootTime = START_MENU_BOOT_DURATION + 1.0
+local filmCountdownTime = FILM_COUNTDOWN_DURATION + 1.0
+local startHudFlow = nil
 
 local function getDirector()
     if director ~= nil and director.IsValid ~= nil and director:IsValid() then
@@ -488,6 +497,7 @@ local function showHud()
     removeWidget("GameOver")
     removeWidget("Clear")
     removeWidget("Credits")
+    removeWidget("Countdown")
     removeWidget("TutorialHUD")
 
     local hud = createWidget("HUD", d:GetHudWidgetPath(), false, 0)
@@ -519,6 +529,266 @@ local function showTutorialHud()
         print("[GameFlow] Tutorial HUD unavailable. Tutorial will keep logging only.")
     end
     return tutorialHud
+end
+
+startHudFlow = function()
+    local d = getDirector()
+    if d == nil then return end
+
+    d:StartCombat()
+    showHud()
+    if TutorialDirector.HasQueuedTrainingSession ~= nil and TutorialDirector.HasQueuedTrainingSession() == true then
+        showTutorialHud()
+    end
+    if TutorialDirector.BeginIfQueued("TrainingMap", widgets.TutorialHUD) == true then
+        print("[GameFlow] Training tutorial enabled after HUD startup")
+    end
+end
+
+local function getCountdownWidgetPath(d)
+    if d ~= nil and d.GetCountdownWidgetPath ~= nil then
+        local path = d:GetCountdownWidgetPath()
+        if path ~= nil and path ~= "" then
+            return path
+        end
+    end
+
+    return FILM_COUNTDOWN_WIDGET_FALLBACK
+end
+
+local function setCountdownProperty(widget, id, property, value)
+    if widget ~= nil then
+        widget:SetProperty(id, property, tostring(value))
+    end
+end
+
+local function setCountdownRect(widget, id, left, top, width, height)
+    setCountdownProperty(widget, id, "left", px(left))
+    setCountdownProperty(widget, id, "top", px(top))
+    setCountdownProperty(widget, id, "width", px(width))
+    setCountdownProperty(widget, id, "height", px(height))
+end
+
+local function setCountdownOpacity(widget, id, value)
+    setCountdownProperty(widget, id, "opacity", scalar(value))
+end
+
+local function updateFilmSprockets(widget, t, viewportHeight, masterOpacity, offsetY)
+    local travel = viewportHeight + FILM_SPROCKET_SPACING
+    local offset = (t * FILM_SPROCKET_SPEED) % FILM_SPROCKET_SPACING
+    local sprocketOpacity = scalar(0.80 * masterOpacity)
+
+    for i = 0, FILM_SPROCKET_COUNT - 1 do
+        local top = ((i * FILM_SPROCKET_SPACING + offset) % travel) - FILM_SPROCKET_SPACING * 0.58 + (offsetY or 0.0)
+        local topText = px(top)
+        local leftId = "sp-l-" .. tostring(i)
+        local rightId = "sp-r-" .. tostring(i)
+        setCountdownProperty(widget, leftId, "top", topText)
+        setCountdownProperty(widget, rightId, "top", topText)
+        setCountdownProperty(widget, leftId, "opacity", sprocketOpacity)
+        setCountdownProperty(widget, rightId, "opacity", sprocketOpacity)
+    end
+end
+
+local function updateSweepBrightArea(widget, centerX, centerY, sweepLength, sweepCycle, masterOpacity)
+    for i = 0, FILM_SWEEP_BRIGHT_COUNT - 1 do
+        local segmentCycle = (i + 0.5) / FILM_SWEEP_BRIGHT_COUNT
+        local id = "sweep-bright-" .. tostring(i)
+        local opacity = 0.0
+        if segmentCycle <= sweepCycle then
+            local fillRatio = segmentCycle / math.max(sweepCycle, 0.001)
+            opacity = (0.06 + 0.11 * fillRatio) * masterOpacity
+        end
+
+        setCountdownRect(widget, id, centerX - 10.0, centerY - sweepLength, 20.0, sweepLength)
+        setCountdownProperty(widget, id, "transform-origin", string.format("10px %.0fpx", sweepLength))
+        setCountdownProperty(widget, id, "transform", string.format("rotate(%.1fdeg)", segmentCycle * 360.0))
+        setCountdownOpacity(widget, id, opacity)
+    end
+end
+
+local function setCountdownNumber(widget, text)
+    setText(widget, "countdown-number-cyan", text)
+    setText(widget, "countdown-number-pink", text)
+    setText(widget, "countdown-number-main", text)
+end
+
+local function completeFilmCountdown()
+    removeWidget("Countdown")
+    filmCountdownTime = FILM_COUNTDOWN_DURATION + 1.0
+    if startHudFlow ~= nil then
+        startHudFlow()
+    end
+end
+
+local function updateFilmCountdown(dt)
+    local countdown = widgets.Countdown
+    if countdown == nil then
+        completeFilmCountdown()
+        return
+    end
+
+    filmCountdownTime = filmCountdownTime + (dt or 0.0)
+    local t = filmCountdownTime
+    if t >= FILM_COUNTDOWN_DURATION then
+        completeFilmCountdown()
+        return
+    end
+
+    local viewportWidth, viewportHeight, centerX, centerY = getStartMenuBootViewport()
+    local jitterStep = math.floor(t * 22.0)
+    local jitterY = 0.0
+    if jitterStep % 19 == 2 then
+        jitterY = 3.0
+    elseif jitterStep % 23 == 7 then
+        jitterY = -2.0
+    elseif jitterStep % 31 == 11 then
+        jitterY = 2.0
+    end
+
+    local activeTime = clamp(t, 0.0, FILM_COUNTDOWN_PLAY_SECONDS - 0.001)
+    local digitIndex = math.floor(activeTime)
+    local digit = 3 - digitIndex
+    local digitTime = activeTime - digitIndex
+    local digitText = tostring(digit)
+    if t >= FILM_COUNTDOWN_PLAY_SECONDS then
+        digitText = "START"
+        digitTime = clamp((t - FILM_COUNTDOWN_PLAY_SECONDS) / (FILM_COUNTDOWN_DURATION - FILM_COUNTDOWN_PLAY_SECONDS), 0.0, 1.0)
+    end
+
+    local fadeIn = clamp(t / 0.18, 0.0, 1.0)
+    local fadeOut = t > 3.08 and (1.0 - clamp((t - 3.08) / 0.27, 0.0, 1.0)) or 1.0
+    local masterOpacity = fadeIn * fadeOut
+    local digitPulse = 1.0 - clamp(digitTime / 0.92, 0.0, 1.0)
+    local flash = flashPulse(digitTime, 0.0, 0.16, 1.0)
+    local sweepAngle = digitTime * 360.0
+    local grainPulse = 0.08 + 0.08 * (math.floor(t * 18.0) % 2)
+    local framePulse = 0.86 + 0.08 * (math.floor(t * 9.0) % 2)
+    local scanSlot = math.floor(t * 14.0)
+    local scanTop = (scanSlot % 8) * viewportHeight * 0.125
+    local scratchSlot = math.floor(t * 7.0)
+    local scratchLeftA = viewportWidth * (0.12 + (scratchSlot % 5) * 0.17)
+    local scratchLeftB = viewportWidth * (0.28 + ((scratchSlot + 3) % 4) * 0.16)
+    local contentCenterY = centerY + jitterY
+    local circleSize = math.min(viewportWidth, viewportHeight) * 0.58
+    local innerCircleSize = circleSize * 0.72
+    local sweepLength = circleSize * 0.50
+    local sweepCycle = clamp(digitTime, 0.0, 1.0)
+    local sweepGlow = (1.0 - sweepCycle) * (1.0 - sweepCycle)
+    local sweepColor = "#4b351d"
+    if sweepCycle < 0.16 then
+        sweepColor = "#fff1c2"
+    elseif sweepCycle < 0.42 then
+        sweepColor = "#c99b55"
+    elseif sweepCycle < 0.72 then
+        sweepColor = "#7a552d"
+    end
+    local digitWidth = digitText == "START" and 520.0 or 190.0
+    local digitFontSize = digitText == "START" and 92.0 or 150.0
+    local digitBoxHeight = digitText == "START" and 92.0 or 150.0
+    local digitLeft = centerX - digitWidth * 0.5
+    local digitTop = contentCenterY - digitBoxHeight * 0.5
+
+    setCountdownProperty(countdown, "screen", "left", "0px")
+    setCountdownProperty(countdown, "screen", "top", "0px")
+    setCountdownProperty(countdown, "screen", "width", px(viewportWidth))
+    setCountdownProperty(countdown, "screen", "height", px(viewportHeight))
+    setCountdownNumber(countdown, digitText)
+    setCountdownOpacity(countdown, "screen", masterOpacity)
+    setCountdownRect(countdown, "gate", 0.0, 0.0, viewportWidth, viewportHeight)
+    setCountdownOpacity(countdown, "gate", masterOpacity)
+    setCountdownRect(countdown, "flicker", 0.0, 0.0, viewportWidth, viewportHeight)
+    setCountdownOpacity(countdown, "flicker", flash * 0.20 + (1.0 - framePulse) * 0.08)
+    setCountdownRect(countdown, "film-left", 0.0, 0.0, 92.0, viewportHeight)
+    setCountdownRect(countdown, "film-right", viewportWidth - 92.0, 0.0, 92.0, viewportHeight)
+    setCountdownRect(countdown, "film-left-edge", 92.0, 0.0, 3.0, viewportHeight)
+    setCountdownRect(countdown, "film-right-edge", viewportWidth - 95.0, 0.0, 3.0, viewportHeight)
+    setCountdownOpacity(countdown, "film-left", 0.44 * masterOpacity)
+    setCountdownOpacity(countdown, "film-right", 0.44 * masterOpacity)
+    setCountdownOpacity(countdown, "film-left-edge", 0.30 * masterOpacity)
+    setCountdownOpacity(countdown, "film-right-edge", 0.30 * masterOpacity)
+    updateFilmSprockets(countdown, t, viewportHeight, masterOpacity, jitterY)
+    setCountdownRect(countdown, "film-noise", 0.0, -24.0 + ((math.floor(t * 18.0) % 5) - 2), viewportWidth, viewportHeight + 48.0)
+    setCountdownOpacity(countdown, "film-noise", (0.18 + 0.10 * (math.floor(t * 11.0) % 2)) * masterOpacity)
+    setCountdownRect(countdown, "grain-a", 0.0, 0.0, viewportWidth, viewportHeight)
+    setCountdownRect(countdown, "grain-b", 0.0, 0.0, viewportWidth, viewportHeight)
+    setCountdownOpacity(countdown, "grain-a", grainPulse * masterOpacity)
+    setCountdownOpacity(countdown, "grain-b", (0.12 - grainPulse * 0.35) * masterOpacity)
+    setCountdownRect(countdown, "vignette", 0.0, 0.0, viewportWidth, viewportHeight)
+    setCountdownOpacity(countdown, "vignette", 0.36 * masterOpacity)
+    setCountdownRect(countdown, "frame-top", 0.0, 0.0, viewportWidth, 42.0)
+    setCountdownRect(countdown, "frame-bottom", 0.0, viewportHeight - 42.0, viewportWidth, 42.0)
+    setCountdownOpacity(countdown, "frame-top", 0.46 * masterOpacity)
+    setCountdownOpacity(countdown, "frame-bottom", 0.46 * masterOpacity)
+    setCountdownRect(countdown, "scanline", 0.0, scanTop, viewportWidth, 3.0 + flash * 8.0)
+    setCountdownOpacity(countdown, "scanline", (0.07 + flash * 0.13) * masterOpacity)
+    setCountdownRect(countdown, "scratch-a", scratchLeftA, 0.0, 2.0, viewportHeight)
+    setCountdownRect(countdown, "scratch-b", scratchLeftB, 0.0, 1.0, viewportHeight)
+    setCountdownOpacity(countdown, "scratch-a", (0.12 + flash * 0.14) * masterOpacity)
+    setCountdownOpacity(countdown, "scratch-b", 0.09 * masterOpacity)
+    setCountdownRect(countdown, "outer-circle", centerX - circleSize * 0.5, contentCenterY - circleSize * 0.5, circleSize, circleSize)
+    setCountdownRect(countdown, "inner-circle", centerX - innerCircleSize * 0.5, contentCenterY - innerCircleSize * 0.5, innerCircleSize, innerCircleSize)
+    setCountdownRect(countdown, "cross-h", centerX - circleSize * 0.56, contentCenterY - 1.5, circleSize * 1.12, 3.0)
+    setCountdownRect(countdown, "cross-v", centerX - 1.5, contentCenterY - circleSize * 0.56, 3.0, circleSize * 1.12)
+    updateSweepBrightArea(countdown, centerX, contentCenterY, sweepLength, sweepCycle, masterOpacity)
+    setCountdownRect(countdown, "sweep-glow", centerX - 8.5, contentCenterY - sweepLength, 17.0, sweepLength)
+    setCountdownProperty(countdown, "sweep-glow", "transform-origin", string.format("8px %.0fpx", sweepLength))
+    setCountdownProperty(countdown, "sweep-glow", "transform", string.format("rotate(%.1fdeg)", sweepAngle))
+    setCountdownOpacity(countdown, "sweep-glow", (0.52 * sweepGlow + flash * 0.16) * masterOpacity)
+    setCountdownRect(countdown, "sweep", centerX - 3.5, contentCenterY - sweepLength, 7.0, sweepLength)
+    setCountdownProperty(countdown, "sweep", "transform-origin", string.format("3px %.0fpx", sweepLength))
+    setCountdownProperty(countdown, "sweep", "transform", string.format("rotate(%.1fdeg)", sweepAngle))
+    setCountdownProperty(countdown, "sweep", "background-color", sweepColor)
+    setCountdownOpacity(countdown, "sweep", (0.30 + 0.42 * sweepGlow) * masterOpacity)
+    setCountdownProperty(countdown, "leader-text", "left", px(centerX - 168.0))
+    setCountdownProperty(countdown, "leader-text", "top", px(contentCenterY - circleSize * 0.5 - 46.0))
+    setCountdownProperty(countdown, "leader-text", "opacity", scalar(0.84 * masterOpacity))
+    setText(countdown, "leader-text", string.format("PICTURE START // %s", digitText))
+    setCountdownProperty(countdown, "countdown-number-cyan", "left", px(digitLeft - 2.0))
+    setCountdownProperty(countdown, "countdown-number-pink", "left", px(digitLeft + 3.0))
+    setCountdownProperty(countdown, "countdown-number-main", "left", px(digitLeft))
+    setCountdownProperty(countdown, "countdown-number-cyan", "top", px(digitTop))
+    setCountdownProperty(countdown, "countdown-number-pink", "top", px(digitTop + 3.0))
+    setCountdownProperty(countdown, "countdown-number-main", "top", px(digitTop))
+    setCountdownProperty(countdown, "countdown-number-cyan", "width", px(digitWidth))
+    setCountdownProperty(countdown, "countdown-number-pink", "width", px(digitWidth))
+    setCountdownProperty(countdown, "countdown-number-main", "width", px(digitWidth))
+    setCountdownProperty(countdown, "countdown-number-cyan", "height", px(digitBoxHeight))
+    setCountdownProperty(countdown, "countdown-number-pink", "height", px(digitBoxHeight))
+    setCountdownProperty(countdown, "countdown-number-main", "height", px(digitBoxHeight))
+    setCountdownProperty(countdown, "countdown-number-cyan", "font-size", px(digitFontSize))
+    setCountdownProperty(countdown, "countdown-number-pink", "font-size", px(digitFontSize))
+    setCountdownProperty(countdown, "countdown-number-main", "font-size", px(digitFontSize))
+    setCountdownProperty(countdown, "countdown-number-cyan", "line-height", px(digitBoxHeight))
+    setCountdownProperty(countdown, "countdown-number-pink", "line-height", px(digitBoxHeight))
+    setCountdownProperty(countdown, "countdown-number-main", "line-height", px(digitBoxHeight))
+    setCountdownOpacity(countdown, "countdown-number-cyan", (0.08 + digitPulse * 0.10) * masterOpacity)
+    setCountdownOpacity(countdown, "countdown-number-pink", (0.12 + digitPulse * 0.08) * masterOpacity)
+    setCountdownOpacity(countdown, "countdown-number-main", (0.82 + flash * 0.10) * masterOpacity)
+    setCountdownRect(countdown, "flash", 0.0, 0.0, viewportWidth, viewportHeight)
+    setCountdownOpacity(countdown, "flash", flash * 0.22 * masterOpacity)
+end
+
+local function showFilmCountdown()
+    local d = getDirector()
+    if d == nil then return end
+
+    removeAllWidgets()
+    d:ResumeGame()
+
+    local countdown = createWidget("Countdown", getCountdownWidgetPath(d), false, 400)
+    if countdown == nil then
+        print("[GameFlow] Countdown widget unavailable. Starting HUD immediately.")
+        if startHudFlow ~= nil then
+            startHudFlow()
+        end
+        return
+    end
+
+    addToViewport(countdown, 400)
+    currentScreen = "Countdown"
+    filmCountdownTime = 0.0
+    updateFilmCountdown(0.0)
 end
 
 local function showStartMenu()
@@ -847,14 +1117,9 @@ function BeginPlay()
     if startup == "StartMenu" then
         showStartMenu()
     elseif startup == "HUD" then
-        d:StartCombat()
-        showHud()
-        if TutorialDirector.HasQueuedTrainingSession ~= nil and TutorialDirector.HasQueuedTrainingSession() == true then
-            showTutorialHud()
-        end
-        if TutorialDirector.BeginIfQueued("TrainingMap", widgets.TutorialHUD) == true then
-            print("[GameFlow] Training tutorial enabled after HUD startup")
-        end
+        startHudFlow()
+    elseif startup == "Countdown" or startup == "FilmCountdown" then
+        showFilmCountdown()
     elseif startup == "GameOver" then
         showGameOver()
     elseif startup == "Clear" then
@@ -879,6 +1144,8 @@ function Tick(dt)
     elseif currentScreen == "StartMenu" then
         applyStartMenuHotkeys()
         updateStartMenuBoot(dt)
+    elseif currentScreen == "Countdown" then
+        updateFilmCountdown(dt)
     end
 end
 

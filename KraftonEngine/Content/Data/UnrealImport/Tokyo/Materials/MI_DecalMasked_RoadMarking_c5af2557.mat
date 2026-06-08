@@ -4,7 +4,7 @@
     "BlendState" : "AlphaBlend",
     "Domain" : "Surface",
     "GeneratorVersion" : "GeneratedMaterialPass_v10_SurfacePinSwizzle_InstancedStaticMesh",
-    "GraphHash" : "5A473E469FE54881",
+    "GraphHash" : "A3D5696B8B57DFFF",
     "GraphShaderMode" : "Generated",
     "Parameters" : {
 
@@ -169,7 +169,7 @@
         "TexturePath" : "",
         "TextureSlot" : "Diffuse",
         "Type" : "ConstantFloat",
-        "Value" : [0.700000, 0.000000, 0.000000, 0.000000]
+        "Value" : [0.250000, 0.000000, 0.000000, 0.000000]
       }]
   },
   "GraphShaderMode" : "Generated",

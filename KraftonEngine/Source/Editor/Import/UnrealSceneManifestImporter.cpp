@@ -849,6 +849,146 @@ namespace
 			std::abs(Color.Z - 1.0f) < 0.0001f;
 	}
 
+	bool ReadVectorValue(json::JSON& Value, FVector4& OutValue)
+	{
+		if (Value.JSONType() != json::JSON::Class::Array || Value.length() < 3)
+		{
+			return false;
+		}
+
+		float X = 1.0f;
+		float Y = 1.0f;
+		float Z = 1.0f;
+		float W = 1.0f;
+		if (!ReadNumber(Value.at(0), X) ||
+			!ReadNumber(Value.at(1), Y) ||
+			!ReadNumber(Value.at(2), Z))
+		{
+			return false;
+		}
+		if (Value.length() >= 4)
+		{
+			ReadNumber(Value.at(3), W);
+		}
+
+		OutValue = FVector4(X, Y, Z, W);
+		return true;
+	}
+
+	bool IsBaseColorVectorName(const FString& Name)
+	{
+		const FString LowerName = ToLowerAscii(Name);
+		return LowerName == "color multiply" ||
+			LowerName == "base color" ||
+			LowerName == "basecolor" ||
+			LowerName == "color" ||
+			LowerName == "tint" ||
+			LowerName == "glass color";
+	}
+
+	bool HasNonEmptyArrayMember(json::JSON& Object, const char* Key)
+	{
+		return Object.hasKey(Key) &&
+			Object[Key].JSONType() == json::JSON::Class::Array &&
+			Object[Key].length() > 0;
+	}
+
+	void CopyObjectDefaults(json::JSON& Child, json::JSON& Parent, const char* Key)
+	{
+		if (!Parent.hasKey(Key) ||
+			Parent[Key].JSONType() != json::JSON::Class::Object)
+		{
+			return;
+		}
+
+		if (!Child.hasKey(Key) ||
+			Child[Key].JSONType() != json::JSON::Class::Object)
+		{
+			Child[Key] = json::JSON::Make(json::JSON::Class::Object);
+		}
+
+		for (auto& Pair : Parent[Key].ObjectRange())
+		{
+			if (!Child[Key].hasKey(Pair.first))
+			{
+				Child[Key][Pair.first] = Pair.second;
+			}
+		}
+	}
+
+	void ApplyTreeTrunkParentColorFallback(json::JSON& Child, json::JSON& Parent)
+	{
+		const FString MaterialIdentity = ToLowerAscii(
+			ReadString(Child, "key") + " " +
+			ReadString(Child, "baseMaterial") + " " +
+			ReadString(Child, "sourceAsset"));
+		if (!ContainsAny(MaterialIdentity, { "treetrunk", "tree_trunk", "tile_treetrunk" }) ||
+			HasNonEmptyArrayMember(Child, "textures") ||
+			!Child.hasKey("vectors") ||
+			!Parent.hasKey("vectors") ||
+			Child["vectors"].JSONType() != json::JSON::Class::Object ||
+			Parent["vectors"].JSONType() != json::JSON::Class::Object)
+		{
+			return;
+		}
+
+		for (auto& ParentPair : Parent["vectors"].ObjectRange())
+		{
+			if (!IsBaseColorVectorName(ParentPair.first) ||
+				!Child["vectors"].hasKey(ParentPair.first))
+			{
+				continue;
+			}
+
+			FVector4 ChildColor;
+			FVector4 ParentColor;
+			if (ReadVectorValue(Child["vectors"][ParentPair.first], ChildColor) &&
+				ReadVectorValue(ParentPair.second, ParentColor) &&
+				IsNearlyWhite(ChildColor) &&
+				!IsNearlyWhite(ParentColor))
+			{
+				Child["vectors"][ParentPair.first] = ParentPair.second;
+			}
+		}
+	}
+
+	void ApplyMaterialParentFallback(json::JSON& Child, json::JSON& Parent)
+	{
+		if (!HasNonEmptyArrayMember(Child, "textures") &&
+			HasNonEmptyArrayMember(Parent, "textures"))
+		{
+			Child["textures"] = Parent["textures"];
+		}
+
+		CopyObjectDefaults(Child, Parent, "scalars");
+		CopyObjectDefaults(Child, Parent, "vectors");
+		ApplyTreeTrunkParentColorFallback(Child, Parent);
+	}
+
+	json::JSON BuildEffectiveMaterialObject(
+		json::JSON& MaterialObject,
+		const TMap<FString, json::JSON*>& MaterialsBySourceAsset,
+		int32 Depth = 0)
+	{
+		json::JSON Effective = MaterialObject;
+		if (Depth >= 8)
+		{
+			return Effective;
+		}
+
+		const FString ParentSource = ReadString(MaterialObject, "baseMaterial");
+		auto ParentIt = MaterialsBySourceAsset.find(ParentSource);
+		if (ParentIt == MaterialsBySourceAsset.end() || !ParentIt->second)
+		{
+			return Effective;
+		}
+
+		json::JSON ParentEffective =
+			BuildEffectiveMaterialObject(*ParentIt->second, MaterialsBySourceAsset, Depth + 1);
+		ApplyMaterialParentFallback(Effective, ParentEffective);
+		return Effective;
+	}
+
 	bool BuildMaterialGraph(
 		json::JSON& MaterialObject,
 		const TMap<FString, FString>& TexturePaths,
@@ -972,6 +1112,10 @@ namespace
 				? std::initializer_list<const char*>{ "dirt mask opacity", "mask opacity", "opacity" }
 				: std::initializer_list<const char*>{ "opacity" },
 			Opacity);
+		if (bProceduralMaskedDecalFallback)
+		{
+			Opacity = (std::min)(Opacity, 0.25f);
+		}
 
 		float EmissiveIntensity = 0.0f;
 		const bool bHasEmissiveIntensity = ReadNamedScalar(
@@ -1259,6 +1403,16 @@ namespace
 			++Result.TextureCount;
 		}
 
+		TMap<FString, json::JSON*> MaterialsBySourceAsset;
+		for (json::JSON& MaterialObject : Root["materials"].ArrayRange())
+		{
+			const FString SourceAsset = ReadString(MaterialObject, "sourceAsset");
+			if (!SourceAsset.empty())
+			{
+				MaterialsBySourceAsset[SourceAsset] = &MaterialObject;
+			}
+		}
+
 		for (json::JSON& MaterialObject : Root["materials"].ArrayRange())
 		{
 			const FString Key = ReadString(MaterialObject, "key");
@@ -1274,8 +1428,10 @@ namespace
 			FString BlendState;
 			FString DepthState;
 			FString RasterState;
+			json::JSON EffectiveMaterialObject =
+				BuildEffectiveMaterialObject(MaterialObject, MaterialsBySourceAsset);
 			if (!BuildMaterialGraph(
-				MaterialObject,
+				EffectiveMaterialObject,
 				TexturePaths,
 				Graph,
 				RenderPass,

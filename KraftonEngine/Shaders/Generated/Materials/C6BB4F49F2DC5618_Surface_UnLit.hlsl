@@ -25,7 +25,7 @@ FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
     float3 n_10 = float3(0.489583f, 0.199397f, 0.020399f);
     float n_13 = 0.700000f;
     float n_16 = 0.000000f;
-    float n_19 = 0.700000f;
+    float n_19 = 0.250000f;
     FMaterialResult Result;
     Result.BaseColor = n_10;
     Result.Normal = float3(0, 0, 1);

@@ -39,6 +39,23 @@ namespace
 		return Material && Material->HasOpacityMaskInputConnected();
 	}
 
+	ERasterizerState GetShadowRasterizerState(const FPrimitiveSceneProxy& Proxy, const FMeshSectionDraw& Section)
+	{
+		if (Proxy.CastsShadowAsTwoSided())
+		{
+			return ERasterizerState::SolidNoCull;
+		}
+
+		if (Section.Material && Section.Material->GetRasterizerState() == ERasterizerState::SolidNoCull)
+		{
+			return ERasterizerState::SolidNoCull;
+		}
+
+		return Proxy.HasMirroredTransform()
+			? ERasterizerState::SolidBackCull
+			: ERasterizerState::SolidFrontCull;
+	}
+
 	ID3D11ShaderResourceView* GetShadowMaskSRV(const FMeshSectionDraw& Section)
 	{
 		const UMaterial* Material = Section.Material;
@@ -679,7 +696,7 @@ void FShadowMapPass::UpdateShadowCB(const FPassContext& Ctx)
 // DrawShadowCasters — 공용 프록시 순회 + depth-only 렌더링
 // ============================================================
 
-void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, FSystemResources& Resources, const FConvexVolume& LightFrustum, bool bUseGpuSkinning, FSpatialPartition* Partition)
+void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, FSystemResources& Resources, const FConvexVolume& LightFrustum, bool bUseGpuSkinning, FSpatialPartition* Partition, bool bCullToLightFrustum)
 {
 	FShader* StaticShadowShader = FShaderManager::Get().GetOrCreateShadowDepthPermutation(
 		EShadowDepthDefines::EVertexFactory::StaticMesh);
@@ -731,7 +748,7 @@ void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, F
 	TArray<FPrimitiveSceneProxy*> BroadPhaseProxies;
 	const TArray<FPrimitiveSceneProxy*>* ProxyList = nullptr;
 
-	if (Partition)
+	if (Partition && bCullToLightFrustum)
 	{
 		Partition->QueryFrustumAllProxies(LightFrustum, BroadPhaseProxies);
 		ProxyList = &BroadPhaseProxies;
@@ -750,7 +767,7 @@ void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, F
 		if (Proxy->HasProxyFlag(EPrimitiveProxyFlags::NeverCull)) continue;
 		if (Proxy->HasProxyFlag(EPrimitiveProxyFlags::EditorOnly)) continue;
 
-		if (!Partition && !LightFrustum.IntersectAABB(Proxy->GetCachedBounds())) continue;
+		if (bCullToLightFrustum && !Partition && !LightFrustum.IntersectAABB(Proxy->GetCachedBounds())) continue;
 
 		const bool bSkeletal = Proxy->HasProxyFlag(EPrimitiveProxyFlags::SkeletalMesh);
 		const bool bInstancedStaticMesh = Proxy->HasProxyFlag(EPrimitiveProxyFlags::InstancedStaticMesh);
@@ -795,17 +812,6 @@ void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, F
 			BoundSkinMatrixSRV = SkinMatrixSRV;
 		}
 
-		const ERasterizerState DesiredRasterizer = Proxy->CastsShadowAsTwoSided()
-			? ERasterizerState::SolidNoCull
-			: (Proxy->HasMirroredTransform()
-				? ERasterizerState::SolidBackCull
-				: ERasterizerState::SolidFrontCull);
-		if (DesiredRasterizer != CurrentCasterRasterizer)
-		{
-			CurrentCasterRasterizer = DesiredRasterizer;
-			Resources.RasterizerStateManager.Set(DC, DesiredRasterizer);
-		}
-
 		++LastDrawCasterCount;
 		ShadowPerObjectCB.Update(DC, &Proxy->GetPerObjectConstants(), sizeof(FPerObjectConstants));
 		ID3D11Buffer* b1 = ShadowPerObjectCB.GetBuffer();
@@ -828,6 +834,13 @@ void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, F
 		{
 			if (Section.IndexCount == 0) continue;
 			if (IsTranslucentShadowSection(Section)) continue;
+
+			const ERasterizerState DesiredRasterizer = GetShadowRasterizerState(*Proxy, Section);
+			if (DesiredRasterizer != CurrentCasterRasterizer)
+			{
+				CurrentCasterRasterizer = DesiredRasterizer;
+				Resources.RasterizerStateManager.Set(DC, DesiredRasterizer);
+			}
 
 			const bool bMaskedShadow = IsMaskedShadowSection(Section);
 			FShader* SectionShadowShader = DesiredShader;
@@ -884,12 +897,12 @@ void FShadowMapPass::DrawShadowCasters(ID3D11DeviceContext* DC, FScene& Scene, F
 	}
 }
 
-void FShadowMapPass::DrawShadowCasters(const FPassContext& Ctx, const FConvexVolume& LightFrustum)
+void FShadowMapPass::DrawShadowCasters(const FPassContext& Ctx, const FConvexVolume& LightFrustum, bool bCullToLightFrustum)
 {
 	UWorld* World = Ctx.World;
-	FSpatialPartition* Partition = World ? &World->GetPartition() : nullptr;
+	FSpatialPartition* Partition = (World && bCullToLightFrustum) ? &World->GetPartition() : nullptr;
 	const bool bUseGpuSkinning = SkinningModeRuntime::Get() == ESkinningMode::GPU;
-	DrawShadowCasters(Ctx.Device.GetDeviceContext(), *Ctx.Scene, Ctx.Resources, LightFrustum, bUseGpuSkinning, Partition);
+	DrawShadowCasters(Ctx.Device.GetDeviceContext(), *Ctx.Scene, Ctx.Resources, LightFrustum, bUseGpuSkinning, Partition, bCullToLightFrustum);
 }
 
 // ============================================================
@@ -1140,7 +1153,7 @@ void FShadowMapPass::RenderDirectionalShadows(const FPassContext& Ctx, FShadowMa
 		ShadowVP.MaxDepth = 1.0f;
 
 		DC->RSSetViewports(1, &ShadowVP);
-		DrawShadowCasters(Ctx, LightFrustum);
+		DrawShadowCasters(Ctx, LightFrustum, false);
 		SHADOW_STATS_ADD_CASTER(DirectionalLight, LastDrawCasterCount);
 
 		ShadowCBCache.CSMViewProj[i] = DirectionalVP.ViewProj;

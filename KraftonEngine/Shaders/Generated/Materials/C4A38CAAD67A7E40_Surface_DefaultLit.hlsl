@@ -19,7 +19,7 @@ struct FMaterialEvalResult
 
 FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
-    float3 n_10 = float3(1.000000f, 1.000000f, 1.000000f);
+    float3 n_10 = float3(0.666667f, 0.551671f, 0.409722f);
     float n_13 = 0.500000f;
     float n_16 = 0.000000f;
     FMaterialResult Result;

@@ -5,6 +5,7 @@
 // This include owns the shared Surface/Opaque vertex factory + lighting/output path.
 
 #include "Common/Skinning.hlsli"
+#include "Common/ForwardLighting.hlsli"
 
 #ifndef GENERATED_SURFACE_ALPHA_CLIP
 #define GENERATED_SURFACE_ALPHA_CLIP 0.333f
@@ -146,21 +147,30 @@ float3 ApplyGeneratedSurfaceNormal(MaterialSurfaceVSOutput Input, FMaterialResul
 
 float3 ComputeGeneratedSurfaceLighting(float3 WorldPos, float4 ClipPos, float3 N, FMaterialResult Material)
 {
-    float3 Lighting = AmbientLight.Color.rgb * AmbientLight.Intensity;
-
-    float3 L = normalize(-DirectionalLight.Direction);
-    float NdotL = saturate(dot(N, L));
-    Lighting += DirectionalLight.Color.rgb * DirectionalLight.Intensity * NdotL;
-
-    AccumulatePointSpotDiffuse(WorldPos, N, ClipPos, Lighting);
-
     float3 V = normalize(CameraWorldPos - WorldPos);
-    float3 H = normalize(L + V);
     float SpecPower = lerp(128.0f, 8.0f, saturate(Material.Roughness));
     float3 SpecColor = lerp(float3(0.04f, 0.04f, 0.04f), Material.BaseColor, saturate(Material.Metallic));
-    float3 Specular = SpecColor * pow(saturate(dot(N, H)), SpecPower) * DirectionalLight.Intensity;
 
-    return saturate(Lighting) * Material.BaseColor + Specular + Material.Emissive;
+    float ViewDepth = abs(mul(float4(WorldPos, 1.0f), View).z);
+    float DirectionalShadow = CalcDirectionalShadowFactor(WorldPos, ViewDepth, N);
+
+    float3 DiffuseLighting = CalcAmbient(AmbientLight.Color.rgb, AmbientLight.Intensity);
+    DiffuseLighting += CalcDirectionalDiffuse(
+        DirectionalLight.Color.rgb,
+        DirectionalLight.Direction,
+        DirectionalLight.Intensity,
+        N) * DirectionalShadow;
+    AccumulatePointSpotDiffuse(WorldPos, N, ClipPos, DiffuseLighting);
+
+    float3 SpecularLighting = CalcDirectionalSpecular(
+        DirectionalLight.Color.rgb,
+        DirectionalLight.Direction,
+        DirectionalLight.Intensity,
+        N,
+        V,
+        SpecPower) * DirectionalShadow;
+
+    return DiffuseLighting * Material.BaseColor + SpecularLighting * SpecColor + Material.Emissive;
 }
 
 MaterialSurfacePSOutput ShadeGeneratedSurface(MaterialSurfaceVSOutput Input, FMaterialResult Material)

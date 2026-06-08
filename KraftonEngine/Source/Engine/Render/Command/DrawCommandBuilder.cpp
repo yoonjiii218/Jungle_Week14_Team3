@@ -223,6 +223,12 @@ void FDrawCommandBuilder::BuildCommandForProxy(FScene& Scene, const FPrimitiveSc
 		const bool bSectionIsTranslucent = (SectionPass == ERenderPass::AlphaBlend);
 		if ((Pass == ERenderPass::PreDepth || Pass == ERenderPass::Opaque) && bSectionIsTranslucent) continue;
 		if (Pass == ERenderPass::AlphaBlend && !bSectionIsTranslucent) continue;
+		if (Pass == ERenderPass::PreDepth &&
+			Section.Material &&
+			Section.Material->HasOpacityMaskInputConnected())
+		{
+			continue;
+		}
 
 		// Section Material이 셰이더를 가지면 사용, 없으면 Proxy 폴백
 		FShader* SectionShader = (Section.Material && Section.Material->GetShader())

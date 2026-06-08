@@ -286,6 +286,8 @@ void RegisterGameLuaBindings(sol::state& Lua)
 		"GetStartupScreen", &AGameFlowDirector::GetStartupScreen,
 		"GetStartMenuWidgetPath", &AGameFlowDirector::GetStartMenuWidgetPath,
 		"GetHudWidgetPath", &AGameFlowDirector::GetHudWidgetPath,
+		"GetCountdownWidgetPath", &AGameFlowDirector::GetCountdownWidgetPath,
+		"GetTutorialHudWidgetPath", &AGameFlowDirector::GetTutorialHudWidgetPath,
 		"GetPauseMenuWidgetPath", &AGameFlowDirector::GetPauseMenuWidgetPath,
 		"GetGameOverWidgetPath", &AGameFlowDirector::GetGameOverWidgetPath,
 		"GetClearWidgetPath", &AGameFlowDirector::GetClearWidgetPath,
