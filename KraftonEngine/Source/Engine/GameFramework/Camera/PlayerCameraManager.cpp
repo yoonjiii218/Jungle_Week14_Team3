@@ -470,6 +470,43 @@ void APlayerCameraManager::ClearCameraVignette()
 	VignetteIntensity = 0.0f;
 }
 
+void APlayerCameraManager::StartPerfectDodgePostProcess(float Duration, float Intensity, float FocusHighlightStrength)
+{
+	if (Duration <= 0.0f)
+	{
+		StopPerfectDodgePostProcess();
+		return;
+	}
+
+	PerfectDodgePostProcess = FPerfectDodgePostProcessState();
+	PerfectDodgePostProcess.bEnabled = true;
+	PerfectDodgePostProcess.Duration = Duration;
+	PerfectDodgePostProcess.ElapsedTime = 0.0f;
+	PerfectDodgePostProcess.Intensity = std::max(0.0f, Intensity);
+	PerfectDodgePostProcess.FocusHighlightStrength = FocusHighlightStrength >= 0.0f
+		? std::max(0.0f, FocusHighlightStrength)
+		: std::max(0.0f, PerfectDodgePostProcessDebug::GetDefaultFocusHighlightStrength());
+}
+
+void APlayerCameraManager::StopPerfectDodgePostProcess()
+{
+	PerfectDodgePostProcess = FPerfectDodgePostProcessState();
+}
+
+void APlayerCameraManager::UpdatePerfectDodgePostProcess(float DeltaTime)
+{
+	if (!PerfectDodgePostProcess.bEnabled)
+	{
+		return;
+	}
+
+	PerfectDodgePostProcess.ElapsedTime += std::max(0.0f, DeltaTime);
+	if (PerfectDodgePostProcess.ElapsedTime >= PerfectDodgePostProcess.Duration)
+	{
+		StopPerfectDodgePostProcess();
+	}
+}
+
 // ─────────────────────────────────────────────────────────────────
 // Camera Blend — ViewTarget A → Pending B 로 전환 중일 때 매 호출 시 보간된
 // raw POV 를 산출. shake 는 미포함. UpdateCamera 가 이걸 호출해 base POV 로
@@ -609,6 +646,9 @@ void APlayerCameraManager::UpdateCamera(float DeltaTime)
 			FadeAmount = 0.0f;
 		}
 	}
+
+	// (5) Perfect Dodge PP 진행 — TimeDilation 영향을 받지 않는 raw camera delta 사용.
+	UpdatePerfectDodgePostProcess(DeltaTime);
 
 	// (6) Cache commit — 외부는 GetCameraCachePOV 로 read (shake/blend 적용된 최종 POV).
 	if (bHasBasePOV)

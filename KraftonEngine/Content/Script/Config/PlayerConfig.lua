@@ -28,9 +28,17 @@ PlayerConfig.Default = {
         -- enters a short sword-wave stance and alternates two diagonal slash motions.
         PostDashAttack = {
             Enabled = true,
-            WindowDuration = 2.5,
+            WindowDuration = 0.75,
             MaxAttacks = 3,
             VariantCount = 2,
+            StepForwardDistances = {
+                0.5,
+                0.5,
+            },
+            StepForwardDurations = {
+                0.12,
+                0.12,
+            },
             SpawnFlyingSlashOnAttackStart = false,
         },
 
@@ -147,8 +155,13 @@ PlayerConfig.Default = {
         HitInvincibleDuration = 0.5,
         DashPerfectDodgeDuration = 0.2,
         PerfectDodgeGraceAfterDash = 0.05,
-        PerfectDodgeSlomoDuration = 1.5,
+        PerfectDodgeSlomoDuration = 5.0,
         PerfectDodgeSlomoScale = 0.1,
+        -- World is slowed by SlomoScale. PlayerSpeedScale is the player's final speed
+        -- relative to real/raw time while TimeRush is active. 1.0 = normal, 1.2 = 20% faster.
+        PerfectDodgePlayerSpeedScale = 1.5,
+        -- Extra AI/cooldown scale on top of global slomo. Keep 1.0 to avoid double slomo.
+        PerfectDodgeEnemyBrainScale = 1.0,
 
         -- Lua-triggered hit feedback. Player attack hitstop is still primarily
         -- driven by AnimNotifyState_AttackHitWindow, but these values are used
@@ -170,6 +183,8 @@ PlayerConfig.Default = {
 
         PerfectDodge = {
             CameraShakeScale = 0.5,
+            PostProcessIntensity = 1.0,
+            FocusHighlightStrength = 1.25,
         },
 
         AttackHit = {

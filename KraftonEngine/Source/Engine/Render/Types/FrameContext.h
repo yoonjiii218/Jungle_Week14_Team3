@@ -95,6 +95,7 @@ struct FFrameContext
 	FCameraFadeState CameraFade;
 	FCameraVignetteState CameraVignette;
 	FCameraLetterboxState CameraLetterbox;
+	FPerfectDodgePostProcessState PerfectDodgePostProcess;
 	bool bDepthOfFieldEnabled = false;
 	float DepthOfFieldFocalLength = 50.0f;
 	float DepthOfFieldAperture = 2.8f;

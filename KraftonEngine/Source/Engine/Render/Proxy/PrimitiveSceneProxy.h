@@ -54,6 +54,7 @@ public:
 
 	virtual void AddReferencedObjects(FReferenceCollector& Collector);
 	bool HasValidOwner() const;
+	bool HasOwnerActorTag(const FName& Tag) const;
 
 	// ================================================================
 	// 읽기 전용 인터페이스 (DrawCommandBuilder, RenderCollector용)

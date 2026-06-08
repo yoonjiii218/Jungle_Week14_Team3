@@ -675,6 +675,9 @@
     <FxCompile Include="Shaders\PostProcess\FXAA.hlsl">
       <Filter>Shaders\PostProcess</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\PostProcess\PerfectDodgePostProcess.hlsl">
+      <Filter>Shaders\PostProcess</Filter>
+    </FxCompile>
     <FxCompile Include="Shaders\PostProcess\GammaCorrection.hlsl">
       <Filter>Shaders\PostProcess</Filter>
     </FxCompile>
@@ -1758,6 +1761,9 @@
       <Filter>Source\Engine\Render\RenderPass</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Render\RenderPass\PassRenderStateTable.cpp">
+      <Filter>Source\Engine\Render\RenderPass</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Render\RenderPass\PerfectDodgePostProcessPass.cpp">
       <Filter>Source\Engine\Render\RenderPass</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Render\RenderPass\PostProcessPass.cpp">
@@ -3192,6 +3198,9 @@
       <Filter>Source\Engine\Render\RenderPass</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Render\RenderPass\PassRenderStateTable.h">
+      <Filter>Source\Engine\Render\RenderPass</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Render\RenderPass\PerfectDodgePostProcessPass.h">
       <Filter>Source\Engine\Render\RenderPass</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Render\RenderPass\PostProcessPass.h">

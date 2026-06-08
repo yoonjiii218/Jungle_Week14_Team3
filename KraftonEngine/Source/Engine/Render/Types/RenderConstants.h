@@ -321,6 +321,44 @@ struct FCameraLetterboxConstants
 	float _pad[2];            // 8B - 16B boundary
 };
 
+// Perfect Dodge / TimeRush PP CB (b2) - HLSL PerfectDodgePostProcessCB와 1:1 대응
+struct FPerfectDodgePostProcessConstants
+{
+	FVector4 BlueTintColor;
+	FVector4 GridColor;
+
+	float EffectAmount;
+	float EnterAmount;
+	float SustainAmount;
+	float ExitAmount;
+
+	float RadialBlurStrength;
+	float FocusFlashStrength;
+	float BlueTintStrength;
+	float GridIntensity;
+
+	float GlitchIntensity;
+	float VignetteIntensity;
+	float ElapsedTime;
+	float Duration;
+
+	float WorldGridIntensity;
+	float WorldGridScale;
+	float WorldGridThickness;
+	float WorldGridDepthFadeDistance;
+
+	float SceneDarkening;
+	float GammaPower;
+	float WorldGridSurfaceBias;
+	float ScreenGridIntensity;
+
+	float FocusHighlightStrength;
+	float _FocusHighlightPad0;
+	float _FocusHighlightPad1;
+	float _FocusHighlightPad2;
+};
+static_assert(sizeof(FPerfectDodgePostProcessConstants) % 16 == 0, "FPerfectDodgePostProcessConstants must be 16-byte aligned");
+
 // ============================================================
 // 타입별 CB 바인딩 디스크립터 — GPU CB에 업로드할 데이터를 인라인 보관
 // ============================================================

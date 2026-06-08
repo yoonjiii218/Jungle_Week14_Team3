@@ -1,4 +1,4 @@
-#include "DepthStencilStateManager.h"
+﻿#include "DepthStencilStateManager.h"
 
 #define SAFE_RELEASE(Obj) if (Obj) { Obj->Release(); Obj = nullptr; }
 
@@ -44,6 +44,37 @@ void FDepthStencilStateManager::Create(ID3D11Device* InDevice)
 	Desc.BackFace = Desc.FrontFace;
 	InDevice->CreateDepthStencilState(&Desc, &StencilWrite);
 
+	// Stencil Write with depth test. Used by gameplay-style masks so occluded actors do not
+	// affect the wall/floor pixel in later post-process passes.
+	Desc.DepthEnable = TRUE;
+	Desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	Desc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
+	Desc.StencilEnable = TRUE;
+	Desc.StencilReadMask = 0xFF;
+	Desc.StencilWriteMask = 0xFF;
+	Desc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+	Desc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+	Desc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	Desc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+	Desc.BackFace = Desc.FrontFace;
+	InDevice->CreateDepthStencilState(&Desc, &StencilWriteDepthTest);
+
+	// Same test as StencilWriteDepthTest, but writes stencil ref 2 so the perfect dodge
+	// focus highlight can be separated from editor selection/gizmo masks that use ref 1.
+	Desc = {};
+	Desc.DepthEnable = TRUE;
+	Desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	Desc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
+	Desc.StencilEnable = TRUE;
+	Desc.StencilReadMask = 0xFF;
+	Desc.StencilWriteMask = 0xFF;
+	Desc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+	Desc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+	Desc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	Desc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+	Desc.BackFace = Desc.FrontFace;
+	InDevice->CreateDepthStencilState(&Desc, &StencilWriteDepthTestGameplayFocus);
+
 	// No Depth
 	Desc = {};
 	Desc.DepthEnable = FALSE;
@@ -85,6 +116,8 @@ void FDepthStencilStateManager::Release()
 	SAFE_RELEASE(DepthGreaterEqual);
 	SAFE_RELEASE(DepthReadOnly);
 	SAFE_RELEASE(StencilWrite);
+	SAFE_RELEASE(StencilWriteDepthTest);
+	SAFE_RELEASE(StencilWriteDepthTestGameplayFocus);
 	SAFE_RELEASE(StencilMaskEqual);
 	SAFE_RELEASE(NoDepth);
 	SAFE_RELEASE(GizmoInside);
@@ -101,6 +134,8 @@ void FDepthStencilStateManager::Set(ID3D11DeviceContext* InContext, EDepthStenci
 	case EDepthStencilState::DepthGreaterEqual:   InContext->OMSetDepthStencilState(DepthGreaterEqual, 0); break;
 	case EDepthStencilState::DepthReadOnly:        InContext->OMSetDepthStencilState(DepthReadOnly, 0);    break;
 	case EDepthStencilState::StencilWrite:         InContext->OMSetDepthStencilState(StencilWrite, 1);     break;
+	case EDepthStencilState::StencilWriteDepthTest:InContext->OMSetDepthStencilState(StencilWriteDepthTest, 1); break;
+	case EDepthStencilState::StencilWriteDepthTestGameplayFocus:InContext->OMSetDepthStencilState(StencilWriteDepthTestGameplayFocus, 2); break;
 	case EDepthStencilState::StencilWriteOnlyEqual:InContext->OMSetDepthStencilState(StencilMaskEqual, 1); break;
 	case EDepthStencilState::NoDepth:              InContext->OMSetDepthStencilState(NoDepth, 0);          break;
 	case EDepthStencilState::GizmoInside:          InContext->OMSetDepthStencilState(GizmoInside, 1);      break;
