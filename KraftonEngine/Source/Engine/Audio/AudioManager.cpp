@@ -3,6 +3,11 @@
 #include "Platform/Paths.h"
 #include <algorithm>
 
+namespace
+{
+	constexpr size_t MaxOneShotChannels = 256;
+}
+
 bool FAudioManager::Initialize()
 {
 	if (FMOD::System_Create(&System) != FMOD_OK || !System)
@@ -32,12 +37,22 @@ void FAudioManager::Shutdown()
 		MasterGroup = nullptr;
 		BGMChannel = nullptr;
 		LoopChannels.clear();
+		OneShotChannels.clear();
 		Audios.clear();
 		return;
 	}
 
 	StopBGM();
 	StopAllLoops();
+	for (FMOD::Channel* Channel : OneShotChannels)
+	{
+		if (Channel)
+		{
+			Channel->stop();
+		}
+	}
+	OneShotChannels.clear();
+
 	if (MasterGroup)
 	{
 		MasterGroup->stop();
@@ -65,6 +80,7 @@ void FAudioManager::Tick()
 	if (System)
 	{
 		System->update();
+		CleanupOneShotChannels();
 	}
 }
 
@@ -96,17 +112,50 @@ bool FAudioManager::LoadAudio(const FString& Key, const FString& Path, bool bLoo
 
 void FAudioManager::PlayAudio(const FString& Key, float Volume)
 {
-	if (!System || !Audios.contains(Key))
+	if (!System)
 	{
 		return;
 	}
 
-	FMOD::Channel* Channel = nullptr;
-	System->playSound(Audios[Key], nullptr, false, &Channel);
-
-	if (Channel)
+	const auto It = Audios.find(Key);
+	if (It == Audios.end() || !It->second)
 	{
-		Channel->setVolume(Volume);
+		return;
+	}
+
+	CleanupOneShotChannels();
+	if (OneShotChannels.size() >= MaxOneShotChannels)
+	{
+		if (FMOD::Channel* OldestChannel = OneShotChannels.front())
+		{
+			OldestChannel->stop();
+		}
+		OneShotChannels.erase(OneShotChannels.begin());
+	}
+
+	FMOD::Channel* Channel = nullptr;
+	FMOD_RESULT Result = System->playSound(It->second, nullptr, false, &Channel);
+
+	if (Result != FMOD_OK)
+	{
+		System->update();
+		CleanupOneShotChannels();
+
+		if (!OneShotChannels.empty())
+		{
+			if (FMOD::Channel* OldestChannel = OneShotChannels.front())
+			{
+				OldestChannel->stop();
+			}
+			OneShotChannels.erase(OneShotChannels.begin());
+			Result = System->playSound(It->second, nullptr, false, &Channel);
+		}
+	}
+
+	if (Result == FMOD_OK && Channel)
+	{
+		Channel->setVolume(std::clamp(Volume, 0.0f, 1.0f));
+		OneShotChannels.push_back(Channel);
 	}
 }
 
@@ -206,6 +255,26 @@ void FAudioManager::SetLoopPitch(const FString& LoopName, float Pitch)
 bool FAudioManager::IsLoopPlaying(const FString& LoopName)
 {
 	return FindPlayingLoopChannel(LoopName) != nullptr;
+}
+
+bool FAudioManager::IsAudioLoaded(const FString& Key) const
+{
+	const auto It = Audios.find(Key);
+	return It != Audios.end() && It->second != nullptr;
+}
+
+void FAudioManager::CleanupOneShotChannels()
+{
+	OneShotChannels.erase(
+		std::remove_if(
+			OneShotChannels.begin(),
+			OneShotChannels.end(),
+			[](FMOD::Channel* Channel)
+			{
+				bool bIsPlaying = false;
+				return !Channel || Channel->isPlaying(&bIsPlaying) != FMOD_OK || !bIsPlaying;
+			}),
+		OneShotChannels.end());
 }
 
 FMOD::Channel* FAudioManager::FindPlayingLoopChannel(const FString& LoopName)

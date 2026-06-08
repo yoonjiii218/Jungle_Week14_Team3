@@ -23,12 +23,14 @@ public:
 	void SetLoopVolume(const FString& LoopName, float Volume);
 	void SetLoopPitch(const FString& LoopName, float Pitch);
 	bool IsLoopPlaying(const FString& LoopName);
+	bool IsAudioLoaded(const FString& Key) const;
 
 	void SetMasterVolume(float Volume);
 
 private:
 	void LoadDefaultAudios();
 	FMOD::Channel* FindPlayingLoopChannel(const FString& LoopName);
+	void CleanupOneShotChannels();
 
 private:
 	FAudioManager() = default;
@@ -40,4 +42,5 @@ private:
 
 	TMap<FString, FMOD::Sound*> Audios;
 	TMap<FString, FMOD::Channel*> LoopChannels;
+	TArray<FMOD::Channel*> OneShotChannels;
 };

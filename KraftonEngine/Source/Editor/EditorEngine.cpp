@@ -1,6 +1,7 @@
 #include "Editor/EditorEngine.h"
 
 #include "Profiling/StartupProfiler.h"
+#include "Audio/AudioManager.h"
 #include "Core/Logging/Notification.h"
 #include "Engine/Platform/WindowsWindow.h"
 #include "Engine/Serialization/SceneSaveManager.h"
@@ -325,6 +326,8 @@ void UEditorEngine::Tick(float DeltaTime)
 	MainPanel.TickAssetEditors(DeltaTime);
 
 	WorldTick(DeltaTime);
+
+	FAudioManager::Get().Tick();
     
     FGarbageCollector::Get().CollectGarbage();
     

@@ -15,9 +15,8 @@
 
 namespace
 {
-	// 이미 LoadAudio 호출 완료한 path 캐시. AudioManager 의 내부 Audios map 에 직접 접근 못 하므로
-	// notify 측에서 한 번만 load 보장 (LoadAudio 매번 호출 시 release+reload 비용 회피).
-	// 프로세스 lifetime 동안 누적, 캐시 무효화 필요 시 process restart.
+	// 이미 LoadAudio 호출 완료한 path 캐시. AudioManager 재초기화로 내부 sound 가 해제될 수 있으므로
+	// Notify 에서는 캐시와 실제 AudioManager 상태를 함께 확인한다.
 	static TSet<FString> GLoadedPlaySoundPaths;
 
 	enum class ENotifyParticleTransformMode
@@ -129,7 +128,8 @@ void UAnimNotify_PlaySound::Notify(USkeletalMeshComponent* /*MeshComp*/, UAnimSe
 	// 캐시 key — path 자체. "AnimNotify:" prefix 로 게임 측 pre-loaded key 들과 namespace 분리.
 	const FString Key = FString("AnimNotify:") + SoundPath;
 
-	if (GLoadedPlaySoundPaths.find(SoundPath) == GLoadedPlaySoundPaths.end())
+	if (GLoadedPlaySoundPaths.find(SoundPath) == GLoadedPlaySoundPaths.end()
+		|| !FAudioManager::Get().IsAudioLoaded(Key))
 	{
 		if (FAudioManager::Get().LoadAudio(Key, SoundPath, /*bLoop=*/false))
 		{
