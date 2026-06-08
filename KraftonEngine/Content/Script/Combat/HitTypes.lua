@@ -116,6 +116,9 @@ function HitTypes.CreatePlayerAttackFromState(args)
         attackId = "PlayerDashChargeAttack"
         attackInstanceId = action.DashChargeAttackInstanceId or (attackId .. "_" .. tostring(Now()))
         damage = combatConfig.DashChargeAttackDamage
+        local multiplier = action.DashChargeDamageMultiplier or 1.0
+        if multiplier < 1.0 then multiplier = 1.0 end
+        damage = math.floor((damage or 0) * multiplier + 0.5)
         gaugeDelta = combatConfig.DashChargeAttackGaugeDelta
     elseif action.IsInUltimateMode == true then
         attackId = "PlayerUltimate"

@@ -8,6 +8,14 @@
 #include "Common/SystemSamplers.hlsli"
 #define USE_FOG 1
 #include "Common/Fog.hlsli"
+cbuffer ParticleFrameBuffer : register(b2)
+{
+    float3 ParticleFrameRight;
+    float ParticleFramePad0;
+    float3 ParticleFrameUp;
+    float ParticleFramePad1;
+};
+
 Texture2D GeneratedSceneColorTexture : register(t17);
 
 struct FMaterialPixelInput
@@ -86,9 +94,9 @@ PS_Input_MaterialParticle VS(VS_Input_ParticleQuad quad, VS_Input_ParticleInstan
         quad.cornerUV.x * sinR + quad.cornerUV.y * cosR
     );
 
-    float3 worldPos = inst.position
-                    + FrameCameraRight * rotUV.x * inst.size.x
-                    + FrameCameraUp * rotUV.y * inst.size.y;
+	float3 worldPos = inst.position
+                    + ParticleFrameRight * rotUV.x * inst.size.x
+                    + ParticleFrameUp * rotUV.y * inst.size.y;
 
     PS_Input_MaterialParticle output;
     output.position       = mul(float4(worldPos, 1.0f), mul(View, Projection));
@@ -147,7 +155,8 @@ float4 PS(PS_Input_MaterialParticle input) : SV_TARGET
     FMaterialEvalResult Eval = EvaluateMaterialWithRefraction(MaterialInput);
     FMaterialResult Result = Eval.Material;
     float4 FinalColor = float4(Result.Color + Result.Emissive, Result.Opacity);
-    clip(FinalColor.a - 0.01f);
+    float ClipThreshold = Eval.RefractionEnabled >= 0.5f ? 0.0001f : 0.01f;
+    clip(FinalColor.a - ClipThreshold);
 
     float4 ForegroundColor = ApplyFogTranslucent(FinalColor, input.worldPos, CameraWorldPos);
     if (Eval.RefractionEnabled < 0.5f)

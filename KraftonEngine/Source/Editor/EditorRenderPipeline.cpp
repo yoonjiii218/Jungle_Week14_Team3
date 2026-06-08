@@ -286,11 +286,6 @@ void FEditorRenderPipeline::BuildFrame(FLevelEditorViewportClient* VC, const FMi
 	}
 
 	FMinimalViewInfo RenderPOV = POV;
-	if (ActiveCamera && Cast<UCineCameraComponent>(ActiveCamera))
-	{
-		const float SensorHeight = 24.0f;
-		RenderPOV.FOV = 2.0f * atanf((SensorHeight * 0.5f) / Frame.DepthOfFieldFocalLength);
-	}
 	ApplyLetterboxAspect(RenderPOV, Frame.CameraLetterbox, Frame.ViewportWidth, Frame.ViewportHeight);
 	Frame.SetCameraInfo(RenderPOV);
 

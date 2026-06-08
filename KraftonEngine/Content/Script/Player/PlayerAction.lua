@@ -167,6 +167,7 @@ function PlayerAction.Init(playerContext)
     playerContext.Runtime.StepForwardDistance = 0.0
     playerContext.Runtime.StepForwardAppliedDistance = 0.0
     playerContext.Runtime.StepForwardDirection = nil
+    playerContext.Runtime.StepForwardUseAttackRangeControl = false
 
     playerContext.Runtime.TargetAssistMode = nil
     playerContext.Runtime.TargetAssistTarget = nil
@@ -189,6 +190,8 @@ function PlayerAction.Init(playerContext)
     playerContext.Action.DashChargeAttackActive = false
     playerContext.Action.DashChargeAttackElapsed = 0.0
     playerContext.Action.DashChargeAttackEnd = false
+    playerContext.Action.DashChargeRatio = 0.0
+    playerContext.Action.DashChargeDamageMultiplier = 1.0
 
     playerContext.Action.HitReactActive = false
     playerContext.Action.HitReactPending = false
@@ -257,7 +260,184 @@ local function GetAttackStepForwardDuration(actionConfig, attackIndex)
     return actionConfig.AttackStepForwardDuration
 end
 
-local function BeginStepForward(playerContext, distance, duration, direction)
+local function ClampNumber(value, minValue, maxValue)
+    if value < minValue then
+        return minValue
+    end
+    if value > maxValue then
+        return maxValue
+    end
+    return value
+end
+
+local function GetStepActorLocation2D(actor)
+    if actor == nil then
+        return nil
+    end
+
+    local location = Reflection.Call(actor, "GetActorLocation")
+    if location == nil then
+        return nil
+    end
+
+    location.Z = 0.0
+    return location
+end
+
+local function IsStepTargetUsable(actor)
+    return actor ~= nil and actor.IsValid ~= nil and actor:IsValid()
+end
+
+local function GetAttackStepForwardControlConfig(playerContext, useAttackRangeControl)
+    if useAttackRangeControl ~= true then
+        return nil
+    end
+
+    local actionConfig = playerContext.Config.Action or {}
+    local config = actionConfig.AttackStepForwardControl or {}
+    if config.Enabled == false then
+        return nil
+    end
+
+    return config
+end
+
+local function GetDirectionToAssistTarget2D(playerContext)
+    local owner = playerContext.Owner
+    local target = playerContext.Runtime.TargetAssistTarget
+    if owner == nil or IsStepTargetUsable(target) ~= true then
+        return nil, nil
+    end
+
+    local ownerLocation = GetStepActorLocation2D(owner)
+    local targetLocation = GetStepActorLocation2D(target)
+    if ownerLocation == nil or targetLocation == nil then
+        return nil, nil
+    end
+
+    local dir = targetLocation - ownerLocation
+    dir.Z = 0.0
+    local distance = dir:Length()
+    if distance <= 0.001 then
+        return nil, distance
+    end
+
+    return dir:Normalized(), distance
+end
+
+local function DotStep2D(a, b)
+    if a == nil or b == nil then
+        return 0.0
+    end
+
+    return (a.X or 0.0) * (b.X or 0.0) + (a.Y or 0.0) * (b.Y or 0.0)
+end
+
+local function ApplyAttackStepForwardPushout(playerContext, useAttackRangeControl)
+    local config = GetAttackStepForwardControlConfig(playerContext, useAttackRangeControl)
+    if config == nil or config.PushoutEnabled ~= true then
+        return
+    end
+
+    local owner = playerContext.Owner
+    if owner == nil then
+        return
+    end
+
+    local toTarget, distance = GetDirectionToAssistTarget2D(playerContext)
+    if distance == nil then
+        return
+    end
+
+    local minDistance = config.MinDistance or 0.0
+    local pushoutDistance = config.PushoutDistance or minDistance
+    if pushoutDistance <= 0.0 or distance >= pushoutDistance then
+        return
+    end
+
+    local away = nil
+    if toTarget ~= nil then
+        away = toTarget * -1.0
+    else
+        local forward = PlayerAction.GetOwnerForward2D(playerContext)
+        if forward ~= nil then
+            away = forward * -1.0
+        end
+    end
+
+    if away == nil then
+        return
+    end
+
+    away.Z = 0.0
+    if away:Length() <= 0.001 then
+        return
+    end
+    away = away:Normalized()
+
+    local strength = config.PushoutStrength or 0.0
+    if strength <= 0.0 then
+        return
+    end
+
+    local pushout = (pushoutDistance - distance) * strength
+    local maxPushout = config.MaxPushoutPerFrame or 0.0
+    if maxPushout > 0.0 then
+        pushout = math.min(pushout, maxPushout)
+    end
+
+    if pushout > 0.001 then
+        Reflection.Call(owner, "AddActorWorldOffset", away * pushout)
+    end
+end
+
+local function ResolveAttackStepForwardDelta(playerContext, desiredDelta, direction, useAttackRangeControl)
+    if desiredDelta == nil or desiredDelta <= 0.0 then
+        return desiredDelta or 0.0
+    end
+
+    local config = GetAttackStepForwardControlConfig(playerContext, useAttackRangeControl)
+    if config == nil then
+        return desiredDelta
+    end
+
+    local toTarget, distance = GetDirectionToAssistTarget2D(playerContext)
+    if toTarget == nil or distance == nil then
+        return desiredDelta
+    end
+
+    local forwardDot = DotStep2D(direction, toTarget)
+    local forwardDotMin = config.ForwardDotMin or 0.0
+    if forwardDot <= forwardDotMin then
+        -- If the step is not moving into the target, do not suppress it.
+        return desiredDelta
+    end
+
+    local minDistance = config.MinDistance or 0.0
+    if minDistance <= 0.0 then
+        return desiredDelta
+    end
+
+    if distance <= minDistance then
+        return 0.0
+    end
+
+    local scaleStartDistance = config.ScaleStartDistance or minDistance
+    if scaleStartDistance < minDistance then
+        scaleStartDistance = minDistance
+    end
+
+    local scale = 1.0
+    if scaleStartDistance > minDistance + 0.001 and distance < scaleStartDistance then
+        scale = ClampNumber((distance - minDistance) / (scaleStartDistance - minDistance), 0.0, 1.0)
+    end
+
+    local scaledDelta = desiredDelta * scale
+    local maxDeltaBeforeMinDistance = (distance - minDistance) / math.max(forwardDot, 0.001)
+    return ClampNumber(scaledDelta, 0.0, maxDeltaBeforeMinDistance)
+end
+
+local function BeginStepForward(playerContext, distance, duration, direction, useAttackRangeControl)
     local owner = playerContext.Owner
     if owner == nil then
         return
@@ -279,7 +459,11 @@ local function BeginStepForward(playerContext, distance, duration, direction)
     end
 
     if duration == nil or duration <= 0.0 then
-        Reflection.Call(owner, "AddActorWorldOffset", forward * distance)
+        ApplyAttackStepForwardPushout(playerContext, useAttackRangeControl)
+        local deltaDistance = ResolveAttackStepForwardDelta(playerContext, distance, forward, useAttackRangeControl)
+        if math.abs(deltaDistance) > 0.001 then
+            Reflection.Call(owner, "AddActorWorldOffset", forward * deltaDistance)
+        end
         return
     end
 
@@ -289,6 +473,7 @@ local function BeginStepForward(playerContext, distance, duration, direction)
     playerContext.Runtime.StepForwardDistance = distance
     playerContext.Runtime.StepForwardAppliedDistance = 0.0
     playerContext.Runtime.StepForwardDirection = forward
+    playerContext.Runtime.StepForwardUseAttackRangeControl = useAttackRangeControl == true
 end
 
 ---@param playerContext PlayerContext
@@ -299,7 +484,9 @@ function PlayerAction.StepAttackForward(playerContext, attackIndex)
     BeginStepForward(
         playerContext,
         GetAttackStepForwardDistance(actionConfig, attackIndex),
-        GetAttackStepForwardDuration(actionConfig, attackIndex)
+        GetAttackStepForwardDuration(actionConfig, attackIndex),
+        nil,
+        true
     )
 end
 
@@ -328,12 +515,14 @@ function PlayerAction.UpdateStepForward(playerContext, dt)
     local dir = playerContext.Runtime.StepForwardDirection
     if owner == nil or dir == nil then
         playerContext.Runtime.StepForwardActive = false
+        playerContext.Runtime.StepForwardUseAttackRangeControl = false
         return
     end
 
     local duration = playerContext.Runtime.StepForwardDuration or 0.0
     if duration <= 0.0 then
         playerContext.Runtime.StepForwardActive = false
+        playerContext.Runtime.StepForwardUseAttackRangeControl = false
         return
     end
 
@@ -347,14 +536,21 @@ function PlayerAction.UpdateStepForward(playerContext, dt)
     local targetDistance = (playerContext.Runtime.StepForwardDistance or 0.0) * alpha
     local deltaDistance = targetDistance - (playerContext.Runtime.StepForwardAppliedDistance or 0.0)
 
+    local useAttackRangeControl = playerContext.Runtime.StepForwardUseAttackRangeControl == true
+    ApplyAttackStepForwardPushout(playerContext, useAttackRangeControl)
+
     if math.abs(deltaDistance) > 0.001 then
-        Reflection.Call(owner, "AddActorWorldOffset", dir * deltaDistance)
+        local adjustedDeltaDistance = ResolveAttackStepForwardDelta(playerContext, deltaDistance, dir, useAttackRangeControl)
+        if math.abs(adjustedDeltaDistance) > 0.001 then
+            Reflection.Call(owner, "AddActorWorldOffset", dir * adjustedDeltaDistance)
+        end
         playerContext.Runtime.StepForwardAppliedDistance = targetDistance
     end
 
     if alpha >= 1.0 then
         playerContext.Runtime.StepForwardActive = false
         playerContext.Runtime.StepForwardDirection = nil
+        playerContext.Runtime.StepForwardUseAttackRangeControl = false
     end
 end
 
@@ -800,7 +996,9 @@ function PlayerAction.BeginPostDashAttack(playerContext, variant)
     BeginStepForward(
         playerContext,
         GetPostDashAttackStepForwardDistance(actionConfig, config, variant),
-        GetPostDashAttackStepForwardDuration(actionConfig, config, variant)
+        GetPostDashAttackStepForwardDuration(actionConfig, config, variant),
+        nil,
+        true
     )
 
     if config.SpawnFlyingSlashOnAttackStart == true then
@@ -850,6 +1048,7 @@ function PlayerAction.CancelAttack(playerContext, unlockMovement)
     playerContext.Action.PostDashAttackVariant = 0
     playerContext.Runtime.StepForwardActive = false
     playerContext.Runtime.StepForwardDirection = nil
+    playerContext.Runtime.StepForwardUseAttackRangeControl = false
     PlayerTargeting.ClearAssist(playerContext, false)
 
     if unlockMovement ~= false then
@@ -1033,6 +1232,7 @@ local function IsHardActionLocked(playerContext)
     local action = playerContext.Action
     return action.HitReactActive == true
         or action.IsUltimateRunning == true
+        or action.IsUltimateCinematic == true
         or action.IsInUltimateMode == true
         or IsPlayerDead(playerContext)
 end
@@ -1353,6 +1553,24 @@ function PlayerAction.UpdateDash(playerContext, dt)
     end
 end
 
+local function UpdateDashChargePower(playerContext)
+    local action = playerContext.Action
+    local damageConfig = ((playerContext.Config.Action or {}).DashChargeDamage or {})
+    local fullChargeTime = damageConfig.FullChargeTime or 1.25
+    if fullChargeTime <= 0.001 then
+        fullChargeTime = 0.001
+    end
+
+    local ratio = ClampNumber((action.DashChargingElapsed or 0.0) / fullChargeTime, 0.0, 1.0)
+    local maxMultiplier = damageConfig.MaxMultiplier or 1.0
+    if maxMultiplier < 1.0 then
+        maxMultiplier = 1.0
+    end
+
+    action.DashChargeRatio = ratio
+    action.DashChargeDamageMultiplier = 1.0 + (maxMultiplier - 1.0) * ratio
+end
+
 ---@param playerContext PlayerContext
 ---@return nil
 function PlayerAction.BeginDashCharging(playerContext)
@@ -1364,6 +1582,8 @@ function PlayerAction.BeginDashCharging(playerContext)
     playerContext.Action.DashChargingActive = true
     playerContext.Action.DashChargingElapsed = 0.0
     playerContext.Action.DashChargingEnd = false
+    playerContext.Action.DashChargeRatio = 0.0
+    playerContext.Action.DashChargeDamageMultiplier = 1.0
     playerContext.Input.DashChargingReleased = false
     playerContext.Runtime.DashChargingTurnTarget = "None"
 
@@ -1392,6 +1612,7 @@ end
 function PlayerAction.UpdateDashCharging(playerContext, dt)
     PlayerContext.Assert(playerContext, "PlayerAction.UpdateDashCharging")
     playerContext.Action.DashChargingElapsed = (playerContext.Action.DashChargingElapsed or 0.0) + (dt or 0.0)
+    UpdateDashChargePower(playerContext)
     StopMovementImmediately(playerContext)
 
     local actionConfig = playerContext.Config.Action
@@ -1426,6 +1647,7 @@ function PlayerAction.BeginDashChargeAttack(playerContext)
         PlayerAction.FaceOwnerToDirection(playerContext, assistedDir)
     end
 
+    UpdateDashChargePower(playerContext)
     PlayerAction.StepDashChargeAttackForward(playerContext)
 
     playerContext.Action.DashChargeAttackActive = true
@@ -1442,6 +1664,8 @@ function PlayerAction.EndDashChargeAttack(playerContext)
     playerContext.Action.DashChargeAttackActive = false
     playerContext.Action.DashChargeAttackElapsed = 0.0
     playerContext.Action.DashChargeAttackEnd = false
+    playerContext.Action.DashChargeRatio = 0.0
+    playerContext.Action.DashChargeDamageMultiplier = 1.0
     PlayerTargeting.ClearAssist(playerContext, false)
 
     SetMovementInputEnabled(playerContext, true)
@@ -1470,6 +1694,9 @@ function PlayerAction.CancelDashActions(playerContext, unlockMovement)
     playerContext.Action.DashChargingElapsed = 0.0
     playerContext.Action.DashChargingEnd = false
     playerContext.Runtime.DashChargingTurnTarget = "None"
+
+    playerContext.Action.DashChargeRatio = 0.0
+    playerContext.Action.DashChargeDamageMultiplier = 1.0
 
     playerContext.Action.DashChargeAttackActive = false
     playerContext.Action.DashChargeAttackElapsed = 0.0
@@ -1549,6 +1776,13 @@ end
 function PlayerAction.IsUltimateRunning(playerContext)
     PlayerContext.Assert(playerContext, "PlayerAction.IsUltimateRunning")
     return playerContext.Action.IsUltimateRunning == true
+end
+
+---@param playerContext PlayerContext
+---@return boolean
+function PlayerAction.IsUltimateCinematic(playerContext)
+    PlayerContext.Assert(playerContext, "PlayerAction.IsUltimateCinematic")
+    return playerContext.Action.IsUltimateCinematic == true
 end
 
 ---@param playerContext PlayerContext

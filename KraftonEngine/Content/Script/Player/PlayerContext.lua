@@ -51,12 +51,15 @@ local PlayerContext = {}
 ---@field DashChargeAttackElapsed number
 ---@field DashChargeAttackEnd boolean
 ---@field DashChargeAttackInstanceId string|nil
+---@field DashChargeRatio number
+---@field DashChargeDamageMultiplier number
 ---@field HitReactActive boolean
 ---@field HitReactPending boolean
 ---@field HitReactDirection string|nil
 ---@field HitReactElapsed number
 ---@field HitReactEnd boolean
 ---@field IsUltimateRunning boolean
+---@field IsUltimateCinematic boolean
 ---@field IsInUltimateMode boolean
 
 ---@class PlayerCombatState
@@ -75,6 +78,10 @@ local PlayerContext = {}
 ---@class PlayerFeedbackState
 ---@field KatanaComponent any
 ---@field KatanaPSC any
+---@field DashChargeGroundPSC any
+---@field DashChargeReadyBursted boolean
+---@field DashChargeVFXTimer number
+---@field DashChargeShakeTimer number
 
 ---@class PlayerRuntimeState
 ---@field MovementComp any
@@ -91,6 +98,7 @@ local PlayerContext = {}
 ---@field StepForwardDistance number
 ---@field StepForwardAppliedDistance number
 ---@field StepForwardDirection any
+---@field StepForwardUseAttackRangeControl boolean
 ---@field TargetAssistMode string|nil
 ---@field TargetAssistTarget any
 ---@field TargetAssistDirection any
@@ -162,13 +170,19 @@ local function CreateActionState()
         DashChargeAttackElapsed = 0.0,
         DashChargeAttackEnd = false,
         DashChargeAttackInstanceId = nil,
+        DashChargeRatio = 0.0,
+        DashChargeDamageMultiplier = 1.0,
         HitReactActive = false,
         HitReactPending = false,
         HitReactDirection = nil,
         HitReactElapsed = 0.0,
         HitReactEnd = false,
         IsUltimateRunning = false,
+        IsUltimateCinematic = false,
         IsInUltimateMode = false,
+        UltimateAttackInstanceId = nil,
+        UltimateFocusTarget = nil,
+        UltimateFocusLocation = nil,
     }
 end
 
@@ -208,6 +222,7 @@ local function CreateRuntimeState()
         StepForwardDistance = 0.0,
         StepForwardAppliedDistance = 0.0,
         StepForwardDirection = nil,
+        StepForwardUseAttackRangeControl = false,
         TargetAssistMode = nil,
         TargetAssistTarget = nil,
         TargetAssistDirection = nil,

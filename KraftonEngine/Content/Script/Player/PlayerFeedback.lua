@@ -6,6 +6,8 @@ local PlayerFeedback = {}
 
 local PlayerContext = require("Player/PlayerContext")
 local PlayerEvents = require("Player/PlayerEvents")
+local PlayerTargeting = require("Player/PlayerTargeting")
+local CombatContext = require("Combat/CombatContext")
 
 local COLLISION_QUERY_AND_PHYSICS = 3
 
@@ -18,6 +20,235 @@ end
 local function EaseOutCubic(t)
     local u = 1.0 - t
     return 1.0 - u * u * u
+end
+
+
+local function IsValidObject(obj)
+    return obj ~= nil and (obj.IsValid == nil or obj:IsValid() == true)
+end
+
+local function GetOwnerLocation(playerContext)
+    local owner = playerContext.Owner
+    if owner == nil then
+        return nil
+    end
+
+    if owner.Location ~= nil then
+        return owner.Location
+    end
+
+    return Reflection.Call(owner, "GetActorLocation")
+end
+
+local function GetDashChargeConfig(playerContext)
+    local feedbackConfig = playerContext.Config.Feedback or {}
+    return feedbackConfig.DashCharge or {}
+end
+
+local function GetDashChargeRatio(playerContext)
+    local action = playerContext.Action or {}
+    return Clamp(action.DashChargeRatio or 0.0, 0.0, 1.0)
+end
+
+local function SpawnParticleSystem(path, location, rotation, scale, life, materialPath)
+    if VFX == nil or VFX.SpawnParticleSystem == nil then
+        return nil
+    end
+
+    if path == nil or path == "" or path == "None" then
+        return nil
+    end
+
+    return VFX.SpawnParticleSystem(
+        path,
+        location,
+        rotation or Vector(0.0, 0.0, 0.0),
+        scale or Vector(1.0, 1.0, 1.0),
+        life or 1.0,
+        materialPath or "None"
+    )
+end
+
+local function ResetDashChargeFeedbackState(playerContext)
+    playerContext.Feedback.DashChargeGroundPSC = nil
+    playerContext.Feedback.DashChargeReadyBursted = false
+    playerContext.Feedback.DashChargeVFXTimer = 0.0
+    playerContext.Feedback.DashChargeShakeTimer = 0.0
+end
+
+local function CanUseFOVPulse(playerContext)
+    local feedbackConfig = playerContext.Config.Feedback or {}
+    local fovConfig = feedbackConfig.FOV
+    return fovConfig ~= nil
+        and fovConfig.Enabled ~= false
+        and CameraManager ~= nil
+        and CameraManager.StartFOVPulse ~= nil
+end
+
+local function StartFOVPulse(playerContext, name, pulseConfig)
+    if CanUseFOVPulse(playerContext) ~= true then
+        return
+    end
+
+    if pulseConfig == nil or pulseConfig.Enabled == false then
+        return
+    end
+
+    local deltaDegrees = pulseConfig.DeltaDegrees or pulseConfig.Delta or 0.0
+    local duration = pulseConfig.Duration or 0.0
+    if deltaDegrees == 0.0 or duration <= 0.0 then
+        return
+    end
+
+    CameraManager.StartFOVPulse(
+        name,
+        deltaDegrees,
+        duration,
+        pulseConfig.BlendIn or 0.0,
+        pulseConfig.BlendOut or 0.0
+    )
+end
+
+local function StopFOVPulse(name)
+    if CameraManager ~= nil and CameraManager.StopFOVPulse ~= nil then
+        CameraManager.StopFOVPulse(name)
+    end
+end
+
+local function GetFOVConfig(playerContext, key)
+    local feedbackConfig = playerContext.Config.Feedback or {}
+    local fovConfig = feedbackConfig.FOV or {}
+    return fovConfig[key]
+end
+
+local function CanUseVignette(playerContext)
+    local feedbackConfig = playerContext.Config.Feedback or {}
+    local vignetteConfig = feedbackConfig.Vignette
+    return vignetteConfig ~= nil
+        and vignetteConfig.Enabled ~= false
+        and CameraManager ~= nil
+        and CameraManager.SetVignetteLayer ~= nil
+        and CameraManager.StartVignettePulse ~= nil
+        and CameraManager.StopVignetteLayer ~= nil
+end
+
+local function GetVignetteConfig(playerContext, key)
+    local feedbackConfig = playerContext.Config.Feedback or {}
+    local vignetteConfig = feedbackConfig.Vignette or {}
+    return vignetteConfig[key]
+end
+
+local function GetVignetteColor(config)
+    if config == nil then
+        return 0.0, 0.0, 0.0, 1.0
+    end
+
+    return config.R or 0.0,
+        config.G or 0.0,
+        config.B or 0.0,
+        config.A or 1.0
+end
+
+local function StartVignettePulse(playerContext, name, pulseConfig)
+    if CanUseVignette(playerContext) ~= true then
+        return
+    end
+
+    if pulseConfig == nil or pulseConfig.Enabled == false then
+        return
+    end
+
+    local intensity = pulseConfig.Intensity or 0.0
+    local duration = pulseConfig.Duration or 0.0
+    if intensity <= 0.0 or duration <= 0.0 then
+        return
+    end
+
+    local r, g, b, a = GetVignetteColor(pulseConfig)
+    CameraManager.StartVignettePulse(
+        name,
+        intensity,
+        pulseConfig.Radius or 0.75,
+        pulseConfig.Softness or 0.35,
+        duration,
+        pulseConfig.BlendIn or 0.0,
+        pulseConfig.BlendOut or 0.0,
+        r, g, b, a
+    )
+end
+
+local function SetVignetteLayer(playerContext, name, layerConfig, intensityOverride)
+    if CanUseVignette(playerContext) ~= true then
+        return
+    end
+
+    if layerConfig == nil or layerConfig.Enabled == false then
+        return
+    end
+
+    local intensity = intensityOverride or layerConfig.Intensity or 0.0
+    if intensity <= 0.0 then
+        CameraManager.StopVignetteLayer(name, 0.0)
+        return
+    end
+
+    local r, g, b, a = GetVignetteColor(layerConfig)
+    CameraManager.SetVignetteLayer(
+        name,
+        intensity,
+        layerConfig.Radius or 0.75,
+        layerConfig.Softness or 0.35,
+        r, g, b, a
+    )
+end
+
+local function StopVignetteLayer(playerContext, name, layerConfig)
+    if CameraManager == nil or CameraManager.StopVignetteLayer == nil then
+        return
+    end
+
+    local blendOut = 0.0
+    if layerConfig ~= nil then
+        blendOut = layerConfig.BlendOut or 0.0
+    end
+
+    CameraManager.StopVignetteLayer(name, blendOut)
+end
+
+local function UpdateLowHPVignette(playerContext)
+    if CanUseVignette(playerContext) ~= true then
+        return
+    end
+
+    local lowHPConfig = GetVignetteConfig(playerContext, "LowHP")
+    if lowHPConfig == nil or lowHPConfig.Enabled == false then
+        StopVignetteLayer(playerContext, "Player.LowHPVignette", lowHPConfig)
+        return
+    end
+
+    local combat = playerContext.Combat or {}
+    local hp = combat.HP or 0.0
+    local maxHP = combat.MaxHP or 0.0
+    if maxHP <= 0.0 or combat.IsDead == true then
+        StopVignetteLayer(playerContext, "Player.LowHPVignette", lowHPConfig)
+        return
+    end
+
+    local ratio = Clamp(hp / maxHP, 0.0, 1.0)
+    local startRatio = lowHPConfig.StartRatio or 0.45
+    local criticalRatio = lowHPConfig.CriticalRatio or 0.18
+
+    if ratio >= startRatio then
+        StopVignetteLayer(playerContext, "Player.LowHPVignette", lowHPConfig)
+        return
+    end
+
+    local denom = math.max(startRatio - criticalRatio, 0.001)
+    local t = Clamp((startRatio - ratio) / denom, 0.0, 1.0)
+    local minIntensity = lowHPConfig.MinIntensity or 0.0
+    local maxIntensity = lowHPConfig.MaxIntensity or lowHPConfig.Intensity or 0.55
+    local intensity = minIntensity + (maxIntensity - minIntensity) * t
+    SetVignetteLayer(playerContext, "Player.LowHPVignette", lowHPConfig, intensity)
 end
 
 local function Bezier2(a, b, c, t)
@@ -60,6 +291,9 @@ local function PlayPerfectDodgeFeedback(playerContext, event)
         CameraManager.StartPerfectDodgeEffect(duration, intensity, focusHighlightStrength)
     end
 
+    StartFOVPulse(playerContext, "Player.PerfectDodgeFOV", GetFOVConfig(playerContext, "PerfectDodge"))
+    StartVignettePulse(playerContext, "Player.PerfectDodgeVignette", GetVignetteConfig(playerContext, "PerfectDodge"))
+
     print("Perfect Dodge")
 end
 
@@ -71,6 +305,82 @@ local function PlayAttackHitFeedback(playerContext, event)
     if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil and shakeScale > 0.0 then
         CameraManager.StartWaveShake(shakeScale)
     end
+
+    StartFOVPulse(playerContext, "Player.AttackHitFOV", GetFOVConfig(playerContext, "AttackHit"))
+    StartVignettePulse(playerContext, "Player.AttackHitVignette", GetVignetteConfig(playerContext, "AttackHit"))
+end
+
+local function PlayDashStartedFeedback(playerContext, event)
+    StartFOVPulse(playerContext, "Player.DashFOV", GetFOVConfig(playerContext, "Dash"))
+    SetVignetteLayer(playerContext, "Player.DashVignette", GetVignetteConfig(playerContext, "Dash"))
+end
+
+local function PlayDashEndedFeedback(playerContext, event)
+    StopFOVPulse("Player.DashFOV")
+    StopVignetteLayer(playerContext, "Player.DashVignette", GetVignetteConfig(playerContext, "Dash"))
+end
+
+local function PlayDashChargingStartedFeedback(playerContext, event)
+    StopFOVPulse("Player.DashFOV")
+    StopVignetteLayer(playerContext, "Player.DashVignette", GetVignetteConfig(playerContext, "Dash"))
+    StartFOVPulse(playerContext, "Player.DashChargingFOV", GetFOVConfig(playerContext, "DashCharging"))
+    SetVignetteLayer(playerContext, "Player.DashChargingVignette", GetVignetteConfig(playerContext, "DashCharging"))
+
+    ResetDashChargeFeedbackState(playerContext)
+
+    local config = GetDashChargeConfig(playerContext)
+    local loc = GetOwnerLocation(playerContext)
+    if loc ~= nil then
+        local scaleValue = config.GroundRingScale or 1.0
+        local ground = Vector(loc.X, loc.Y, loc.Z + 0.05)
+        local psc = SpawnParticleSystem(
+            config.GroundRingPath,
+            ground,
+            Vector(0.0, 0.0, 0.0),
+            Vector(scaleValue, scaleValue, scaleValue),
+            30.0,
+            config.GroundRingMaterialPath)
+        playerContext.Feedback.DashChargeGroundPSC = psc
+    end
+end
+
+local function PlayDashChargingEndedFeedback(playerContext, event)
+    StopFOVPulse("Player.DashChargingFOV")
+    StopVignetteLayer(playerContext, "Player.DashChargingVignette", GetVignetteConfig(playerContext, "DashCharging"))
+
+    local psc = playerContext.Feedback.DashChargeGroundPSC
+    if IsValidObject(psc) then
+        if psc.StopSpawning ~= nil then
+            psc:StopSpawning()
+        else
+            psc:Deactivate()
+        end
+        if psc.SetAutoDestroyOwnerAfter ~= nil then
+            psc:SetAutoDestroyOwnerAfter(0.35)
+        end
+    end
+    ResetDashChargeFeedbackState(playerContext)
+end
+
+local function PlayDashChargeAttackStartedFeedback(playerContext, event)
+    StopFOVPulse("Player.DashChargingFOV")
+    StopVignetteLayer(playerContext, "Player.DashChargingVignette", GetVignetteConfig(playerContext, "DashCharging"))
+    StartFOVPulse(playerContext, "Player.DashChargeAttackFOV", GetFOVConfig(playerContext, "DashChargeAttack"))
+    SetVignetteLayer(playerContext, "Player.DashChargeAttackVignette", GetVignetteConfig(playerContext, "DashChargeAttack"))
+end
+
+local function PlayDashChargeAttackEndedFeedback(playerContext, event)
+    StopFOVPulse("Player.DashChargeAttackFOV")
+    StopVignetteLayer(playerContext, "Player.DashChargeAttackVignette", GetVignetteConfig(playerContext, "DashChargeAttack"))
+end
+
+local function PlayAttackStartedFeedback(playerContext, event)
+    if event ~= nil and event.IsPostDashAttack == true then
+        StartFOVPulse(playerContext, "Player.PostDashAttackFOV", GetFOVConfig(playerContext, "PostDashAttack"))
+        return
+    end
+
+    StartFOVPulse(playerContext, "Player.AttackStartFOV", GetFOVConfig(playerContext, "AttackStart"))
 end
 
 local function GetOrAddActionComponent(ownerActor)
@@ -109,6 +419,9 @@ local function PlayHitReactFeedback(playerContext, event)
     if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil and shakeScale > 0.0 then
         CameraManager.StartWaveShake(shakeScale)
     end
+
+    StartFOVPulse(playerContext, "Player.HitReactFOV", GetFOVConfig(playerContext, "HitReact"))
+    StartVignettePulse(playerContext, "Player.HitReactVignette", GetVignetteConfig(playerContext, "HitReact"))
 
     local owner = playerContext.Owner
     local meshComp = ResolvePlayerMeshComponent(playerContext)
@@ -223,6 +536,68 @@ local function FaceOwnerToDirection(playerContext, dir)
 
     local targetYaw = math.atan2(dir.Y, dir.X) * 180.0 / math.pi
     Reflection.Call(owner, "SetActorRotation", Vector(0.0, 0.0, targetYaw))
+end
+
+local function GetActorLocationSafe(actor)
+    if actor == nil then
+        return nil
+    end
+
+    local location = nil
+    if Reflection ~= nil and Reflection.Call ~= nil then
+        location = Reflection.Call(actor, "GetActorLocation")
+    end
+    if location == nil then
+        location = actor.Location
+    end
+    return location
+end
+
+local function GetDirection2D(from, to)
+    if from == nil or to == nil then
+        return nil, 0.0
+    end
+
+    local dir = to - from
+    dir.Z = 0.0
+    local distance = dir:Length()
+    if distance <= 0.001 then
+        return nil, distance
+    end
+
+    return dir:Normalized(), distance
+end
+
+local function GetRightFromForward(forward)
+    if forward == nil then
+        return nil
+    end
+
+    local right = Vector(-forward.Y, forward.X, 0.0)
+    if right:Length() <= 0.001 then
+        return nil
+    end
+    return right:Normalized()
+end
+
+local function ResolveUltimateFocus(playerContext, actorLocation, fallbackForward)
+    local target, targetDir = PlayerTargeting.FindTarget(playerContext, "Ultimate", fallbackForward)
+    if target == nil then
+        return nil, nil, fallbackForward
+    end
+
+    local targetLocation = GetActorLocationSafe(target)
+    local dir = GetDirection2D(actorLocation, targetLocation)
+    if dir == nil then
+        dir = targetDir
+    end
+    if dir == nil then
+        dir = fallbackForward
+    end
+
+    playerContext.Action.UltimateFocusTarget = target
+    playerContext.Action.UltimateFocusLocation = targetLocation
+    return target, targetLocation, dir
 end
 
 local function StartDeathRagdoll(playerContext)
@@ -388,6 +763,7 @@ end
 ---@return nil
 function PlayerFeedback.Init(playerContext)
     PlayerContext.Assert(playerContext, "PlayerFeedback.Init")
+    ResetDashChargeFeedbackState(playerContext)
     PlayerFeedback.AttachKatanaToWeaponSocket(playerContext)
     PlayerFeedback.AttachPSCToWeaponSocket(playerContext)
 end
@@ -396,6 +772,18 @@ end
 ---@return nil
 function PlayerFeedback.Shutdown(playerContext)
     PlayerContext.Assert(playerContext, "PlayerFeedback.Shutdown")
+    StopVignetteLayer(playerContext, "Player.LowHPVignette", nil)
+    StopVignetteLayer(playerContext, "Player.DashVignette", nil)
+    StopVignetteLayer(playerContext, "Player.DashChargingVignette", nil)
+    StopVignetteLayer(playerContext, "Player.DashChargeAttackVignette", nil)
+    local dashChargePSC = playerContext.Feedback.DashChargeGroundPSC
+    if IsValidObject(dashChargePSC) then
+        dashChargePSC:Deactivate()
+        if dashChargePSC.SetAutoDestroyOwnerAfter ~= nil then
+            dashChargePSC:SetAutoDestroyOwnerAfter(0.1)
+        end
+    end
+    ResetDashChargeFeedbackState(playerContext)
     playerContext.Feedback.KatanaComponent = nil
     playerContext.Feedback.KatanaPSC = nil
 end
@@ -406,26 +794,34 @@ function PlayerFeedback.BeginUltimate(playerContext)
     PlayerContext.Assert(playerContext, "PlayerFeedback.BeginUltimate")
     print("Begin Ultimate")
 
-    playerContext.Action.IsUltimateRunning = true
-    playerContext.Action.IsInUltimateMode = false
+    local action = playerContext.Action
+    action.IsUltimateRunning = true
+    action.IsUltimateCinematic = true
+    action.IsInUltimateMode = false
+    action.UltimateAttackInstanceId = nil
+    action.UltimateFocusTarget = nil
+    action.UltimateFocusLocation = nil
 
     local owner = playerContext.Owner
     if owner == nil then
-        playerContext.Action.IsUltimateRunning = false
+        action.IsUltimateRunning = false
+        action.IsUltimateCinematic = false
         return
     end
 
     local movementComp = owner:GetCharacterMovement()
     if movementComp == nil then
         print("Movement not found")
-        playerContext.Action.IsUltimateRunning = false
+        action.IsUltimateRunning = false
+        action.IsUltimateCinematic = false
         return
     end
 
     local ultimateCamera = World.FindFirstActorByTag("UltimateCamera")
     if ultimateCamera == nil then
         print("UltimateCamera not found")
-        playerContext.Action.IsUltimateRunning = false
+        action.IsUltimateRunning = false
+        action.IsUltimateCinematic = false
         return
     end
 
@@ -434,9 +830,22 @@ function PlayerFeedback.BeginUltimate(playerContext)
 
     if actorLocation == nil or actorForward == nil or actorRight == nil then
         print("Invalid owner transform")
-        playerContext.Action.IsUltimateRunning = false
+        action.IsUltimateRunning = false
+        action.IsUltimateCinematic = false
         return
     end
+
+    local focusTarget, focusLocation, focusForward = ResolveUltimateFocus(playerContext, actorLocation, actorForward)
+    if focusForward ~= nil then
+        actorForward = focusForward
+        actorRight = GetRightFromForward(actorForward) or actorRight
+    end
+    if focusLocation == nil then
+        focusLocation = actorLocation + actorForward * 30.0
+    end
+    focusLocation.Z = actorLocation.Z
+
+    FaceOwnerToDirection(playerContext, actorForward)
 
     local PrimComp = owner:GetPrimitiveComponent()
     local PrevSimulatePhysics = false
@@ -450,13 +859,14 @@ function PlayerFeedback.BeginUltimate(playerContext)
     local cameraConfig = playerContext.Config.Feedback.UltimateCamera
     local moveConfig = playerContext.Config.Feedback.UltimateMove
     local vfxConfig = playerContext.Config.Feedback.UltimateVfx
+    local fovConfig = playerContext.Config.Feedback.FOV or {}
     local cameraLocation =
-        actorLocation
+        focusLocation
         - actorForward * (cameraConfig.BackDistance)
         + up * (cameraConfig.Height)
 
     local slashAnchor =
-        cameraLocation
+        focusLocation
         + actorForward * (cameraConfig.SlashCameraDistance)
         + up * (cameraConfig.SlashCameraHeightOffset)
         + actorRight * (cameraConfig.SlashCameraRightOffset)
@@ -468,28 +878,35 @@ function PlayerFeedback.BeginUltimate(playerContext)
     Reflection.Call(ultimateCamera, "SetActorRotation", GetUltimateCameraRotation(cameraConfig, baseCameraRotation, 0.0))
 
     CameraManager.ToggleOwnerCamera(ultimateCamera, 0)
+    StartFOVPulse(playerContext, "Player.UltimateStartFOV", fovConfig.UltimateStart)
+    StartVignettePulse(playerContext, "Player.UltimateStartVignette", GetVignetteConfig(playerContext, "UltimateStart"))
+    local ownerAction = GetOrAddActionComponent(owner)
+    if ownerAction ~= nil and ownerAction.Slomo ~= nil then
+        ownerAction:Slomo(moveConfig.SlomoDuration or 0.0, moveConfig.SlomoScale or 1.0)
+    end
     Reflection.Call(movementComp, "StopMovementImmediately")
     Reflection.Call(movementComp, "SetMovementInputEnabled", false)
 
     Wait(0.15)
 
     local startPos =
-        cameraLocation
-        + actorForward * (moveConfig.StartDistance)
+        focusLocation
+        - actorForward * (moveConfig.StartDistance)
         + actorRight * (moveConfig.SideOffset)
 
     startPos.Z = actorLocation.Z
 
     local cinematicEndPos =
-        cameraLocation
-        + actorForward * (moveConfig.EndDistance)
+        focusLocation
+        - actorForward * (moveConfig.EndDistance)
         + actorRight * (moveConfig.EndRightDistance)
 
     cinematicEndPos.Z = actorLocation.Z
+    local subUVSlashAnchor = cinematicEndPos
 
     local controlPos =
-        cameraLocation
-        + actorForward * (((moveConfig.StartDistance) + (moveConfig.EndDistance)) * 0.5)
+        focusLocation
+        - actorForward * (((moveConfig.StartDistance) + (moveConfig.EndDistance)) * 0.5)
         + actorRight * (moveConfig.ControlSideOffset)
 
     controlPos.Z = actorLocation.Z
@@ -504,9 +921,9 @@ function PlayerFeedback.BeginUltimate(playerContext)
     )
 
     Reflection.Call(owner, "SetActorLocation", startPos)
+    FaceOwnerToDirection(playerContext, actorForward)
 
     local elapsed = 0.0
-    local prevPos = startPos
 
     local spawnedAirSlashA = false
     local spawnedAirSlashB = false
@@ -514,8 +931,6 @@ function PlayerFeedback.BeginUltimate(playerContext)
     local spawnedAirSlashD = false
     local spawnedAirSlashE = false
     local spawnedSlashFlash = false
-
-    playerContext.Action.IsInUltimateMode = true
 
     local moveDuration = moveConfig.Duration
     local frameStep = moveConfig.FrameStep
@@ -541,27 +956,27 @@ function PlayerFeedback.BeginUltimate(playerContext)
         end
 
         if not spawnedAirSlashA and t >= 0.20 then
-            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, slashAnchor - actorForward * 6.0 - actorRight * 8.0 + up * 0.4, Vector(1.0, 88.0, 7.0), -12.0, vfxConfig.SlashFrameRate, false, true)
+            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, subUVSlashAnchor - actorForward * 6.0 - actorRight * 8.0 + up * 0.4, Vector(1.0, 88.0, 7.0), -12.0, vfxConfig.SlashFrameRate, false, true)
             spawnedAirSlashA = true
         end
 
         if not spawnedAirSlashB and t >= 0.34 then
-            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, slashAnchor + actorForward * 2.0 + actorRight * 9.0 + up * 3.0, Vector(1.0, 65.0, 4.5), 32.0, vfxConfig.SlashFrameRate, false, true)
+            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, subUVSlashAnchor + actorForward * 2.0 + actorRight * 9.0 + up * 3.0, Vector(1.0, 65.0, 4.5), 32.0, vfxConfig.SlashFrameRate, false, true)
             spawnedAirSlashB = true
         end
 
         if not spawnedAirSlashD and t >= 0.42 then
-            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, slashAnchor + actorForward * 8.0 - actorRight * 3.0 + up * 5.0, Vector(1.0, 72.0, 4.0), 58.0, vfxConfig.SlashFrameRate, false, true)
+            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, subUVSlashAnchor + actorForward * 8.0 - actorRight * 3.0 + up * 5.0, Vector(1.0, 72.0, 4.0), 58.0, vfxConfig.SlashFrameRate, false, true)
             spawnedAirSlashD = true
         end
 
         if not spawnedAirSlashC and t >= 0.50 then
-            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, slashAnchor + actorForward * 12.0 - actorRight * 12.0 + up * -2.0, Vector(1.0, 55.0, 3.5), -36.0, vfxConfig.SlashFrameRate, false, true)
+            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, subUVSlashAnchor + actorForward * 12.0 - actorRight * 12.0 + up * -2.0, Vector(1.0, 55.0, 3.5), -36.0, vfxConfig.SlashFrameRate, false, true)
             spawnedAirSlashC = true
         end
 
         if not spawnedAirSlashE and t >= 0.62 then
-            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, slashAnchor - actorForward * 2.0 + actorRight * 15.0 + up * -3.4, Vector(1.0, 50.0, 3.0), -62.0, vfxConfig.SlashFrameRate, false, true)
+            VFX.SpawnSubUV(vfxConfig.SlashSubUVResource, subUVSlashAnchor - actorForward * 2.0 + actorRight * 15.0 + up * -3.4, Vector(1.0, 50.0, 3.0), -62.0, vfxConfig.SlashFrameRate, false, true)
             spawnedAirSlashE = true
         end
 
@@ -571,14 +986,17 @@ function PlayerFeedback.BeginUltimate(playerContext)
         Reflection.Call(ultimateCamera, "SetActorRotation", GetUltimateCameraRotation(cameraConfig, baseCameraRotation, t))
         Reflection.Call(owner, "SetActorLocation", nextPos)
 
-        local moveDir = nextPos - prevPos
-        moveDir.Z = 0.0
-
-        if moveDir:Length() > 0.001 then
-            FaceOwnerToDirection(playerContext, moveDir:Normalized())
+        local faceDir = actorForward
+        if focusTarget ~= nil then
+            local latestFocusLocation = GetActorLocationSafe(focusTarget) or focusLocation
+            latestFocusLocation.Z = actorLocation.Z
+            faceDir = GetDirection2D(nextPos, latestFocusLocation) or actorForward
+            focusLocation = latestFocusLocation
         end
 
-        prevPos = nextPos
+        if faceDir ~= nil then
+            FaceOwnerToDirection(playerContext, faceDir)
+        end
     end
 
     local decal = VFX.SpawnGroundCrackDecal(
@@ -594,22 +1012,148 @@ function PlayerFeedback.BeginUltimate(playerContext)
     end
 
     Reflection.Call(owner, "SetActorLocation", cinematicEndPos)
+    local attackFaceDir = GetDirection2D(cinematicEndPos, focusLocation) or actorForward
+    FaceOwnerToDirection(playerContext, attackFaceDir)
     CameraManager.StartWaveShake(1.0)
+    StartFOVPulse(playerContext, "Player.UltimateImpactFOV", fovConfig.UltimateImpact)
+    StartVignettePulse(playerContext, "Player.UltimateImpactVignette", GetVignetteConfig(playerContext, "UltimateImpact"))
 
-    Wait(0.4)
+    Wait(moveConfig.AttackStartDelay or 0.0)
+
+    action.IsUltimateCinematic = false
+    action.UltimateAttackInstanceId = "PlayerUltimate_" .. tostring(World.GetGameTime())
+    action.IsInUltimateMode = true
+
+    Wait(moveConfig.AttackDamageDelay or 0.0)
+    CombatContext.ApplyPlayerUltimateDamage(playerContext, focusLocation, focusTarget)
+
+    local remainingAttackTime = (moveConfig.AttackDuration or 0.0) - (moveConfig.AttackDamageDelay or 0.0)
+    if remainingAttackTime > 0.0 then
+        Wait(remainingAttackTime)
+    end
+
+    action.IsInUltimateMode = false
+
+    Wait(moveConfig.RecoverHold or 0.0)
 
     Reflection.Call(movementComp, "SetMovementInputEnabled", true)
+    StartFOVPulse(playerContext, "Player.UltimateRecoverFOV", fovConfig.UltimateRecover)
+    StartVignettePulse(playerContext, "Player.UltimateRecoverVignette", GetVignetteConfig(playerContext, "UltimateRecover"))
     CameraManager.ToggleOwnerCamera(owner, 0.4)
 
     if PrimComp ~= nil then
         Reflection.Call(PrimComp, "SetSimulatePhysics", PrevSimulatePhysics)
     end
 
-    playerContext.Action.IsInUltimateMode = false
-    playerContext.Action.IsUltimateRunning = false
+    action.IsUltimateCinematic = false
+    action.IsInUltimateMode = false
+    action.IsUltimateRunning = false
+    action.UltimateFocusTarget = nil
+    action.UltimateFocusLocation = nil
     PlayerEvents.EmitUltimateEnded(playerContext)
 
     print("End Ultimate")
+end
+
+local function SpawnDashChargeInwardParticle(playerContext, config, ratio)
+    local ownerLoc = GetOwnerLocation(playerContext)
+    if ownerLoc == nil then
+        return
+    end
+
+    local minRadius = config.InwardMinRadius or 2.0
+    local maxRadius = config.InwardMaxRadius or 4.5
+    local radius = minRadius + (maxRadius - minRadius) * ratio
+    local angle = math.random() * math.pi * 2.0
+    local spawn = Vector(
+        ownerLoc.X + math.cos(angle) * radius,
+        ownerLoc.Y + math.sin(angle) * radius,
+        ownerLoc.Z + (config.InwardHeight or 0.75))
+
+    local target = Vector(ownerLoc.X, ownerLoc.Y, ownerLoc.Z + (config.InwardTargetHeight or 1.05))
+    local toTarget = target - spawn
+    local yaw = 0.0
+    local pitch = 0.0
+    if toTarget:Length() > 0.001 then
+        local n = toTarget:Normalized()
+        yaw = math.atan2(n.Y, n.X) * 180.0 / math.pi
+        pitch = math.atan2(n.Z, math.sqrt(n.X * n.X + n.Y * n.Y)) * 180.0 / math.pi
+    end
+
+    local minScale = config.InwardMinScale or 0.35
+    local maxScale = config.InwardMaxScale or 1.0
+    local scaleValue = minScale + (maxScale - minScale) * ratio
+    SpawnParticleSystem(
+        config.InwardParticlePath,
+        spawn,
+        Vector(pitch, 0.0, yaw),
+        Vector(scaleValue, scaleValue, scaleValue),
+        config.InwardLife or 0.32,
+        config.InwardMaterialPath)
+end
+
+local function UpdateDashChargeFeedback(playerContext, dt)
+    if playerContext.Action.DashChargingActive ~= true then
+        return
+    end
+
+    local config = GetDashChargeConfig(playerContext)
+    local ratio = GetDashChargeRatio(playerContext)
+
+    playerContext.Feedback.DashChargeVFXTimer = (playerContext.Feedback.DashChargeVFXTimer or 0.0) - (dt or 0.0)
+    if playerContext.Feedback.DashChargeVFXTimer <= 0.0 then
+        SpawnDashChargeInwardParticle(playerContext, config, ratio)
+        local interval = config.InwardSpawnInterval or 0.06
+        playerContext.Feedback.DashChargeVFXTimer = math.max(0.01, interval * (1.0 - ratio * 0.55))
+    end
+
+    if config.CameraShakeEnabled ~= false and CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
+        playerContext.Feedback.DashChargeShakeTimer = (playerContext.Feedback.DashChargeShakeTimer or 0.0) - (dt or 0.0)
+        if playerContext.Feedback.DashChargeShakeTimer <= 0.0 then
+            local minScale = config.CameraShakeMinScale or 0.08
+            local maxScale = config.CameraShakeMaxScale or 0.35
+            CameraManager.StartWaveShake(minScale + (maxScale - minScale) * ratio)
+            playerContext.Feedback.DashChargeShakeTimer = config.CameraShakeInterval or 0.16
+        end
+    end
+
+    if ratio >= 1.0 and playerContext.Feedback.DashChargeReadyBursted ~= true then
+        local loc = GetOwnerLocation(playerContext)
+        if loc ~= nil then
+            local scaleValue = config.ReadyBurstScale or 1.5
+            SpawnParticleSystem(
+                config.ReadyBurstPath,
+                Vector(loc.X, loc.Y, loc.Z + 0.1),
+                Vector(0.0, 0.0, 0.0),
+                Vector(scaleValue, scaleValue, scaleValue),
+                0.75,
+                config.ReadyBurstMaterialPath)
+        end
+        if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
+            CameraManager.StartWaveShake(config.CameraShakeMaxScale or 0.45)
+        end
+        playerContext.Feedback.DashChargeReadyBursted = true
+    end
+
+    local ground = playerContext.Feedback.DashChargeGroundPSC
+    local loc = GetOwnerLocation(playerContext)
+    if IsValidObject(ground) and loc ~= nil then
+        ground.Location = Vector(loc.X, loc.Y, loc.Z + 0.05)
+        if ground.SetParticleSizeScale ~= nil then
+            local baseScale = config.GroundRingScale or 1.0
+            local scaleValue = baseScale * (0.8 + 0.45 * ratio)
+            ground:SetParticleSizeScale(Vector(scaleValue, scaleValue, scaleValue))
+        end
+    end
+end
+
+---@param playerContext PlayerContext
+---@param dt number
+---@return nil
+function PlayerFeedback.Update(playerContext, dt)
+    PlayerContext.Assert(playerContext, "PlayerFeedback.Update")
+    UpdateLowHPVignette(playerContext)
+    UpdateDashChargeFeedback(playerContext, dt)
 end
 
 ---@param playerContext PlayerContext
@@ -618,7 +1162,21 @@ end
 function PlayerFeedback.ProcessEvents(playerContext, events)
     PlayerContext.Assert(playerContext, "PlayerFeedback.ProcessEvents")
     for _, event in ipairs(events) do
-        if PlayerEvents.Is(event, PlayerEvents.Type.PerfectDodge) then
+        if PlayerEvents.Is(event, PlayerEvents.Type.DashStarted) then
+            PlayDashStartedFeedback(playerContext, event)
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.DashEnded) then
+            PlayDashEndedFeedback(playerContext, event)
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.DashChargingStarted) then
+            PlayDashChargingStartedFeedback(playerContext, event)
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.DashChargingEnded) then
+            PlayDashChargingEndedFeedback(playerContext, event)
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.DashChargeAttackStarted) then
+            PlayDashChargeAttackStartedFeedback(playerContext, event)
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.DashChargeAttackEnded) then
+            PlayDashChargeAttackEndedFeedback(playerContext, event)
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.AttackStarted) then
+            PlayAttackStartedFeedback(playerContext, event)
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.PerfectDodge) then
             PlayPerfectDodgeFeedback(playerContext, event)
         elseif PlayerEvents.Is(event, PlayerEvents.Type.Hit) then
             PlayHitReactFeedback(playerContext, event)
@@ -628,6 +1186,8 @@ function PlayerFeedback.ProcessEvents(playerContext, events)
             -- 여기서는 이후 피격 VFX/UI/사운드를 붙일 수 있도록 이벤트만 한 곳에서 받는다.
         elseif PlayerEvents.Is(event, PlayerEvents.Type.Dead) then
             StartDeathRagdoll(playerContext)
+            StopVignetteLayer(playerContext, "Player.LowHPVignette", nil)
+            StartVignettePulse(playerContext, "Player.DeathVignette", GetVignetteConfig(playerContext, "Death"))
             if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil then
                 CameraManager.StartWaveShake(0.8)
             end
