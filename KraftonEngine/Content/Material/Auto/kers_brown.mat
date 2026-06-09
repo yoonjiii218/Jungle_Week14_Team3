@@ -13,6 +13,7 @@
   "RasterizerState" : "",
   "RenderPass" : "Opaque",
   "ShaderPath" : "Shaders/Geometry/UberLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Textures" : {
     "DiffuseTexture" : "Content/Texture/Auto/mcl39-steering-wheel/Image_18"
   }

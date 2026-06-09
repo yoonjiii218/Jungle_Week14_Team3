@@ -1,5 +1,6 @@
 local CombatContext = require("Combat/CombatContext")
 local TutorialDirector = require("Tutorial/TutorialDirector")
+local GameplayEventBus = require("Core/GameplayEventBus")
 
 local widgets = {}
 local director = nil
@@ -16,8 +17,9 @@ local START_MENU_BOOT_DURATION = 1.50
 local START_MENU_BOOT_BASE_WIDTH = 1280.0
 local START_MENU_BOOT_BASE_HEIGHT = 720.0
 local FILM_COUNTDOWN_WIDGET_FALLBACK = "Content/UI/GameFlow/FilmCountdown.uasset"
-local FILM_COUNTDOWN_DURATION = 5.35
+local FILM_COUNTDOWN_START_NUMBER = 5
 local FILM_COUNTDOWN_PLAY_SECONDS = 5.0
+local FILM_COUNTDOWN_DURATION = 5.35
 local pendingTransitionAction = nil
 local pendingTransitionFrameDelay = 0
 local FILM_SPROCKET_COUNT = 11
@@ -34,6 +36,7 @@ local COMBO_HOLD_DURATION = 3.0
 local COMBO_IMPACT_DURATION = 0.42
 local SCOREBOARD_FILE = "GameFlowScoreboard.tsv"
 local SCOREBOARD_MAX_ENTRIES = 5
+local TOKYO_AUTOSPAWN_BOSS = false
 local UI_AUDIO = {
     Hover = { key = "UI_ButtonHover", path = "UI/button_hover.mp3", volume = 0.55 },
     Down = { key = "UI_ButtonDown", path = "UI/button_down.mp3", volume = 0.75 },
@@ -81,6 +84,7 @@ local combatTimerStarted = false
 local clearTimeSaved = false
 local lastClearScore = nil
 local lastClearEntries = nil
+local wavesFinishedHandle = nil
 local startHudFlow = nil
 local showCredits = nil
 local FLOW_BGM = {
@@ -259,6 +263,7 @@ local function updateStartMenuPadHints(widget)
 end
 
 local function updateCreditsPadHints(widget)
+    setText(widget, "btn-score", padHintLabel("Score", "Y"))
     setText(widget, "btn-main-menu", padHintLabel("Main Menu", "X"))
     setText(widget, "btn-exit", padHintLabel("Exit", "B"))
 end
@@ -392,13 +397,15 @@ local function recordClearScore(d)
 
     if combatTimerStarted ~= true then
         local entries = loadScoreboard()
-        return findLatestScore(entries), entries
+        lastClearScore = findLatestScore(entries)
+        lastClearEntries = entries
+        return lastClearScore, entries
     end
 
     local score = {
         Time = combatElapsedTime,
         Scene = getCurrentSceneName(d),
-        Stamp = os.date ~= nil and os.date("%Y-%m-%d %H:%M:%S") or "",
+        Stamp = os ~= nil and os.date ~= nil and os.date("%Y-%m-%d %H:%M:%S") or "",
     }
 
     local entries = loadScoreboard()
@@ -426,7 +433,6 @@ local function applyScoreboardToClear(screen, currentScore, entries)
 
     entries = entries or loadScoreboard()
     setText(screen, "clear-time", "CLEAR TIME  " .. formatClearTime(currentScore ~= nil and currentScore.Time or combatElapsedTime))
-
     for i = 1, 3 do
         local entry = entries[i]
         if entry ~= nil then
@@ -437,6 +443,37 @@ local function applyScoreboardToClear(screen, currentScore, entries)
             setText(screen, "score-rank-" .. tostring(i), string.format("#%d  --:--.--", i))
         end
     end
+end
+
+local function applyScoreboardToCredits(credits)
+    if credits == nil then
+        return
+    end
+
+    local entries = loadScoreboard()
+    local currentText = lastClearScore ~= nil and formatClearTime(lastClearScore.Time) or "--:--.--"
+    setText(credits, "score-current", "LAST CLEAR  " .. currentText)
+
+    for i = 1, 5 do
+        local entry = entries[i]
+        if entry ~= nil then
+            local scene = entry.Scene ~= nil and entry.Scene ~= "" and entry.Scene or "UNKNOWN"
+            local stamp = entry.Stamp ~= nil and entry.Stamp ~= "" and entry.Stamp or "NO DATE"
+            setText(credits, "score-rank-" .. tostring(i), string.format("#%d  %s  |  %s  |  %s", i, formatClearTime(entry.Time), scene, stamp))
+        else
+            setText(credits, "score-rank-" .. tostring(i), string.format("#%d  --:--.--", i))
+        end
+    end
+end
+
+local function showCreditsScoreboard(credits)
+    if credits == nil then
+        return
+    end
+
+    applyScoreboardToCredits(credits)
+    credits:SetProperty("score-panel", "display", "block")
+    credits:SetProperty("score-panel", "opacity", "1")
 end
 
 local function updateBossDamageBar(hud, hp, maxHP, dt)
@@ -1023,6 +1060,40 @@ local function showTutorialHud()
     return tutorialHud
 end
 
+local function ensureTokyoBossSpawned(d)
+    if TOKYO_AUTOSPAWN_BOSS ~= true or d == nil then
+        return
+    end
+    if getCurrentSceneName(d) ~= "Tokyo_Current" then
+        return
+    end
+    if hasRegisteredBoss() == true or hasBossActor(d) == true then
+        return
+    end
+    if GameFlow == nil or GameFlow.SpawnTutorialBoss == nil then
+        print("[GameFlow] Tokyo boss auto-spawn skipped: binding unavailable.")
+        return
+    end
+
+    local spawnLocation = Vector(5.0, 0.0, 1.0)
+    local player = d:GetPlayerActor()
+    if isValidActor(player) then
+        spawnLocation = player.Location + Vector(10.0, 0.0, 0.0)
+    end
+
+    local boss = GameFlow.SpawnTutorialBoss(spawnLocation, 180.0)
+    if boss ~= nil then
+        if boss.AddTag ~= nil then
+            boss:AddTag("Boss")
+            boss:AddTag("HitTarget")
+        end
+        d:SetBossHP(d:GetBossMaxHP(), d:GetBossMaxHP())
+        print("[GameFlow] Tokyo boss auto-spawned for HUD/game-flow.")
+    else
+        print("[GameFlow] Tokyo boss auto-spawn failed.")
+    end
+end
+
 startHudFlow = function()
     local d = getDirector()
     if d == nil then return end
@@ -1032,6 +1103,7 @@ startHudFlow = function()
     local bTrainingMapFlow = isTrainingMapFlow(d, bTrainingQueued)
 
     d:StartCombat()
+    ensureTokyoBossSpawned(d)
     showHud()
     if bTrainingMapFlow == true then
         playFlowBGM(FLOW_BGM.TrainingMap)
@@ -1158,7 +1230,7 @@ local function updateFilmCountdown(dt)
 
     local activeTime = clamp(t, 0.0, FILM_COUNTDOWN_PLAY_SECONDS - 0.001)
     local digitIndex = math.floor(activeTime)
-    local digit = 5 - digitIndex
+    local digit = FILM_COUNTDOWN_START_NUMBER - digitIndex
     local digitTime = activeTime - digitIndex
     local digitText = tostring(digit)
     if t >= FILM_COUNTDOWN_PLAY_SECONDS then
@@ -1167,7 +1239,8 @@ local function updateFilmCountdown(dt)
     end
 
     local fadeIn = clamp(t / 0.18, 0.0, 1.0)
-    local fadeOut = t > 5.08 and (1.0 - clamp((t - 5.08) / 0.27, 0.0, 1.0)) or 1.0
+    local fadeOutStart = math.max(0.0, FILM_COUNTDOWN_DURATION - 0.27)
+    local fadeOut = t > fadeOutStart and (1.0 - clamp((t - fadeOutStart) / 0.27, 0.0, 1.0)) or 1.0
     local masterOpacity = fadeIn * fadeOut
     local digitPulse = 1.0 - clamp(digitTime / 0.92, 0.0, 1.0)
     local flash = flashPulse(digitTime, 0.0, 0.16, 1.0)
@@ -1706,9 +1779,15 @@ showCredits = function()
     local screen = createWidget("Credits", d:GetCreditsWidgetPath(), true, 100)
     if screen ~= nil then
         updateCreditsPadHints(screen)
-        bindButtonAudio(screen, { "btn-main-menu", "btn-exit" })
+        bindButtonAudio(screen, { "btn-score", "btn-main-menu", "btn-exit" })
         setCreditsOpacity(screen, "control-panel", 0.0)
         setCreditsProperty(screen, "control-panel", "display", "none")
+        setCreditsOpacity(screen, "score-panel", 0.0)
+        setCreditsProperty(screen, "score-panel", "display", "none")
+        applyScoreboardToCredits(screen)
+        screen:bind_click("btn-score", function()
+            showCreditsScoreboard(screen)
+        end)
         screen:bind_click("btn-main-menu", function()
             d:RequestMainMenu()
         end)
@@ -1732,7 +1811,10 @@ local function applyCreditsPadActions()
     local d = getDirector()
     if d == nil then return end
 
-    if Input.WasActionStarted("Attack") then
+    if Input.WasActionStarted("Ultimate") then
+        playButtonDown()
+        showCreditsScoreboard(widgets.Credits)
+    elseif Input.WasActionStarted("Attack") then
         playButtonDown()
         d:RequestMainMenu()
     elseif Input.WasActionStarted("SecondaryDash") then
@@ -1832,6 +1914,7 @@ local function updateTerminalFlow()
         if phase == "GameOver" then
             showGameOver()
         elseif phase == "Clear" then
+            recordClearScore(d)
             showClear()
         end
         return
@@ -1841,13 +1924,36 @@ local function updateTerminalFlow()
         return
     end
 
+    local hasBoss = CombatContext.HasBoss ~= nil and CombatContext.HasBoss()
+    if not hasBoss then
+        local bossMaxHP = d:GetBossMaxHP()
+        hasBoss = bossMaxHP ~= nil and bossMaxHP > 0.0
+    end
+
     if d:GetPlayerHP() <= 0.0 then
         d:RequestGameOver()
         showGameOver()
-    elseif d:GetBossHP() <= 0.0 then
+    elseif hasBoss and d:GetBossHP() <= 0.0 then
+        recordClearScore(d)
         d:RequestClear()
         showClear()
     end
+end
+
+local function handleWavesFinished(eventData)
+    if currentScreen ~= "HUD" then
+        return
+    end
+
+    local d = getDirector()
+    if d == nil then
+        return
+    end
+
+    print("[GameFlow] Waves finished. Request clear.")
+    recordClearScore(d)
+    d:RequestClear()
+    showClear()
 end
 
 function BeginPlay()
@@ -1862,6 +1968,10 @@ function BeginPlay()
             togglePauseMenu()
         end
     end)
+
+    if wavesFinishedHandle == nil then
+        wavesFinishedHandle = GameplayEventBus.Subscribe("WavesFinished", obj, handleWavesFinished)
+    end
 
     local startup = d:GetStartupScreen()
     if startup == "StartMenu" then
@@ -1882,7 +1992,7 @@ function BeginPlay()
 end
 
 function Tick(dt)
-    if pendingTransitionAction ~= nil then
+    if pendingTransitionAction ~= nil and currentScreen ~= "Countdown" then
         pendingTransitionFrameDelay = pendingTransitionFrameDelay - 1
         if pendingTransitionFrameDelay <= 0 then
             local action = pendingTransitionAction
@@ -1926,6 +2036,10 @@ end
 
 function EndPlay()
     TutorialDirector.End()
+    if wavesFinishedHandle ~= nil then
+        GameplayEventBus.Unsubscribe(wavesFinishedHandle)
+        wavesFinishedHandle = nil
+    end
     if Engine.ClearOnEscape ~= nil then
         Engine.ClearOnEscape()
     else

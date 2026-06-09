@@ -32,14 +32,21 @@
         #thanks-b { top: 832px; }
         #end-title { position: absolute; left: 0px; top: 930px; width: 800px; height: 58px; color: #ffffff; font-size: 42px; text-align: center; }
         #end-sub { position: absolute; left: 0px; top: 994px; width: 800px; height: 28px; color: #d9ff2f; font-size: 18px; text-align: center; }
-        #control-panel { position: absolute; left: 816px; top: 520px; width: 360px; height: 150px; opacity: 0; }
+        #control-panel { position: absolute; left: 816px; top: 462px; width: 360px; height: 208px; opacity: 0; }
         .button-bg { position: absolute; left: 0px; width: 320px; height: 48px; }
         button { position: absolute; left: 32px; width: 250px; height: 26px; font-size: 18px; color: #ffffff; background-color: #00000000; border-width: 0px; text-align: left; }
         button:hover { color: #d9ff2f; background-color: #00000000; border-width: 0px; }
-        #bg-main-menu { top: 10px; }
-        #btn-main-menu { top: 22px; }
-        #bg-exit { top: 68px; }
-        #btn-exit { top: 80px; }
+        #bg-score { top: 10px; }
+        #btn-score { top: 22px; }
+        #bg-main-menu { top: 68px; }
+        #btn-main-menu { top: 80px; }
+        #bg-exit { top: 126px; }
+        #btn-exit { top: 138px; }
+        #score-panel { position: absolute; left: 72px; top: 104px; width: 500px; height: 370px; background-color: #020b08dd; border-width: 1px; border-color: #d9ff2f; padding: 18px; display: none; opacity: 0; }
+        #score-title { font-size: 18px; color: #00eaff; margin-bottom: 8px; }
+        #score-current { font-size: 20px; color: #d9ff2f; margin-bottom: 14px; }
+        .score-line { width: 320px; height: 2px; background-color: #ff2bd6; margin-bottom: 14px; }
+        .score-rank { width: 480px; font-size: 13px; color: #ffffff; margin-bottom: 14px; white-space: nowrap; }
         #skip-hint { position: absolute; left: 64px; top: 626px; width: 340px; height: 24px; color: #d3d8e3; font-size: 15px; opacity: 0.68; }
     </style>
 </head>
@@ -74,11 +81,23 @@
         <div id="fade-top"></div>
         <div id="fade-bottom"></div>
         <div id="scanline"></div>
-        <div id="control-panel" data-ue-anchors="1 1 1 1" data-ue-offsets="-104 -188 360 150" data-ue-alignment="1 1">
+        <div id="control-panel" data-ue-anchors="1 1 1 1" data-ue-offsets="-104 -246 360 208" data-ue-alignment="1 1">
+            <img id="bg-score" class="button-bg" src="Images/button_credits.png" />
+            <button id="btn-score">Score</button>
             <img id="bg-main-menu" class="button-bg" src="Images/button_main_menu.png" />
             <button id="btn-main-menu">Main Menu</button>
             <img id="bg-exit" class="button-bg" src="Images/button_exit.png" />
             <button id="btn-exit">Exit</button>
+        </div>
+        <div id="score-panel" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="72 -185 500 370" data-ue-alignment="0 0.5">
+            <div id="score-title">CLEAR SCOREBOARD</div>
+            <div id="score-current">LAST CLEAR  --:--.--</div>
+            <div class="score-line"></div>
+            <div id="score-rank-1" class="score-rank">#1  --:--.--</div>
+            <div id="score-rank-2" class="score-rank">#2  --:--.--</div>
+            <div id="score-rank-3" class="score-rank">#3  --:--.--</div>
+            <div id="score-rank-4" class="score-rank">#4  --:--.--</div>
+            <div id="score-rank-5" class="score-rank">#5  --:--.--</div>
         </div>
         <div id="skip-hint" data-ue-anchors="0 1 0 1" data-ue-offsets="64 -74 340 24" data-ue-alignment="0 1">Esc pauses. Buttons unlock after the staff roll.</div>
     </div>

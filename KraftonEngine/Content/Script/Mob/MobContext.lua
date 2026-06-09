@@ -21,6 +21,7 @@ local MobContext = {}
 ---@field HitboxOpen boolean
 ---@field HitboxClose boolean
 ---@field TrackEnd boolean
+---@field ActiveZone table|nil          현재 표시 중인 공격 범위 Decal 묶음. 사망/캔슬 시 즉시 정리용.
 
 ---@class MobCombatState
 ---@field HP number
@@ -67,6 +68,7 @@ local function CreateAttackState()
         HitboxOpen = false,
         HitboxClose = false,
         TrackEnd = false,
+        ActiveZone = nil,
     }
 end
 
