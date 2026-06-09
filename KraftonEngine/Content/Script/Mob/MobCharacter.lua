@@ -104,6 +104,16 @@ function Tick(dt)
     end
 
     if mobContext.Combat.IsDead then
+        -- 죽은 잡몹은 아래의 일반 Tick 경로를 더 이상 돌지 않는다.
+        -- 따라서 공격 코루틴이 HideZone 까지 자연스럽게 진행되기를 기다리면
+        -- NO_FADE_DELAY 로 만든 장판 Decal 이 맵에 계속 남는다.
+        -- 사망 진입 첫 프레임에 공격 VFX/코루틴을 명시적으로 정리한다.
+        if mobContext.Runtime.DeathAttackCleanupDone ~= true then
+            MobAttacks.CleanupActiveAttack(mobContext)
+            CoroutineManager.Destroy(obj.UUID)
+            mobContext.Runtime.DeathAttackCleanupDone = true
+        end
+
         if mobContext.Runtime.HPBarWidget ~= nil then
             mobContext.Runtime.HPBarWidget:RemoveFromParent()
             mobContext.Runtime.HPBarWidget = nil
@@ -244,6 +254,9 @@ function Tick(dt)
 end
 
 function EndPlay()
+    if mobContext ~= nil then
+        MobAttacks.CleanupActiveAttack(mobContext)
+    end
     CoroutineManager.Destroy(obj.UUID)
     if mobContext ~= nil then
         if mobContext.Runtime.HPBarWidget ~= nil then
