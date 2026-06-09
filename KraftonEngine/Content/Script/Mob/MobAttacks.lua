@@ -35,6 +35,17 @@ local function WaitForNotify(mobContext, flag, timeout)
     end
 end
 
+local function ClearAttackNotifyFlags(attack)
+    if attack == nil then return end
+
+    attack.ZoneShow    = false
+    attack.ZoneFlash   = false
+    attack.ZoneHide    = false
+    attack.HitboxOpen  = false
+    attack.HitboxClose = false
+    attack.TrackEnd    = false
+end
+
 local function ResolveYaw(mobContext)
     local ownerActor = mobContext.Owner
     local targetActor = mobContext.Brain.TargetActor
@@ -227,6 +238,13 @@ end
 -- 장판을 치우고 추적 재개 + 락/캔슬 플래그 해제 → 애니는 ActionLock 해제로 Locomotion(or 피격) 복귀.
 local function EndAttack(mobContext, zone)
     HideZone(mobContext, zone)
+
+    local attack = mobContext.Attack
+    if attack ~= nil and attack.ActiveZone == zone then
+        attack.ActiveZone = nil
+    end
+    ClearAttackNotifyFlags(attack)
+
     mobContext.Brain.IsTracking = true
     mobContext.Combat.ActionLock = false
     mobContext.Combat.CancelAttack = false
@@ -240,12 +258,8 @@ local function MeleeAttack(mobContext)
     -- 지난 공격에서 남았을 수 있는 notify 플래그를 초기화한다.
     -- 공격 애니의 ZoneFlash/ZoneHide/HitboxOpen/HitboxClose 가 다음 공격까지 잔류하면
     -- WaitForNotify 가 곧장 통과해 판정 단계가 한 프레임에 뭉개질 수 있으므로 시작 시 비운다.
-    attack.ZoneShow   = false
-    attack.ZoneFlash  = false
-    attack.ZoneHide   = false
-    attack.HitboxOpen = false
-    attack.HitboxClose = false
-    attack.TrackEnd   = false
+    ClearAttackNotifyFlags(attack)
+    attack.ActiveZone = nil
 
     if mobContext.Runtime.MovementComp then
         mobContext.Runtime.MovementComp:StopMovementImmediately()
@@ -256,6 +270,7 @@ local function MeleeAttack(mobContext)
     -- 준비 모션(Idle1)을 없애고, 코드가 먼저 장판을 띄워 리드 타임(ZONE_LEAD)동안 차오르게 한 뒤
     -- 공격 애니를 트리거한다. 리드 타임 동안 mob 은 Locomotion(서있기)으로 장판만 띄운다.
     zone = ShowZone(mobContext)
+    attack.ActiveZone = zone
     FillZone(mobContext, zone, 0.0)
     RunZoneFill(mobContext, zone)
 
@@ -312,6 +327,24 @@ end
 ---@return nil
 function MobAttacks.Init(mobContext)
     MobContext.Assert(mobContext, "MobAttacks.Init")
+end
+
+---@param mobContext MobContext
+---@return nil
+function MobAttacks.CleanupActiveAttack(mobContext)
+    MobContext.Assert(mobContext, "MobAttacks.CleanupActiveAttack")
+
+    local attack = mobContext.Attack
+    if attack ~= nil and attack.ActiveZone ~= nil then
+        HideZone(mobContext, attack.ActiveZone)
+        attack.ActiveZone = nil
+    end
+
+    ClearAttackNotifyFlags(attack)
+
+    mobContext.Brain.IsTracking = true
+    mobContext.Combat.ActionLock = false
+    mobContext.Combat.CancelAttack = false
 end
 
 ---@param mobContext MobContext
