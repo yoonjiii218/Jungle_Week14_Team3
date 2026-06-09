@@ -16,6 +16,8 @@ PlayerEvents.Type = {
     DashChargeAttackEnded = "Player.DashChargeAttackEnded",
     AttackStarted = "Player.AttackStarted",
     AttackHit = "Player.AttackHit",
+    AttackImpact = "Player.AttackImpact",
+    AttackImpactWindowClosed = "Player.AttackImpactWindowClosed",
     AttackEnded = "Player.AttackEnded",
     Hit = "Player.Hit",
     PerfectDodge = "Player.PerfectDodge",
@@ -48,6 +50,26 @@ PlayerEvents.Type = {
 ---@field GaugeDelta number
 ---@field HP number|nil
 ---@field MaxHP number|nil
+---@field AttackInstanceId string|nil
+---@field HitWindowSerial integer|nil
+---@field AttackImpactGroupId string|nil
+
+---@class PlayerAttackImpactEvent : PlayerEvent
+---@field AttackId string
+---@field AttackInstanceId string|nil
+---@field AttackIndex integer|nil
+---@field HitWindowSerial integer|nil
+---@field TargetCount integer
+---@field DamageTotal number
+---@field CenterLocation any
+---@field HitStopDuration number
+---@field CameraShakeScale number
+---@field VfxScale number
+---@field SoundVolume number
+---@field SoundPitch number
+
+---@class PlayerAttackImpactWindowClosedEvent : PlayerEvent
+---@field HitWindowSerial integer
 
 ---@class PlayerHitEvent : PlayerEvent
 ---@field SourceActor any
@@ -162,6 +184,32 @@ end
 ---@return nil
 function PlayerEvents.EmitAttackHit(playerContext, args)
     PlayerEvents.Push(playerContext, MakeEvent(PlayerEvents.Type.AttackHit, args))
+end
+
+---@param args table
+---@return PlayerAttackImpactEvent
+function PlayerEvents.CreateAttackImpact(args)
+    return MakeEvent(PlayerEvents.Type.AttackImpact, args)
+end
+
+---@param playerContext PlayerContext
+---@param args table
+---@return nil
+function PlayerEvents.EmitAttackImpact(playerContext, args)
+    PlayerEvents.Push(playerContext, PlayerEvents.CreateAttackImpact(args))
+end
+
+---@param args table
+---@return PlayerAttackImpactWindowClosedEvent
+function PlayerEvents.CreateAttackImpactWindowClosed(args)
+    return MakeEvent(PlayerEvents.Type.AttackImpactWindowClosed, args)
+end
+
+---@param playerContext PlayerContext
+---@param args table
+---@return nil
+function PlayerEvents.EmitAttackImpactWindowClosed(playerContext, args)
+    PlayerEvents.Push(playerContext, PlayerEvents.CreateAttackImpactWindowClosed(args))
 end
 
 ---@param playerContext PlayerContext

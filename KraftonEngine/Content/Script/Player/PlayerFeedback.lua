@@ -135,6 +135,26 @@ local function PlayConfiguredSound(playerContext, soundConfig)
     AudioManager.Play(key, soundConfig.Volume or 1.0, soundConfig.Pitch or 1.0)
 end
 
+
+local function ScaleByImpactCount(baseValue, perTargetValue, maxValue, countForScale)
+    local count = math.max(1, countForScale or 1)
+    local value = (baseValue or 0.0) + (perTargetValue or 0.0) * (count - 1)
+    if maxValue ~= nil then
+        value = math.min(value, maxValue)
+    end
+    return value
+end
+
+local function ClampOptional(value, minValue, maxValue)
+    if minValue ~= nil and value < minValue then
+        value = minValue
+    end
+    if maxValue ~= nil and value > maxValue then
+        value = maxValue
+    end
+    return value
+end
+
 local function ResetDashChargeFeedbackState(playerContext)
     playerContext.Feedback.DashChargeGroundPSC = nil
     playerContext.Feedback.DashChargeReadyBursted = false
@@ -519,19 +539,71 @@ local function SpawnDamageTextFeedback(playerContext, event)
 end
 
 local function PlayAttackHitFeedback(playerContext, event)
-    local feedbackConfig = playerContext.Config.Feedback
-    local attackHitConfig = feedbackConfig.AttackHit or {}
-    local shakeScale = attackHitConfig.CameraShakeScale or 0.0
+    -- Individual AttackHit remains per-target UI feedback. Heavier camera/audio/VFX
+    -- feedback is emitted once per AttackImpact group so multi-target hit windows do
+    -- not stutter from repeated hit-stop/shake/sound playback.
+    SpawnDamageTextFeedback(playerContext, event)
+end
 
+local function PlayAttackImpactFeedback(playerContext, event)
+    local feedbackConfig = playerContext.Config.Feedback or {}
+    local impactConfig = feedbackConfig.AttackImpact or {}
+    if impactConfig.Enabled == false then
+        return
+    end
+
+    local countForScale = event.CountForScale or event.TargetCount or 1
+
+    local shakeConfig = impactConfig.CameraShake or {}
+    local shakeScale = event.CameraShakeScale
+        or ScaleByImpactCount(shakeConfig.Base or 0.0, shakeConfig.PerTarget or 0.0, shakeConfig.Max, countForScale)
     if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil and shakeScale > 0.0 then
         CameraManager.StartWaveShake(shakeScale)
     end
 
-    PlayConfiguredSound(playerContext, attackHitConfig.Sound)
-    SpawnDamageTextFeedback(playerContext, event)
+    local vfxConfig = impactConfig.VFX or {}
+    local particlePath = vfxConfig.ParticlePath
+    local center = event.CenterLocation
+    if center ~= nil and particlePath ~= nil and particlePath ~= "" and particlePath ~= "None" then
+        local zOffset = vfxConfig.ZOffset or 0.0
+        local scaleValue = event.VfxScale
+            or ScaleByImpactCount(vfxConfig.BaseScale or 1.0, vfxConfig.PerTargetScale or 0.0, vfxConfig.MaxScale, countForScale)
+        SpawnParticleSystem(
+            particlePath,
+            Vector(center.X, center.Y, center.Z + zOffset),
+            vfxConfig.Rotation or Vector(0.0, 0.0, 0.0),
+            Vector(scaleValue, scaleValue, scaleValue),
+            vfxConfig.Life or 0.45,
+            vfxConfig.MaterialPath or "None")
+    end
 
-    StartFOVPulse(playerContext, "Player.AttackHitFOV", GetFOVConfig(playerContext, "AttackHit"))
-    StartVignettePulse(playerContext, "Player.AttackHitVignette", GetVignetteConfig(playerContext, "AttackHit"))
+    local soundConfig = impactConfig.Sound
+    if soundConfig ~= nil and soundConfig.Enabled ~= false then
+        local volume = event.SoundVolume
+            or ScaleByImpactCount(soundConfig.BaseVolume or soundConfig.Volume or 1.0,
+                soundConfig.PerTargetVolume or 0.0,
+                soundConfig.MaxVolume,
+                countForScale)
+        volume = ClampOptional(volume, soundConfig.MinVolume, soundConfig.MaxVolume)
+
+        local pitch = event.SoundPitch
+            or ScaleByImpactCount(soundConfig.BasePitch or soundConfig.Pitch or 1.0,
+                soundConfig.PerTargetPitch or 0.0,
+                soundConfig.MaxPitch,
+                countForScale)
+        pitch = ClampOptional(pitch, soundConfig.MinPitch, soundConfig.MaxPitch)
+
+        local resolvedSound = {}
+        for key, value in pairs(soundConfig) do
+            resolvedSound[key] = value
+        end
+        resolvedSound.Volume = volume
+        resolvedSound.Pitch = pitch
+        PlayConfiguredSound(playerContext, resolvedSound)
+    end
+
+    StartFOVPulse(playerContext, "Player.AttackImpactFOV", GetFOVConfig(playerContext, "AttackImpact") or GetFOVConfig(playerContext, "AttackHit"))
+    StartVignettePulse(playerContext, "Player.AttackImpactVignette", GetVignetteConfig(playerContext, "AttackImpact") or GetVignetteConfig(playerContext, "AttackHit"))
 end
 
 local function PlayDashStartedFeedback(playerContext, event)
@@ -1019,9 +1091,11 @@ function PlayerFeedback.Init(playerContext)
 
     local feedbackConfig = playerContext.Config.Feedback or {}
     local attackHitConfig = feedbackConfig.AttackHit or {}
+    local attackImpactConfig = feedbackConfig.AttackImpact or {}
     local perfectDodgeConfig = feedbackConfig.PerfectDodge or {}
     EnsureConfiguredSoundLoaded(playerContext, perfectDodgeConfig.Sound)
     EnsureConfiguredSoundLoaded(playerContext, attackHitConfig.Sound)
+    EnsureConfiguredSoundLoaded(playerContext, attackImpactConfig.Sound)
 end
 
 ---@param playerContext PlayerContext
@@ -1460,8 +1534,8 @@ function PlayerFeedback.ProcessEvents(playerContext, events)
             PlayHitReactFeedback(playerContext, event)
         elseif PlayerEvents.Is(event, PlayerEvents.Type.AttackHit) then
             PlayAttackHitFeedback(playerContext, event)
-            -- AttackHitWindow 자체 hitstop은 C++ NotifyState가 처리한다.
-            -- 여기서는 이후 피격 VFX/UI/사운드를 붙일 수 있도록 이벤트만 한 곳에서 받는다.
+        elseif PlayerEvents.Is(event, PlayerEvents.Type.AttackImpact) then
+            PlayAttackImpactFeedback(playerContext, event)
         elseif PlayerEvents.Is(event, PlayerEvents.Type.Dead) then
             StartDeathRagdoll(playerContext)
             StopVignetteLayer(playerContext, "Player.LowHPVignette", nil)

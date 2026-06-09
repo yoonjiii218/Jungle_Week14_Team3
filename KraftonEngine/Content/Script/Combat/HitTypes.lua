@@ -20,6 +20,11 @@ local HitTypes = {}
 ---@field ComboDelta integer|nil
 ---@field CanPerfectDodge boolean|nil
 ---@field HitStopDuration number|nil
+---@field HitWindowSerial integer|nil
+---@field AttackImpactGroupId string|nil
+---@field HitIndex integer|nil
+---@field HitCount integer|nil
+---@field HitInterval number|nil
 ---@field HitboxComponent any
 ---@field TargetComponent any
 ---@field HitResult any
@@ -62,6 +67,11 @@ local function Create(args, caller)
         ComboDelta = args.ComboDelta,
         CanPerfectDodge = args.CanPerfectDodge,
         HitStopDuration = args.HitStopDuration,
+        HitWindowSerial = args.HitWindowSerial,
+        AttackImpactGroupId = args.AttackImpactGroupId,
+        HitIndex = args.HitIndex,
+        HitCount = args.HitCount,
+        HitInterval = args.HitInterval,
         HitboxComponent = args.HitboxComponent,
         TargetComponent = args.TargetComponent,
         HitResult = args.HitResult,
@@ -136,6 +146,11 @@ function HitTypes.CreatePlayerAttackFromState(args)
         Damage = damage,
         GaugeDelta = gaugeDelta,
         HitStopDuration = args.HitStopDuration,
+        HitWindowSerial = args.HitWindowSerial,
+        AttackImpactGroupId = args.AttackImpactGroupId,
+        HitIndex = args.HitIndex,
+        HitCount = args.HitCount,
+        HitInterval = args.HitInterval,
         HitboxComponent = args.HitboxComponent,
         TargetComponent = args.TargetComponent,
         HitResult = args.HitResult,

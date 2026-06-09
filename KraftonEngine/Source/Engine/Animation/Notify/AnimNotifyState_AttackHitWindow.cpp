@@ -246,6 +246,18 @@ void UAnimNotifyState_AttackHitWindow::NotifyTick(USkeletalMeshComponent* MeshCo
 
 void UAnimNotifyState_AttackHitWindow::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* /*Anim*/)
 {
+	if (IsValid(MeshComp))
+	{
+		auto It = ActiveWindowsByMesh.find(MeshComp);
+		if (It != ActiveWindowsByMesh.end())
+		{
+			if (ULuaAnimInstance* LuaAnim = Cast<ULuaAnimInstance>(MeshComp->GetAnimInstance()))
+			{
+				LuaAnim->InvokeLuaFunction("on_attack_hit_window_end", It->second.WindowSerial);
+			}
+		}
+	}
+
 	DisableHitBox(MeshComp);
 }
 

@@ -125,6 +125,8 @@ local function ResetPlayerCombatState(playerContext)
     playerContext.Combat.CombatDodgeActive = false
     playerContext.Combat.DodgeStartLocation = nil
     playerContext.Combat.LastHitTime = 0.0
+    playerContext.Combat.PendingAttackImpacts = {}
+    playerContext.Combat.LastAttackerHitStopTime = -999.0
 end
 
 local function ResetBossCombatState(bossContext)
@@ -157,6 +159,7 @@ local function NormalizeHit(hit)
     hit.TargetTeam = hit.TargetTeam or "Neutral"
     hit.Damage = hit.Damage or 0
     hit.GaugeDelta = hit.GaugeDelta or 0
+    hit.AttackImpactGroupId = hit.AttackImpactGroupId or hit.AttackInstanceId or hit.AttackId
     return hit
 end
 
@@ -240,6 +243,302 @@ local function ApplyLocalHitStop(actor, duration)
         action:LocalHitStop(duration)
     elseif action.HitStop ~= nil then
         action:HitStop(duration, 0.0)
+    end
+end
+
+
+local function NumberOrDefault(value, fallback)
+    value = tonumber(value)
+    if value == nil then
+        return fallback
+    end
+    return value
+end
+
+local function GetImpactGroupConfig(playerContext)
+    local combatConfig = playerContext.Config.Combat or {}
+    return combatConfig.ImpactGroup or {}
+end
+
+local function GetImpactGroupCountForScale(groupConfig, count)
+    count = math.max(1, count or 1)
+    local maxCount = groupConfig.MaxCountForScale or count
+    return math.max(1, math.min(count, maxCount))
+end
+
+local function ScaleImpactValue(channelConfig, countForScale, fallbackBase)
+    channelConfig = channelConfig or {}
+    local base = NumberOrDefault(channelConfig.Base, fallbackBase or 0.0)
+    local perTarget = NumberOrDefault(channelConfig.PerTarget, 0.0)
+    local maxValue = NumberOrDefault(channelConfig.Max, base)
+    return math.min(maxValue, base + perTarget * math.max(0, (countForScale or 1) - 1))
+end
+
+local function ResolveImpactGroupKey(event)
+    if event.AttackImpactGroupId ~= nil then
+        return tostring(event.AttackImpactGroupId)
+    end
+
+    local base = tostring(event.AttackInstanceId or event.AttackId or "UnknownAttack")
+    if event.HitWindowSerial ~= nil then
+        return base .. "_W" .. tostring(event.HitWindowSerial)
+    end
+    return base
+end
+
+local function TryGetEventLocation(event)
+    local location = event.HitLocation
+    if location ~= nil then
+        return location
+    end
+
+    local target = event.TargetActor
+    if target ~= nil and target.Location ~= nil then
+        return target.Location
+    end
+
+    if target ~= nil and Reflection ~= nil and Reflection.Call ~= nil then
+        return Reflection.Call(target, "GetActorLocation")
+    end
+
+    return nil
+end
+
+local function AddLocationToImpactGroup(group, location)
+    if location == nil then
+        return
+    end
+
+    group.LocationSumX = (group.LocationSumX or 0.0) + (location.X or 0.0)
+    group.LocationSumY = (group.LocationSumY or 0.0) + (location.Y or 0.0)
+    group.LocationSumZ = (group.LocationSumZ or 0.0) + (location.Z or 0.0)
+    group.LocationCount = (group.LocationCount or 0) + 1
+end
+
+local function GetImpactGroupCenter(group)
+    local count = group.LocationCount or 0
+    if count <= 0 then
+        return nil
+    end
+
+    return Vector(
+        (group.LocationSumX or 0.0) / count,
+        (group.LocationSumY or 0.0) / count,
+        (group.LocationSumZ or 0.0) / count)
+end
+
+local function AccumulateAttackImpactGroups(playerContext, events, now)
+    local groupConfig = GetImpactGroupConfig(playerContext)
+    local combatConfig = playerContext.Config.Combat or {}
+
+    if groupConfig.Enabled == false then
+        for _, event in ipairs(events) do
+            if PlayerEvents.Is(event, PlayerEvents.Type.AttackHit) then
+                ApplyLocalHitStop(event.SourceActor or playerContext.Owner,
+                    event.RequestedHitStopDuration or combatConfig.HitStopDuration)
+            end
+        end
+        return false
+    end
+
+    local pending = playerContext.Combat.PendingAttackImpacts
+    if pending == nil then
+        pending = {}
+        playerContext.Combat.PendingAttackImpacts = pending
+    end
+
+    for _, event in ipairs(events) do
+        if PlayerEvents.Is(event, PlayerEvents.Type.AttackHit) then
+            local groupKey = ResolveImpactGroupKey(event)
+            local group = pending[groupKey]
+            if group == nil then
+                group = {
+                    Key = groupKey,
+                    AttackId = event.AttackId,
+                    AttackInstanceId = event.AttackInstanceId,
+                    AttackIndex = event.AttackIndex,
+                    HitWindowSerial = event.HitWindowSerial,
+                    SourceActor = event.SourceActor or playerContext.Owner,
+                    TargetKeys = {},
+                    TargetCount = 0,
+                    DamageTotal = 0.0,
+                    ComboTotal = 0,
+                    GaugeTotal = 0.0,
+                    FirstHitTime = now,
+                    LastHitTime = now,
+                    RequestedHitStopDuration = 0.0,
+                    HasRequestedHitStopDuration = false,
+                    WindowClosed = event.HitWindowSerial == nil,
+                    ExpectedFlushTime = now,
+                }
+                pending[groupKey] = group
+            end
+
+            group.LastHitTime = now
+            group.AttackId = group.AttackId or event.AttackId
+            group.AttackInstanceId = group.AttackInstanceId or event.AttackInstanceId
+            group.AttackIndex = group.AttackIndex or event.AttackIndex
+            group.SourceActor = group.SourceActor or event.SourceActor or playerContext.Owner
+            if group.HitWindowSerial == nil then
+                group.HitWindowSerial = event.HitWindowSerial
+            end
+            if event.HitWindowSerial ~= nil then
+                group.WindowClosed = false
+            end
+
+            local targetKey = GetOwnerKey(event.TargetActor) or tostring(event.TargetActor or (groupKey .. "_Target" .. tostring(group.TargetCount + 1)))
+            if group.TargetKeys[targetKey] ~= true then
+                group.TargetKeys[targetKey] = true
+                group.TargetCount = group.TargetCount + 1
+            end
+
+            group.DamageTotal = (group.DamageTotal or 0.0) + (event.Damage or 0.0)
+            group.ComboTotal = (group.ComboTotal or 0) + (event.ComboDelta or 0)
+            group.GaugeTotal = (group.GaugeTotal or 0.0) + (event.GaugeDelta or 0.0)
+            if event.RequestedHitStopDuration ~= nil then
+                group.HasRequestedHitStopDuration = true
+                group.RequestedHitStopDuration = math.max(group.RequestedHitStopDuration or 0.0,
+                    event.RequestedHitStopDuration or 0.0)
+            end
+
+            local hitIndex = math.max(1, event.HitIndex or 1)
+            local hitCount = math.max(hitIndex, event.HitCount or hitIndex)
+            local hitInterval = math.max(0.0, event.HitInterval or 0.0)
+            local expectedFlushTime = now + math.max(0, hitCount - hitIndex) * hitInterval
+            group.ExpectedFlushTime = math.max(group.ExpectedFlushTime or now, expectedFlushTime)
+
+            AddLocationToImpactGroup(group, TryGetEventLocation(event))
+        end
+    end
+
+    return true
+end
+
+local function MarkClosedAttackImpactWindows(playerContext, events, now)
+    local pending = playerContext.Combat.PendingAttackImpacts
+    if pending == nil then
+        return false
+    end
+
+    local hadClosedWindow = false
+    for _, event in ipairs(events) do
+        if PlayerEvents.Is(event, PlayerEvents.Type.AttackImpactWindowClosed) then
+            local serial = event.HitWindowSerial
+            if serial ~= nil then
+                for _, group in pairs(pending) do
+                    if group.HitWindowSerial == serial then
+                        group.WindowClosed = true
+                        group.ClosedTime = now
+                        hadClosedWindow = true
+                    end
+                end
+            end
+        end
+    end
+
+    return hadClosedWindow
+end
+
+local function HasAttackImpactForceFlushEvent(events)
+    for _, event in ipairs(events) do
+        if PlayerEvents.Is(event, PlayerEvents.Type.AttackEnded)
+            or PlayerEvents.Is(event, PlayerEvents.Type.DashChargeAttackEnded)
+            or PlayerEvents.Is(event, PlayerEvents.Type.UltimateEnded) then
+            return true
+        end
+    end
+    return false
+end
+
+local function ResolveAttackImpactHitStopDuration(playerContext, group, targetCount)
+    local combatConfig = playerContext.Config.Combat or {}
+    local groupConfig = GetImpactGroupConfig(playerContext)
+    local hitStopConfig = groupConfig.AttackerHitStop or {}
+    local countForScale = GetImpactGroupCountForScale(groupConfig, targetCount)
+    if group.HasRequestedHitStopDuration == true and (group.RequestedHitStopDuration or 0.0) <= 0.0 then
+        return 0.0
+    end
+
+    local fallbackBase = group.RequestedHitStopDuration
+    if group.HasRequestedHitStopDuration ~= true then
+        fallbackBase = combatConfig.HitStopDuration or 0.0
+    end
+    return ScaleImpactValue(hitStopConfig, countForScale, fallbackBase)
+end
+
+local function FlushAttackImpactGroup(playerContext, events, groupKey, group, now)
+    if group == nil or (group.TargetCount or 0) <= 0 then
+        playerContext.Combat.PendingAttackImpacts[groupKey] = nil
+        return
+    end
+
+    local groupConfig = GetImpactGroupConfig(playerContext)
+    local targetCount = group.TargetCount or 1
+    local countForScale = GetImpactGroupCountForScale(groupConfig, targetCount)
+    local hitStopDuration = ResolveAttackImpactHitStopDuration(playerContext, group, targetCount)
+
+    local hitStopConfig = groupConfig.AttackerHitStop or {}
+    local minInterval = NumberOrDefault(hitStopConfig.MinInterval, 0.0)
+    local lastHitStopTime = playerContext.Combat.LastAttackerHitStopTime or -999.0
+    if hitStopDuration > 0.0 and now >= lastHitStopTime + minInterval then
+        ApplyLocalHitStop(group.SourceActor or playerContext.Owner, hitStopDuration)
+        playerContext.Combat.LastAttackerHitStopTime = now
+    else
+        hitStopDuration = 0.0
+    end
+
+    table.insert(events, PlayerEvents.CreateAttackImpact({
+        AttackId = group.AttackId,
+        AttackInstanceId = group.AttackInstanceId,
+        AttackIndex = group.AttackIndex,
+        HitWindowSerial = group.HitWindowSerial,
+        AttackImpactGroupId = group.Key,
+        SourceActor = group.SourceActor or playerContext.Owner,
+        TargetCount = targetCount,
+        CountForScale = countForScale,
+        DamageTotal = group.DamageTotal or 0.0,
+        ComboTotal = group.ComboTotal or 0,
+        GaugeTotal = group.GaugeTotal or 0.0,
+        CenterLocation = GetImpactGroupCenter(group),
+        HitStopDuration = hitStopDuration,
+    }))
+
+    playerContext.Combat.PendingAttackImpacts[groupKey] = nil
+end
+
+local function FlushReadyAttackImpactGroups(playerContext, events, now, forceFlush)
+    local groupConfig = GetImpactGroupConfig(playerContext)
+    if groupConfig.Enabled == false then
+        return
+    end
+
+    local pending = playerContext.Combat.PendingAttackImpacts
+    if pending == nil then
+        return
+    end
+
+    local fallbackFlushDelay = NumberOrDefault(groupConfig.FallbackFlushDelay, 0.12)
+    local noWindowFlushDelay = NumberOrDefault(groupConfig.NoWindowFlushDelay, 0.0)
+    local readyKeys = {}
+
+    for groupKey, group in pairs(pending) do
+        local ready = forceFlush == true
+        if ready ~= true then
+            if group.HitWindowSerial ~= nil then
+                ready = (group.WindowClosed == true and now >= (group.ExpectedFlushTime or now))
+                    or (fallbackFlushDelay >= 0.0 and now >= (group.LastHitTime or now) + fallbackFlushDelay)
+            else
+                ready = now >= (group.LastHitTime or now) + noWindowFlushDelay
+            end
+        end
+
+        if ready == true then
+            table.insert(readyKeys, groupKey)
+        end
+    end
+
+    for _, groupKey in ipairs(readyKeys) do
+        FlushAttackImpactGroup(playerContext, events, groupKey, pending[groupKey], now)
     end
 end
 
@@ -348,6 +647,10 @@ function CombatContext.ProcessPlayerEvents(playerContext, events)
 
     local now = Now()
     local combatConfig = playerContext.Config.Combat
+
+    AccumulateAttackImpactGroups(playerContext, events, now)
+    MarkClosedAttackImpactWindows(playerContext, events, now)
+    FlushReadyAttackImpactGroups(playerContext, events, now, HasAttackImpactForceFlushEvent(events))
 
     for _, event in ipairs(events) do
         if PlayerEvents.Is(event, PlayerEvents.Type.PerfectDodge) then
@@ -875,18 +1178,25 @@ function CombatContext.ApplyHitToBoss(hit)
     local sourcePlayerContext = CombatContext.GetPlayerByOwner(hit.SourceActor)
     if sourcePlayerContext ~= nil then
         local combatConfig = sourcePlayerContext.Config.Combat
-        ApplyLocalHitStop(hit.SourceActor, hit.HitStopDuration or combatConfig.HitStopDuration)
         ApplyLocalHitStop(bossRef, hit.HitStopDuration or combatConfig.EnemyHitStopDuration)
 
         PlayerEvents.EmitAttackHit(sourcePlayerContext, {
             AttackId = hit.AttackId,
+            AttackInstanceId = hit.AttackInstanceId,
             AttackIndex = hit.AttackIndex,
+            HitWindowSerial = hit.HitWindowSerial,
+            AttackImpactGroupId = hit.AttackImpactGroupId,
+            HitIndex = hit.HitIndex,
+            HitCount = hit.HitCount,
+            HitInterval = hit.HitInterval,
+            SourceActor = hit.SourceActor,
             TargetActor = bossRef,
             Damage = damage,
             HitResult = hit.HitResult,
             HitLocation = hit.HitResult and hit.HitResult.WorldHitLocation or nil,
             GaugeDelta = hit.GaugeDelta or combatConfig.AttackHitGaugeDelta or 0,
             ComboDelta = hit.ComboDelta or combatConfig.AttackComboGain or 1,
+            RequestedHitStopDuration = hit.HitStopDuration or combatConfig.HitStopDuration,
             HP = bossContext.Combat.HP,
             MaxHP = bossContext.Combat.MaxHP,
         })
@@ -979,18 +1289,25 @@ function CombatContext.ApplyHitToMob(mobContext, hitRequest)
     local sourcePlayerContext = CombatContext.GetPlayerByOwner(hit.SourceActor)
     if sourcePlayerContext ~= nil then
         local combatConfig = sourcePlayerContext.Config.Combat
-        ApplyLocalHitStop(hit.SourceActor, hit.HitStopDuration or combatConfig.HitStopDuration)
         ApplyLocalHitStop(mobContext.Owner, hit.HitStopDuration or combatConfig.EnemyHitStopDuration)
 
         PlayerEvents.EmitAttackHit(sourcePlayerContext, {
             AttackId = hit.AttackId,
+            AttackInstanceId = hit.AttackInstanceId,
             AttackIndex = hit.AttackIndex,
+            HitWindowSerial = hit.HitWindowSerial,
+            AttackImpactGroupId = hit.AttackImpactGroupId,
+            HitIndex = hit.HitIndex,
+            HitCount = hit.HitCount,
+            HitInterval = hit.HitInterval,
+            SourceActor = hit.SourceActor,
             TargetActor = mobContext.Owner,
             Damage = damage,
             HitResult = hit.HitResult,
             HitLocation = hit.HitResult and hit.HitResult.WorldHitLocation or nil,
             GaugeDelta = hit.GaugeDelta or combatConfig.AttackHitGaugeDelta or 0,
             ComboDelta = hit.ComboDelta or combatConfig.AttackComboGain or 1,
+            RequestedHitStopDuration = hit.HitStopDuration or combatConfig.HitStopDuration,
             HP = mobContext.Combat.HP,
             MaxHP = maxHP,
         })

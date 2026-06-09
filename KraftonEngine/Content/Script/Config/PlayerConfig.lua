@@ -170,7 +170,7 @@ PlayerConfig.Default = {
         FlyingSlashDamage = 20,
         FlyingSlashGaugeDelta = 8,
         FlyingSlashHitStopDuration = 0.03,
-        UltimateDamage = 10,
+        UltimateDamage = 5,
         UltimateRange = 42.0,
         UltimateHitStopDuration = 0.08,
         UltimateDuplicateHitLifetime = 1.2,
@@ -198,7 +198,7 @@ PlayerConfig.Default = {
         },
         DashChargeAttackHitCount = 1,
         DashChargeAttackHitInterval = 0.06,
-        UltimateHitCount = 10,
+        UltimateHitCount = 20,
         UltimateHitInterval = 0.03,
 
         -- Gauge/anti-duplicate policy.
@@ -213,7 +213,7 @@ PlayerConfig.Default = {
         HitInvincibleDuration = 0.5,
         DashPerfectDodgeDuration = 0.2,
         PerfectDodgeGraceAfterDash = 0.05,
-        PerfectDodgeSlomoDuration = 5.0,
+        PerfectDodgeSlomoDuration = 2.5,
         PerfectDodgeSlomoScale = 0.1,
         -- World is slowed by SlomoScale. PlayerSpeedScale is the player's final speed
         -- relative to real/raw time while TimeRush is active. 1.0 = normal, 1.2 = 20% faster.
@@ -221,11 +221,28 @@ PlayerConfig.Default = {
         -- Extra AI/cooldown scale on top of global slomo. Keep 1.0 to avoid double slomo.
         PerfectDodgeEnemyBrainScale = 1.0,
 
-        -- Lua-triggered hit feedback. Player attack hitstop is still primarily
-        -- driven by AnimNotifyState_AttackHitWindow, but these values are used
-        -- by boss->player hits and non-notify based hit windows.
+        -- Lua-triggered hit feedback. Player attack hitstop is now grouped per
+        -- AttackHitWindow below; HitStopDuration remains the default/fallback value.
         HitStopDuration = 0.05,
         EnemyHitStopDuration = 0.04,
+
+        -- AttackHitWindow 단위로 여러 AttackHit를 묶어 공격자 hitstop을 1회만 적용한다.
+        -- 다수 대상 피격은 아래 채널별 config로 조금씩 증폭하되, 반복 호출로 끊기지 않게 한다.
+        ImpactGroup = {
+            Enabled = true,
+            MaxCountForScale = 5,
+            -- Window end 이벤트를 못 받는 예외 상황을 위한 안전 flush.
+            FallbackFlushDelay = 0.12,
+            -- Projectile / Ultimate처럼 HitWindowSerial이 없는 공격은 같은 frame Drain 이후 즉시 묶어 처리.
+            NoWindowFlushDelay = 0.0,
+
+            AttackerHitStop = {
+                Base = 0.035,
+                PerTarget = 0.006,
+                Max = 0.05,
+                MinInterval = 0.08,
+            },
+        },
     },
 
     Feedback = {
@@ -280,14 +297,39 @@ PlayerConfig.Default = {
             },
         },
 
+        -- Per-target hit feedback. Heavy impact feedback is grouped below as AttackImpact.
         AttackHit = {
-            CameraShakeScale = 0.25,
+        },
+
+        -- One feedback packet per AttackHitWindow / impact group. Multi-target hits scale
+        -- different channels independently: hitstop slightly, shake more, VFX/sound most.
+        AttackImpact = {
+            Enabled = true,
+            CameraShake = {
+                Base = 0.22,
+                PerTarget = 0.08,
+                Max = 0.33,
+            },
+            VFX = {
+                ParticlePath = "None",
+                MaterialPath = "None",
+                BaseScale = 1.0,
+                PerTargetScale = 0.25,
+                MaxScale = 2.0,
+                Life = 0.45,
+                ZOffset = 0.8,
+            },
             Sound = {
                 Enabled = true,
-                Key = "PlayerAttackHit",
+                Key = "PlayerAttackImpact",
                 Path = "Hit Crash/WEAPSwrd_Sword_Hit_Crash_12.wav",
-                Volume = 1.0,
-                Pitch = 1.0,
+                BaseVolume = 0.85,
+                PerTargetVolume = 0.12,
+                MaxVolume = 1.25,
+                BasePitch = 1.0,
+                PerTargetPitch = -0.025,
+                MinPitch = 0.90,
+                MaxPitch = 1.08,
             },
         },
 
@@ -378,6 +420,19 @@ PlayerConfig.Default = {
                 BlendIn = 0.01,
                 BlendOut = 0.11,
                 R = 0.18,
+                G = 0.02,
+                B = 0.02,
+                A = 1.0,
+            },
+
+            AttackImpact = {
+                Intensity = 0.12,
+                Radius = 0.68,
+                Softness = 0.34,
+                Duration = 0.18,
+                BlendIn = 0.01,
+                BlendOut = 0.12,
+                R = 0.20,
                 G = 0.02,
                 B = 0.02,
                 A = 1.0,
@@ -495,6 +550,13 @@ PlayerConfig.Default = {
                 BlendOut = 0.15,
             },
 
+            AttackImpact = {
+                DeltaDegrees = 0,
+                Duration = 0.20,
+                BlendIn = 0.02,
+                BlendOut = 0.15,
+            },
+
             HitReact = {
                 DeltaDegrees = 0,
                 Duration = 0.24,
@@ -544,8 +606,8 @@ PlayerConfig.Default = {
         },
 
         UltimateCamera = {
-            BackDistance = 70.0,
-            Height = 23.0,
+            BackDistance = 40.0,
+            Height = 10.0,
             SlashCameraDistance = 30.0,
             SlashCameraRightOffset = 15,
             SlashCameraHeightOffset = -5.0,
@@ -564,7 +626,7 @@ PlayerConfig.Default = {
         },
 
         UltimateMove = {
-            StartDistance = 100.0,
+            StartDistance = -100.0,
             EndDistance = 10,
             SideOffset = -10.0,
             ControlSideOffset = 40.0,
