@@ -4,6 +4,7 @@
 -- (WaveDirector 가 require 해서 사용하는 순수 모듈. 코루틴은 호출자의 Begin/End 스코프에서 구동된다.)
 
 local WaveSpawner = {}
+local CombatContext = require("Combat/CombatContext")
 
 -- 추적 테이블 (TutorialSpawner 의 모듈 레벨 상태 패턴과 동일. 웨이브 시스템은 단일 인스턴스)
 local spawnedEntities = {}
@@ -23,6 +24,34 @@ local function GetPlayerActor()
         return player
     end
     return World.FindActorByName("PlayerCharacter")
+end
+
+local function ResolveNumber(value)
+    if type(value) == "number" then
+        return value
+    end
+    if type(value) == "string" then
+        return tonumber(value)
+    end
+    return nil
+end
+
+local function ApplySpawnOverrides(enemyData, spawnedActor)
+    if not IsValidActor(spawnedActor) or enemyData.spawnType ~= "Boss" then
+        return
+    end
+
+    local maxHP = ResolveNumber(enemyData.maxHP or enemyData.MaxHP or enemyData.HP or enemyData.hp)
+    if maxHP == nil then
+        return
+    end
+
+    local currentHP = ResolveNumber(enemyData.hp or enemyData.HP) or maxHP
+    if CombatContext.SetBossHP ~= nil and CombatContext.SetBossHP(currentHP, maxHP) == true then
+        print("[WaveSpawner] boss HP override: " .. tostring(currentHP) .. "/" .. tostring(maxHP))
+    else
+        print("[WaveSpawner] boss HP override failed: boss context missing")
+    end
 end
 
 -- waveData 안의 모든 적 그룹 수 합산 (Director 의 AliveCount 사전 계산용).
@@ -88,6 +117,7 @@ function WaveSpawner.SpawnSingleEntity(enemyData)
 
     if IsValidActor(spawnedActor) then
         spawnedActor:AddTag("WaveEnemy")
+        ApplySpawnOverrides(enemyData, spawnedActor)
         table.insert(spawnedEntities, spawnedActor)
         return true
     end

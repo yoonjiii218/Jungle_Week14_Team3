@@ -24,7 +24,7 @@ local WaveConfig = {
     {
         waveType = "Boss",
         enemies = {
-            { spawnType = "Boss", mobId = "Boss", count = 1, spawnDelay = 0.0, distance = 25.0 },
+            { spawnType = "Boss", mobId = "Boss", count = 1, spawnDelay = 0.0, distance = 25.0, maxHP = 300.0 },
         },
     },
 

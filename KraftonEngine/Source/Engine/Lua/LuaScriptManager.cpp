@@ -3239,6 +3239,11 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 		return Actor.AddComponent<UActionComponent>();
 	},
 
+		"AddCameraComponent", [](AActor& Actor) -> UCameraComponent*
+	{
+		return Actor.AddComponent<UCameraComponent>();
+	},
+
 		"GetSkeletalMeshComponent", [](AActor& Actor)
 	{
 		return Actor.GetComponentByClass<USkeletalMeshComponent>();

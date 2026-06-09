@@ -67,7 +67,10 @@ local function StartNextWave()
         state.IsActive = false
         SetState(WaveState.Finished)
         print("[WaveDirector] All Waves Cleared! Stage Complete.")
-        -- TODO: GameFlowDirector 의 클리어 UI 흐름으로 연결
+        GameplayEventBus.Publish({
+            Type = "WavesFinished",
+            WaveIndex = state.CurrentWaveIndex - 1,
+        })
         return
     end
 

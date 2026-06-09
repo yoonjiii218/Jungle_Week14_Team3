@@ -1,5 +1,6 @@
 local CombatContext = require("Combat/CombatContext")
 local TutorialDirector = require("Tutorial/TutorialDirector")
+local GameplayEventBus = require("Core/GameplayEventBus")
 
 local widgets = {}
 local director = nil
@@ -16,8 +17,9 @@ local START_MENU_BOOT_DURATION = 1.50
 local START_MENU_BOOT_BASE_WIDTH = 1280.0
 local START_MENU_BOOT_BASE_HEIGHT = 720.0
 local FILM_COUNTDOWN_WIDGET_FALLBACK = "Content/UI/GameFlow/FilmCountdown.uasset"
-local FILM_COUNTDOWN_DURATION = 5.35
-local FILM_COUNTDOWN_PLAY_SECONDS = 5.0
+local FILM_COUNTDOWN_START_NUMBER = 3
+local FILM_COUNTDOWN_PLAY_SECONDS = 3.0
+local FILM_COUNTDOWN_DURATION = 3.35
 local pendingTransitionAction = nil
 local pendingTransitionFrameDelay = 0
 local FILM_SPROCKET_COUNT = 11
@@ -34,7 +36,7 @@ local COMBO_HOLD_DURATION = 3.0
 local COMBO_IMPACT_DURATION = 0.42
 local SCOREBOARD_FILE = "GameFlowScoreboard.tsv"
 local SCOREBOARD_MAX_ENTRIES = 5
-local TOKYO_AUTOSPAWN_BOSS = true
+local TOKYO_AUTOSPAWN_BOSS = false
 local UI_AUDIO = {
     Hover = { key = "UI_ButtonHover", path = "UI/button_hover.mp3", volume = 0.55 },
     Down = { key = "UI_ButtonDown", path = "UI/button_down.mp3", volume = 0.75 },
@@ -80,6 +82,7 @@ local loadedUiAudio = {}
 local combatElapsedTime = 0.0
 local clearTimeSaved = false
 local lastClearScore = nil
+local wavesFinishedHandle = nil
 local startHudFlow = nil
 local showCredits = nil
 local FLOW_BGM = {
@@ -1184,7 +1187,7 @@ local function updateFilmCountdown(dt)
 
     local activeTime = clamp(t, 0.0, FILM_COUNTDOWN_PLAY_SECONDS - 0.001)
     local digitIndex = math.floor(activeTime)
-    local digit = 5 - digitIndex
+    local digit = FILM_COUNTDOWN_START_NUMBER - digitIndex
     local digitTime = activeTime - digitIndex
     local digitText = tostring(digit)
     if t >= FILM_COUNTDOWN_PLAY_SECONDS then
@@ -1193,7 +1196,8 @@ local function updateFilmCountdown(dt)
     end
 
     local fadeIn = clamp(t / 0.18, 0.0, 1.0)
-    local fadeOut = t > 5.08 and (1.0 - clamp((t - 5.08) / 0.27, 0.0, 1.0)) or 1.0
+    local fadeOutStart = math.max(0.0, FILM_COUNTDOWN_DURATION - 0.27)
+    local fadeOut = t > fadeOutStart and (1.0 - clamp((t - fadeOutStart) / 0.27, 0.0, 1.0)) or 1.0
     local masterOpacity = fadeIn * fadeOut
     local digitPulse = 1.0 - clamp(digitTime / 0.92, 0.0, 1.0)
     local flash = flashPulse(digitTime, 0.0, 0.16, 1.0)
@@ -1875,14 +1879,36 @@ local function updateTerminalFlow()
         return
     end
 
+    local hasBoss = CombatContext.HasBoss ~= nil and CombatContext.HasBoss()
+    if not hasBoss then
+        local bossMaxHP = d:GetBossMaxHP()
+        hasBoss = bossMaxHP ~= nil and bossMaxHP > 0.0
+    end
+
     if d:GetPlayerHP() <= 0.0 then
         d:RequestGameOver()
         showGameOver()
-    elseif d:GetBossHP() <= 0.0 then
+    elseif hasBoss and d:GetBossHP() <= 0.0 then
         recordClearScore(d)
         d:RequestClear()
         showClear()
     end
+end
+
+local function handleWavesFinished(eventData)
+    if currentScreen ~= "HUD" then
+        return
+    end
+
+    local d = getDirector()
+    if d == nil then
+        return
+    end
+
+    print("[GameFlow] Waves finished. Request clear.")
+    recordClearScore(d)
+    d:RequestClear()
+    showClear()
 end
 
 function BeginPlay()
@@ -1897,6 +1923,10 @@ function BeginPlay()
             togglePauseMenu()
         end
     end)
+
+    if wavesFinishedHandle == nil then
+        wavesFinishedHandle = GameplayEventBus.Subscribe("WavesFinished", obj, handleWavesFinished)
+    end
 
     local startup = d:GetStartupScreen()
     if startup == "StartMenu" then
@@ -1917,7 +1947,7 @@ function BeginPlay()
 end
 
 function Tick(dt)
-    if pendingTransitionAction ~= nil then
+    if pendingTransitionAction ~= nil and currentScreen ~= "Countdown" then
         pendingTransitionFrameDelay = pendingTransitionFrameDelay - 1
         if pendingTransitionFrameDelay <= 0 then
             local action = pendingTransitionAction
@@ -1961,6 +1991,10 @@ end
 
 function EndPlay()
     TutorialDirector.End()
+    if wavesFinishedHandle ~= nil then
+        GameplayEventBus.Unsubscribe(wavesFinishedHandle)
+        wavesFinishedHandle = nil
+    end
     if Engine.ClearOnEscape ~= nil then
         Engine.ClearOnEscape()
     else

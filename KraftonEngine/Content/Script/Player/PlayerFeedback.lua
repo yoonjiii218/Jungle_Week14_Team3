@@ -824,6 +824,32 @@ local function ResolveUltimateFocus(playerContext, actorLocation, fallbackForwar
     return target, targetLocation, dir
 end
 
+local function GetOrCreateUltimateCameraActor()
+    local ultimateCamera = World.FindFirstActorByTag("UltimateCamera")
+    if IsValidObject(ultimateCamera) then
+        return ultimateCamera
+    end
+
+    if World.SpawnActor == nil then
+        return nil
+    end
+
+    ultimateCamera = World.SpawnActor("AActor")
+    if not IsValidObject(ultimateCamera) then
+        return nil
+    end
+
+    if ultimateCamera.AddTag ~= nil then
+        ultimateCamera:AddTag("UltimateCamera")
+    end
+    if ultimateCamera.AddCameraComponent ~= nil then
+        ultimateCamera:AddCameraComponent()
+    end
+
+    print("[PlayerFeedback] Runtime UltimateCamera created")
+    return ultimateCamera
+end
+
 local function StartDeathRagdoll(playerContext)
     local owner = playerContext.Owner
     if owner == nil or owner.GetSkeletalMeshComponent == nil then
@@ -1048,7 +1074,7 @@ function PlayerFeedback.BeginUltimate(playerContext)
         return
     end
 
-    local ultimateCamera = World.FindFirstActorByTag("UltimateCamera")
+    local ultimateCamera = GetOrCreateUltimateCameraActor()
     if ultimateCamera == nil then
         print("UltimateCamera not found")
         action.IsUltimateRunning = false
