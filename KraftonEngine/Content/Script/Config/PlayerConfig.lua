@@ -326,7 +326,7 @@ PlayerConfig.Default = {
 
             HitReact = {
                 Intensity = 0.62,
-                Radius = 0.56,
+                Radius = 0.9,
                 Softness = 0.38,
                 Duration = 0.44,
                 BlendIn = 0.02,

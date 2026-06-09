@@ -34,6 +34,7 @@ local COMBO_HOLD_DURATION = 3.0
 local COMBO_IMPACT_DURATION = 0.42
 local SCOREBOARD_FILE = "GameFlowScoreboard.tsv"
 local SCOREBOARD_MAX_ENTRIES = 5
+local TOKYO_AUTOSPAWN_BOSS = true
 local UI_AUDIO = {
     Hover = { key = "UI_ButtonHover", path = "UI/button_hover.mp3", volume = 0.55 },
     Down = { key = "UI_ButtonDown", path = "UI/button_down.mp3", volume = 0.75 },
@@ -257,6 +258,7 @@ local function updateStartMenuPadHints(widget)
 end
 
 local function updateCreditsPadHints(widget)
+    setText(widget, "btn-score", padHintLabel("Score", "Y"))
     setText(widget, "btn-main-menu", padHintLabel("Main Menu", "X"))
     setText(widget, "btn-exit", padHintLabel("Exit", "B"))
 end
@@ -381,7 +383,7 @@ local function recordClearScore(d)
     local score = {
         Time = combatElapsedTime,
         Scene = getCurrentSceneName(d),
-        Stamp = os.date ~= nil and os.date("%Y-%m-%d %H:%M:%S") or "",
+        Stamp = os ~= nil and os.date ~= nil and os.date("%Y-%m-%d %H:%M:%S") or "",
     }
 
     local entries = loadScoreboard()
@@ -399,24 +401,35 @@ local function recordClearScore(d)
     return score
 end
 
-local function applyScoreboardToClear(screen, currentScore)
-    if screen == nil then
+local function applyScoreboardToCredits(credits)
+    if credits == nil then
         return
     end
 
     local entries = loadScoreboard()
-    setText(screen, "clear-time", "CLEAR TIME  " .. formatClearTime(currentScore ~= nil and currentScore.Time or combatElapsedTime))
+    local currentText = lastClearScore ~= nil and formatClearTime(lastClearScore.Time) or "--:--.--"
+    setText(credits, "score-current", "LAST CLEAR  " .. currentText)
 
-    for i = 1, 3 do
+    for i = 1, 5 do
         local entry = entries[i]
         if entry ~= nil then
-            setText(screen, "score-rank-" .. tostring(i), string.format("#%d  %s", i, formatClearTime(entry.Time)))
-            setText(screen, "score-meta-" .. tostring(i), (entry.Scene ~= nil and entry.Scene ~= "" and entry.Scene or "UNKNOWN") .. "  " .. (entry.Stamp or ""))
+            setText(credits, "score-rank-" .. tostring(i), string.format("#%d  %s", i, formatClearTime(entry.Time)))
+            setText(credits, "score-meta-" .. tostring(i), (entry.Scene ~= nil and entry.Scene ~= "" and entry.Scene or "UNKNOWN") .. "  " .. (entry.Stamp or ""))
         else
-            setText(screen, "score-rank-" .. tostring(i), string.format("#%d  --:--.--", i))
-            setText(screen, "score-meta-" .. tostring(i), "NO RECORD")
+            setText(credits, "score-rank-" .. tostring(i), string.format("#%d  --:--.--", i))
+            setText(credits, "score-meta-" .. tostring(i), "NO RECORD")
         end
     end
+end
+
+local function showCreditsScoreboard(credits)
+    if credits == nil then
+        return
+    end
+
+    applyScoreboardToCredits(credits)
+    credits:SetProperty("score-panel", "display", "block")
+    credits:SetProperty("score-panel", "opacity", "1")
 end
 
 local function updateBossDamageBar(hud, hp, maxHP, dt)
@@ -1001,6 +1014,40 @@ local function showTutorialHud()
     return tutorialHud
 end
 
+local function ensureTokyoBossSpawned(d)
+    if TOKYO_AUTOSPAWN_BOSS ~= true or d == nil then
+        return
+    end
+    if getCurrentSceneName(d) ~= "Tokyo_Current" then
+        return
+    end
+    if hasRegisteredBoss() == true or hasBossActor(d) == true then
+        return
+    end
+    if GameFlow == nil or GameFlow.SpawnTutorialBoss == nil then
+        print("[GameFlow] Tokyo boss auto-spawn skipped: binding unavailable.")
+        return
+    end
+
+    local spawnLocation = Vector(5.0, 0.0, 1.0)
+    local player = d:GetPlayerActor()
+    if isValidActor(player) then
+        spawnLocation = player.Location + Vector(10.0, 0.0, 0.0)
+    end
+
+    local boss = GameFlow.SpawnTutorialBoss(spawnLocation, 180.0)
+    if boss ~= nil then
+        if boss.AddTag ~= nil then
+            boss:AddTag("Boss")
+            boss:AddTag("HitTarget")
+        end
+        d:SetBossHP(d:GetBossMaxHP(), d:GetBossMaxHP())
+        print("[GameFlow] Tokyo boss auto-spawned for HUD/game-flow.")
+    else
+        print("[GameFlow] Tokyo boss auto-spawn failed.")
+    end
+end
+
 startHudFlow = function()
     local d = getDirector()
     if d == nil then return end
@@ -1010,6 +1057,7 @@ startHudFlow = function()
     local bTrainingMapFlow = isTrainingMapFlow(d, bTrainingQueued)
 
     d:StartCombat()
+    ensureTokyoBossSpawned(d)
     showHud()
     if bTrainingMapFlow == true then
         playFlowBGM(FLOW_BGM.TrainingMap)
@@ -1566,11 +1614,9 @@ local function showClear()
     removeAllWidgets()
     d:ResumeGame()
     clearToCreditsTime = 0.0
-    local clearScore = recordClearScore(d)
 
     local screen = createWidget("Clear", d:GetClearWidgetPath(), true, 100)
     if screen ~= nil then
-        applyScoreboardToClear(screen, clearScore)
         bindButtonAudio(screen, { "btn-credits", "btn-main-menu", "btn-exit" })
         screen:bind_click("btn-credits", function()
             if showCredits ~= nil then
@@ -1684,9 +1730,15 @@ showCredits = function()
     local screen = createWidget("Credits", d:GetCreditsWidgetPath(), true, 100)
     if screen ~= nil then
         updateCreditsPadHints(screen)
-        bindButtonAudio(screen, { "btn-main-menu", "btn-exit" })
+        bindButtonAudio(screen, { "btn-score", "btn-main-menu", "btn-exit" })
         setCreditsOpacity(screen, "control-panel", 0.0)
         setCreditsProperty(screen, "control-panel", "display", "none")
+        setCreditsOpacity(screen, "score-panel", 0.0)
+        setCreditsProperty(screen, "score-panel", "display", "none")
+        applyScoreboardToCredits(screen)
+        screen:bind_click("btn-score", function()
+            showCreditsScoreboard(screen)
+        end)
         screen:bind_click("btn-main-menu", function()
             d:RequestMainMenu()
         end)
@@ -1710,7 +1762,10 @@ local function applyCreditsPadActions()
     local d = getDirector()
     if d == nil then return end
 
-    if Input.WasActionStarted("Attack") then
+    if Input.WasActionStarted("Ultimate") then
+        playButtonDown()
+        showCreditsScoreboard(widgets.Credits)
+    elseif Input.WasActionStarted("Attack") then
         playButtonDown()
         d:RequestMainMenu()
     elseif Input.WasActionStarted("SecondaryDash") then
@@ -1810,6 +1865,7 @@ local function updateTerminalFlow()
         if phase == "GameOver" then
             showGameOver()
         elseif phase == "Clear" then
+            recordClearScore(d)
             showClear()
         end
         return
@@ -1823,6 +1879,7 @@ local function updateTerminalFlow()
         d:RequestGameOver()
         showGameOver()
     elseif d:GetBossHP() <= 0.0 then
+        recordClearScore(d)
         d:RequestClear()
         showClear()
     end
