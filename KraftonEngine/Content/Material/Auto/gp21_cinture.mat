@@ -13,6 +13,7 @@
   "RasterizerState" : "",
   "RenderPass" : "Opaque",
   "ShaderPath" : "Shaders/Geometry/UberLit.hlsl",
+  "ShadingModel" : "DefaultLit",
   "Textures" : {
     "DiffuseTexture" : "Content/Texture/Auto/mcl39-chassis/Image_15",
     "NormalTexture" : "Content/Texture/Auto/mcl39-chassis/Image_16"
