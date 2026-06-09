@@ -910,10 +910,11 @@ local function HandleMobDeath(mobContext, hit)
     mobContext.Combat.IsDead = true
     -- 락을 풀어 "맞고 굳어버리는" 상태를 방지 (MobAction.Update 는 IsDead 면 어차피 조기 반환).
     mobContext.Combat.ActionLock = false
+    mobContext.Combat.CancelAttack = true
 
-    -- 진행 중이던 공격 코루틴은 직접 죽이지 않는다. MobAttacks 의 IsAttackAborted 가 IsDead 를
-    -- 감지해 EndAttack 으로 IsTracking=true / ActionLock=false 로 플래그를 중립화하며 스스로 종료한다.
-    -- (코루틴을 강제로 Destroy 하면 그 정리가 안 돌아 플래그가 "공격 중"으로 얼어붙어 공격 모션이 반복된다.)
+    -- 사망한 잡몹은 MobCharacter.Tick 의 일반 업데이트 경로를 더 이상 돌지 않는다.
+    -- 그래서 진행 중인 공격 코루틴이 장판 HideZone 까지 자연스럽게 도달하지 못할 수 있다.
+    -- 실제 Decal/코루틴 정리는 MobCharacter 의 사망 진입 첫 프레임에서 MobAttacks.CleanupActiveAttack 으로 수행한다.
 
     -- 사망 모션 방향 신호 (MobAnimation 이 소비해 Death_Forward/Backward 재생)
     -- 보스의 HandleBossDeath 와 동일하게, 치명타가 앞에서 들어왔으면 "Front", 뒤에서 들어왔으면 "Back".
