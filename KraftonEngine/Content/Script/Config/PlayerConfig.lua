@@ -285,7 +285,7 @@ PlayerConfig.Default = {
             Sound = {
                 Enabled = true,
                 Key = "PlayerAttackHit",
-                Path = "Player Whoosh/whoosh_swish_high_fast_04.wav",
+                Path = "Hit Crash/WEAPSwrd_Sword_Hit_Crash_12.wav",
                 Volume = 1.0,
                 Pitch = 1.0,
             },
