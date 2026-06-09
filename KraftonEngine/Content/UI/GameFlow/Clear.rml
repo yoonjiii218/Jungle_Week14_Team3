@@ -30,8 +30,7 @@
         .report-head { font-size: 14px; color: #00eaff; margin-bottom: 12px; }
         .report-row { font-size: 17px; color: #e9ffd0; margin-bottom: 9px; }
         .report-line { width: 300px; height: 2px; background-color: #d9ff2f; margin: 12px 0 12px 0; }
-        .score-rank { font-size: 21px; color: #ffffff; margin-bottom: 2px; }
-        .score-meta { font-size: 12px; color: #7eefff; margin-bottom: 10px; }
+        .score-rank { width: 350px; font-size: 14px; color: #ffffff; margin-bottom: 12px; white-space: nowrap; }
         .widget-scan-a { width: 132px; height: 2px; background-color: #00eaff; margin-bottom: 8px; }
         .widget-scan-b { width: 64px; height: 2px; background-color: #d9ff2f; margin-bottom: 12px; }
     </style>
@@ -46,11 +45,8 @@
             <div id="clear-time" class="report-row">CLEAR TIME  00:00.00</div>
             <div class="report-line"></div>
             <div id="score-rank-1" class="score-rank">#1  --:--.--</div>
-            <div id="score-meta-1" class="score-meta">NO RECORD</div>
             <div id="score-rank-2" class="score-rank">#2  --:--.--</div>
-            <div id="score-meta-2" class="score-meta">NO RECORD</div>
             <div id="score-rank-3" class="score-rank">#3  --:--.--</div>
-            <div id="score-meta-3" class="score-meta">NO RECORD</div>
             <div class="widget-scan-b"></div>
         </div>
         <div id="title-panel" data-ue-anchors="1 0 1 0" data-ue-offsets="-140 124 420 150" data-ue-alignment="1 0">

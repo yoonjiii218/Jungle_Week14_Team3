@@ -77,8 +77,10 @@ local comboImpactTime = 0.0
 local comboImpactThreshold = 0
 local loadedUiAudio = {}
 local combatElapsedTime = 0.0
+local combatTimerStarted = false
 local clearTimeSaved = false
 local lastClearScore = nil
+local lastClearEntries = nil
 local startHudFlow = nil
 local showCredits = nil
 local FLOW_BGM = {
@@ -319,7 +321,7 @@ local function parseScoreboardLine(line)
 
     local timeValue, sceneName, stamp = string.match(line, "([^\t]+)\t([^\t]*)\t([^\t]*)")
     local seconds = tonumber(timeValue)
-    if seconds == nil then
+    if seconds == nil or seconds <= 0.0 then
         return nil
     end
 
@@ -354,6 +356,16 @@ local function loadScoreboard()
     return entries
 end
 
+local function findLatestScore(entries)
+    local latest = nil
+    for _, entry in ipairs(entries or {}) do
+        if latest == nil or (entry.Stamp or "") > (latest.Stamp or "") then
+            latest = entry
+        end
+    end
+    return latest
+end
+
 local function saveScoreboard(entries)
     if Engine == nil or Engine.WriteTextFile == nil or entries == nil then
         return false
@@ -375,7 +387,12 @@ end
 
 local function recordClearScore(d)
     if clearTimeSaved == true then
-        return lastClearScore
+        return lastClearScore, lastClearEntries or loadScoreboard()
+    end
+
+    if combatTimerStarted ~= true then
+        local entries = loadScoreboard()
+        return findLatestScore(entries), entries
     end
 
     local score = {
@@ -393,28 +410,31 @@ local function recordClearScore(d)
         table.remove(entries)
     end
 
-    saveScoreboard(entries)
+    if saveScoreboard(entries) ~= true then
+        print("[GameFlow] Failed to save clear scoreboard: " .. SCOREBOARD_FILE)
+    end
     clearTimeSaved = true
     lastClearScore = score
-    return score
+    lastClearEntries = entries
+    return score, entries
 end
 
-local function applyScoreboardToClear(screen, currentScore)
+local function applyScoreboardToClear(screen, currentScore, entries)
     if screen == nil then
         return
     end
 
-    local entries = loadScoreboard()
+    entries = entries or loadScoreboard()
     setText(screen, "clear-time", "CLEAR TIME  " .. formatClearTime(currentScore ~= nil and currentScore.Time or combatElapsedTime))
 
     for i = 1, 3 do
         local entry = entries[i]
         if entry ~= nil then
-            setText(screen, "score-rank-" .. tostring(i), string.format("#%d  %s", i, formatClearTime(entry.Time)))
-            setText(screen, "score-meta-" .. tostring(i), (entry.Scene ~= nil and entry.Scene ~= "" and entry.Scene or "UNKNOWN") .. "  " .. (entry.Stamp or ""))
+            local scene = entry.Scene ~= nil and entry.Scene ~= "" and entry.Scene or "UNKNOWN"
+            local stamp = entry.Stamp ~= nil and entry.Stamp ~= "" and entry.Stamp or "NO DATE"
+            setText(screen, "score-rank-" .. tostring(i), string.format("#%d  %s  |  %s  |  %s", i, formatClearTime(entry.Time), scene, stamp))
         else
             setText(screen, "score-rank-" .. tostring(i), string.format("#%d  --:--.--", i))
-            setText(screen, "score-meta-" .. tostring(i), "NO RECORD")
         end
     end
 end
@@ -967,8 +987,10 @@ local function showHud()
     resetBossHudAnimation()
     resetComboHoldTimer()
     combatElapsedTime = 0.0
+    combatTimerStarted = true
     clearTimeSaved = false
     lastClearScore = nil
+    lastClearEntries = nil
 
     local hud = createWidget("HUD", d:GetHudWidgetPath(), false, 0)
     addToViewport(hud, 0)
@@ -1566,11 +1588,11 @@ local function showClear()
     removeAllWidgets()
     d:ResumeGame()
     clearToCreditsTime = 0.0
-    local clearScore = recordClearScore(d)
+    local clearScore, scoreboardEntries = recordClearScore(d)
 
     local screen = createWidget("Clear", d:GetClearWidgetPath(), true, 100)
     if screen ~= nil then
-        applyScoreboardToClear(screen, clearScore)
+        applyScoreboardToClear(screen, clearScore, scoreboardEntries)
         bindButtonAudio(screen, { "btn-credits", "btn-main-menu", "btn-exit" })
         screen:bind_click("btn-credits", function()
             if showCredits ~= nil then
