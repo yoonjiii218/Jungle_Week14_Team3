@@ -35,7 +35,7 @@ local BOSS_DAMAGE_LAG_RATIO_PER_SECOND = 0.72
 local COMBO_HOLD_DURATION = 3.0
 local COMBO_IMPACT_DURATION = 0.42
 local SCOREBOARD_FILE = "GameFlowScoreboard.tsv"
-local SCOREBOARD_MAX_ENTRIES = 5
+local SCOREBOARD_MAX_ENTRIES = 10
 local TOKYO_AUTOSPAWN_BOSS = false
 local UI_AUDIO = {
     Hover = { key = "UI_ButtonHover", path = "UI/button_hover.mp3", volume = 0.55 },
@@ -324,7 +324,7 @@ local function parseScoreboardLine(line)
         return nil
     end
 
-    local timeValue, sceneName, stamp = string.match(line, "([^\t]+)\t([^\t]*)\t([^\t]*)")
+    local timeValue = string.match(line, "^%s*([^\t%s]+)")
     local seconds = tonumber(timeValue)
     if seconds == nil or seconds <= 0.0 then
         return nil
@@ -332,8 +332,6 @@ local function parseScoreboardLine(line)
 
     return {
         Time = seconds,
-        Scene = sceneName or "",
-        Stamp = stamp or "",
     }
 end
 
@@ -362,13 +360,7 @@ local function loadScoreboard()
 end
 
 local function findLatestScore(entries)
-    local latest = nil
-    for _, entry in ipairs(entries or {}) do
-        if latest == nil or (entry.Stamp or "") > (latest.Stamp or "") then
-            latest = entry
-        end
-    end
-    return latest
+    return entries ~= nil and entries[1] or nil
 end
 
 local function saveScoreboard(entries)
@@ -380,7 +372,7 @@ local function saveScoreboard(entries)
     local count = math.min(#entries, SCOREBOARD_MAX_ENTRIES)
     for i = 1, count do
         local entry = entries[i]
-        table.insert(lines, string.format("%.3f\t%s\t%s", entry.Time or 0.0, entry.Scene or "", entry.Stamp or ""))
+        table.insert(lines, string.format("%.3f", entry.Time or 0.0))
     end
 
     local text = ""
@@ -404,8 +396,6 @@ local function recordClearScore(d)
 
     local score = {
         Time = combatElapsedTime,
-        Scene = getCurrentSceneName(d),
-        Stamp = os ~= nil and os.date ~= nil and os.date("%Y-%m-%d %H:%M:%S") or "",
     }
 
     local entries = loadScoreboard()
@@ -433,12 +423,10 @@ local function applyScoreboardToClear(screen, currentScore, entries)
 
     entries = entries or loadScoreboard()
     setText(screen, "clear-time", "CLEAR TIME  " .. formatClearTime(currentScore ~= nil and currentScore.Time or combatElapsedTime))
-    for i = 1, 3 do
+    for i = 1, SCOREBOARD_MAX_ENTRIES do
         local entry = entries[i]
         if entry ~= nil then
-            local scene = entry.Scene ~= nil and entry.Scene ~= "" and entry.Scene or "UNKNOWN"
-            local stamp = entry.Stamp ~= nil and entry.Stamp ~= "" and entry.Stamp or "NO DATE"
-            setText(screen, "score-rank-" .. tostring(i), string.format("#%d  %s  |  %s  |  %s", i, formatClearTime(entry.Time), scene, stamp))
+            setText(screen, "score-rank-" .. tostring(i), string.format("#%d  %s", i, formatClearTime(entry.Time)))
         else
             setText(screen, "score-rank-" .. tostring(i), string.format("#%d  --:--.--", i))
         end
@@ -454,12 +442,10 @@ local function applyScoreboardToCredits(credits)
     local currentText = lastClearScore ~= nil and formatClearTime(lastClearScore.Time) or "--:--.--"
     setText(credits, "score-current", "LAST CLEAR  " .. currentText)
 
-    for i = 1, 5 do
+    for i = 1, SCOREBOARD_MAX_ENTRIES do
         local entry = entries[i]
         if entry ~= nil then
-            local scene = entry.Scene ~= nil and entry.Scene ~= "" and entry.Scene or "UNKNOWN"
-            local stamp = entry.Stamp ~= nil and entry.Stamp ~= "" and entry.Stamp or "NO DATE"
-            setText(credits, "score-rank-" .. tostring(i), string.format("#%d  %s  |  %s  |  %s", i, formatClearTime(entry.Time), scene, stamp))
+            setText(credits, "score-rank-" .. tostring(i), string.format("#%d  %s", i, formatClearTime(entry.Time)))
         else
             setText(credits, "score-rank-" .. tostring(i), string.format("#%d  --:--.--", i))
         end
