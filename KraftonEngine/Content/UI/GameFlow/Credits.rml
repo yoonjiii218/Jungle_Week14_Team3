@@ -28,8 +28,7 @@
         #name-03 { top: 508px; }
         #role-04 { top: 614px; }
         #name-04 { top: 642px; }
-        #thanks-a { top: 800px; }
-        #thanks-b { top: 832px; }
+
         #end-title { position: absolute; left: 0px; top: 930px; width: 800px; height: 58px; color: #ffffff; font-size: 42px; text-align: center; }
         #end-sub { position: absolute; left: 0px; top: 994px; width: 800px; height: 28px; color: #d9ff2f; font-size: 18px; text-align: center; }
         #control-panel { position: absolute; left: 816px; top: 462px; width: 360px; height: 208px; opacity: 0; }
@@ -59,7 +58,7 @@
                 <div id="title-cyan">ENDING CREDITS</div>
                 <div id="title-pink">ENDING CREDITS</div>
                 <div id="title-main">ENDING CREDITS</div>
-                <div id="subtitle">FINAL ARCHIVE // TARGET CORE COLLAPSED</div>
+                <div id="subtitle">FINAL GAME JAM</div>
                 <div id="roll-line-a"></div>
                 <div id="roll-line-b"></div>
 
@@ -72,9 +71,8 @@
                 <div id="role-04" class="credit-role">TEAM MEMBER 04</div>
                 <div id="name-04" class="credit-name">조 상현</div>
 
-                <div id="thanks-a" class="credit-note">SPECIAL THANKS TO THE JUNGLE WEEK 14 TEAM</div>
-                <div id="thanks-b" class="credit-note">AND YOU</div>
-                <div id="end-title">THE END</div>
+
+                <div id="end-title">AND YOU</div>
                 <div id="end-sub">THANK YOU FOR PLAYING</div>
             </div>
         </div>
