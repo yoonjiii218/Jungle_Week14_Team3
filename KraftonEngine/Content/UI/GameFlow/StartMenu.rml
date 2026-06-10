@@ -50,13 +50,13 @@
         #btn-credits { top: 146px; }
         #bg-exit { top: 192px; }
         #btn-exit { top: 204px; }
-        .readout-head { font-size: 14px; color: #ff2bd6; margin-bottom: 12px; }
-        .readout-row { font-size: 16px; color: #d8f8ff; margin-bottom: 8px; }
-        .readout-line { width: 250px; height: 2px; background-color: #00eaff; margin: 12px 0 12px 0; }
-        .readout-gauge { width: 250px; height: 8px; background-color: #02040acc; border-width: 1px; border-color: #00eaff; margin: 7px 0 10px 0; }
-        .readout-fill { width: 72%; height: 100%; background-color: #ffffff; }
-        .widget-scan-a { width: 132px; height: 2px; background-color: #00eaff; margin-bottom: 8px; }
-        .widget-scan-b { width: 64px; height: 2px; background-color: #ff2bd6; margin-bottom: 12px; }
+        .readout-head { display: block; font-size: 14px; color: #ff2bd6; margin-bottom: 12px; }
+        .readout-row { display: block; font-size: 16px; color: #d8f8ff; margin-bottom: 8px; }
+        .readout-line { display: block; width: 250px; height: 2px; background-color: #00eaff; margin: 12px 0 12px 0; }
+        .readout-gauge { display: block; width: 250px; height: 8px; background-color: #02040acc; border-width: 1px; border-color: #00eaff; margin: 7px 0 10px 0; }
+        .readout-fill { display: block; width: 72%; height: 100%; background-color: #ffffff; }
+        .widget-scan-a { display: block; width: 132px; height: 2px; background-color: #00eaff; margin-bottom: 8px; }
+        .widget-scan-b { display: block; width: 64px; height: 2px; background-color: #ff2bd6; margin-bottom: 12px; }
     </style>
 </head>
 <body>
@@ -65,9 +65,9 @@
         <div id="shade"></div>
         <div id="title-panel" data-ue-anchors="0 0 0 0" data-ue-offsets="60 52 560 116" data-ue-alignment="0 0">
             <div class="title-stack">
-                <div class="title-layer title-cyan">Boss Prototype</div>
-                <div class="title-layer title-pink">Boss Prototype</div>
-                <div class="title-layer title-main">Boss Prototype</div>
+                <div class="title-layer title-cyan">Cyber Runner</div>
+                <div class="title-layer title-pink">Cyber Runner</div>
+                <div class="title-layer title-main">Cyber Runner</div>
             </div>
             <p>Select deployment vector.</p>
         </div>

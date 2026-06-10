@@ -121,7 +121,7 @@ void FRmlUiDocumentManager::RefreshAvailableDocuments()
 			continue;
 		}
 
-		const FString RelPath = FPaths::ToUtf8(Entry.path().lexically_relative(ProjectRoot).generic_wstring());
+		const FString RelPath = FPaths::MakeProjectRelative(FPaths::ToUtf8(Entry.path().wstring()));
 		FAssetImportMetadata Metadata;
 		if (!FAssetPackage::ReadMetadata(RelPath, EAssetPackageType::RmlUiDocument, Metadata))
 		{

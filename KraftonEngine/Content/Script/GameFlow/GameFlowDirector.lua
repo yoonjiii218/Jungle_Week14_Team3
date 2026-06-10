@@ -7,46 +7,47 @@ local director = nil
 local currentScreen = "None"
 local currentFlowBgmKey = nil
 local loadedFlowBgm = {}
-local TEST_HOTKEYS_ENABLED = true
-local TEST_PLAYER_DAMAGE = 10.0
-local TEST_BOSS_DAMAGE = 10.0
-local TEST_ULTIMATE_DELTA = 25.0
-local START_MENU_BOOT_REPLAY_KEY_NAME = "F9"
-local KEY_ENTER = 13
-local START_MENU_BOOT_DURATION = 1.50
-local START_MENU_BOOT_BASE_WIDTH = 1280.0
-local START_MENU_BOOT_BASE_HEIGHT = 720.0
-local FILM_COUNTDOWN_WIDGET_FALLBACK = "Content/UI/GameFlow/FilmCountdown.uasset"
-local FILM_COUNTDOWN_START_NUMBER = 5
-local FILM_COUNTDOWN_PLAY_SECONDS = 5.0
-local FILM_COUNTDOWN_DURATION = 5.35
-local pendingTransitionAction = nil
-local pendingTransitionSceneName = nil
-local pendingTransitionAsyncStarted = false
-local pendingTransitionAsyncUnavailable = false
-local pendingTransitionBeginFrameDelay = 0
-local FILM_SPROCKET_COUNT = 11
-local FILM_SPROCKET_SPACING = 86.0
-local FILM_SPROCKET_SPEED = 210.0
-local FILM_SWEEP_SECTOR_FRAME_COUNT = 33
-local CLEAR_TO_CREDITS_DELAY = 2.35
-local CREDITS_ROLL_DURATION = 18.0
-local CREDITS_ROLL_START_PADDING = 120.0
-local CREDITS_ROLL_END_OFFSET = 1080.0
-local BOSS_HP_PANEL_WIDGET_PATH = "Content/UI/GameFlow/BossHPPanel.uasset"
-local BOSS_DAMAGE_LAG_RATIO_PER_SECOND = 0.72
-local COMBO_HOLD_DURATION = 3.0
-local COMBO_IMPACT_DURATION = 0.42
-local SCOREBOARD_FILE = "GameFlowScoreboard.tsv"
-local SCOREBOARD_MAX_ENTRIES = 10
-local TOKYO_AUTOSPAWN_BOSS = false
-local UI_AUDIO = {
+TEST_HOTKEYS_ENABLED = true
+TEST_PLAYER_DAMAGE = 10.0
+TEST_BOSS_DAMAGE = 10.0
+TEST_ULTIMATE_DELTA = 25.0
+START_MENU_BOOT_REPLAY_KEY_NAME = "F9"
+KEY_ENTER = 13
+START_MENU_BOOT_DURATION = 1.50
+START_MENU_BOOT_BASE_WIDTH = 1280.0
+START_MENU_BOOT_BASE_HEIGHT = 720.0
+FILM_COUNTDOWN_WIDGET_FALLBACK = "Content/UI/GameFlow/FilmCountdown.uasset"
+FILM_COUNTDOWN_START_NUMBER = 5
+FILM_COUNTDOWN_PLAY_SECONDS = 5.0
+FILM_COUNTDOWN_DURATION = 5.35
+pendingTransitionAction = nil
+pendingTransitionSceneName = nil
+pendingTransitionAsyncStarted = false
+pendingTransitionAsyncUnavailable = false
+pendingTransitionBeginFrameDelay = 0
+isCutsceneWaitingToCommit = false
+FILM_SPROCKET_COUNT = 11
+FILM_SPROCKET_SPACING = 86.0
+FILM_SPROCKET_SPEED = 210.0
+FILM_SWEEP_SECTOR_FRAME_COUNT = 33
+CLEAR_TO_CREDITS_DELAY = 2.35
+CREDITS_ROLL_DURATION = 18.0
+CREDITS_ROLL_START_PADDING = 120.0
+CREDITS_ROLL_END_OFFSET = 1080.0
+BOSS_HP_PANEL_WIDGET_PATH = "Content/UI/GameFlow/BossHPPanel.uasset"
+BOSS_DAMAGE_LAG_RATIO_PER_SECOND = 0.72
+COMBO_HOLD_DURATION = 3.0
+COMBO_IMPACT_DURATION = 0.42
+SCOREBOARD_FILE = "GameFlowScoreboard.tsv"
+SCOREBOARD_MAX_ENTRIES = 10
+TOKYO_AUTOSPAWN_BOSS = false
+UI_AUDIO = {
     Hover = { key = "UI_ButtonHover", path = "UI/button_hover.mp3", volume = 0.55 },
     Down = { key = "UI_ButtonDown", path = "UI/button_down.mp3", volume = 0.75 },
     FilmCountdown = { key = "UI_FilmCountdown", path = "UI/Film countdown.mp3", volume = 0.95 },
 }
-local COMBO_IMPACT_THRESHOLDS = { 10, 30, 50, 99 }
-local START_MENU_BOOT_ELEMENT_IDS = {
+COMBO_IMPACT_THRESHOLDS = { 10, 30, 50, 99 }
+START_MENU_BOOT_ELEMENT_IDS = {
     "boot-black",
     "boot-shutter-top",
     "boot-shutter-bottom",
@@ -77,6 +78,7 @@ local creditsRollTime = CREDITS_ROLL_DURATION + 1.0
 local bossHudWasVisible = false
 local bossHudHP = nil
 local bossDamageHP = nil
+local bossDamageDelayRemaining = 0.0
 local bossPanelCreateFailed = false
 local comboHoldRemaining = 0.0
 local lastComboCount = 0
@@ -92,7 +94,7 @@ local lastClearEntries = nil
 local wavesFinishedHandle = nil
 local startHudFlow = nil
 local showCredits = nil
-local FLOW_BGM = {
+FLOW_BGM = {
     StartMenu = {
         key = "BGM_StartMenu",
         path = "BGM/Start Menu BGM.mp3",
@@ -529,17 +531,25 @@ local function updateBossDamageBar(hud, hp, maxHP, dt)
     if bossHudWasVisible ~= true or bossHudHP == nil or bossDamageHP == nil then
         bossHudHP = targetHP
         bossDamageHP = targetHP
+        bossDamageDelayRemaining = 0.0
     elseif targetHP < bossHudHP - 0.001 then
         bossDamageHP = math.max(bossDamageHP, bossHudHP)
+        bossDamageDelayRemaining = 0.65
     elseif targetHP > bossHudHP + 0.001 then
         bossDamageHP = targetHP
+        bossDamageDelayRemaining = 0.0
     end
 
     bossHudHP = targetHP
     if bossDamageHP > targetHP then
-        bossDamageHP = math.max(targetHP, bossDamageHP - safeMax * BOSS_DAMAGE_LAG_RATIO_PER_SECOND * frameDt)
+        if bossDamageDelayRemaining > 0.0 then
+            bossDamageDelayRemaining = bossDamageDelayRemaining - frameDt
+        else
+            bossDamageHP = math.max(targetHP, bossDamageHP - safeMax * 0.24 * frameDt)
+        end
     else
         bossDamageHP = targetHP
+        bossDamageDelayRemaining = 0.0
     end
 
     setBar(hud, "boss-hp-fill", targetHP, safeMax)
@@ -570,6 +580,7 @@ local function resetBossHudAnimation()
     bossHudWasVisible = false
     bossHudHP = nil
     bossDamageHP = nil
+    bossDamageDelayRemaining = 0.0
 end
 
 local function resetComboHoldTimer()
@@ -1275,6 +1286,24 @@ local function isPendingTransitionReady()
 end
 
 local function completeFilmCountdown()
+    if isPendingTransitionReady() ~= true then
+        print("[GameFlow-Debug] Cutscene completed but scene loading not finished yet. Waiting to commit...")
+        isCutsceneWaitingToCommit = true
+        local countdown = widgets.Countdown
+        if countdown ~= nil then
+            setText(countdown, "skip-hint", "LOADING SCENE...")
+            setCountdownProperty(countdown, "skip-hint", "opacity", scalar(1.0))
+        end
+        return
+    end
+
+    local countdown = widgets.Countdown
+    if countdown ~= nil then
+        setText(countdown, "skip-hint", "LOADING SCENE...")
+        setCountdownProperty(countdown, "skip-hint", "opacity", scalar(1.0))
+    end
+
+    isCutsceneWaitingToCommit = false
     filmCountdownTime = FILM_COUNTDOWN_DURATION + 1.0
 
     if pendingTransitionSceneName ~= nil then
@@ -1284,7 +1313,9 @@ local function completeFilmCountdown()
             and GameFlow.CommitAsyncOpenScene ~= nil
             and GameFlow.CommitAsyncOpenScene() == true
         clearPendingTransition()
-        removeWidget("Countdown")
+        if committed ~= true then
+            removeWidget("Countdown")
+        end
         currentScreen = "SceneTransition"
         if committed == true then
             return
@@ -1302,13 +1333,338 @@ local function completeFilmCountdown()
     end
 end
 
+local isCutsceneMode = false
+local currentCutPage = 1
+local currentCutIndex = 0
+local totalPages = 2
+local pageCuts = { 3, 2 }
+local cutsceneCutRects = {}
+local cutsceneFinishCallback = nil
+local cutsceneInputCooldown = 0.0
+local cutsceneRevealTime = 0.0
+local cutsceneHoldTime = 0.0
+local CUTSCENE_REVEAL_DURATION = 0.52
+local CUTSCENE_CUT_HOLD_DURATION = 0.72
+local CUTSCENE_PAGE_HOLD_DURATION = 0.92
+
+local function getCutId(pageIndex, cutIndex)
+    return string.format("cut-%d-%d", pageIndex, cutIndex)
+end
+
+local function getCoverId(pageIndex, cutIndex)
+    return string.format("cover-%d-%d", pageIndex, cutIndex)
+end
+
+local function getEdgeId(pageIndex, cutIndex)
+    return string.format("edge-%d-%d", pageIndex, cutIndex)
+end
+
+local function setCutReveal(countdown, pageIndex, cutIndex, progress)
+    local cutId = getCutId(pageIndex, cutIndex)
+    local coverId = getCoverId(pageIndex, cutIndex)
+    local edgeId = getEdgeId(pageIndex, cutIndex)
+    local rect = cutsceneCutRects[cutId]
+    if rect == nil then
+        return
+    end
+
+    progress = clamp(progress or 0.0, 0.0, 1.0)
+    setCountdownProperty(countdown, cutId, "display", "block")
+    setCountdownOpacity(countdown, cutId, 1.0)
+
+    local coverWidth = rect.Width * (1.0 - progress)
+    local coverLeft = rect.Width - coverWidth
+    setCountdownRect(countdown, coverId, coverLeft, 0.0, coverWidth, rect.Height)
+    setCountdownOpacity(countdown, coverId, progress < 1.0 and (0.96 - progress * 0.18) or 0.0)
+
+    local edgeWidth = math.max(3.0, rect.Width * 0.008)
+    local edgeLeft = math.min(rect.Width - edgeWidth, math.max(0.0, coverLeft - edgeWidth * 0.5))
+    setCountdownRect(countdown, edgeId, edgeLeft, 0.0, edgeWidth, rect.Height)
+    setCountdownOpacity(countdown, edgeId, progress < 1.0 and (0.35 + (1.0 - progress) * 0.45) or 0.0)
+end
+
+local function hideCut(countdown, pageIndex, cutIndex)
+    local cutId = getCutId(pageIndex, cutIndex)
+    local coverId = getCoverId(pageIndex, cutIndex)
+    local edgeId = getEdgeId(pageIndex, cutIndex)
+    local rect = cutsceneCutRects[cutId]
+    setCountdownProperty(countdown, cutId, "display", "none")
+    setCountdownOpacity(countdown, cutId, 0.0)
+    if rect ~= nil then
+        setCountdownRect(countdown, coverId, 0.0, 0.0, rect.Width, rect.Height)
+    end
+    setCountdownOpacity(countdown, coverId, 1.0)
+    setCountdownOpacity(countdown, edgeId, 0.0)
+end
+
+local function refreshCutsceneCuts(countdown)
+    if countdown == nil then
+        return
+    end
+
+    for p = 1, totalPages do
+        local maxCuts = pageCuts[p] or 0
+        for c = 1, maxCuts do
+            if p == currentCutPage and c <= currentCutIndex then
+                local progress = 1.0
+                if c == currentCutIndex then
+                    progress = clamp(cutsceneRevealTime / CUTSCENE_REVEAL_DURATION, 0.0, 1.0)
+                end
+                setCutReveal(countdown, p, c, progress)
+            else
+                hideCut(countdown, p, c)
+            end
+        end
+    end
+end
+
+local function showCutscenePage(countdown, pageIndex)
+    for p = 1, totalPages do
+        local pageId = string.format("page-%d", p)
+        if p == pageIndex then
+            setCountdownProperty(countdown, pageId, "display", "block")
+            setCountdownProperty(countdown, pageId, "opacity", scalar(1.0))
+        else
+            setCountdownProperty(countdown, pageId, "display", "none")
+            setCountdownProperty(countdown, pageId, "opacity", scalar(0.0))
+        end
+    end
+end
+
+local function finishCutscene()
+    isCutsceneMode = false
+    playUiAudio(UI_AUDIO.Down)
+    if cutsceneFinishCallback ~= nil then
+        cutsceneFinishCallback()
+    end
+end
+
+local function beginCutReveal(countdown, pageIndex, cutIndex)
+    currentCutPage = pageIndex
+    currentCutIndex = cutIndex
+    if pageIndex == 2 and cutIndex == 2 then
+        cutsceneRevealTime = CUTSCENE_REVEAL_DURATION
+    else
+        cutsceneRevealTime = 0.0
+    end
+    cutsceneHoldTime = 0.0
+    showCutscenePage(countdown, currentCutPage)
+    refreshCutsceneCuts(countdown)
+    playUiAudio(UI_AUDIO.Hover)
+end
+
+local function advanceCutscene()
+    local countdown = widgets.Countdown
+    if countdown == nil then
+        finishCutscene()
+        return
+    end
+
+    if currentCutIndex > 0 and cutsceneRevealTime < CUTSCENE_REVEAL_DURATION then
+        cutsceneRevealTime = CUTSCENE_REVEAL_DURATION
+        cutsceneHoldTime = 0.0
+        refreshCutsceneCuts(countdown)
+        return
+    end
+
+    local nextPage = currentCutPage
+    local nextCutIndex = currentCutIndex + 1
+    local maxCuts = pageCuts[currentCutPage] or 0
+
+    if nextCutIndex <= maxCuts then
+        beginCutReveal(countdown, nextPage, nextCutIndex)
+    else
+        nextPage = currentCutPage + 1
+        if nextPage <= totalPages then
+            playUiAudio(UI_AUDIO.Down)
+            beginCutReveal(countdown, nextPage, 1)
+        else
+            finishCutscene()
+        end
+    end
+end
+
+local function updateCutsceneLayout(countdown, viewportWidth, viewportHeight, centerX, centerY)
+    cutsceneCutRects = {}
+
+    local maxW = viewportWidth * 0.90
+    local maxH = viewportHeight * 0.90
+
+    -- Page 1: Aspect Ratio = 1133 / 576 = 1.9670
+    local page1Width = maxW
+    local page1Height = maxW / 1.9670
+    if page1Height > maxH then
+        page1Height = maxH
+        page1Width = maxH * 1.9670
+    end
+    local page1Left = centerX - page1Width * 0.5
+    local page1Top = centerY - page1Height * 0.5
+
+    -- Page 2: Aspect Ratio = 1024 / 576 = 1.7778
+    local page2Width = maxW
+    local page2Height = maxW / 1.7778
+    if page2Height > maxH then
+        page2Height = maxH
+        page2Width = maxH * 1.7778
+    end
+    local page2Left = centerX - page2Width * 0.5
+    local page2Top = centerY - page2Height * 0.5
+
+    setCountdownRect(countdown, "page-1", page1Left, page1Top, page1Width, page1Height)
+    setCountdownRect(countdown, "page-2", page2Left, page2Top, page2Width, page2Height)
+
+    -- Page 1 cuts (3 cuts, side-by-side left-to-right)
+    -- Widths: cutscene1 (346px), cutscene2 (454px), cutscene3 (333px). Total: 1133px
+    local w1_1 = page1Width * (346 / 1133)
+    local w1_2 = page1Width * (454 / 1133)
+    local w1_3 = page1Width * (333 / 1133)
+
+    setCountdownRect(countdown, "cut-1-1", 0.0, 0.0, w1_1, page1Height)
+    setCountdownRect(countdown, "cut-1-2", w1_1, 0.0, w1_2, page1Height)
+    setCountdownRect(countdown, "cut-1-3", w1_1 + w1_2, 0.0, w1_3, page1Height)
+    cutsceneCutRects["cut-1-1"] = { Width = w1_1, Height = page1Height }
+    cutsceneCutRects["cut-1-2"] = { Width = w1_2, Height = page1Height }
+    cutsceneCutRects["cut-1-3"] = { Width = w1_3, Height = page1Height }
+
+    -- Page 2 cuts (2 cuts, overlaying completely)
+    -- Both occupying full page size, cut-2-2 (cut 5) overlaying cut-2-1 (cut 4)
+    setCountdownRect(countdown, "cut-2-1", 0.0, 0.0, page2Width, page2Height)
+    setCountdownRect(countdown, "cut-2-2", 0.0, 0.0, page2Width, page2Height)
+    cutsceneCutRects["cut-2-1"] = { Width = page2Width, Height = page2Height }
+    cutsceneCutRects["cut-2-2"] = { Width = page2Width, Height = page2Height }
+end
+
+local function startCutsceneMode()
+    print("[GameFlow-Debug] startCutsceneMode initiated.")
+    isCutsceneMode = true
+    isCutsceneWaitingToCommit = false
+    currentCutPage = 1
+    currentCutIndex = 0
+    cutsceneInputCooldown = 0.5
+    cutsceneRevealTime = 0.0
+    cutsceneHoldTime = 0.0
+    
+    local countdown = widgets.Countdown
+    if countdown == nil then
+        print("[GameFlow-Debug] startCutsceneMode: widgets.Countdown is nil! Bypassing.")
+        completeFilmCountdown()
+        return
+    end
+
+    -- Enable mouse input on the widget to allow clicks
+    countdown:SetWantsMouse(true)
+    countdown:bind_click("cutscene-root", function()
+        print("[GameFlow-Debug] Click on cutscene-root detected.")
+        if cutsceneInputCooldown <= 0.0 then
+            cutsceneInputCooldown = 0.35
+            advanceCutscene()
+        end
+    end)
+
+    print("[GameFlow-Debug] Hiding countdown-root, showing cutscene-root")
+    setCountdownProperty(countdown, "countdown-root", "display", "none")
+    setCountdownProperty(countdown, "countdown-root", "opacity", scalar(0.0))
+
+    setCountdownProperty(countdown, "cutscene-root", "display", "block")
+    setCountdownProperty(countdown, "cutscene-root", "opacity", scalar(1.0))
+
+    for p = 1, totalPages do
+        local pageId = string.format("page-%d", p)
+        if p == 1 then
+            setCountdownProperty(countdown, pageId, "display", "block")
+            setCountdownProperty(countdown, pageId, "opacity", scalar(1.0))
+        else
+            setCountdownProperty(countdown, pageId, "display", "none")
+            setCountdownProperty(countdown, pageId, "opacity", scalar(0.0))
+        end
+
+        local maxCuts = pageCuts[p]
+        for c = 1, maxCuts do
+            local cutId = string.format("cut-%d-%d", p, c)
+            setCountdownProperty(countdown, cutId, "display", "none")
+            setCountdownProperty(countdown, cutId, "opacity", scalar(0.0))
+        end
+    end
+
+    -- Apply initial layout before advancing/revealing
+    local viewportWidth, viewportHeight, centerX, centerY = getStartMenuBootViewport()
+    updateCutsceneLayout(countdown, viewportWidth, viewportHeight, centerX, centerY)
+
+    advanceCutscene()
+end
+
+local function updateCutsceneReveal(countdown, dt)
+    if countdown == nil then
+        return
+    end
+
+    local delta = math.max(dt or 0.0, 0.0)
+    if currentCutIndex <= 0 then
+        advanceCutscene()
+        return
+    end
+
+    if cutsceneRevealTime < CUTSCENE_REVEAL_DURATION then
+        cutsceneRevealTime = math.min(CUTSCENE_REVEAL_DURATION, cutsceneRevealTime + delta)
+        refreshCutsceneCuts(countdown)
+        return
+    end
+
+    cutsceneHoldTime = cutsceneHoldTime + delta
+    refreshCutsceneCuts(countdown)
+
+    -- Auto-advance disabled by user request. Must click to advance.
+    -- local maxCuts = pageCuts[currentCutPage] or 0
+    -- local holdDuration = currentCutIndex >= maxCuts and CUTSCENE_PAGE_HOLD_DURATION or CUTSCENE_CUT_HOLD_DURATION
+    -- if cutsceneHoldTime >= holdDuration then
+    --     advanceCutscene()
+    -- end
+end
+
 local function updateFilmCountdown(dt)
     local countdown = widgets.Countdown
     if countdown == nil then
         completeFilmCountdown()
         return
     end
+
     if beginPendingAsyncTransition() ~= true then
+        return
+    end
+
+    if isCutsceneWaitingToCommit then
+        if isPendingTransitionReady() == true then
+            print("[GameFlow-Debug] Scene loading ready during wait. Committing transition now.")
+            completeFilmCountdown()
+        end
+        return
+    end
+
+    if isCutsceneMode then
+        if cutsceneInputCooldown > 0.0 then
+            cutsceneInputCooldown = cutsceneInputCooldown - (dt or 0.0)
+        end
+
+        local actionStarted = false
+        if cutsceneInputCooldown <= 0.0 and Input ~= nil then
+            if Input.GetKeyDown ~= nil and (Input.GetKeyDown(0x01) or Input.GetKeyDown(0x20) or Input.GetKeyDown(0x0D)) then
+                print("[GameFlow-Debug] Input action detected (key click).")
+                actionStarted = true
+            elseif Input.WasActionStarted ~= nil and (Input.WasActionStarted("Attack") or Input.WasActionStarted("Dash")) then
+                print("[GameFlow-Debug] Input action detected (action mapping).")
+                actionStarted = true
+            end
+        end
+
+        local viewportWidth, viewportHeight, centerX, centerY = getStartMenuBootViewport()
+        updateCutsceneLayout(countdown, viewportWidth, viewportHeight, centerX, centerY)
+
+        if actionStarted then
+            cutsceneInputCooldown = 0.35
+            advanceCutscene()
+        else
+            updateCutsceneReveal(countdown, dt)
+        end
         return
     end
 
@@ -1325,9 +1681,37 @@ local function updateFilmCountdown(dt)
 
     local t = filmCountdownTime
     if t >= FILM_COUNTDOWN_DURATION then
-        if isPendingTransitionReady() == true then
-            completeFilmCountdown()
-            return
+        local showCut = false
+        local d = getDirector()
+        if d ~= nil then
+            if pendingTransitionSceneName ~= nil then
+                local name = string.lower(pendingTransitionSceneName)
+                if string.find(name, "storyboss") ~= nil 
+                    or string.find(name, "tokyo_current") ~= nil 
+                    or string.find(name, "trainingmap") ~= nil then
+                    showCut = true
+                end
+            else
+                local startup = d:GetStartupScreen()
+                if startup == "Countdown" or startup == "FilmCountdown" then
+                    showCut = true
+                end
+            end
+        end
+
+        if showCut then
+            if not isCutsceneMode then
+                print("[GameFlow-Debug] Entering cutscene mode immediately during loading.")
+                cutsceneFinishCallback = completeFilmCountdown
+                startCutsceneMode()
+                return
+            end
+        else
+            if isPendingTransitionReady() == true then
+                print("[GameFlow-Debug] Countdown elapsed. Transitioning.")
+                completeFilmCountdown()
+                return
+            end
         end
         filmCountdownTime = FILM_COUNTDOWN_DURATION - 0.001
         t = filmCountdownTime
@@ -1450,14 +1834,15 @@ local function updateFilmCountdown(dt)
     setCountdownProperty(countdown, "sweep", "transform", string.format("rotate(%.1fdeg)", sweepAngle))
     setCountdownProperty(countdown, "sweep", "background-color", sweepColor)
     setCountdownOpacity(countdown, "sweep", (0.30 + 0.42 * sweepGlow) * masterOpacity)
-    setCountdownProperty(countdown, "leader-text", "left", px(centerX - leaderWidth * 0.5))
-    setCountdownProperty(countdown, "leader-text", "top", px(leaderTop))
-    setCountdownProperty(countdown, "leader-text", "width", px(leaderWidth))
-    setCountdownProperty(countdown, "leader-text", "height", px(leaderHeight))
-    setCountdownProperty(countdown, "leader-text", "font-size", px(22.0 * uiScale))
-    setCountdownProperty(countdown, "leader-text", "line-height", px(leaderHeight))
-    setCountdownProperty(countdown, "leader-text", "opacity", scalar(0.84 * masterOpacity))
-    setText(countdown, "leader-text", string.format("PICTURE START // %s", digitText))
+    -- leader-text disabled by user request (remove PICTURE START)
+    -- setCountdownProperty(countdown, "leader-text", "left", px(centerX - leaderWidth * 0.5))
+    -- setCountdownProperty(countdown, "leader-text", "top", px(leaderTop))
+    -- setCountdownProperty(countdown, "leader-text", "width", px(leaderWidth))
+    -- setCountdownProperty(countdown, "leader-text", "height", px(leaderHeight))
+    -- setCountdownProperty(countdown, "leader-text", "font-size", px(22.0 * uiScale))
+    -- setCountdownProperty(countdown, "leader-text", "line-height", px(leaderHeight))
+    -- setCountdownProperty(countdown, "leader-text", "opacity", scalar(0.84 * masterOpacity))
+    -- setText(countdown, "leader-text", string.format("PICTURE START // %s", digitText))
     setCountdownProperty(countdown, "countdown-number-cyan", "left", px(digitLeft - 2.0))
     setCountdownProperty(countdown, "countdown-number-pink", "left", px(digitLeft + 3.0))
     setCountdownProperty(countdown, "countdown-number-main", "left", px(digitLeft))
@@ -1494,6 +1879,7 @@ local function triggerTransitionWithCountdown(sceneName, action)
         return
     end
 
+    stopFlowBGM()
     d:ResumeGame()
     removeWidget("StartMenu")
     removeWidget("Pause")
@@ -1523,6 +1909,7 @@ local function showFilmCountdown()
     local d = getDirector()
     if d == nil then return end
 
+    stopFlowBGM()
     removeAllWidgets()
     d:ResumeGame()
 

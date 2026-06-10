@@ -276,12 +276,12 @@ void UEditorEngine::Init(FWindowsWindow* InWindow)
 	// 에디터 엔진이 완전히 이니셜라이즈된 시점에 디스크의 RML 소스를 UAsset으로 안전하게 싱크
 	auto SyncRmlToUasset = []() {
 		const std::filesystem::path ContentRoot = std::filesystem::path(FPaths::RootDir()) / L"Content";
+		UE_LOG("[AutoSync] SyncRmlToUasset started. ContentRoot: %ls", ContentRoot.wstring().c_str());
 		if (!std::filesystem::exists(ContentRoot))
 		{
+			UE_LOG("[AutoSync] ContentRoot does not exist!");
 			return;
 		}
-
-		const std::filesystem::path ProjectRoot(FPaths::RootDir());
 
 		for (const auto& Entry : std::filesystem::recursive_directory_iterator(ContentRoot))
 		{
@@ -300,11 +300,13 @@ void UEditorEngine::Init(FWindowsWindow* InWindow)
 			std::filesystem::path UassetPath = Entry.path();
 			UassetPath.replace_extension(L".uasset");
 
-
+			FString RelUassetPath = FPaths::MakeProjectRelative(FPaths::ToUtf8(UassetPath.wstring()));
+			UE_LOG("[AutoSync] Processing RML: %ls -> RelUasset: %s", Entry.path().wstring().c_str(), RelUassetPath.c_str());
 
 			std::ifstream RmlFile(Entry.path(), std::ios::binary);
 			if (!RmlFile.is_open())
 			{
+				UE_LOG("[AutoSync] Failed to open RML file: %ls", Entry.path().wstring().c_str());
 				continue;
 			}
 			std::stringstream Ss;
@@ -312,7 +314,6 @@ void UEditorEngine::Init(FWindowsWindow* InWindow)
 			std::string RmlContent = Ss.str();
 			RmlFile.close();
 
-			FString RelUassetPath = FPaths::ToUtf8(UassetPath.lexically_relative(ProjectRoot).generic_wstring());
 			URmlUiDocumentAsset* Asset = FRmlUiDocumentManager::Get().Load(RelUassetPath);
 			if (Asset)
 			{
@@ -323,9 +324,14 @@ void UEditorEngine::Init(FWindowsWindow* InWindow)
 					FRmlUiDocumentManager::Get().Reload(RelUassetPath);
 					UE_LOG("[AutoSync] Successfully updated RML to uasset: %s", RelUassetPath.c_str());
 				}
+				else
+				{
+					UE_LOG("[AutoSync] RML source matches uasset, no update needed: %s", RelUassetPath.c_str());
+				}
 			}
 			else
 			{
+				UE_LOG("[AutoSync] Loading existing uasset failed. Recreating: %s", RelUassetPath.c_str());
 				URmlUiDocumentAsset* NewAsset = UObjectManager::Get().CreateObject<URmlUiDocumentAsset>();
 				NewAsset->SetSourcePath(RelUassetPath);
 				NewAsset->SetDocumentSource(RmlContent);

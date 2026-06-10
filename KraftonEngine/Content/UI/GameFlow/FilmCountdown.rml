@@ -22,7 +22,7 @@
         .sweep-sector-frame { position: absolute; left: 0px; top: 0px; width: 1024px; height: 1024px; opacity: 0; }
         #sweep-glow { position: absolute; left: 632px; top: 154px; width: 17px; height: 206px; background-color: #fff1c2; opacity: 0; transform-origin: 8px 206px; }
         #sweep { position: absolute; left: 637px; top: 154px; width: 7px; height: 206px; background-color: #4b351d; opacity: 0.42; transform-origin: 3px 206px; }
-        #leader-text { position: absolute; left: 472px; top: 108px; width: 336px; height: 24px; font-size: 22px; color: #3c2b19; text-align: center; opacity: 0.76; }
+        #leader-text { display: none; }
         #countdown-number-cyan { position: absolute; left: 543px; top: 268px; width: 190px; height: 184px; font-size: 150px; line-height: 184px; color: #f1ddb0; text-align: center; opacity: 0.10; }
         #countdown-number-pink { position: absolute; left: 548px; top: 271px; width: 190px; height: 184px; font-size: 150px; line-height: 184px; color: #5b3f24; text-align: center; opacity: 0.16; }
         #countdown-number-main { position: absolute; left: 545px; top: 268px; width: 190px; height: 184px; font-size: 150px; line-height: 184px; color: #24170c; text-align: center; opacity: 0.88; }
@@ -54,91 +54,175 @@
         #sp-r-8 { right: 28px; top: 658px; }
         #sp-r-9 { right: 28px; top: 730px; }
         #sp-r-10 { right: 28px; top: -62px; }
+
+        /* 컷씬 모드 스타일 */
+        #countdown-root { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; pointer-events: none; }
+        #cutscene-root { position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background-color: #000000; display: none; pointer-events: auto; }
+        
+        .cutscene-page {
+            position: absolute;
+            opacity: 0;
+            display: none;
+            transition: opacity 0.8s;
+        }
+        
+        .cut {
+            position: absolute;
+            overflow: hidden;
+            opacity: 0;
+            display: none;
+            transition: opacity 1.0s;
+            border-width: 3px;
+            border-color: #1a1a1a;
+        }
+
+        .cut img {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .cut-cover {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            opacity: 1;
+        }
+
+        .cut-edge {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            width: 4px;
+            height: 100%;
+            background-color: #f8f0d2;
+            opacity: 0;
+        }
+
+        /* 안내 텍스트 */
+        #skip-hint {
+            position: absolute;
+            left: 50%;
+            bottom: 30px;
+            width: 400px;
+            margin-left: -200px;
+            font-size: 18px;
+            color: #aaaaaa;
+            text-align: center;
+            opacity: 0.6;
+        }
     </style>
 </head>
 <body>
+    <!-- 카운트다운 루트 -->
+    <div id="countdown-root">
         <div id="screen" data-ue-anchors="0 0 1 1" data-ue-offsets="0 0 0 0" data-ue-alignment="0 0">
-        <div id="gate"></div>
-        <img id="sweep-sector-0" class="sweep-sector-frame" src="Images/film_sweep_sector_00.png" />
-        <img id="sweep-sector-1" class="sweep-sector-frame" src="Images/film_sweep_sector_01.png" />
-        <img id="sweep-sector-2" class="sweep-sector-frame" src="Images/film_sweep_sector_02.png" />
-        <img id="sweep-sector-3" class="sweep-sector-frame" src="Images/film_sweep_sector_03.png" />
-        <img id="sweep-sector-4" class="sweep-sector-frame" src="Images/film_sweep_sector_04.png" />
-        <img id="sweep-sector-5" class="sweep-sector-frame" src="Images/film_sweep_sector_05.png" />
-        <img id="sweep-sector-6" class="sweep-sector-frame" src="Images/film_sweep_sector_06.png" />
-        <img id="sweep-sector-7" class="sweep-sector-frame" src="Images/film_sweep_sector_07.png" />
-        <img id="sweep-sector-8" class="sweep-sector-frame" src="Images/film_sweep_sector_08.png" />
-        <img id="sweep-sector-9" class="sweep-sector-frame" src="Images/film_sweep_sector_09.png" />
-        <img id="sweep-sector-10" class="sweep-sector-frame" src="Images/film_sweep_sector_10.png" />
-        <img id="sweep-sector-11" class="sweep-sector-frame" src="Images/film_sweep_sector_11.png" />
-        <img id="sweep-sector-12" class="sweep-sector-frame" src="Images/film_sweep_sector_12.png" />
-        <img id="sweep-sector-13" class="sweep-sector-frame" src="Images/film_sweep_sector_13.png" />
-        <img id="sweep-sector-14" class="sweep-sector-frame" src="Images/film_sweep_sector_14.png" />
-        <img id="sweep-sector-15" class="sweep-sector-frame" src="Images/film_sweep_sector_15.png" />
-        <img id="sweep-sector-16" class="sweep-sector-frame" src="Images/film_sweep_sector_16.png" />
-        <img id="sweep-sector-17" class="sweep-sector-frame" src="Images/film_sweep_sector_17.png" />
-        <img id="sweep-sector-18" class="sweep-sector-frame" src="Images/film_sweep_sector_18.png" />
-        <img id="sweep-sector-19" class="sweep-sector-frame" src="Images/film_sweep_sector_19.png" />
-        <img id="sweep-sector-20" class="sweep-sector-frame" src="Images/film_sweep_sector_20.png" />
-        <img id="sweep-sector-21" class="sweep-sector-frame" src="Images/film_sweep_sector_21.png" />
-        <img id="sweep-sector-22" class="sweep-sector-frame" src="Images/film_sweep_sector_22.png" />
-        <img id="sweep-sector-23" class="sweep-sector-frame" src="Images/film_sweep_sector_23.png" />
-        <img id="sweep-sector-24" class="sweep-sector-frame" src="Images/film_sweep_sector_24.png" />
-        <img id="sweep-sector-25" class="sweep-sector-frame" src="Images/film_sweep_sector_25.png" />
-        <img id="sweep-sector-26" class="sweep-sector-frame" src="Images/film_sweep_sector_26.png" />
-        <img id="sweep-sector-27" class="sweep-sector-frame" src="Images/film_sweep_sector_27.png" />
-        <img id="sweep-sector-28" class="sweep-sector-frame" src="Images/film_sweep_sector_28.png" />
-        <img id="sweep-sector-29" class="sweep-sector-frame" src="Images/film_sweep_sector_29.png" />
-        <img id="sweep-sector-30" class="sweep-sector-frame" src="Images/film_sweep_sector_30.png" />
-        <img id="sweep-sector-31" class="sweep-sector-frame" src="Images/film_sweep_sector_31.png" />
-        <img id="sweep-sector-32" class="sweep-sector-frame" src="Images/film_sweep_sector_32.png" />
-        <div id="film-left"></div>
-        <div id="film-right"></div>
-        <div id="film-left-edge"></div>
-        <div id="film-right-edge"></div>
-        <img id="film-noise" src="Images/film_noise_overlay.png" />
-        <div id="grain-a"></div>
-        <div id="grain-b"></div>
-        <div id="vignette"></div>
-        <div id="frame-top"></div>
-        <div id="frame-bottom"></div>
-        <div id="sp-l-0" class="sprocket"></div>
-        <div id="sp-l-1" class="sprocket"></div>
-        <div id="sp-l-2" class="sprocket"></div>
-        <div id="sp-l-3" class="sprocket"></div>
-        <div id="sp-l-4" class="sprocket"></div>
-        <div id="sp-l-5" class="sprocket"></div>
-        <div id="sp-l-6" class="sprocket"></div>
-        <div id="sp-l-7" class="sprocket"></div>
-        <div id="sp-l-8" class="sprocket"></div>
-        <div id="sp-l-9" class="sprocket"></div>
-        <div id="sp-l-10" class="sprocket"></div>
-        <div id="sp-r-0" class="sprocket"></div>
-        <div id="sp-r-1" class="sprocket"></div>
-        <div id="sp-r-2" class="sprocket"></div>
-        <div id="sp-r-3" class="sprocket"></div>
-        <div id="sp-r-4" class="sprocket"></div>
-        <div id="sp-r-5" class="sprocket"></div>
-        <div id="sp-r-6" class="sprocket"></div>
-        <div id="sp-r-7" class="sprocket"></div>
-        <div id="sp-r-8" class="sprocket"></div>
-        <div id="sp-r-9" class="sprocket"></div>
-        <div id="sp-r-10" class="sprocket"></div>
-        <div id="outer-circle"></div>
-        <div id="inner-circle"></div>
-        <div id="cross-h"></div>
-        <div id="cross-v"></div>
-        <div id="sweep-glow"></div>
-        <div id="sweep"></div>
-        <div id="leader-text">PICTURE START // 3</div>
-        <div id="countdown-number-cyan">3</div>
-        <div id="countdown-number-pink">3</div>
-        <div id="countdown-number-main">3</div>
-        <div id="scanline"></div>
-        <div id="scratch-a"></div>
-        <div id="scratch-b"></div>
-        <div id="flash"></div>
-        <div id="flicker"></div>
+            <div id="gate"></div>
+            <img id="sweep-sector-0" class="sweep-sector-frame" src="Images/film_sweep_sector_00.png" />
+            <img id="sweep-sector-1" class="sweep-sector-frame" src="Images/film_sweep_sector_01.png" />
+            <img id="sweep-sector-2" class="sweep-sector-frame" src="Images/film_sweep_sector_02.png" />
+            <img id="sweep-sector-3" class="sweep-sector-frame" src="Images/film_sweep_sector_03.png" />
+            <img id="sweep-sector-4" class="sweep-sector-frame" src="Images/film_sweep_sector_04.png" />
+            <img id="sweep-sector-5" class="sweep-sector-frame" src="Images/film_sweep_sector_05.png" />
+            <img id="sweep-sector-6" class="sweep-sector-frame" src="Images/film_sweep_sector_06.png" />
+            <img id="sweep-sector-7" class="sweep-sector-frame" src="Images/film_sweep_sector_07.png" />
+            <img id="sweep-sector-8" class="sweep-sector-frame" src="Images/film_sweep_sector_08.png" />
+            <img id="sweep-sector-9" class="sweep-sector-frame" src="Images/film_sweep_sector_09.png" />
+            <img id="sweep-sector-10" class="sweep-sector-frame" src="Images/film_sweep_sector_10.png" />
+            <img id="sweep-sector-11" class="sweep-sector-frame" src="Images/film_sweep_sector_11.png" />
+            <img id="sweep-sector-12" class="sweep-sector-frame" src="Images/film_sweep_sector_12.png" />
+            <img id="sweep-sector-13" class="sweep-sector-frame" src="Images/film_sweep_sector_13.png" />
+            <img id="sweep-sector-14" class="sweep-sector-frame" src="Images/film_sweep_sector_14.png" />
+            <img id="sweep-sector-15" class="sweep-sector-frame" src="Images/film_sweep_sector_15.png" />
+            <img id="sweep-sector-16" class="sweep-sector-frame" src="Images/film_sweep_sector_16.png" />
+            <img id="sweep-sector-17" class="sweep-sector-frame" src="Images/film_sweep_sector_17.png" />
+            <img id="sweep-sector-18" class="sweep-sector-frame" src="Images/film_sweep_sector_18.png" />
+            <img id="sweep-sector-19" class="sweep-sector-frame" src="Images/film_sweep_sector_19.png" />
+            <img id="sweep-sector-20" class="sweep-sector-frame" src="Images/film_sweep_sector_20.png" />
+            <img id="sweep-sector-21" class="sweep-sector-frame" src="Images/film_sweep_sector_21.png" />
+            <img id="sweep-sector-22" class="sweep-sector-frame" src="Images/film_sweep_sector_22.png" />
+            <img id="sweep-sector-23" class="sweep-sector-frame" src="Images/film_sweep_sector_23.png" />
+            <img id="sweep-sector-24" class="sweep-sector-frame" src="Images/film_sweep_sector_24.png" />
+            <img id="sweep-sector-25" class="sweep-sector-frame" src="Images/film_sweep_sector_25.png" />
+            <img id="sweep-sector-26" class="sweep-sector-frame" src="Images/film_sweep_sector_26.png" />
+            <img id="sweep-sector-27" class="sweep-sector-frame" src="Images/film_sweep_sector_27.png" />
+            <img id="sweep-sector-28" class="sweep-sector-frame" src="Images/film_sweep_sector_28.png" />
+            <img id="sweep-sector-29" class="sweep-sector-frame" src="Images/film_sweep_sector_29.png" />
+            <img id="sweep-sector-30" class="sweep-sector-frame" src="Images/film_sweep_sector_30.png" />
+            <img id="sweep-sector-31" class="sweep-sector-frame" src="Images/film_sweep_sector_31.png" />
+            <img id="sweep-sector-32" class="sweep-sector-frame" src="Images/film_sweep_sector_32.png" />
+            <div id="film-left"></div>
+            <div id="film-right"></div>
+            <div id="film-left-edge"></div>
+            <div id="film-right-edge"></div>
+            <img id="film-noise" src="Images/film_noise_overlay.png" />
+            <div id="grain-a"></div>
+            <div id="grain-b"></div>
+            <div id="vignette"></div>
+            <div id="frame-top"></div>
+            <div id="frame-bottom"></div>
+            <div id="sp-l-0" class="sprocket"></div>
+            <div id="sp-l-1" class="sprocket"></div>
+            <div id="sp-l-2" class="sprocket"></div>
+            <div id="sp-l-3" class="sprocket"></div>
+            <div id="sp-l-4" class="sprocket"></div>
+            <div id="sp-l-5" class="sprocket"></div>
+            <div id="sp-l-6" class="sprocket"></div>
+            <div id="sp-l-7" class="sprocket"></div>
+            <div id="sp-l-8" class="sprocket"></div>
+            <div id="sp-l-9" class="sprocket"></div>
+            <div id="sp-l-10" class="sprocket"></div>
+            <div id="sp-r-0" class="sprocket"></div>
+            <div id="sp-r-1" class="sprocket"></div>
+            <div id="sp-r-2" class="sprocket"></div>
+            <div id="sp-r-3" class="sprocket"></div>
+            <div id="sp-r-4" class="sprocket"></div>
+            <div id="sp-r-5" class="sprocket"></div>
+            <div id="sp-r-6" class="sprocket"></div>
+            <div id="sp-r-7" class="sprocket"></div>
+            <div id="sp-r-8" class="sprocket"></div>
+            <div id="sp-r-9" class="sprocket"></div>
+            <div id="sp-r-10" class="sprocket"></div>
+            <div id="outer-circle"></div>
+            <div id="inner-circle"></div>
+            <div id="cross-h"></div>
+            <div id="cross-v"></div>
+            <div id="sweep-glow"></div>
+            <div id="sweep"></div>
+            <div id="leader-text">PICTURE START // 5</div>
+            <div id="countdown-number-cyan">5</div>
+            <div id="countdown-number-pink">5</div>
+            <div id="countdown-number-main">5</div>
+            <div id="scanline"></div>
+            <div id="scratch-a"></div>
+            <div id="scratch-b"></div>
+            <div id="flash"></div>
+            <div id="flicker"></div>
+        </div>
+    </div>
+
+    <!-- 컷씬 루트 -->
+    <div id="cutscene-root" data-ue-anchors="0 0 1 1" data-ue-offsets="0 0 0 0" data-ue-alignment="0 0">
+        <!-- 1페이지 (3컷) -->
+        <div id="page-1" class="cutscene-page cuts-3">
+            <div id="cut-1-1" class="cut"><img id="img-1-1" src="Images/cutscene1.png" /><div id="cover-1-1" class="cut-cover"></div><div id="edge-1-1" class="cut-edge"></div></div>
+            <div id="cut-1-2" class="cut"><img id="img-1-2" src="Images/cutscene2.png" /><div id="cover-1-2" class="cut-cover"></div><div id="edge-1-2" class="cut-edge"></div></div>
+            <div id="cut-1-3" class="cut"><img id="img-1-3" src="Images/cutscene3.png" /><div id="cover-1-3" class="cut-cover"></div><div id="edge-1-3" class="cut-edge"></div></div>
+        </div>
+
+        <!-- 2페이지 (2컷) -->
+        <div id="page-2" class="cutscene-page cuts-2">
+            <div id="cut-2-1" class="cut"><img id="img-2-1" src="Images/cutscene4.png" /><div id="cover-2-1" class="cut-cover"></div><div id="edge-2-1" class="cut-edge"></div></div>
+            <div id="cut-2-2" class="cut"><img id="img-2-2" src="Images/cutscene5.png" /><div id="cover-2-2" class="cut-cover"></div><div id="edge-2-2" class="cut-edge"></div></div>
+        </div>
+
+        <div id="skip-hint">CLICK OR PRESS KEY TO ADVANCE</div>
     </div>
 </body>
 </rml>
