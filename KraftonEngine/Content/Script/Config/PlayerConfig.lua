@@ -242,6 +242,18 @@ PlayerConfig.Default = {
                 Max = 0.05,
                 MinInterval = 0.08,
             },
+
+            -- 궁극기는 카메라 컷신/슬로모/반복 데미지 자체가 이미 멈춤감을 만든다.
+            -- 공격자 hitstop은 기본 비활성화하고, 최종 impact의 shake/sound/vignette로 묵직함을 표현한다.
+            UltimateMaxCountForScale = 6,
+            UltimateAttackerHitStop = {
+                Enabled = false,
+                Base = 0.0,
+                PerTarget = 0.0,
+                Max = 0.0,
+                MinInterval = 0.20,
+                FinalHitOnly = true,
+            },
         },
     },
 
@@ -330,6 +342,39 @@ PlayerConfig.Default = {
                 PerTargetPitch = -0.025,
                 MinPitch = 0.90,
                 MaxPitch = 1.08,
+            },
+        },
+
+        -- 궁극기 직접 데미지 / 궁극기 HitWindow에서 발생한 AttackImpact 전용 채널.
+        -- 반복 데미지 중간타는 개별 damage text로만 보이고, 큰 shake/sound/vignette는 최종 impact 한 번에 몰아준다.
+        UltimateAttackImpact = {
+            Enabled = true,
+            FinalHitOnly = true,
+            CameraShake = {
+                Base = 0.44,
+                PerTarget = 0.08,
+                Max = 0.72,
+            },
+            VFX = {
+                ParticlePath = "None",
+                MaterialPath = "None",
+                BaseScale = 1.35,
+                PerTargetScale = 0.32,
+                MaxScale = 2.7,
+                Life = 0.55,
+                ZOffset = 1.0,
+            },
+            Sound = {
+                Enabled = true,
+                Key = "PlayerUltimateAttackImpact",
+                Path = "Hit Crash/WEAPSwrd_Sword_Hit_Crash_12.wav",
+                BaseVolume = 1.05,
+                PerTargetVolume = 0.10,
+                MaxVolume = 1.35,
+                BasePitch = 0.94,
+                PerTargetPitch = -0.018,
+                MinPitch = 0.86,
+                MaxPitch = 1.02,
             },
         },
 
@@ -433,6 +478,19 @@ PlayerConfig.Default = {
                 BlendIn = 0.01,
                 BlendOut = 0.12,
                 R = 0.20,
+                G = 0.02,
+                B = 0.02,
+                A = 1.0,
+            },
+
+            UltimateAttackImpact = {
+                Intensity = 0.22,
+                Radius = 0.58,
+                Softness = 0.32,
+                Duration = 0.22,
+                BlendIn = 0.01,
+                BlendOut = 0.16,
+                R = 0.42,
                 G = 0.02,
                 B = 0.02,
                 A = 1.0,
@@ -557,6 +615,13 @@ PlayerConfig.Default = {
                 BlendOut = 0.15,
             },
 
+            UltimateAttackImpact = {
+                DeltaDegrees = 0,
+                Duration = 0.24,
+                BlendIn = 0.02,
+                BlendOut = 0.18,
+            },
+
             HitReact = {
                 DeltaDegrees = 0,
                 Duration = 0.24,
@@ -606,8 +671,8 @@ PlayerConfig.Default = {
         },
 
         UltimateCamera = {
-            BackDistance = 40.0,
-            Height = 10.0,
+            BackDistance = 70.0,
+            Height = 20.0,
             SlashCameraDistance = 30.0,
             SlashCameraRightOffset = 15,
             SlashCameraHeightOffset = -5.0,
@@ -615,6 +680,29 @@ PlayerConfig.Default = {
             YawSwing = 0.0,
             RollSwing = 2.0,
             RotationStart = 0.5,
+
+            -- 궁극기 카메라가 한 위치에 오래 멈춰 있으면 hitstop 없이도 화면이 정지한 것처럼 보인다.
+            -- 아래 drift는 컷씬/공격/회복 구간 동안 아주 약하게 dolly/orbit을 유지해 멈춤감을 줄인다.
+            MotionEnabled = true,
+            IntroHold = 0.12,
+            IntroSideDrift = 3.0,
+            IntroForwardDrift = 2.0,
+            IntroHeightDrift = 0.8,
+            IntroPitchDrift = 0.8,
+            IntroYawDrift = 1.5,
+            MoveSideDrift = 0.0,
+            MoveForwardDrift = -4.0,
+            MoveHeightDrift = 1.2,
+            AttackSideDrift = 0.0,
+            AttackForwardDrift = 6.0,
+            AttackHeightDrift = 2.0,
+            AttackPitchDrift = 1.2,
+            AttackYawDrift = 4.0,
+            RecoverSideDrift = 0.0,
+            RecoverForwardDrift = 3.0,
+            RecoverHeightDrift = 1.0,
+            RecoverPitchDrift = 0.8,
+            RecoverYawDrift = 1.5,
         },
 
         UltimateVfx = {
@@ -626,18 +714,18 @@ PlayerConfig.Default = {
         },
 
         UltimateMove = {
-            StartDistance = -100.0,
+            StartDistance = 100.0,
             EndDistance = 10,
             SideOffset = -10.0,
             ControlSideOffset = 40.0,
-            Duration = 0.55,
+            Duration = 0.3,
             FrameStep = 1.0 / 60.0,
             EndRightDistance = 5,
-            SlomoDuration = 0.65,
-            SlomoScale = 0.7,
+            SlomoDuration = 0.3,
+            SlomoScale = 0.6,
             AttackStartDelay = 0.08,
             AttackDamageDelay = 0,
-            AttackDuration = 0.95,
+            AttackDuration = 0.3,
             RecoverHold = 0.15,
         },
     },

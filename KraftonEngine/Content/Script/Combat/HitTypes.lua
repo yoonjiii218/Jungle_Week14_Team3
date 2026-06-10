@@ -22,6 +22,7 @@ local HitTypes = {}
 ---@field HitStopDuration number|nil
 ---@field HitWindowSerial integer|nil
 ---@field AttackImpactGroupId string|nil
+---@field ImpactKind string|nil
 ---@field HitIndex integer|nil
 ---@field HitCount integer|nil
 ---@field HitInterval number|nil
@@ -67,6 +68,7 @@ local function Create(args, caller)
         ComboDelta = args.ComboDelta,
         CanPerfectDodge = args.CanPerfectDodge,
         HitStopDuration = args.HitStopDuration,
+        ImpactKind = args.ImpactKind,
         HitWindowSerial = args.HitWindowSerial,
         AttackImpactGroupId = args.AttackImpactGroupId,
         HitIndex = args.HitIndex,
@@ -121,6 +123,7 @@ function HitTypes.CreatePlayerAttackFromState(args)
     local attackInstanceId = action.AttackInstanceId or (attackId .. "_" .. tostring(Now()))
     local damage = combatConfig.AttackDamages[attackIndex]
     local gaugeDelta = combatConfig.AttackHitGaugeDelta
+    local impactKind = "Attack"
 
     if action.DashChargeAttackActive == true then
         attackId = "PlayerDashChargeAttack"
@@ -135,6 +138,7 @@ function HitTypes.CreatePlayerAttackFromState(args)
         attackInstanceId = action.UltimateAttackInstanceId or (attackId .. "_" .. tostring(Now()))
         damage = combatConfig.UltimateDamage
         gaugeDelta = 0
+        impactKind = "Ultimate"
     end
 
     return HitTypes.CreatePlayerAttack({
@@ -146,6 +150,7 @@ function HitTypes.CreatePlayerAttackFromState(args)
         Damage = damage,
         GaugeDelta = gaugeDelta,
         HitStopDuration = args.HitStopDuration,
+        ImpactKind = args.ImpactKind or impactKind,
         HitWindowSerial = args.HitWindowSerial,
         AttackImpactGroupId = args.AttackImpactGroupId,
         HitIndex = args.HitIndex,

@@ -51,6 +51,7 @@ PlayerEvents.Type = {
 ---@field HP number|nil
 ---@field MaxHP number|nil
 ---@field AttackInstanceId string|nil
+---@field ImpactKind string|nil
 ---@field HitWindowSerial integer|nil
 ---@field AttackImpactGroupId string|nil
 
@@ -58,6 +59,10 @@ PlayerEvents.Type = {
 ---@field AttackId string
 ---@field AttackInstanceId string|nil
 ---@field AttackIndex integer|nil
+---@field ImpactKind string|nil
+---@field HitIndex integer|nil
+---@field HitCount integer|nil
+---@field HitInterval number|nil
 ---@field HitWindowSerial integer|nil
 ---@field TargetCount integer
 ---@field DamageTotal number

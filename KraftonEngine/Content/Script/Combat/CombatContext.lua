@@ -260,10 +260,42 @@ local function GetImpactGroupConfig(playerContext)
     return combatConfig.ImpactGroup or {}
 end
 
-local function GetImpactGroupCountForScale(groupConfig, count)
+local function IsUltimateImpactKind(impactKind)
+    return tostring(impactKind or "") == "Ultimate"
+end
+
+local function ResolveAttackImpactKind(event)
+    if event.ImpactKind ~= nil and tostring(event.ImpactKind) ~= "" then
+        return tostring(event.ImpactKind)
+    end
+
+    local attackId = tostring(event.AttackId or "")
+    local attackInstanceId = tostring(event.AttackInstanceId or "")
+    if attackId == "PlayerUltimate" or string.find(attackInstanceId, "PlayerUltimate", 1, true) ~= nil then
+        return "Ultimate"
+    end
+
+    return "Attack"
+end
+
+local function ResolveImpactCountMax(groupConfig, impactKind)
+    if IsUltimateImpactKind(impactKind) and groupConfig.UltimateMaxCountForScale ~= nil then
+        return groupConfig.UltimateMaxCountForScale
+    end
+    return groupConfig.MaxCountForScale
+end
+
+local function GetImpactGroupCountForScale(groupConfig, count, impactKind)
     count = math.max(1, count or 1)
-    local maxCount = groupConfig.MaxCountForScale or count
+    local maxCount = ResolveImpactCountMax(groupConfig, impactKind) or count
     return math.max(1, math.min(count, maxCount))
+end
+
+local function ResolveAttackerHitStopConfig(groupConfig, impactKind)
+    if IsUltimateImpactKind(impactKind) then
+        return groupConfig.UltimateAttackerHitStop or groupConfig.AttackerHitStop or {}
+    end
+    return groupConfig.AttackerHitStop or {}
 end
 
 local function ScaleImpactValue(channelConfig, countForScale, fallbackBase)
@@ -357,6 +389,10 @@ local function AccumulateAttackImpactGroups(playerContext, events, now)
                     AttackId = event.AttackId,
                     AttackInstanceId = event.AttackInstanceId,
                     AttackIndex = event.AttackIndex,
+                    ImpactKind = ResolveAttackImpactKind(event),
+                    HitIndex = event.HitIndex,
+                    HitCount = event.HitCount,
+                    HitInterval = event.HitInterval,
                     HitWindowSerial = event.HitWindowSerial,
                     SourceActor = event.SourceActor or playerContext.Owner,
                     TargetKeys = {},
@@ -378,6 +414,10 @@ local function AccumulateAttackImpactGroups(playerContext, events, now)
             group.AttackId = group.AttackId or event.AttackId
             group.AttackInstanceId = group.AttackInstanceId or event.AttackInstanceId
             group.AttackIndex = group.AttackIndex or event.AttackIndex
+            local eventImpactKind = ResolveAttackImpactKind(event)
+            if group.ImpactKind == nil or group.ImpactKind == "Attack" or eventImpactKind == "Ultimate" then
+                group.ImpactKind = eventImpactKind
+            end
             group.SourceActor = group.SourceActor or event.SourceActor or playerContext.Owner
             if group.HitWindowSerial == nil then
                 group.HitWindowSerial = event.HitWindowSerial
@@ -404,6 +444,9 @@ local function AccumulateAttackImpactGroups(playerContext, events, now)
             local hitIndex = math.max(1, event.HitIndex or 1)
             local hitCount = math.max(hitIndex, event.HitCount or hitIndex)
             local hitInterval = math.max(0.0, event.HitInterval or 0.0)
+            group.HitIndex = math.max(group.HitIndex or 1, hitIndex)
+            group.HitCount = math.max(group.HitCount or hitCount, hitCount)
+            group.HitInterval = math.max(group.HitInterval or 0.0, hitInterval)
             local expectedFlushTime = now + math.max(0, hitCount - hitIndex) * hitInterval
             group.ExpectedFlushTime = math.max(group.ExpectedFlushTime or now, expectedFlushTime)
 
@@ -450,18 +493,42 @@ local function HasAttackImpactForceFlushEvent(events)
     return false
 end
 
+local function ShouldSuppressAttackImpactHitStop(group, hitStopConfig, impactKind)
+    if IsUltimateImpactKind(impactKind) and hitStopConfig.FinalHitOnly == true then
+        local hitIndex = math.max(1, tonumber(group.HitIndex) or 1)
+        local hitCount = math.max(hitIndex, tonumber(group.HitCount) or hitIndex)
+        if hitCount > 1 and hitIndex < hitCount then
+            return true
+        end
+    end
+
+    return false
+end
+
 local function ResolveAttackImpactHitStopDuration(playerContext, group, targetCount)
     local combatConfig = playerContext.Config.Combat or {}
     local groupConfig = GetImpactGroupConfig(playerContext)
-    local hitStopConfig = groupConfig.AttackerHitStop or {}
-    local countForScale = GetImpactGroupCountForScale(groupConfig, targetCount)
+    local impactKind = group.ImpactKind or "Attack"
+    local hitStopConfig = ResolveAttackerHitStopConfig(groupConfig, impactKind)
+    if hitStopConfig.Enabled == false then
+        return 0.0
+    end
+    if ShouldSuppressAttackImpactHitStop(group, hitStopConfig, impactKind) == true then
+        return 0.0
+    end
+
+    local countForScale = GetImpactGroupCountForScale(groupConfig, targetCount, impactKind)
     if group.HasRequestedHitStopDuration == true and (group.RequestedHitStopDuration or 0.0) <= 0.0 then
         return 0.0
     end
 
     local fallbackBase = group.RequestedHitStopDuration
     if group.HasRequestedHitStopDuration ~= true then
-        fallbackBase = combatConfig.HitStopDuration or 0.0
+        if IsUltimateImpactKind(impactKind) then
+            fallbackBase = combatConfig.UltimateHitStopDuration or combatConfig.HitStopDuration or 0.0
+        else
+            fallbackBase = combatConfig.HitStopDuration or 0.0
+        end
     end
     return ScaleImpactValue(hitStopConfig, countForScale, fallbackBase)
 end
@@ -474,10 +541,11 @@ local function FlushAttackImpactGroup(playerContext, events, groupKey, group, no
 
     local groupConfig = GetImpactGroupConfig(playerContext)
     local targetCount = group.TargetCount or 1
-    local countForScale = GetImpactGroupCountForScale(groupConfig, targetCount)
+    local impactKind = group.ImpactKind or "Attack"
+    local countForScale = GetImpactGroupCountForScale(groupConfig, targetCount, impactKind)
     local hitStopDuration = ResolveAttackImpactHitStopDuration(playerContext, group, targetCount)
 
-    local hitStopConfig = groupConfig.AttackerHitStop or {}
+    local hitStopConfig = ResolveAttackerHitStopConfig(groupConfig, impactKind)
     local minInterval = NumberOrDefault(hitStopConfig.MinInterval, 0.0)
     local lastHitStopTime = playerContext.Combat.LastAttackerHitStopTime or -999.0
     if hitStopDuration > 0.0 and now >= lastHitStopTime + minInterval then
@@ -491,6 +559,10 @@ local function FlushAttackImpactGroup(playerContext, events, groupKey, group, no
         AttackId = group.AttackId,
         AttackInstanceId = group.AttackInstanceId,
         AttackIndex = group.AttackIndex,
+        ImpactKind = impactKind,
+        HitIndex = group.HitIndex,
+        HitCount = group.HitCount,
+        HitInterval = group.HitInterval,
         HitWindowSerial = group.HitWindowSerial,
         AttackImpactGroupId = group.Key,
         SourceActor = group.SourceActor or playerContext.Owner,
@@ -1184,6 +1256,7 @@ function CombatContext.ApplyHitToBoss(hit)
             AttackId = hit.AttackId,
             AttackInstanceId = hit.AttackInstanceId,
             AttackIndex = hit.AttackIndex,
+            ImpactKind = hit.ImpactKind,
             HitWindowSerial = hit.HitWindowSerial,
             AttackImpactGroupId = hit.AttackImpactGroupId,
             HitIndex = hit.HitIndex,
@@ -1295,6 +1368,7 @@ function CombatContext.ApplyHitToMob(mobContext, hitRequest)
             AttackId = hit.AttackId,
             AttackInstanceId = hit.AttackInstanceId,
             AttackIndex = hit.AttackIndex,
+            ImpactKind = hit.ImpactKind,
             HitWindowSerial = hit.HitWindowSerial,
             AttackImpactGroupId = hit.AttackImpactGroupId,
             HitIndex = hit.HitIndex,
@@ -1326,8 +1400,9 @@ end
 ---@param playerContext PlayerContext
 ---@param centerLocation Vector|nil
 ---@param forcedTarget any|nil
+---@param impactArgs table|nil
 ---@return number
-function CombatContext.ApplyPlayerUltimateDamage(playerContext, centerLocation, forcedTarget)
+function CombatContext.ApplyPlayerUltimateDamage(playerContext, centerLocation, forcedTarget, impactArgs)
     PlayerContext.Assert(playerContext, "CombatContext.ApplyPlayerUltimateDamage")
 
     local owner = playerContext.Owner
@@ -1373,12 +1448,19 @@ function CombatContext.ApplyPlayerUltimateDamage(playerContext, centerLocation, 
         or ("PlayerUltimate_" .. tostring(Now()))
     playerContext.Action.UltimateAttackInstanceId = attackInstanceId
 
+    impactArgs = impactArgs or {}
+
     local hit = {
         SourceActor = owner,
         SourceTeam = "Player",
         TargetTeam = "Enemy",
         AttackId = "PlayerUltimate",
         AttackInstanceId = attackInstanceId,
+        AttackImpactGroupId = impactArgs.AttackImpactGroupId or tostring(attackInstanceId) .. "_UltimateImpact",
+        ImpactKind = "Ultimate",
+        HitIndex = impactArgs.HitIndex,
+        HitCount = impactArgs.HitCount,
+        HitInterval = impactArgs.HitInterval,
         Damage = damage,
         GaugeDelta = 0,
         DuplicateHitLifetime = combatConfig.UltimateDuplicateHitLifetime or combatConfig.DuplicateHitLifetime,

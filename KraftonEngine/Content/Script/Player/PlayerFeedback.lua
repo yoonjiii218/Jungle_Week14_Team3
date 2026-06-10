@@ -545,10 +545,32 @@ local function PlayAttackHitFeedback(playerContext, event)
     SpawnDamageTextFeedback(playerContext, event)
 end
 
+local function IsUltimateAttackImpact(event)
+    return tostring(event.ImpactKind or "") == "Ultimate"
+        or tostring(event.AttackId or "") == "PlayerUltimate"
+end
+
+local function ResolveAttackImpactFeedbackConfig(feedbackConfig, event)
+    if IsUltimateAttackImpact(event) then
+        return feedbackConfig.UltimateAttackImpact or feedbackConfig.AttackImpact or {}, "UltimateAttackImpact"
+    end
+    return feedbackConfig.AttackImpact or {}, "AttackImpact"
+end
+
+local function ShouldSuppressAttackImpactFeedback(event, impactConfig)
+    if IsUltimateAttackImpact(event) ~= true or impactConfig.FinalHitOnly ~= true then
+        return false
+    end
+
+    local hitIndex = math.max(1, tonumber(event.HitIndex) or 1)
+    local hitCount = math.max(hitIndex, tonumber(event.HitCount) or hitIndex)
+    return hitCount > 1 and hitIndex < hitCount
+end
+
 local function PlayAttackImpactFeedback(playerContext, event)
     local feedbackConfig = playerContext.Config.Feedback or {}
-    local impactConfig = feedbackConfig.AttackImpact or {}
-    if impactConfig.Enabled == false then
+    local impactConfig, pulseConfigKey = ResolveAttackImpactFeedbackConfig(feedbackConfig, event)
+    if impactConfig.Enabled == false or ShouldSuppressAttackImpactFeedback(event, impactConfig) == true then
         return
     end
 
@@ -602,8 +624,15 @@ local function PlayAttackImpactFeedback(playerContext, event)
         PlayConfiguredSound(playerContext, resolvedSound)
     end
 
-    StartFOVPulse(playerContext, "Player.AttackImpactFOV", GetFOVConfig(playerContext, "AttackImpact") or GetFOVConfig(playerContext, "AttackHit"))
-    StartVignettePulse(playerContext, "Player.AttackImpactVignette", GetVignetteConfig(playerContext, "AttackImpact") or GetVignetteConfig(playerContext, "AttackHit"))
+    local pulsePrefix = "Player." .. tostring(pulseConfigKey)
+    StartFOVPulse(playerContext, pulsePrefix .. "FOV",
+        GetFOVConfig(playerContext, pulseConfigKey)
+            or GetFOVConfig(playerContext, "AttackImpact")
+            or GetFOVConfig(playerContext, "AttackHit"))
+    StartVignettePulse(playerContext, pulsePrefix .. "Vignette",
+        GetVignetteConfig(playerContext, pulseConfigKey)
+            or GetVignetteConfig(playerContext, "AttackImpact")
+            or GetVignetteConfig(playerContext, "AttackHit"))
 end
 
 local function PlayDashStartedFeedback(playerContext, event)
@@ -778,7 +807,7 @@ end
 local function GetUltimateCameraRotation(cameraConfig, baseRotation, t)
     local rotationStart = cameraConfig.RotationStart
     if t <= rotationStart then
-        return baseRotation
+        return Vector(baseRotation.X, baseRotation.Y, baseRotation.Z)
     end
 
     local rotationT = Clamp((t - rotationStart) / (1.0 - rotationStart), 0.0, 1.0)
@@ -795,6 +824,95 @@ local function GetUltimateCameraRotation(cameraConfig, baseRotation, t)
     local yaw = baseRotation.Z + math.sin(rotationT * math.pi * 2.0) * yawSwing
 
     return Vector(pitch, roll, yaw)
+end
+
+local function GetUltimateCameraBaseLocation(cameraConfig, focusLocation, actorForward, up)
+    return
+        focusLocation
+        - actorForward * (cameraConfig.BackDistance or 40.0)
+        + up * (cameraConfig.Height or 10.0)
+end
+
+local function GetUltimateCameraMotionTransform(cameraConfig, focusLocation, actorForward, actorRight, up, baseRotation, phase, t)
+    local location = GetUltimateCameraBaseLocation(cameraConfig, focusLocation, actorForward, up)
+    local rotation = GetUltimateCameraRotation(cameraConfig, baseRotation, t)
+
+    if cameraConfig.MotionEnabled == false then
+        return location, rotation
+    end
+
+    local easedT = EaseOutCubic(Clamp(t or 0.0, 0.0, 1.0))
+    local waveT = math.sin(Clamp(t or 0.0, 0.0, 1.0) * math.pi)
+
+    if phase == "Intro" then
+        location = location
+            - actorRight * ((cameraConfig.IntroSideDrift or 3.0) * (1.0 - easedT))
+            - actorForward * ((cameraConfig.IntroForwardDrift or 2.0) * (1.0 - easedT))
+            + up * ((cameraConfig.IntroHeightDrift or 0.8) * waveT)
+        rotation.X = rotation.X - (cameraConfig.IntroPitchDrift or 0.8) * waveT
+        rotation.Z = rotation.Z - (cameraConfig.IntroYawDrift or 1.5) * (1.0 - easedT)
+    elseif phase == "Move" then
+        location = location
+            + actorRight * ((cameraConfig.MoveSideDrift or 6.0) * waveT)
+            + actorForward * ((cameraConfig.MoveForwardDrift or -4.0) * easedT)
+            + up * ((cameraConfig.MoveHeightDrift or 1.2) * waveT)
+    elseif phase == "Attack" then
+        location = location
+            + actorRight * ((cameraConfig.AttackSideDrift or 10.0) * easedT)
+            + actorForward * ((cameraConfig.AttackForwardDrift or 6.0) * easedT)
+            + up * ((cameraConfig.AttackHeightDrift or 2.0) * waveT)
+        rotation.X = rotation.X + (cameraConfig.AttackPitchDrift or 1.2) * waveT
+        rotation.Z = rotation.Z + (cameraConfig.AttackYawDrift or 4.0) * easedT
+    elseif phase == "Recover" then
+        location = location
+            + actorRight * ((cameraConfig.RecoverSideDrift or 4.0) * (1.0 - easedT))
+            + actorForward * ((cameraConfig.RecoverForwardDrift or 3.0) * (1.0 - easedT))
+            + up * ((cameraConfig.RecoverHeightDrift or 1.0) * waveT)
+        rotation.X = rotation.X + (cameraConfig.RecoverPitchDrift or 0.8) * waveT
+        rotation.Z = rotation.Z + (cameraConfig.RecoverYawDrift or 1.5) * (1.0 - easedT)
+    end
+
+    return location, rotation
+end
+
+local function ApplyUltimateCameraMotion(ultimateCamera, cameraConfig, focusLocation, actorForward, actorRight, up, baseRotation, phase, t)
+    if ultimateCamera == nil then
+        return
+    end
+
+    local location, rotation = GetUltimateCameraMotionTransform(
+        cameraConfig,
+        focusLocation,
+        actorForward,
+        actorRight,
+        up,
+        baseRotation,
+        phase,
+        t
+    )
+
+    Reflection.Call(ultimateCamera, "SetActorLocation", location)
+    Reflection.Call(ultimateCamera, "SetActorRotation", rotation)
+end
+
+local function WaitWithUltimateCameraMotion(duration, frameStep, updateFunc)
+    local total = math.max(0.0, tonumber(duration) or 0.0)
+    if total <= 0.0 then
+        return
+    end
+
+    local step = math.max(1.0 / 120.0, tonumber(frameStep) or (1.0 / 60.0))
+    local elapsed = 0.0
+
+    while elapsed < total do
+        local waitStep = math.min(step, total - elapsed)
+        Wait(waitStep)
+        elapsed = elapsed + waitStep
+
+        if updateFunc ~= nil then
+            updateFunc(Clamp(elapsed / total, 0.0, 1.0), elapsed, waitStep)
+        end
+    end
 end
 
 local function GetSafeOwnerBasis(owner)
@@ -1092,10 +1210,12 @@ function PlayerFeedback.Init(playerContext)
     local feedbackConfig = playerContext.Config.Feedback or {}
     local attackHitConfig = feedbackConfig.AttackHit or {}
     local attackImpactConfig = feedbackConfig.AttackImpact or {}
+    local ultimateAttackImpactConfig = feedbackConfig.UltimateAttackImpact or {}
     local perfectDodgeConfig = feedbackConfig.PerfectDodge or {}
     EnsureConfiguredSoundLoaded(playerContext, perfectDodgeConfig.Sound)
     EnsureConfiguredSoundLoaded(playerContext, attackHitConfig.Sound)
     EnsureConfiguredSoundLoaded(playerContext, attackImpactConfig.Sound)
+    EnsureConfiguredSoundLoaded(playerContext, ultimateAttackImpactConfig.Sound)
 end
 
 ---@param playerContext PlayerContext
@@ -1191,11 +1311,6 @@ function PlayerFeedback.BeginUltimate(playerContext)
     local moveConfig = playerContext.Config.Feedback.UltimateMove
     local vfxConfig = playerContext.Config.Feedback.UltimateVfx
     local fovConfig = playerContext.Config.Feedback.FOV or {}
-    local cameraLocation =
-        focusLocation
-        - actorForward * (cameraConfig.BackDistance)
-        + up * (cameraConfig.Height)
-
     local slashAnchor =
         focusLocation
         + actorForward * (cameraConfig.SlashCameraDistance)
@@ -1205,8 +1320,17 @@ function PlayerFeedback.BeginUltimate(playerContext)
     local cameraYaw = math.atan2(actorForward.Y, actorForward.X) * 180.0 / math.pi
     local baseCameraRotation = Vector(-10.0, 15.0, cameraYaw)
 
-    Reflection.Call(ultimateCamera, "SetActorLocation", cameraLocation)
-    Reflection.Call(ultimateCamera, "SetActorRotation", GetUltimateCameraRotation(cameraConfig, baseCameraRotation, 0.0))
+    ApplyUltimateCameraMotion(
+        ultimateCamera,
+        cameraConfig,
+        focusLocation,
+        actorForward,
+        actorRight,
+        up,
+        baseCameraRotation,
+        "Intro",
+        0.0
+    )
 
     CameraManager.ToggleOwnerCamera(ultimateCamera, 0)
     StartFOVPulse(playerContext, "Player.UltimateStartFOV", fovConfig.UltimateStart)
@@ -1218,7 +1342,19 @@ function PlayerFeedback.BeginUltimate(playerContext)
     Reflection.Call(movementComp, "StopMovementImmediately")
     Reflection.Call(movementComp, "SetMovementInputEnabled", false)
 
-    Wait(0.15)
+    WaitWithUltimateCameraMotion(cameraConfig.IntroHold or 0.15, moveConfig.FrameStep, function(t)
+        ApplyUltimateCameraMotion(
+            ultimateCamera,
+            cameraConfig,
+            focusLocation,
+            actorForward,
+            actorRight,
+            up,
+            baseCameraRotation,
+            "Intro",
+            t
+        )
+    end)
 
     local startPos =
         focusLocation
@@ -1314,7 +1450,17 @@ function PlayerFeedback.BeginUltimate(playerContext)
         local nextPos = Bezier2(startPos, controlPos, cinematicEndPos, easedT)
         nextPos.Z = actorLocation.Z
 
-        Reflection.Call(ultimateCamera, "SetActorRotation", GetUltimateCameraRotation(cameraConfig, baseCameraRotation, t))
+        ApplyUltimateCameraMotion(
+            ultimateCamera,
+            cameraConfig,
+            focusLocation,
+            actorForward,
+            actorRight,
+            up,
+            baseCameraRotation,
+            "Move",
+            t
+        )
         Reflection.Call(owner, "SetActorLocation", nextPos)
 
         local faceDir = actorForward
@@ -1349,44 +1495,95 @@ function PlayerFeedback.BeginUltimate(playerContext)
     StartFOVPulse(playerContext, "Player.UltimateImpactFOV", fovConfig.UltimateImpact)
     StartVignettePulse(playerContext, "Player.UltimateImpactVignette", GetVignetteConfig(playerContext, "UltimateImpact"))
 
-    Wait(moveConfig.AttackStartDelay or 0.0)
+    local combatConfig = playerContext.Config.Combat or {}
+    local ultimateHitCount = math.max(1, math.min(20, math.floor(tonumber(combatConfig.UltimateHitCount) or 1)))
+    local ultimateHitInterval = math.max(0.0, tonumber(combatConfig.UltimateHitInterval) or 0.0)
+    local attackCameraDuration = math.max(
+        moveConfig.AttackDuration or 0.0,
+        (moveConfig.AttackStartDelay or 0.0)
+            + (moveConfig.AttackDamageDelay or 0.0)
+            + ultimateHitInterval * math.max(0, ultimateHitCount - 1)
+    )
+    local attackCameraElapsed = 0.0
+
+    local function UpdateAttackCamera(deltaTime)
+        if attackCameraDuration <= 0.0 then
+            return
+        end
+
+        attackCameraElapsed = math.min(attackCameraDuration, attackCameraElapsed + (deltaTime or 0.0))
+        ApplyUltimateCameraMotion(
+            ultimateCamera,
+            cameraConfig,
+            focusLocation,
+            actorForward,
+            actorRight,
+            up,
+            baseCameraRotation,
+            "Attack",
+            Clamp(attackCameraElapsed / attackCameraDuration, 0.0, 1.0)
+        )
+    end
+
+    local function WaitAttackCamera(duration)
+        WaitWithUltimateCameraMotion(duration, moveConfig.FrameStep, function(_, _, deltaTime)
+            UpdateAttackCamera(deltaTime)
+        end)
+    end
+
+    WaitAttackCamera(moveConfig.AttackStartDelay or 0.0)
 
     action.IsUltimateCinematic = false
     action.UltimateAttackInstanceId = "PlayerUltimate_" .. tostring(World.GetGameTime())
     action.IsInUltimateMode = true
 
-    Wait(moveConfig.AttackDamageDelay or 0.0)
+    WaitAttackCamera(moveConfig.AttackDamageDelay or 0.0)
 
-    local combatConfig = playerContext.Config.Combat or {}
-    local ultimateHitCount = math.max(1, math.min(20, math.floor(tonumber(combatConfig.UltimateHitCount) or 1)))
-    local ultimateHitInterval = math.max(0.0, tonumber(combatConfig.UltimateHitInterval) or 0.0)
     local baseUltimateAttackInstanceId = action.UltimateAttackInstanceId
     local repeatedHitTime = 0.0
 
     for hitIndex = 1, ultimateHitCount do
         if hitIndex > 1 then
             if ultimateHitInterval > 0.0 then
-                Wait(ultimateHitInterval)
+                WaitAttackCamera(ultimateHitInterval)
                 repeatedHitTime = repeatedHitTime + ultimateHitInterval
             else
                 WaitFrame()
+                UpdateAttackCamera(moveConfig.FrameStep or (1.0 / 60.0))
             end
             action.UltimateAttackInstanceId = tostring(baseUltimateAttackInstanceId) .. "_H" .. tostring(hitIndex)
         end
 
-        CombatContext.ApplyPlayerUltimateDamage(playerContext, focusLocation, focusTarget)
+        CombatContext.ApplyPlayerUltimateDamage(playerContext, focusLocation, focusTarget, {
+            AttackImpactGroupId = tostring(baseUltimateAttackInstanceId) .. "_UltimateImpact_H" .. tostring(hitIndex),
+            HitIndex = hitIndex,
+            HitCount = ultimateHitCount,
+            HitInterval = ultimateHitInterval,
+        })
     end
 
     action.UltimateAttackInstanceId = baseUltimateAttackInstanceId
 
     local remainingAttackTime = (moveConfig.AttackDuration or 0.0) - (moveConfig.AttackDamageDelay or 0.0) - repeatedHitTime
     if remainingAttackTime > 0.0 then
-        Wait(remainingAttackTime)
+        WaitAttackCamera(remainingAttackTime)
     end
 
     action.IsInUltimateMode = false
 
-    Wait(moveConfig.RecoverHold or 0.0)
+    WaitWithUltimateCameraMotion(moveConfig.RecoverHold or 0.0, moveConfig.FrameStep, function(t)
+        ApplyUltimateCameraMotion(
+            ultimateCamera,
+            cameraConfig,
+            focusLocation,
+            actorForward,
+            actorRight,
+            up,
+            baseCameraRotation,
+            "Recover",
+            t
+        )
+    end)
 
     Reflection.Call(movementComp, "SetMovementInputEnabled", true)
     StartFOVPulse(playerContext, "Player.UltimateRecoverFOV", fovConfig.UltimateRecover)
