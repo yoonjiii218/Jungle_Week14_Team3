@@ -41,6 +41,10 @@ function BeginPlay()
 
     if bossContext.Runtime.MovementComp then
         Reflection.Call(bossContext.Runtime.MovementComp, "SetMovementInputEnabled", true)
+        -- 이동 속도는 BB.MOVE.WALK_SPEED 로 일괄 관리 (씬 파일의 MaxWalkSpeed 를 런타임에 덮어씀)
+        if BossConfig.MOVE and BossConfig.MOVE.WALK_SPEED then
+            Reflection.SetProperty(bossContext.Runtime.MovementComp, "MaxWalkSpeed", BossConfig.MOVE.WALK_SPEED)
+        end
     end
 
     -- 보스는 넉백을 받지 않는다. 넉백은 플레이어 공격 클립의 AttackHitWindow 노티파이(C++)가

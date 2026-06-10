@@ -54,7 +54,7 @@ local DEATH_BLEND_IN   = 0.15
 -- get_owner_speed() 는 cm/s 가 아니라 ~10 스케일의 작은 값을 반환한다.
 -- (PlayerConfig: RunThreshold=8.0, RunSampleSpeed=10.0 와 동일 스케일)
 local WALK_SPEED   = 8.0
-local SPRINT_SPEED = 15.0
+local SPRINT_SPEED = 30.0
 
 -- 블렌드 시간 (초)
 local ATTACK_BLEND_IN  = 0.12   -- 공격 진입 / 콤보 단 사이 전환
@@ -185,10 +185,12 @@ function init(self)
     ResetAttack(self)
 
     -- ── 이동 블렌드스페이스 (Idle → Walk → Sprint) ─────────────────
+    -- 걷기 클립 재생 속도는 BB.ANIM.WALK_PLAY_RATE 로 조절 (발 미끄러짐 보정).
+    local walkPlayRate = (BossConfig.ANIM and BossConfig.ANIM.WALK_PLAY_RATE) or 1.0
     local loco = Anim.create_blend_space_1d(0.0)
-    Anim.blend_space_1d_add_sample(loco, IDLE2_PATH,  0.0,          1.0, true)
-    Anim.blend_space_1d_add_sample(loco, WALK_PATH,   WALK_SPEED,   1.0, true)
-    Anim.blend_space_1d_add_sample(loco, SPRINT_PATH, SPRINT_SPEED, 1.0, true)
+    Anim.blend_space_1d_add_sample(loco, IDLE2_PATH,  0.0,          1.0,          true)
+    Anim.blend_space_1d_add_sample(loco, WALK_PATH,   WALK_SPEED,   walkPlayRate, true)
+    Anim.blend_space_1d_add_sample(loco, SPRINT_PATH, SPRINT_SPEED, 1.0,          true)
     self.LocoBlendSpace = loco
 
     -- ── 최상위 상태 머신 ────────────────────────────────────────────

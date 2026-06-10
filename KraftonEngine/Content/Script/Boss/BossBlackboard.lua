@@ -7,6 +7,14 @@ local BB = {}
 -- ── 체력 ─────────────────────────────────────
 BB.MAX_HP = 10000.0   -- 보스 최대 체력
 
+-- ── 이동 속도 ────────────────────────────────
+-- 보스가 플레이어를 추격할 때의 실제 이동 속도(m/s).
+-- BossCharacter.BeginPlay 가 MovementComp.MaxWalkSpeed 에 적용한다.
+-- (씬 파일에도 MaxWalkSpeed 가 있지만 이 값이 런타임에 덮어쓴다 → 속도 조절은 여기서)
+BB.MOVE = {
+    WALK_SPEED = 15.0,
+}
+
 -- ── 거리 임계값 ──────────────────────────────
 BB.CHASE_DISTANCE  = 12.0   -- 이 이상이면 추격
 BB.ATTACK_DISTANCE = 12.0   -- 이 이하이면 공격 가능
@@ -134,6 +142,11 @@ BB.HIT_REACT = {
 -- 값을 낮추면 그 단의 모션뿐 아니라 노티파이(ZoneShow/HitboxOpen 등) 타이밍도 함께 느려진다.
 BB.ANIM = {
     DEFAULT_PLAY_RATE = 1.0,
+
+    -- 이동 블렌드스페이스의 걷기 클립 재생 속도. 발 미끄러짐(foot sliding) 보정용.
+    -- 1.0 = 에셋 원본 속도. 보스 이동 속도(BB.MOVE.WALK_SPEED)를 바꾼 뒤 발이 미끄러지면 이 값을 조절.
+    WALK_PLAY_RATE = 0.3,
+
     LIGHT_PLAY_RATES  = {
         [2] = 1.0,
         [3] = 1.0, --P3 준비 동작
@@ -156,6 +169,6 @@ BB.ANIM = {
 }
 
 -- ── 디버그 ───────────────────────────────────
-BB.DEBUG = true   -- false 로 바꾸면 print 전부 꺼짐
+BB.DEBUG = false   -- false 로 바꾸면 print 전부 꺼짐
 
 return BB
