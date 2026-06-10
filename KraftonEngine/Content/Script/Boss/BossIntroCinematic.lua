@@ -25,13 +25,13 @@ local SHOT = {
     LowRise  = 1.0,    -- 로우앵글에서 위로 상승하는 양(초당), 1.3초간 상승
     LowTime  = 1.3,
     -- ② 좌측 3/4
-    Left     = { fwd = 15,  side = -10.0, up = 1.5,  look = 0.8 },
+    Left     = { fwd = 10,  side = -10.0, up = 1.5,  look = 0.8 },
     LeftHold = 0.7,
     -- ③ 우측 3/4
-    Right    = { fwd = 20,  side = 10.0,  up = 1.5,  look = 1.8 },
+    Right    = { fwd = 15,  side = 10.0,  up = 1.5,  look = 1.8 },
     RightHold= 0.7,
     -- ④ 공격 직전: 정면에서 살짝 로우로 빠짐
-    Attack   = { fwd = 30,  side = 0.0,  up = 1.0,  look = 1.5 },
+    Attack   = { fwd = 20,  side = 0.0,  up = 1.0,  look = 1.5 },
 }
 
 local PITCH_SIGN       = 1.0     -- 위를 올려다보는 pitch 부호. 카메라가 거꾸로 보이면 -1.0 로 바꾼다.

@@ -19,6 +19,12 @@ local GameplayEventBus = require("Core/GameplayEventBus")
 local playersByOwner = {}
 local mobsByOwner = {}
 local activeEnemyAttackWindows = {}
+
+-- 보스 사망 시네마틱 동안 GameFlowDirector 의 자동 클리어(BossHP<=0 → RequestClear → 씬 전환)를
+-- 보류하기 위한 게이트. 켜져 있는 동안 SyncBossToGameFlow 가 디렉터에 0 대신 미세 양수를 보내
+-- IsBossDefeated 판정을 피한다. 시네마틱이 끝나면 ReleaseBossDeathClear 로 실제 0 을 반영한다.
+local bossDeathClearHeld = false
+local BOSS_DEATH_HOLD_HP = 0.001   -- IsBossDefeated(BossHP<=0) 를 피하는 표시상 0 으로 보이는 양수
 local COLLISION_NO = 0
 
 local function GetOwnerKey(owner)
@@ -105,7 +111,13 @@ local function SyncBossToGameFlow(bossContext)
 
     local director = GetGameFlowDirector()
     if director ~= nil and director.SetBossHP ~= nil then
-        director:SetBossHP(bossContext.Combat.HP or 0.0, bossContext.Combat.MaxHP or 0.0)
+        local hp = bossContext.Combat.HP or 0.0
+        -- 사망 시네마틱 보류 중에는 디렉터가 보스를 '처치됨'으로 보지 않도록 0 대신 미세 양수를 보낸다.
+        -- (AGameFlowDirector 는 BossHP<=0 을 보면 같은 프레임에 RequestClear → 씬 전환한다.)
+        if bossDeathClearHeld and hp <= 0.0 then
+            hp = BOSS_DEATH_HOLD_HP
+        end
+        director:SetBossHP(hp, bossContext.Combat.MaxHP or 0.0)
     end
 end
 
@@ -130,6 +142,9 @@ local function ResetPlayerCombatState(playerContext)
 end
 
 local function ResetBossCombatState(bossContext)
+    -- 새 보스 등록/리셋 시 이전 판의 사망 클리어 보류가 남지 않게 초기화.
+    bossDeathClearHeld = false
+
     local maxHP = bossContext.Config.MAX_HP or bossContext.Combat.MaxHP or 1.0
     bossContext.Combat.MaxHP = maxHP
     bossContext.Combat.HP = maxHP
@@ -1198,6 +1213,24 @@ local function HandleBossDeath(bossContext, hit)
     -- TODO: 전투 종료 이벤트, 보상 등 (에셋/연출 단계)
 end
 
+-- 사망 시네마틱이 GameFlowDirector 자동 클리어를 잠시 막기 위한 게이트 제어.
+-- HoldBossDeathClear 는 ApplyHitToBoss 의 치명타 처리에서 이미 켜지므로 보통 직접 부를 일은 없다.
+function CombatContext.HoldBossDeathClear()
+    bossDeathClearHeld = true
+end
+
+-- 시네마틱 종료 시 호출. 보류를 풀고 실제 HP(0)를 디렉터에 반영해 클리어가 정상 진행되게 한다.
+function CombatContext.ReleaseBossDeathClear()
+    bossDeathClearHeld = false
+    if registeredBossContext ~= nil then
+        SyncBossToGameFlow(registeredBossContext)
+    end
+end
+
+function CombatContext.IsBossDeathClearHeld()
+    return bossDeathClearHeld
+end
+
 function CombatContext.ApplyHitToBoss(hit)
     hit = NormalizeHit(hit)
     local bossContext = registeredBossContext
@@ -1227,6 +1260,12 @@ function CombatContext.ApplyHitToBoss(hit)
     end
 
     bossContext.Combat.HP = math.max(0.0, bossContext.Combat.HP - damage)
+    -- 치명타(HP 0)면, 디렉터에 0 을 push 하기 전에 자동 클리어를 보류한다.
+    -- (이 SyncBossToGameFlow 가 바로 아래에서 0 을 보내며, 디렉터는 같은 프레임에 씬을 전환하기 때문.)
+    -- 보류는 BossCharacter 가 사망 시네마틱을 끝낸 뒤 ReleaseBossDeathClear 로 해제한다.
+    if bossContext.Combat.HP <= 0.0 then
+        bossDeathClearHeld = true
+    end
     SyncBossToGameFlow(bossContext)
 
     -- 피격 방향 판정 → 방향별 피격 모션 신호 (BossAnimation 이 소비)
@@ -1592,9 +1631,15 @@ function CombatContext.GetBossHPRatio()
 end
 
 -- [플레이어팀 조회] 현재/최대 체력 (current, max)
+-- 사망 시네마틱 보류 중에는 0 대신 미세 양수를 반환해, 이 값을 디렉터에 직접 push 하는
+-- 외부 경로(GameFlowDirector HUD 동기화 등)에서도 자동 클리어가 트리거되지 않게 한다.
 function CombatContext.GetBossHP()
     if registeredBossContext == nil then return 0.0, 0.0 end
-    return registeredBossContext.Combat.HP, registeredBossContext.Combat.MaxHP
+    local hp = registeredBossContext.Combat.HP
+    if bossDeathClearHeld and hp <= 0.0 then
+        hp = BOSS_DEATH_HOLD_HP
+    end
+    return hp, registeredBossContext.Combat.MaxHP
 end
 
 function CombatContext.HasBoss()

@@ -177,6 +177,11 @@ function init(self)
     self.HitReactElapsed   = 0.0
     self.HitReactEnd       = false   -- "HitReactEnd" notify 수신
 
+    -- 사망 모션 상태 플래그 (리트라이 시 잔존 방지)
+    self.DeathPending   = false
+    self.DeathDirection = nil
+    self.DeathPlayed    = false      -- 사망 전이가 실제 발동했는지(재무장/재발동 방지)
+
     ResetAttack(self)
 
     -- ── 이동 블렌드스페이스 (Idle → Walk → Sprint) ─────────────────
@@ -446,10 +451,15 @@ function init(self)
     local function AddDeathTransition(direction, stateName)
         Anim.sm_add_transition(top, "AnyState", stateName,
             function()
+                -- DeathPlayed 가드: 실제 전이가 성공할 때만 플래그를 소비한다.
+                -- (예전엔 가드 없이 predicate 안에서 DeathPending 을 소비해, 블렌드 중 전이가
+                --  막히면 플래그만 날아가고 사망 모션이 영영 안 나오는 굳음 버그가 있었다.)
+                if self.DeathPlayed then return false end
                 if not self.DeathPending or self.DeathDirection ~= direction then
                     return false
                 end
                 self.DeathPending = false
+                self.DeathPlayed  = true
                 return true
             end, DEATH_BLEND_IN)
     end
@@ -500,6 +510,17 @@ function update(self, dt)
         bossContext.Brain.DeathSignal = nil
         self.DeathPending   = true
         self.DeathDirection = deathSignal
+    end
+
+    -- ── 방어: 1회성 DeathSignal 을 (공격/피격 블렌드 도중 사망 등으로) 놓쳐도
+    --    영속 플래그 IsDead 로 사망 전이를 매 프레임 재무장한다. 실제 전이가 발동하면
+    --    DeathPlayed 가 켜져 재무장/재발동을 멈춘다. (기본동작으로 굳는 것 방지)
+    if bossContext.Combat.IsDead and not self.DeathPlayed then
+        self.DeathDirection  = self.DeathDirection or "Front"
+        self.DeathPending    = true
+        -- 죽은 뒤 피격 리액션은 의미 없고 사망 전이를 방해하므로 정리.
+        self.HitReactActive  = false
+        self.HitReactPending = false
     end
 
     -- 피격 모션 재생 중이면 fallback 복귀용 경과 시간 누적

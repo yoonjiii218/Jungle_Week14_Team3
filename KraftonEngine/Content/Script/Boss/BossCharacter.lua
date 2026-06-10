@@ -13,16 +13,19 @@ local BossHitbox    = require("Boss/BossHitbox")
 local CombatContext = require("Combat/CombatContext")
 local GameplayEventBus = require("Core/GameplayEventBus")
 local BossIntroCinematic = require("Boss/BossIntroCinematic")
+local BossDeathCinematic = require("Boss/BossDeathCinematic")
 
 local bossContext = nil
 local introPlayed = false   -- 등장 시네마틱을 한 번만 재생
 local introActive = false   -- 시네마틱 동안 보스 AI 를 멈춤
+local deathPlayed = false   -- 사망 시네마틱을 한 번만 재생
 
 function BeginPlay()
     math.randomseed((World.GetGameTime() or 0) * 1000.0 + 1.0)
 
     introPlayed = false
     introActive = false
+    deathPlayed = false
 
     bossContext = BossContext.Create(obj, this, BossConfig)
 
@@ -84,6 +87,19 @@ function Tick(dt)
         introPlayed = true
         introActive = true
         BossIntroCinematic.Play(function() introActive = false end)
+    end
+
+    -- 사망 시 1회 사망 시네마틱(슬로모 + 궤도샷) 재생. CombatContext 가 치명타 시점에
+    -- GameFlowDirector 자동 클리어를 보류해 두므로, 시네마틱이 끝난 뒤 ReleaseBossDeathClear
+    -- 로 보류를 풀어 클리어/엔딩이 진행되게 한다. (이 보스 코루틴 풀에서 구동 — 사망 처리로
+    -- 기존 풀이 Destroy 됐어도 Begin 이 새 풀을 만들고 보스 액터는 사망 모션 동안 계속 Tick 한다.)
+    if not deathPlayed and bossContext.Combat ~= nil and bossContext.Combat.IsDead == true then
+        deathPlayed = true
+        BossDeathCinematic.Play(obj, function()
+            if CombatContext.ReleaseBossDeathClear ~= nil then
+                CombatContext.ReleaseBossDeathClear()
+            end
+        end)
     end
 
     BossEvents.BeginFrame(bossContext)
