@@ -18,9 +18,24 @@ local WaveState = {
     Finished  = "Finished",   -- 모든 웨이브 종료
 }
 
-local FIRST_WAVE_DELAY = 2.0    -- 씬 로딩 후 첫 웨이브까지
+local FIRST_WAVE_DELAY = 2.0    -- 플레이어가 처음 이동한 뒤 첫 웨이브까지
 local INTER_WAVE_DELAY = 3.0    -- 웨이브 사이 휴식
 local FALL_KILL_DELTA  = 50.0   -- 플레이어보다 이만큼 아래로 떨어지면 추락(맵 밖)으로 간주
+
+local WAVE_BGM = {
+    Enemy = {
+        Key = "Tokyo_EnemyBGM",
+        Path = "BGM/Enemy BGM.mp3",
+        Volume = 0.6,
+        Pitch = 1.0,
+    },
+    Boss = {
+        Key = "Tokyo_BossBGM",
+        Path = "BGM/Boss BGM.mp3",
+        Volume = 0.6,
+        Pitch = 1.0,
+    },
+}
 
 -- 웨이브 시스템 상태 (단일 액터이므로 모듈 레벨 상태로 보유)
 local state = {
@@ -34,6 +49,9 @@ local state = {
 
 local mobDeadHandle = nil
 local bossDeadHandle = nil
+local moveStartedHandle = nil
+local loadedBgm = {}
+local currentBgmKey = nil
 
 -- 이미 사망/추락 처리한 액터 키 집합. 사망 이벤트와 추락 회수가 같은 적을 중복 차감하지 않게 한다.
 -- 액터 UUID 는 고유하므로 웨이브 간 초기화하지 않는다(이전 시체가 떨어져도 재차감되지 않음).
@@ -58,6 +76,34 @@ local function SetState(newState)
     state.State = newState
 end
 
+local function PlayWaveBGM(bgm)
+    if bgm == nil or AudioManager == nil or AudioManager.Load == nil or AudioManager.PlayBGM == nil then
+        return
+    end
+    if currentBgmKey == bgm.Key then return end
+
+    if loadedBgm[bgm.Key] ~= true then
+        if AudioManager.Load(bgm.Key, bgm.Path, true) ~= true then
+            print("[WaveDirector] Failed to load BGM: " .. tostring(bgm.Path))
+            return
+        end
+        loadedBgm[bgm.Key] = true
+    end
+
+    AudioManager.PlayBGM(bgm.Key, bgm.Volume, bgm.Pitch)
+    currentBgmKey = bgm.Key
+    print("[WaveDirector] Playing BGM: " .. tostring(bgm.Path))
+end
+
+local function OnPlayerMoveStarted(_eventData)
+    if not state.IsActive then return end
+    if state.CurrentWaveIndex ~= 0 or state.State ~= WaveState.Idle then return end
+
+    state.WaitTimer = FIRST_WAVE_DELAY
+    SetState(WaveState.Waiting)
+    print("[WaveDirector] Player movement detected - first wave in " .. FIRST_WAVE_DELAY .. "s")
+end
+
 local function StartNextWave()
     state.CurrentWaveIndex = state.CurrentWaveIndex + 1
     local waveData = WaveConfig[state.CurrentWaveIndex]
@@ -72,6 +118,12 @@ local function StartNextWave()
             WaveIndex = state.CurrentWaveIndex - 1,
         })
         return
+    end
+
+    if state.CurrentWaveIndex == 1 then
+        PlayWaveBGM(WAVE_BGM.Enemy)
+    elseif waveData.waveType == "Boss" then
+        PlayWaveBGM(WAVE_BGM.Boss)
     end
 
     -- ① AliveCount 를 Config 기준으로 '미리' 확정 (스폰 콜백이 아니라 시작 시점에).
@@ -150,11 +202,21 @@ local function StopWaveSystem()
         GameplayEventBus.Unsubscribe(bossDeadHandle)
         bossDeadHandle = nil
     end
+    if moveStartedHandle then
+        GameplayEventBus.Unsubscribe(moveStartedHandle)
+        moveStartedHandle = nil
+    end
+
+    if currentBgmKey ~= nil and AudioManager ~= nil and AudioManager.StopBGM ~= nil then
+        AudioManager.StopBGM()
+        currentBgmKey = nil
+    end
 
     WaveSpawner.ClearAll()
     resolved = {}
     state.AliveCount = 0
     state.SpawnComplete = false
+    state.WaitTimer = 0.0
 end
 
 -- =========================================================
@@ -170,11 +232,12 @@ function BeginPlay()
     -- 몹/보스 사망 이벤트 구독 (CombatContext 에서 각각 Publish)
     mobDeadHandle  = GameplayEventBus.Subscribe("MobDead", obj, OnMobDead)
     bossDeadHandle = GameplayEventBus.Subscribe("BossDead", obj, OnBossDead)
+    moveStartedHandle = GameplayEventBus.Subscribe("Player.MoveStarted", obj, OnPlayerMoveStarted)
 
-    -- 씬 로딩 후 잠시 대기했다가 첫 웨이브 시작 (타이머는 Tick 이 소모)
-    state.WaitTimer = FIRST_WAVE_DELAY
-    SetState(WaveState.Waiting)
-    print("[WaveDirector] BeginPlay - first wave in " .. FIRST_WAVE_DELAY .. "s")
+    -- 첫 이동 입력이 들어오기 전까지 웨이브 타이머를 시작하지 않는다.
+    state.WaitTimer = 0.0
+    SetState(WaveState.Idle)
+    print("[WaveDirector] BeginPlay - waiting for player movement")
 end
 
 function Tick(dt)

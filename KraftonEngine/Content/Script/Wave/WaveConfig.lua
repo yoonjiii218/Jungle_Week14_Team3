@@ -12,27 +12,25 @@ local WaveConfig = {
         },
     },
 
-    -- [웨이브 2] 일반 몹 5마리, 더 빠르게
     {
         waveType = "Normal",
         enemies = {
-            { spawnType = "Mob", mobId = "Goblin", count = 5, spawnDelay = 0.3, distance = 20.0 },
+            { spawnType = "Mob", mobId = "Goblin", count = 5, spawnDelay = 0.5, distance = 15.0 },
         },
     },
-
 
     {
         waveType = "Normal",
         enemies = {
-            { spawnType = "Mob", mobId = "Goblin", count = 7, spawnDelay = 0.5, distance = 20.0 },
+            { spawnType = "Mob", mobId = "Goblin", count = 7, spawnDelay = 0.5, distance = 15.0 },
         },
     },
-
+    
     -- [웨이브 3] 보스 1마리 (지연 없이 바로)
     {
         waveType = "Boss",
         enemies = {
-            { spawnType = "Boss", mobId = "Boss", count = 1, spawnDelay = 0.0, distance = 25.0, maxHP = 300.0 },
+            { spawnType = "Boss", mobId = "Boss", count = 1, spawnDelay = 0.0, distance = 25.0, maxHP = 4500.0 },
         },
     },
 

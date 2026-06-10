@@ -108,7 +108,7 @@ end
 
 
 local function ApplyAttackHitOnce(playerContext, targetActor, hitboxComponent, targetComponent, hitResult,
-    hitStopDuration, hitIndex)
+    hitStopDuration, hitIndex, hitCount, hitInterval, hitWindowSerial, attackImpactGroupId)
     local requestHitStop = hitStopDuration
     if hitIndex ~= nil and hitIndex > 1 then
         -- Prevent repeated local hit-stop from making the game look permanently frozen.
@@ -122,6 +122,11 @@ local function ApplyAttackHitOnce(playerContext, targetActor, hitboxComponent, t
         TargetComponent = targetComponent,
         HitResult = hitResult,
         HitStopDuration = requestHitStop,
+        HitWindowSerial = hitWindowSerial,
+        AttackImpactGroupId = attackImpactGroupId,
+        HitIndex = hitIndex or 1,
+        HitCount = hitCount or 1,
+        HitInterval = hitInterval or 0.0,
     })
 
     if hitIndex ~= nil and hitIndex > 1 then
@@ -902,8 +907,14 @@ function on_attack_hit(self, targetActor, hitboxComponent, targetComponent, hitR
     -- inside the notify callback. Only follow-up hits are deferred to the owner
     -- coroutine pool so damage/death/collision changes do not recurse inside the
     -- C++ overlap traversal.
+    local baseAttackInstanceId = tostring(playerContext.Action.AttackInstanceId
+        or playerContext.Action.DashChargeAttackInstanceId
+        or playerContext.Action.UltimateAttackInstanceId
+        or "PlayerAttack")
+    local attackImpactGroupId = baseAttackInstanceId .. "_W" .. tostring(hitWindowSerial or "NoWindow")
+
     local firstHitResult = ApplyAttackHitOnce(playerContext, targetActor, hitboxComponent, targetComponent,
-        hitResult, hitStopDuration, nil)
+        hitResult, hitStopDuration, 1, resolvedHitCount, resolvedHitInterval, hitWindowSerial, attackImpactGroupId)
     LogAttackHitResult(targetActor, firstHitResult, 1, resolvedHitCount)
 
     if resolvedHitCount <= 1 or ShouldStopRepeatedAttackHit(firstHitResult) == true then
@@ -924,7 +935,7 @@ function on_attack_hit(self, targetActor, hitboxComponent, targetComponent, hitR
             end
 
             local repeatedHitResult = ApplyAttackHitOnce(playerContext, targetActor, hitboxComponent, targetComponent,
-                hitResult, 0.0, hitIndex)
+                hitResult, 0.0, hitIndex, resolvedHitCount, resolvedHitInterval, hitWindowSerial, attackImpactGroupId)
             LogAttackHitResult(targetActor, repeatedHitResult, hitIndex, resolvedHitCount)
 
             if ShouldStopRepeatedAttackHit(repeatedHitResult) == true then
@@ -932,6 +943,20 @@ function on_attack_hit(self, targetActor, hitboxComponent, targetComponent, hitR
             end
         end
     end)
+end
+
+---@param self table
+---@param hitWindowSerial integer|nil
+---@return nil
+function on_attack_hit_window_end(self, hitWindowSerial)
+    self.PlayerContext = CombatContext.GetPlayerByOwner(obj)
+    local playerContext = self.PlayerContext
+    if playerContext == nil then return end
+    PlayerContext.Assert(playerContext, "PlayerAnimation.on_attack_hit_window_end")
+
+    PlayerEvents.EmitAttackImpactWindowClosed(playerContext, {
+        HitWindowSerial = hitWindowSerial,
+    })
 end
 
 function on_dash_vanish_begin(self)

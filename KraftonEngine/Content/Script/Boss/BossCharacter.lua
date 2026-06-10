@@ -12,11 +12,20 @@ local BossFeedback  = require("Boss/BossFeedback")
 local BossHitbox    = require("Boss/BossHitbox")
 local CombatContext = require("Combat/CombatContext")
 local GameplayEventBus = require("Core/GameplayEventBus")
+local BossIntroCinematic = require("Boss/BossIntroCinematic")
+local BossDeathCinematic = require("Boss/BossDeathCinematic")
 
 local bossContext = nil
+local introPlayed = false   -- 등장 시네마틱을 한 번만 재생
+local introActive = false   -- 시네마틱 동안 보스 AI 를 멈춤
+local deathPlayed = false   -- 사망 시네마틱을 한 번만 재생
 
 function BeginPlay()
     math.randomseed((World.GetGameTime() or 0) * 1000.0 + 1.0)
+
+    introPlayed = false
+    introActive = false
+    deathPlayed = false
 
     bossContext = BossContext.Create(obj, this, BossConfig)
 
@@ -72,6 +81,27 @@ function Tick(dt)
     -- this boss's scaledDt, never another actor's (see CoroutineManager.lua).
     CoroutineManager.Begin(obj.UUID)
 
+    -- 첫 Tick 에 등장 시네마틱 시작(이 보스 코루틴 풀에서 구동). 어떤 경로로 스폰되든
+    -- 모든 보스가 이 진입점을 거치므로 여기서 트리거하는 게 가장 확실하다.
+    if not introPlayed then
+        introPlayed = true
+        introActive = true
+        BossIntroCinematic.Play(function() introActive = false end)
+    end
+
+    -- 사망 시 1회 사망 시네마틱(슬로모 + 궤도샷) 재생. CombatContext 가 치명타 시점에
+    -- GameFlowDirector 자동 클리어를 보류해 두므로, 시네마틱이 끝난 뒤 ReleaseBossDeathClear
+    -- 로 보류를 풀어 클리어/엔딩이 진행되게 한다. (이 보스 코루틴 풀에서 구동 — 사망 처리로
+    -- 기존 풀이 Destroy 됐어도 Begin 이 새 풀을 만들고 보스 액터는 사망 모션 동안 계속 Tick 한다.)
+    if not deathPlayed and bossContext.Combat ~= nil and bossContext.Combat.IsDead == true then
+        deathPlayed = true
+        BossDeathCinematic.Play(obj, function()
+            if CombatContext.ReleaseBossDeathClear ~= nil then
+                CombatContext.ReleaseBossDeathClear()
+            end
+        end)
+    end
+
     BossEvents.BeginFrame(bossContext)
 
     local brain = bossContext.Brain
@@ -99,8 +129,12 @@ function Tick(dt)
     end
 
     UpdateCoroutines(scaledDt)
-    BossAction.Update(bossContext, dt)
-    BossAttacks.Update(bossContext, scaledDt)
+    -- 시네마틱 중에는 AI 를 멈춰 보스가 가만히 있다가 연출 끝에 DashSlash 만 나가게 한다.
+    -- (DashSlash 는 brain.AnimAttack 신호 → 애님 인스턴스가 소비하므로 AI 정지와 무관하게 재생된다.)
+    if not introActive then
+        BossAction.Update(bossContext, dt)
+        BossAttacks.Update(bossContext, scaledDt)
+    end
 
     local events = BossEvents.Drain(bossContext)
     CombatContext.ProcessBossEvents(bossContext, events)

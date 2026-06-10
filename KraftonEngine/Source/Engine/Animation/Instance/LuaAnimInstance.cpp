@@ -233,6 +233,31 @@ bool ULuaAnimInstance::GetDebugSnapshotText(FString& OutText)
 	return !OutText.empty();
 }
 
+
+bool ULuaAnimInstance::InvokeLuaFunction(const FString& FunctionName, int32 HitWindowSerial)
+{
+	if (FunctionName.empty() || !Env.valid() || !LuaSelf.valid())
+	{
+		return false;
+	}
+
+	sol::protected_function Function = Env[FunctionName];
+	if (!Function.valid())
+	{
+		return false;
+	}
+
+	FLuaCallScope Scope(this);
+	auto R = Function(LuaSelf, HitWindowSerial);
+	if (!R.valid())
+	{
+		sol::error Err = R;
+		UE_LOG("[LuaAnimInstance] %s() error: %s", FunctionName.c_str(), Err.what());
+		return false;
+	}
+	return true;
+}
+
 bool ULuaAnimInstance::InvokeLuaFunction(const FString& FunctionName, AActor* OtherActor,
 	UPrimitiveComponent* HitComponent, UPrimitiveComponent* OtherComp, const FHitResult& HitResult,
 	float HitStopDuration, int32 HitCount, float HitInterval, int32 HitWindowSerial)
