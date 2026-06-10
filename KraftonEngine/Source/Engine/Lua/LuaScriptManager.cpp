@@ -1,4 +1,4 @@
-﻿#include "LuaScriptManager.h"
+#include "LuaScriptManager.h"
 
 #include "Core/Logging/Log.h"
 #include "Core/Logging/Notification.h"
@@ -48,6 +48,7 @@
 #include "Core/Property/StringProperty.h"
 #include "Core/Property/StructProperty.h"
 #include "Platform/Paths.h"
+#include "Profiling/Time/PlatformTime.h"
 #include "Math/Vector.h"
 #include "Math/Rotator.h"
 #include "Platform/WindowsWindow.h"
@@ -157,11 +158,16 @@ namespace
 		}
 
 		const std::filesystem::path SaveRoot = std::filesystem::path(FPaths::SaveDir()).lexically_normal();
+		std::filesystem::path CleanSaveRoot = SaveRoot;
+		if (CleanSaveRoot.filename().empty())
+		{
+			CleanSaveRoot = CleanSaveRoot.parent_path();
+		}
 		const std::filesystem::path FullPath = (SaveRoot / RelPath).lexically_normal();
 
-		auto RootIt = SaveRoot.begin();
+		auto RootIt = CleanSaveRoot.begin();
 		auto FullIt = FullPath.begin();
-		for (; RootIt != SaveRoot.end(); ++RootIt, ++FullIt)
+		for (; RootIt != CleanSaveRoot.end(); ++RootIt, ++FullIt)
 		{
 			if (FullIt == FullPath.end() || *RootIt != *FullIt)
 			{
@@ -2129,6 +2135,10 @@ void FLuaScriptManager::RegisterCoreBindings(sol::state& Lua)
 	Engine.set_function("AppendTextFile", [](const FString& RelativePath, const FString& Content)
 	{
 		return WriteLuaSavedTextFile(RelativePath, Content, true);
+	});
+	Engine.set_function("GetRealtimeSeconds", []() -> double
+	{
+		return static_cast<double>(FPlatformTime::Cycles64()) * static_cast<double>(FPlatformTime::GetSecondsPerCycle());
 	});
 	Engine.set_function("Exit", []()
 	{

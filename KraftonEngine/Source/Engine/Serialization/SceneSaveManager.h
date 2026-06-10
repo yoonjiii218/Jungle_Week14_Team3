@@ -50,6 +50,23 @@ public:
 	// 사고를 막기 위해, 이 값은 Actor 생성 전에 World 에 적용된다.
 	static void LoadSceneFromJSON(const string& filepath, FWorldContext& OutWorldContext, FPerspectiveCameraData& OutCam, const EWorldType* OverrideWorldType = nullptr);
 
+	struct FSceneAsyncLoadState;
+	struct FSceneAsyncLoadStatus
+	{
+		bool bFinished = false;
+		bool bSucceeded = false;
+		int32 LoadedActorCount = 0;
+		int32 TotalActorCount = 0;
+	};
+
+	static FSceneAsyncLoadState* BeginLoadSceneFromJSONAsync(
+		const string& filepath,
+		FWorldContext& OutWorldContext,
+		FPerspectiveCameraData& OutCam,
+		const EWorldType* OverrideWorldType = nullptr);
+	static FSceneAsyncLoadStatus TickLoadSceneFromJSONAsync(FSceneAsyncLoadState& State, int32 WorkBudget, double MaxWorkMilliseconds = 2.0);
+	static void DestroySceneAsyncLoadState(FSceneAsyncLoadState* State);
+
 	static TArray<FString> GetSceneFileList();
 
 	struct FSceneSaveContext
@@ -71,6 +88,7 @@ public:
 	{
 		TMap<uint32, UObject*> ObjectById;
 		TArray<FPendingPropertyLoad> PendingProperties;
+		bool bDeferExpensiveAssetPostEdit = false;
 
 		void RegisterLoadedObject(json::JSON& Node, UObject* Object);
 		UObject* FindObjectById(uint32 ObjectId) const;
@@ -90,6 +108,7 @@ private:
 	// ---- Camera ----
 	static json::JSON SerializeCamera(const FMinimalViewInfo* POV);
 	static void DeserializeCamera(json::JSON& CamJSON, FPerspectiveCameraData& OutCam);
+	static bool DeserializeActor(json::JSON& ActorJSON, UWorld* World, FSceneLoadContext& Context);
 
 	// ---- Deserialization helpers ----
 	static USceneComponent* DeserializeSceneComponentTree(json::JSON& Node, AActor* Owner, FSceneLoadContext& Context);

@@ -21,7 +21,10 @@ local FILM_COUNTDOWN_START_NUMBER = 5
 local FILM_COUNTDOWN_PLAY_SECONDS = 5.0
 local FILM_COUNTDOWN_DURATION = 5.35
 local pendingTransitionAction = nil
-local pendingTransitionFrameDelay = 0
+local pendingTransitionSceneName = nil
+local pendingTransitionAsyncStarted = false
+local pendingTransitionAsyncUnavailable = false
+local pendingTransitionBeginFrameDelay = 0
 local FILM_SPROCKET_COUNT = 11
 local FILM_SPROCKET_SPACING = 86.0
 local FILM_SPROCKET_SPEED = 210.0
@@ -68,6 +71,7 @@ local START_MENU_BOOT_ELEMENT_IDS = {
 }
 local startMenuBootTime = START_MENU_BOOT_DURATION + 1.0
 local filmCountdownTime = FILM_COUNTDOWN_DURATION + 1.0
+local filmCountdownStartRealtime = nil
 local clearToCreditsTime = 0.0
 local creditsRollTime = CREDITS_ROLL_DURATION + 1.0
 local bossHudWasVisible = false
@@ -80,6 +84,7 @@ local comboImpactTime = 0.0
 local comboImpactThreshold = 0
 local loadedUiAudio = {}
 local combatElapsedTime = 0.0
+local combatStartWorldTime = nil
 local combatTimerStarted = false
 local clearTimeSaved = false
 local lastClearScore = nil
@@ -319,6 +324,31 @@ local function formatClearTime(seconds)
     return string.format("%02d:%05.2f", minutes, remain)
 end
 
+local function getWorldTimeSeconds()
+    if World ~= nil and World.GetGameTime ~= nil then
+        return World.GetGameTime() or nil
+    end
+    return nil
+end
+
+local function getRealtimeSeconds()
+    if Engine ~= nil and Engine.GetRealtimeSeconds ~= nil then
+        return Engine.GetRealtimeSeconds() or nil
+    end
+    return nil
+end
+
+local function getCombatElapsedTime()
+    local elapsed = math.max(combatElapsedTime or 0.0, 0.0)
+    if combatStartWorldTime ~= nil then
+        local now = getWorldTimeSeconds()
+        if now ~= nil then
+            elapsed = math.max(elapsed, now - combatStartWorldTime)
+        end
+    end
+    return elapsed
+end
+
 local function parseScoreboardLine(line)
     if line == nil or line == "" then
         return nil
@@ -387,17 +417,39 @@ local function recordClearScore(d)
         return lastClearScore, lastClearEntries or loadScoreboard()
     end
 
-    if combatTimerStarted ~= true then
+    local canRecordCurrentRun = combatTimerStarted == true
+        or combatStartWorldTime ~= nil
+        or (combatElapsedTime ~= nil and combatElapsedTime > 0.0)
+
+    if canRecordCurrentRun ~= true then
+        local storedTime = nil
+        if Engine ~= nil and Engine.ReadTextFile ~= nil then
+            local content = Engine.ReadTextFile("LastClearScore.txt")
+            if content ~= nil and content ~= "" then
+                storedTime = tonumber(content)
+            end
+        end
+
         local entries = loadScoreboard()
-        lastClearScore = findLatestScore(entries)
+        local score = storedTime ~= nil and storedTime > 0.0 and { Time = storedTime } or nil
+        if score == nil then
+            print("[GameFlow] Clear time was not saved because no combat timer or stored clear time was available.")
+        end
+
+        clearTimeSaved = true
+        lastClearScore = score
         lastClearEntries = entries
-        return lastClearScore, entries
+        return score, entries
+    end
+
+    local clearTime = getCombatElapsedTime()
+    if clearTime <= 0.0 then
+        clearTime = 0.001
     end
 
     local score = {
-        Time = combatElapsedTime,
+        Time = clearTime,
     }
-
     local entries = loadScoreboard()
     table.insert(entries, score)
     table.sort(entries, function(a, b)
@@ -407,8 +459,14 @@ local function recordClearScore(d)
         table.remove(entries)
     end
 
+    if Engine ~= nil and Engine.WriteTextFile ~= nil then
+        Engine.WriteTextFile("LastClearScore.txt", string.format("%.3f", clearTime))
+    end
+
     if saveScoreboard(entries) ~= true then
         print("[GameFlow] Failed to save clear scoreboard: " .. SCOREBOARD_FILE)
+    else
+        print("[GameFlow] Saved clear time: " .. formatClearTime(score.Time))
     end
     clearTimeSaved = true
     lastClearScore = score
@@ -422,7 +480,7 @@ local function applyScoreboardToClear(screen, currentScore, entries)
     end
 
     entries = entries or loadScoreboard()
-    setText(screen, "clear-time", "CLEAR TIME  " .. formatClearTime(currentScore ~= nil and currentScore.Time or combatElapsedTime))
+    setText(screen, "clear-time", "CLEAR TIME  " .. formatClearTime(currentScore ~= nil and currentScore.Time or getCombatElapsedTime()))
     for i = 1, SCOREBOARD_MAX_ENTRIES do
         local entry = entries[i]
         if entry ~= nil then
@@ -438,8 +496,9 @@ local function applyScoreboardToCredits(credits)
         return
     end
 
-    local entries = loadScoreboard()
-    local currentText = lastClearScore ~= nil and formatClearTime(lastClearScore.Time) or "--:--.--"
+    local d = getDirector()
+    local clearScore, entries = recordClearScore(d)
+    local currentText = clearScore ~= nil and formatClearTime(clearScore.Time) or "--:--.--"
     setText(credits, "score-current", "LAST CLEAR  " .. currentText)
 
     for i = 1, SCOREBOARD_MAX_ENTRIES do
@@ -1010,6 +1069,7 @@ local function showHud()
     resetBossHudAnimation()
     resetComboHoldTimer()
     combatElapsedTime = 0.0
+    combatStartWorldTime = getWorldTimeSeconds()
     combatTimerStarted = true
     clearTimeSaved = false
     lastClearScore = nil
@@ -1167,17 +1227,75 @@ local function setCountdownNumber(widget, text)
     setText(widget, "countdown-number-main", text)
 end
 
+local function clearPendingTransition()
+    pendingTransitionAction = nil
+    pendingTransitionSceneName = nil
+    pendingTransitionAsyncStarted = false
+    pendingTransitionAsyncUnavailable = false
+    pendingTransitionBeginFrameDelay = 0
+    filmCountdownStartRealtime = nil
+end
+
+local function beginPendingAsyncTransition()
+    if pendingTransitionSceneName == nil or pendingTransitionAsyncStarted == true then
+        return true
+    end
+
+    if pendingTransitionBeginFrameDelay > 0 then
+        pendingTransitionBeginFrameDelay = pendingTransitionBeginFrameDelay - 1
+        return true
+    end
+
+    pendingTransitionAsyncStarted = true
+    if GameFlow ~= nil and GameFlow.BeginAsyncOpenScene ~= nil then
+        if GameFlow.BeginAsyncOpenScene(pendingTransitionSceneName) == true then
+            return true
+        end
+    end
+
+    pendingTransitionAsyncUnavailable = true
+    print("[GameFlow] Async scene load unavailable. Falling back after film countdown.")
+    return true
+end
+
+local function isPendingTransitionReady()
+    if pendingTransitionSceneName == nil then
+        return true
+    end
+    if pendingTransitionAsyncStarted ~= true then
+        return false
+    end
+    if pendingTransitionAsyncUnavailable == true then
+        return true
+    end
+    if GameFlow ~= nil and GameFlow.IsAsyncOpenSceneReady ~= nil then
+        return GameFlow.IsAsyncOpenSceneReady() == true
+    end
+    return true
+end
+
 local function completeFilmCountdown()
-    removeWidget("Countdown")
     filmCountdownTime = FILM_COUNTDOWN_DURATION + 1.0
 
-    if pendingTransitionAction ~= nil then
+    if pendingTransitionSceneName ~= nil then
         local action = pendingTransitionAction
-        pendingTransitionAction = nil
-        pendingTransitionFrameDelay = 0
-        action()
+        local committed = pendingTransitionAsyncUnavailable ~= true
+            and GameFlow ~= nil
+            and GameFlow.CommitAsyncOpenScene ~= nil
+            and GameFlow.CommitAsyncOpenScene() == true
+        clearPendingTransition()
+        removeWidget("Countdown")
+        currentScreen = "SceneTransition"
+        if committed == true then
+            return
+        end
+        if action ~= nil then
+            action()
+        end
         return
     end
+
+    removeWidget("Countdown")
 
     if startHudFlow ~= nil then
         startHudFlow()
@@ -1190,17 +1308,29 @@ local function updateFilmCountdown(dt)
         completeFilmCountdown()
         return
     end
-
-    local clampedDt = dt or 0.0
-    if clampedDt > 0.1 then
-        clampedDt = 0.016
+    if beginPendingAsyncTransition() ~= true then
+        return
     end
 
-    filmCountdownTime = filmCountdownTime + clampedDt
+    local realtimeSeconds = getRealtimeSeconds()
+    if filmCountdownStartRealtime ~= nil and realtimeSeconds ~= nil then
+        filmCountdownTime = math.max(0.0, realtimeSeconds - filmCountdownStartRealtime)
+    else
+        local clampedDt = math.max(dt or 0.0, 0.0)
+        if clampedDt > 1.0 then
+            clampedDt = 1.0
+        end
+        filmCountdownTime = filmCountdownTime + clampedDt
+    end
+
     local t = filmCountdownTime
     if t >= FILM_COUNTDOWN_DURATION then
-        completeFilmCountdown()
-        return
+        if isPendingTransitionReady() == true then
+            completeFilmCountdown()
+            return
+        end
+        filmCountdownTime = FILM_COUNTDOWN_DURATION - 0.001
+        t = filmCountdownTime
     end
 
     local viewportWidth, viewportHeight, centerX, centerY = getStartMenuBootViewport()
@@ -1353,13 +1483,18 @@ local function updateFilmCountdown(dt)
     setCountdownOpacity(countdown, "flash", flash * 0.22 * masterOpacity)
 end
 
-local function triggerTransitionWithCountdown(action)
+local function triggerTransitionWithCountdown(sceneName, action)
     local d = getDirector()
     if d == nil then
         action()
         return
     end
+    if sceneName == nil or sceneName == "" then
+        action()
+        return
+    end
 
+    d:ResumeGame()
     removeWidget("StartMenu")
     removeWidget("Pause")
     removeWidget("GameOver")
@@ -1375,8 +1510,11 @@ local function triggerTransitionWithCountdown(action)
     widgets.Countdown = countdown
     currentScreen = "Countdown"
     filmCountdownTime = 0.0
+    filmCountdownStartRealtime = getRealtimeSeconds()
     pendingTransitionAction = action
-    pendingTransitionFrameDelay = 0
+    pendingTransitionSceneName = sceneName
+    pendingTransitionAsyncStarted = false
+    pendingTransitionBeginFrameDelay = 30
     playUiAudio(UI_AUDIO.FilmCountdown)
     updateFilmCountdown(0.0)
 end
@@ -1400,6 +1538,7 @@ local function showFilmCountdown()
     addToViewport(countdown, 400)
     currentScreen = "Countdown"
     filmCountdownTime = 0.0
+    filmCountdownStartRealtime = getRealtimeSeconds()
     playUiAudio(UI_AUDIO.FilmCountdown)
     updateFilmCountdown(0.0)
 end
@@ -1439,7 +1578,11 @@ local function showStartMenu()
 end
 
 startStoryBossFromMenu = function(d)
-    triggerTransitionWithCountdown(function()
+    local sceneName = "Default"
+    if d.GetStoryBossSceneName ~= nil then
+        sceneName = d:GetStoryBossSceneName()
+    end
+    triggerTransitionWithCountdown(sceneName, function()
         d:StartStoryBoss()
     end)
 end
@@ -1451,9 +1594,20 @@ startTrainingFromMenu = function(d)
     end
     print("[GameFlow] Training button clicked -> " .. tostring(sceneName))
     TutorialDirector.QueueTrainingSession(sceneName)
-    triggerTransitionWithCountdown(function()
+    triggerTransitionWithCountdown(sceneName, function()
         d:StartTraining()
     end)
+end
+
+local function getRetryCombatSceneName(d)
+    local sceneName = nil
+    if d ~= nil and d.GetRetrySceneName ~= nil then
+        sceneName = d:GetRetrySceneName()
+    end
+    if (sceneName == nil or sceneName == "") and d ~= nil and d.GetStoryBossSceneName ~= nil then
+        sceneName = d:GetStoryBossSceneName()
+    end
+    return sceneName ~= nil and sceneName ~= "" and sceneName or "Default"
 end
 
 local function applyStartMenuPadActions()
@@ -1590,7 +1744,7 @@ local function showPauseMenu()
             hidePauseMenu()
         end)
         pause:bind_click("btn-restart", function()
-            triggerTransitionWithCountdown(function()
+            triggerTransitionWithCountdown(getRetryCombatSceneName(d), function()
                 d:RestartCombatScene()
             end)
         end)
@@ -1625,7 +1779,7 @@ local function showGameOver()
     if screen ~= nil then
         bindButtonAudio(screen, { "btn-retry", "btn-main-menu", "btn-exit" })
         screen:bind_click("btn-retry", function()
-            triggerTransitionWithCountdown(function()
+            triggerTransitionWithCountdown(getRetryCombatSceneName(d), function()
                 d:RestartCombatScene()
             end)
         end)
@@ -1646,29 +1800,17 @@ local function showClear()
 
     removeAllWidgets()
     d:ResumeGame()
-    clearToCreditsTime = 0.0
-    local clearScore, scoreboardEntries = recordClearScore(d)
 
-    local screen = createWidget("Clear", d:GetClearWidgetPath(), true, 100)
-    if screen ~= nil then
-        applyScoreboardToClear(screen, clearScore, scoreboardEntries)
-        bindButtonAudio(screen, { "btn-credits", "btn-main-menu", "btn-exit" })
-        screen:bind_click("btn-credits", function()
-            if showCredits ~= nil then
-                showCredits()
-            else
-                d:RequestCredits()
-            end
-        end)
-        screen:bind_click("btn-main-menu", function()
-            d:RequestMainMenu()
-        end)
-        screen:bind_click("btn-exit", function()
-            d:ExitGame()
-        end)
+    local startup = d:GetStartupScreen()
+    if startup == "Clear" or startup == "Credits" then
+        if showCredits ~= nil then
+            showCredits()
+        else
+            d:RequestCredits()
+        end
+    else
+        currentScreen = "None"
     end
-    addToViewport(screen, 100)
-    currentScreen = "Clear"
 end
 
 local function updateClearOutro(dt)
@@ -1978,16 +2120,6 @@ function BeginPlay()
 end
 
 function Tick(dt)
-    if pendingTransitionAction ~= nil and currentScreen ~= "Countdown" then
-        pendingTransitionFrameDelay = pendingTransitionFrameDelay - 1
-        if pendingTransitionFrameDelay <= 0 then
-            local action = pendingTransitionAction
-            pendingTransitionAction = nil
-            action()
-        end
-        return
-    end
-
     if wasPadMenuStarted() == true then
         if handleTrainingEscape() ~= true then
             togglePauseMenu()
@@ -2034,8 +2166,7 @@ function EndPlay()
     end
     removeAllWidgets()
     stopFlowBGM()
-    pendingTransitionAction = nil
-    pendingTransitionFrameDelay = 0
+    clearPendingTransition()
     director = nil
     currentScreen = "None"
 end

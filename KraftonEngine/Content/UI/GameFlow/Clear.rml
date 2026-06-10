@@ -27,13 +27,13 @@
         #btn-main-menu { top: 78px; }
         #bg-exit { top: 124px; }
         #btn-exit { top: 136px; }
-        .report-head { font-size: 14px; color: #00eaff; margin-bottom: 8px; }
-        .report-row { font-size: 15px; color: #e9ffd0; margin-bottom: 6px; }
-        .report-line { width: 300px; height: 2px; background-color: #d9ff2f; margin: 8px 0 8px 0; }
-        #clear-time { font-size: 17px; color: #d9ff2f; margin-bottom: 8px; }
-        .score-rank { width: 410px; font-size: 12px; color: #ffffff; margin-bottom: 6px; white-space: nowrap; }
-        .widget-scan-a { width: 132px; height: 2px; background-color: #00eaff; margin-bottom: 8px; }
-        .widget-scan-b { width: 64px; height: 2px; background-color: #d9ff2f; margin-bottom: 12px; }
+        .report-head { display: block; font-size: 14px; color: #00eaff; margin-bottom: 8px; }
+        .report-row { display: block; font-size: 15px; color: #e9ffd0; margin-bottom: 6px; }
+        .report-line { display: block; width: 300px; height: 2px; background-color: #d9ff2f; margin: 8px 0 8px 0; }
+        #clear-time { display: block; font-size: 17px; color: #d9ff2f; margin-bottom: 8px; }
+        .score-rank { display: block; width: 410px; font-size: 12px; color: #ffffff; margin-bottom: 6px; white-space: nowrap; }
+        .widget-scan-a { display: block; width: 132px; height: 2px; background-color: #00eaff; margin-bottom: 8px; }
+        .widget-scan-b { display: block; width: 64px; height: 2px; background-color: #d9ff2f; margin-bottom: 12px; }
     </style>
 </head>
 <body>
