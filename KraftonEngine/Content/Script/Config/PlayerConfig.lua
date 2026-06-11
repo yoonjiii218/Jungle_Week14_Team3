@@ -366,7 +366,7 @@ PlayerConfig.Default = {
             },
         },
 
-        -- 궁극기 직접 데미지 / 궁극기 HitWindow에서 발생한 AttackImpact 전용 채널.
+        -- 궁극기 직접 데미지 / 궁극기 HitWindow에서 dw발생한 AttackImpact 전용 채널.
         -- 반복 데미지 중간타는 개별 damage text로만 보이고, 큰 shake/sound/vignette는 최종 impact 한 번에 몰아준다.
         UltimateAttackImpact = {
             Enabled = true,
