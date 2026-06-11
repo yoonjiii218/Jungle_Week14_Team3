@@ -90,11 +90,21 @@ function CoroutineManager.StartForOwner(ownerKey, func)
 end
 
 function Wait(seconds)
-    CurrentPool("Wait"):Wait(seconds)
+    return CurrentPool("Wait"):Wait(seconds)
+end
+
+-- Waits using real frame time, ignoring global/custom time dilation.
+-- Use this for camera/cutscene presentation that must remain smooth during slomo.
+function WaitRaw(seconds)
+    return CurrentPool("WaitRaw"):WaitRaw(seconds)
 end
 
 function WaitFrame()
     return CurrentPool("WaitFrame"):WaitFrame()
+end
+
+function WaitFrameRaw()
+    return CurrentPool("WaitFrameRaw"):WaitFrameRaw()
 end
 
 function WaitUntil(predicate)
@@ -158,16 +168,31 @@ function CoroutineManager:Resume(routine, dt)
 end
 
 function CoroutineManager:Wait(seconds)
-    coroutine.yield({
+    return coroutine.yield({
         type = "wait",
-        time = seconds
-    })
+        time = seconds,
+        elapsed = 0.0
+    }) or 0.0
+end
+
+function CoroutineManager:WaitRaw(seconds)
+    return coroutine.yield({
+        type = "wait_raw",
+        time = seconds,
+        elapsed = 0.0
+    }) or 0.0
 end
 
 function CoroutineManager:WaitFrame()
     return coroutine.yield({
         type = "frame"
-    }) or 0
+    }) or 0.0
+end
+
+function CoroutineManager:WaitFrameRaw()
+    return coroutine.yield({
+        type = "frame_raw"
+    }) or 0.0
 end
 
 function CoroutineManager:WaitUntil(predicate)
@@ -177,7 +202,26 @@ function CoroutineManager:WaitUntil(predicate)
     })
 end
 
+local function GetRawDeltaTime(fallback)
+    local rawDelta = tonumber(fallback) or 0.0
+
+    if World ~= nil and World.GetRawDeltaTime ~= nil then
+        local ok, value = pcall(World.GetRawDeltaTime)
+        if ok and value ~= nil then
+            rawDelta = tonumber(value) or rawDelta
+        end
+    end
+
+    if rawDelta < 0.0 then
+        rawDelta = 0.0
+    end
+    return rawDelta
+end
+
 function CoroutineManager:Update(dt)
+    local scaledDelta = tonumber(dt) or 0.0
+    local rawDelta = nil
+
     for i = #self.coroutines, 1, -1 do
         local routine = self.coroutines[i]
 
@@ -186,13 +230,30 @@ function CoroutineManager:Update(dt)
         else
             local wait = routine.wait
             local shouldResume = false
+            local resumeDelta = scaledDelta
 
             if wait == nil then
                 shouldResume = true
             elseif wait.type == "wait" then
-                wait.time = wait.time - dt;
+                wait.time = wait.time - scaledDelta
+                wait.elapsed = (wait.elapsed or 0.0) + scaledDelta
+                resumeDelta = wait.elapsed
+                shouldResume = wait.time <= 0
+            elseif wait.type == "wait_raw" then
+                if rawDelta == nil then
+                    rawDelta = GetRawDeltaTime(scaledDelta)
+                end
+                wait.time = wait.time - rawDelta
+                wait.elapsed = (wait.elapsed or 0.0) + rawDelta
+                resumeDelta = wait.elapsed
                 shouldResume = wait.time <= 0
             elseif wait.type == "frame" then
+                shouldResume = true
+            elseif wait.type == "frame_raw" then
+                if rawDelta == nil then
+                    rawDelta = GetRawDeltaTime(scaledDelta)
+                end
+                resumeDelta = rawDelta
                 shouldResume = true
             elseif wait.type == "wait_until" then
                 local ok, result = pcall(wait.predicate)
@@ -207,7 +268,7 @@ function CoroutineManager:Update(dt)
             end
 
             if shouldResume and not routine.dead then
-                self:Resume(routine, dt)
+                self:Resume(routine, resumeDelta)
             end
         end
     end

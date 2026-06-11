@@ -50,6 +50,7 @@
 #include "Core/Property/StructProperty.h"
 #include "Platform/Paths.h"
 #include "Profiling/Time/PlatformTime.h"
+#include "Profiling/Time/Timer.h"
 #include "Math/Vector.h"
 #include "Math/Rotator.h"
 #include "Platform/WindowsWindow.h"
@@ -3900,6 +3901,10 @@ void FLuaScriptManager::RegisterActorBindings(sol::state& Lua)
 	{
 		UWorld* CurrentWorld = GEngine ? GEngine->GetWorld() : nullptr;
 		return CurrentWorld ? CurrentWorld->GetGameTimeSeconds() : 0.0f;
+	});
+	World.set_function("GetRawDeltaTime", []() -> float
+	{
+		return (GEngine && GEngine->GetTimer()) ? GEngine->GetTimer()->GetRawDeltaTime() : 0.0f;
 	});
 
 	// 게임 특화 usertype/enum/global(GetGameState 등) 은 Game 모듈의

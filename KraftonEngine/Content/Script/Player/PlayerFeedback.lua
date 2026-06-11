@@ -19,6 +19,21 @@ local function Now()
     return 0.0
 end
 
+local function WaitRealTime(seconds)
+    local requested = math.max(0.0, tonumber(seconds) or 0.0)
+    if requested <= 0.0 then
+        return 0.0
+    end
+
+    if WaitRaw ~= nil then
+        local elapsed = WaitRaw(requested)
+        return math.max(0.0, tonumber(elapsed) or requested)
+    end
+
+    Wait(requested)
+    return requested
+end
+
 local function Clamp(v, minValue, maxValue)
     if v < minValue then return minValue end
     if v > maxValue then return maxValue end
@@ -1034,11 +1049,14 @@ local function WaitWithUltimateCameraMotion(duration, frameStep, updateFunc)
 
     while elapsed < total do
         local waitStep = math.min(step, total - elapsed)
-        Wait(waitStep)
-        elapsed = elapsed + waitStep
+        local deltaTime = WaitRealTime(waitStep)
+        if deltaTime <= 0.0 then
+            deltaTime = waitStep
+        end
+        elapsed = math.min(total, elapsed + deltaTime)
 
         if updateFunc ~= nil then
-            updateFunc(Clamp(elapsed / total, 0.0, 1.0), elapsed, waitStep)
+            updateFunc(Clamp(elapsed / total, 0.0, 1.0), elapsed, deltaTime)
         end
     end
 end
@@ -1538,9 +1556,12 @@ function PlayerFeedback.BeginUltimate(playerContext)
     local frameStep = moveConfig.FrameStep
 
     while elapsed < moveDuration do
-        Wait(frameStep)
+        local deltaTime = WaitRealTime(frameStep)
+        if deltaTime <= 0.0 then
+            deltaTime = frameStep
+        end
 
-        elapsed = elapsed + frameStep
+        elapsed = math.min(moveDuration, elapsed + deltaTime)
 
         local t = Clamp(elapsed / moveDuration, 0.0, 1.0)
         local easedT = EaseOutCubic(t)
@@ -1685,8 +1706,12 @@ function PlayerFeedback.BeginUltimate(playerContext)
                 WaitAttackCamera(ultimateHitInterval)
                 repeatedHitTime = repeatedHitTime + ultimateHitInterval
             else
-                WaitFrame()
-                UpdateAttackCamera(moveConfig.FrameStep or (1.0 / 60.0))
+                local deltaTime = WaitFrameRaw ~= nil and WaitFrameRaw() or nil
+                if deltaTime == nil or deltaTime <= 0.0 then
+                    WaitFrame()
+                    deltaTime = moveConfig.FrameStep or (1.0 / 60.0)
+                end
+                UpdateAttackCamera(deltaTime)
             end
             action.UltimateAttackInstanceId = tostring(baseUltimateAttackInstanceId) .. "_H" .. tostring(hitIndex)
         end
