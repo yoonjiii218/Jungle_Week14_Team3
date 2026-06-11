@@ -45,6 +45,8 @@ UI_AUDIO = {
     Hover = { key = "UI_ButtonHover", path = "UI/button_hover.mp3", volume = 0.55 },
     Down = { key = "UI_ButtonDown", path = "UI/button_down.mp3", volume = 0.75 },
     FilmCountdown = { key = "UI_FilmCountdown", path = "UI/Film countdown.mp3", volume = 0.95 },
+    Cutscene = { key = "UI_Cutscene", path = "UI/Cutscene_sound.mp3", volume = 0.95 },
+    Cut = { key = "UI_Cut", path = "UI/cut sound.mp3", volume = 0.60 },
 }
 COMBO_IMPACT_THRESHOLDS = { 10, 30, 50, 99 }
 START_MENU_BOOT_ELEMENT_IDS = {
@@ -1444,7 +1446,7 @@ end
 
 local function finishCutscene()
     isCutsceneMode = false
-    playUiAudio(UI_AUDIO.Down)
+    -- playUiAudio(UI_AUDIO.Down) -- Removed standard sound
     if cutsceneFinishCallback ~= nil then
         cutsceneFinishCallback()
     end
@@ -1458,7 +1460,7 @@ local function beginCutReveal(countdown, pageIndex, cutIndex)
     cutsceneHoldTime = 0.0
     showCutscenePage(countdown, currentCutPage)
     refreshCutsceneCuts(countdown)
-    playUiAudio(UI_AUDIO.Hover)
+    -- playUiAudio(UI_AUDIO.Hover) -- Removed cutscene-advancing sound
 end
 
 local function advanceCutscene()
@@ -1480,13 +1482,20 @@ local function advanceCutscene()
     local maxCuts = pageCuts[currentCutPage] or 0
 
     if nextCutIndex <= maxCuts then
+        -- Play cut sound when transitioning between cuts on the same page (1->2, 2->3, and 4->5)
+        if currentCutIndex > 0 then
+            playUiAudio(UI_AUDIO.Cut)
+        end
         beginCutReveal(countdown, nextPage, nextCutIndex)
     else
         nextPage = currentCutPage + 1
         if nextPage <= totalPages then
-            playUiAudio(UI_AUDIO.Down)
+            -- Transition from Page 1 to Page 2 (3rd to 4th cut)
+            playUiAudio(UI_AUDIO.Cutscene)
             beginCutReveal(countdown, nextPage, 1)
         else
+            -- Transition from 5th cut (Page 2, Cut 2) onwards to complete loading
+            playUiAudio(UI_AUDIO.Cutscene)
             finishCutscene()
         end
     end
