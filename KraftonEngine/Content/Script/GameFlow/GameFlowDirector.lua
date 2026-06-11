@@ -46,6 +46,7 @@ UI_AUDIO = {
     Down = { key = "UI_ButtonDown", path = "UI/button_down.mp3", volume = 0.75 },
     FilmCountdown = { key = "UI_FilmCountdown", path = "UI/Film countdown.mp3", volume = 0.95 },
     Cutscene = { key = "UI_Cutscene", path = "UI/Cutscene_sound.mp3", volume = 0.95 },
+    Cut = { key = "UI_Cut", path = "UI/cut sound.mp3", volume = 0.95 },
 }
 COMBO_IMPACT_THRESHOLDS = { 10, 30, 50, 99 }
 START_MENU_BOOT_ELEMENT_IDS = {
@@ -1481,6 +1482,10 @@ local function advanceCutscene()
     local maxCuts = pageCuts[currentCutPage] or 0
 
     if nextCutIndex <= maxCuts then
+        -- Play cut sound when transitioning between cuts on the same page (1->2, 2->3, and 4->5)
+        if currentCutIndex > 0 then
+            playUiAudio(UI_AUDIO.Cut)
+        end
         beginCutReveal(countdown, nextPage, nextCutIndex)
     else
         nextPage = currentCutPage + 1
