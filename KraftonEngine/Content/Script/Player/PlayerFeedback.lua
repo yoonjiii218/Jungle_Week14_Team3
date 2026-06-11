@@ -7,6 +7,7 @@ local PlayerFeedback = {}
 local PlayerContext = require("Player/PlayerContext")
 local PlayerEvents = require("Player/PlayerEvents")
 local PlayerTargeting = require("Player/PlayerTargeting")
+local PlayerAction = require("Player/PlayerAction")
 local CombatContext = require("Combat/CombatContext")
 
 local COLLISION_QUERY_AND_PHYSICS = 3
@@ -1354,6 +1355,9 @@ function PlayerFeedback.BeginUltimate(playerContext)
         action.IsUltimateCinematic = false
         return
     end
+
+    PlayerAction.CancelDashActions(playerContext, false)
+    PlayerAction.StopMovementImmediately(playerContext)
 
     local ultimateCamera = GetOrCreateUltimateCameraActor()
     if ultimateCamera == nil then

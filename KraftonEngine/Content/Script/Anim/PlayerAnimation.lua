@@ -248,14 +248,6 @@ local function EndDashChargeAttack(self)
     PlayerAction.EndDashChargeAttack(playerContext)
 end
 
-local function BeginUltimateCinematic(self)
-    ResetAttack(self, false)
-    local playerContext = self.PlayerContext
-    PlayerContext.Assert(playerContext, "PlayerAnimation.BeginUltimateCinematic")
-    PlayerAction.CancelDashActions(playerContext, false)
-    PlayerAction.StopMovementImmediately(playerContext)
-end
-
 local function BeginUltimateAttack(self)
     ResetAttack(self, false)
     local playerContext = self.PlayerContext
@@ -465,47 +457,7 @@ function init(self)
         samuraiConfig.DashChargeAttackBlendOut
     )
 
-    Anim.sm_add_state(top, "UltimateCharge", Anim.create_sequence_player(samuraiConfig.DashChargingPath, samuraiConfig.UltimateChargePlayRate or samuraiConfig.DashChargingPlayRate, false))
     Anim.sm_add_state(top, "UltimateAttack", Anim.create_sequence_player(samuraiConfig.UltimateAttackPath, samuraiConfig.UltimateAttackPlayRate, false))
-
-    Anim.sm_add_transition(top, "AnyState", "UltimateCharge",
-        function()
-            if self.PlayerContext == nil then return false end
-            if self.PlayerContext.Action.IsUltimateCinematic == true
-                and self.PlayerContext.Action.IsInUltimateMode ~= true then
-                BeginUltimateCinematic(self)
-                return true
-            end
-            return false
-        end,
-        samuraiConfig.UltimateChargeBlendIn or samuraiConfig.DashChargingBlendIn
-    )
-
-    Anim.sm_add_transition(top, "UltimateCharge", "UltimateAttack",
-        function()
-            if self.PlayerContext == nil then return false end
-            if self.PlayerContext.Action.IsUltimateCinematic ~= true
-                and self.PlayerContext.Action.IsInUltimateMode == true then
-                BeginUltimateAttack(self)
-                return true
-            end
-            return false
-        end,
-        samuraiConfig.UltimateAttackBlendIn
-    )
-
-    Anim.sm_add_transition(top, "UltimateCharge", "Locomotion",
-        function()
-            if self.PlayerContext == nil then return false end
-            if self.PlayerContext.Action.IsUltimateCinematic ~= true
-                and self.PlayerContext.Action.IsInUltimateMode ~= true then
-                ResetAttack(self)
-                return true
-            end
-            return false
-        end,
-        samuraiConfig.UltimateChargeBlendOut or samuraiConfig.DashChargingBlendOut or samuraiConfig.UltimateAttackBlendOut
-    )
 
     Anim.sm_add_transition(top, "AnyState", "UltimateAttack",
         function()

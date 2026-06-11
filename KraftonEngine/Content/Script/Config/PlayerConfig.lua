@@ -819,9 +819,6 @@ PlayerConfig.Default = {
             DashChargeAttackPlayRate = 1.4,
             DashChargeAttackFallbackDuration = 0.65,
 
-            UltimateChargeBlendIn = 0.05,
-            UltimateChargeBlendOut = 0.08,
-            UltimateChargePlayRate = 1.3,
             UltimateAttackBlendIn = 0.05,
             UltimateAttackBlendOut = 0.12,
             UltimateAttackPlayRate = 1.2,
