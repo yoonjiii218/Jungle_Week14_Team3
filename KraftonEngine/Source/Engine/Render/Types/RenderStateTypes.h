@@ -27,6 +27,7 @@ enum class EBlendState
 {
 	Opaque,
 	AlphaBlend,
+	CameraRayFade,
 	Additive,
 	NoColor,
 	MAX
@@ -56,8 +57,9 @@ namespace RenderStateStrings
 	inline constexpr FEnumEntry BlendStateMap[] =
 	{
 		{ "Opaque",     (int)EBlendState::Opaque },
-		{ "AlphaBlend", (int)EBlendState::AlphaBlend },
-		{ "Additive",   (int)EBlendState::Additive },
+		{ "AlphaBlend",    (int)EBlendState::AlphaBlend },
+		{ "CameraRayFade", (int)EBlendState::CameraRayFade },
+		{ "Additive",      (int)EBlendState::Additive },
 		{ "NoColor",    (int)EBlendState::NoColor },
 	};
 

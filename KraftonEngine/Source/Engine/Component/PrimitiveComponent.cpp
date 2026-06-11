@@ -252,6 +252,21 @@ void UPrimitiveComponent::SetCastShadow(bool bNewCastShadow)
 	MarkRenderVisibilityDirty();
 }
 
+void UPrimitiveComponent::SetCameraRayFadeOpacity(float InOpacity)
+{
+	const float NewOpacity = std::max(0.0f, std::min(InOpacity, 1.0f));
+	if (std::abs(CameraRayFadeOpacity - NewOpacity) <= 1e-4f)
+	{
+		return;
+	}
+
+	CameraRayFadeOpacity = NewOpacity;
+	if (SceneProxy)
+	{
+		SceneProxy->SetCameraRayFadeOpacity(CameraRayFadeOpacity);
+	}
+}
+
 // ============================================================
 // MarkRenderTransformDirty / MarkRenderVisibilityDirty
 //   프록시 dirty + Octree(액터 단위 dirty) + PickingBVH dirty
@@ -301,6 +316,13 @@ void UPrimitiveComponent::PostEditProperty(const char* PropertyName)
 	else if (strcmp(PropertyName, "bCastShadowAsTwoSided") == 0 || strcmp(PropertyName, "Two Sided Shadow") == 0)
 	{
 		MarkRenderVisibilityDirty();
+	}
+	else if (strcmp(PropertyName, "bCanCameraRayFade") == 0 || strcmp(PropertyName, "Can Camera Ray Fade") == 0)
+	{
+		if (!bCanCameraRayFade)
+		{
+			SetCameraRayFadeOpacity(1.0f);
+		}
 	}
 	else if (strcmp(PropertyName, "CollisionEnabled") == 0 || strcmp(PropertyName, "Collision Enabled") == 0)
 	{

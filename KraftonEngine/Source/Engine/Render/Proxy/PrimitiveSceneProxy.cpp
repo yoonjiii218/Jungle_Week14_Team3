@@ -6,6 +6,7 @@
 #include "Materials/Material.h"
 #include "Object/Reflection/ObjectFactory.h"
 #include "Object/GarbageCollection.h"
+#include <algorithm>
 
 // ============================================================
 // FPrimitiveSceneProxy — 기본 구현
@@ -83,15 +84,22 @@ void FPrimitiveSceneProxy::UpdateMaterial()
 	// 기본 PrimitiveComponent는 섹션별 머티리얼이 없음 — 서브클래스에서 오버라이드
 }
 
+void FPrimitiveSceneProxy::SetCameraRayFadeOpacity(float InOpacity)
+{
+	CameraRayFadeOpacity = std::max(0.0f, std::min(InOpacity, 1.0f));
+}
+
 void FPrimitiveSceneProxy::UpdateVisibility()
 {
 	UPrimitiveComponent* OwnerComponent = GetOwner();
 	if (!OwnerComponent)
 	{
 		bVisible = false;
+		CameraRayFadeOpacity = 1.0f;
 		return;
 	}
 
+	CameraRayFadeOpacity = OwnerComponent->GetCameraRayFadeOpacity();
 	bVisible = OwnerComponent->IsVisible();
 	if (bVisible)
 	{

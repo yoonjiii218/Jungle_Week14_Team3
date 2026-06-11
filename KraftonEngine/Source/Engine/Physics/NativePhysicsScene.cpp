@@ -422,8 +422,55 @@ FVector FNativePhysicsScene::GetCenterOfMass(UPrimitiveComponent* Comp) const
 
 namespace
 {
-	// AABB slab 테스트 + closest-hit 갱신. 어떤 컴포넌트가 통과되는지 정하는 predicate 만
-	// 호출자가 주입. Raycast / RaycastByObjectTypes 가 같은 기하 코드를 공유한다.
+	// AABB slab 테스트. Raycast / RaycastMulti 가 같은 기하 코드를 공유한다.
+	bool RayIntersectsComponentAABB(
+		UPrimitiveComponent* Comp,
+		const FVector& Start, const FVector& Dir, const FVector& InvDir, float MaxDist,
+		float& OutDistance)
+	{
+		if (!IsValid(Comp))
+		{
+			return false;
+		}
+
+		FBoundingBox Box = Comp->GetWorldBoundingBox();
+
+		float tMin = (Box.Min.X - Start.X) * InvDir.X;
+		float tMax = (Box.Max.X - Start.X) * InvDir.X;
+		if (tMin > tMax) { float tmp = tMin; tMin = tMax; tMax = tmp; }
+
+		float tyMin = (Box.Min.Y - Start.Y) * InvDir.Y;
+		float tyMax = (Box.Max.Y - Start.Y) * InvDir.Y;
+		if (tyMin > tyMax) { float tmp = tyMin; tyMin = tyMax; tyMax = tmp; }
+
+		if ((tMin > tyMax) || (tyMin > tMax)) return false;
+		if (tyMin > tMin) tMin = tyMin;
+		if (tyMax < tMax) tMax = tyMax;
+
+		float tzMin = (Box.Min.Z - Start.Z) * InvDir.Z;
+		float tzMax = (Box.Max.Z - Start.Z) * InvDir.Z;
+		if (tzMin > tzMax) { float tmp = tzMin; tzMin = tzMax; tzMax = tmp; }
+
+		if ((tMin > tzMax) || (tzMin > tMax)) return false;
+		if (tzMin > tMin) tMin = tzMin;
+
+		if (tMin < 0.0f) tMin = 0.0f;
+		if (tMin >= MaxDist) return false;
+
+		OutDistance = tMin;
+		return true;
+	}
+
+	void FillNativeRaycastHit(UPrimitiveComponent* Comp, const FVector& Start, const FVector& Dir, float Distance, FHitResult& OutHit)
+	{
+		OutHit.bHit = true;
+		OutHit.Distance = Distance;
+		OutHit.HitComponent = Comp;
+		AActor* CompOwnerForHit = Comp ? Comp->GetOwner() : nullptr;
+		OutHit.HitActor = IsValid(CompOwnerForHit) ? CompOwnerForHit : nullptr;
+		OutHit.WorldHitLocation = Start + Dir * Distance;
+	}
+
 	template<typename FPredicate>
 	bool NativeRaycastImpl(
 		const std::vector<UPrimitiveComponent*>& RegisteredComponents,
@@ -447,42 +494,53 @@ namespace
 			if (IgnoreActor && IsValid(CompOwner) && CompOwner == IgnoreActor) continue;
 			if (!AcceptComponent(Comp)) continue;
 
-			FBoundingBox Box = Comp->GetWorldBoundingBox();
+			float HitDistance = 0.0f;
+			if (!RayIntersectsComponentAABB(Comp, Start, Dir, InvDir, ClosestDist, HitDistance)) continue;
 
-			float tMin = (Box.Min.X - Start.X) * InvDir.X;
-			float tMax = (Box.Max.X - Start.X) * InvDir.X;
-			if (tMin > tMax) { float tmp = tMin; tMin = tMax; tMax = tmp; }
-
-			float tyMin = (Box.Min.Y - Start.Y) * InvDir.Y;
-			float tyMax = (Box.Max.Y - Start.Y) * InvDir.Y;
-			if (tyMin > tyMax) { float tmp = tyMin; tyMin = tyMax; tyMax = tmp; }
-
-			if ((tMin > tyMax) || (tyMin > tMax)) continue;
-			if (tyMin > tMin) tMin = tyMin;
-			if (tyMax < tMax) tMax = tyMax;
-
-			float tzMin = (Box.Min.Z - Start.Z) * InvDir.Z;
-			float tzMax = (Box.Max.Z - Start.Z) * InvDir.Z;
-			if (tzMin > tzMax) { float tmp = tzMin; tzMin = tzMax; tzMax = tmp; }
-
-			if ((tMin > tzMax) || (tzMin > tMax)) continue;
-			if (tzMin > tMin) tMin = tzMin;
-
-			if (tMin < 0.0f) tMin = 0.0f;
-			if (tMin >= ClosestDist) continue;
-
-			ClosestDist = tMin;
+			ClosestDist = HitDistance;
 			bFound = true;
-
-			OutHit.bHit = true;
-			OutHit.Distance = tMin;
-			OutHit.HitComponent = Comp;
-			AActor* CompOwnerForHit = Comp->GetOwner();
-			OutHit.HitActor = IsValid(CompOwnerForHit) ? CompOwnerForHit : nullptr;
-			OutHit.WorldHitLocation = Start + Dir * tMin;
+			FillNativeRaycastHit(Comp, Start, Dir, HitDistance, OutHit);
 		}
 
 		return bFound;
+	}
+
+	template<typename FPredicate>
+	bool NativeRaycastMultiImpl(
+		const std::vector<UPrimitiveComponent*>& RegisteredComponents,
+		const FVector& Start, const FVector& Dir, float MaxDist,
+		const AActor* IgnoreActor,
+		FPredicate AcceptComponent,
+		TArray<FHitResult>& OutHits)
+	{
+		OutHits.clear();
+
+		FVector InvDir;
+		InvDir.X = (Dir.X != 0.0f) ? (1.0f / Dir.X) : 1e30f;
+		InvDir.Y = (Dir.Y != 0.0f) ? (1.0f / Dir.Y) : 1e30f;
+		InvDir.Z = (Dir.Z != 0.0f) ? (1.0f / Dir.Z) : 1e30f;
+
+		for (UPrimitiveComponent* Comp : RegisteredComponents)
+		{
+			if (!IsValid(Comp)) continue;
+			AActor* CompOwner = Comp->GetOwner();
+			if (IgnoreActor && IsValid(CompOwner) && CompOwner == IgnoreActor) continue;
+			if (!AcceptComponent(Comp)) continue;
+
+			float HitDistance = 0.0f;
+			if (!RayIntersectsComponentAABB(Comp, Start, Dir, InvDir, MaxDist, HitDistance)) continue;
+
+			FHitResult Hit;
+			FillNativeRaycastHit(Comp, Start, Dir, HitDistance, Hit);
+			OutHits.push_back(Hit);
+		}
+
+		std::sort(OutHits.begin(), OutHits.end(), [](const FHitResult& A, const FHitResult& B)
+		{
+			return A.Distance < B.Distance;
+		});
+
+		return !OutHits.empty();
 	}
 }
 
@@ -495,6 +553,15 @@ bool FNativePhysicsScene::Raycast(const FVector& Start, const FVector& Dir, floa
 		[TraceChannel](UPrimitiveComponent* Comp) {
 			return Comp->GetCollisionResponseToChannel(TraceChannel) == ECollisionResponse::Block;
 		}, OutHit);
+}
+
+bool FNativePhysicsScene::RaycastMulti(const FVector& Start, const FVector& Dir, float MaxDist, TArray<FHitResult>& OutHits,
+	ECollisionChannel TraceChannel, const AActor* IgnoreActor) const
+{
+	return NativeRaycastMultiImpl(RegisteredComponents, Start, Dir, MaxDist, IgnoreActor,
+		[TraceChannel](UPrimitiveComponent* Comp) {
+			return Comp->GetCollisionResponseToChannel(TraceChannel) == ECollisionResponse::Block;
+		}, OutHits);
 }
 
 bool FNativePhysicsScene::RaycastByObjectTypes(const FVector& Start, const FVector& Dir, float MaxDist, FHitResult& OutHit,

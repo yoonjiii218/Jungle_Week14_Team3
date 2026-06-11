@@ -214,6 +214,7 @@ void FDrawCommandBuilder::BuildCommandForProxy(FScene& Scene, const FPrimitiveSc
 	const bool bDepthOnly = (Pass == ERenderPass::PreDepth
 		|| Pass == ERenderPass::SelectionMask
 		|| Pass == ERenderPass::GameplayFocusMask);
+	const bool bCameraRayFaded = Proxy.IsCameraRayFaded();
 
 	// 섹션당 1개 커맨드 (per-section 셰이더)
  	for (const FMeshSectionDraw& Section : Proxy.GetSectionDraws())
@@ -225,8 +226,10 @@ void FDrawCommandBuilder::BuildCommandForProxy(FScene& Scene, const FPrimitiveSc
 		ERenderPass SectionPass = Section.Material
 			? Section.Material->GetRenderPass() : ERenderPass::Opaque;
 		const bool bSectionIsTranslucent = (SectionPass == ERenderPass::AlphaBlend);
-		if ((Pass == ERenderPass::PreDepth || Pass == ERenderPass::Opaque) && bSectionIsTranslucent) continue;
-		if (Pass == ERenderPass::AlphaBlend && !bSectionIsTranslucent) continue;
+		const bool bRenderAsCameraRayFade = bCameraRayFaded && !bSectionIsTranslucent;
+		const bool bRouteToAlphaBlend = bSectionIsTranslucent || bRenderAsCameraRayFade;
+		if ((Pass == ERenderPass::PreDepth || Pass == ERenderPass::Opaque) && bRouteToAlphaBlend) continue;
+		if (Pass == ERenderPass::AlphaBlend && !bRouteToAlphaBlend) continue;
 		if (Pass == ERenderPass::PreDepth &&
 			Section.Material &&
 			Section.Material->HasOpacityMaskInputConnected())
@@ -334,6 +337,13 @@ void FDrawCommandBuilder::BuildCommandForProxy(FScene& Scene, const FPrimitiveSc
 				Cmd.RenderState.Rasterizer = ERasterizerState::SolidFrontCull;
 			else if (Cmd.RenderState.Rasterizer == ERasterizerState::SolidFrontCull)
 				Cmd.RenderState.Rasterizer = ERasterizerState::SolidBackCull;
+		}
+
+		if (bRenderAsCameraRayFade)
+		{
+			Cmd.RenderState.DepthStencil = EDepthStencilState::DepthReadOnly;
+			Cmd.RenderState.Blend = EBlendState::CameraRayFade;
+			Cmd.RenderState.BlendFactor = Proxy.GetCameraRayFadeOpacity();
 		}
 
 		if (Pass == ERenderPass::AlphaBlend)

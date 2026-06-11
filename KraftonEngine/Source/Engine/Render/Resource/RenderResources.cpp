@@ -979,9 +979,9 @@ void FSystemResources::SetDepthStencilState(FD3DDevice& Device, EDepthStencilSta
 	DepthStencilStateManager.Set(Device.GetDeviceContext(), InState);
 }
 
-void FSystemResources::SetBlendState(FD3DDevice& Device, EBlendState InState)
+void FSystemResources::SetBlendState(FD3DDevice& Device, EBlendState InState, float InBlendFactor)
 {
-	BlendStateManager.Set(Device.GetDeviceContext(), InState);
+	BlendStateManager.Set(Device.GetDeviceContext(), InState, InBlendFactor);
 }
 
 void FSystemResources::SetRasterizerState(FD3DDevice& Device, ERasterizerState InState)

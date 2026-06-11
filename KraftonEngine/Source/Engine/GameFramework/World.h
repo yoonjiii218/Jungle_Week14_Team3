@@ -169,6 +169,10 @@ public:
 		ECollisionChannel TraceChannel = ECollisionChannel::WorldStatic,
 		const AActor* IgnoreActor = nullptr) const;
 
+	bool PhysicsRaycastMulti(const FVector& Start, const FVector& Dir, float MaxDist, TArray<FHitResult>& OutHits,
+		ECollisionChannel TraceChannel = ECollisionChannel::WorldStatic,
+		const AActor* IgnoreActor = nullptr) const;
+
 	bool PhysicsSweep(const FVector& Start, const FVector& Dir, float MaxDist,
 		const FCollisionShape& Shape, const FQuat& ShapeRot, FHitResult& OutHit,
 		ECollisionChannel TraceChannel, const AActor* IgnoreActor) const;

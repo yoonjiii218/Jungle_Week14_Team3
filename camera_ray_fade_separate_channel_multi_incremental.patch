@@ -1,0 +1,43 @@
+diff --git a/KraftonEngine/Source/Engine/Component/Camera/SpringArmComponent.h b/KraftonEngine/Source/Engine/Component/Camera/SpringArmComponent.h
+--- a/KraftonEngine/Source/Engine/Component/Camera/SpringArmComponent.h
++++ b/KraftonEngine/Source/Engine/Component/Camera/SpringArmComponent.h
+@@ -70,11 +70,13 @@
+ 	float ProbeSize = 0.12f;               // hit 지점에서 ProbeSize 만큼 안쪽에 정지
+ 
+ 	// Camera ray fade — 카메라와 플레이어 사이를 가리는 mesh들을 통째로 반투명 처리한다.
+-	// DoCollisionTest와 독립적으로 켤 수 있고, 향후 partial mask/sweep으로 확장할 진입점이다.
++	// DoCollisionTest와 독립적인 전용 채널(CameraFade)을 기본값으로 사용해서,
++	// Camera probe 는 Ignore 이지만 fade 탐지에는 Block 인 구성을 쉽게 만들 수 있다.
++	// 향후 partial mask/sweep으로 확장할 진입점이다.
+ 	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Enable Camera Ray Fade")
+ 	bool bEnableCameraRayFade = false;
+ 	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Channel", Enum=ECollisionChannel)
+-	ECollisionChannel CameraRayFadeChannel = ECollisionChannel::Camera;
++	ECollisionChannel CameraRayFadeChannel = ECollisionChannel::CameraFade;
+ 	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Opacity", Min=0.02f, Max=1.0f, Speed=0.01f)
+ 	float CameraRayFadeOpacity = 0.35f;
+ 	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Max Hits", Min=1.0f, Max=32.0f, Speed=1.0f)
+diff --git a/KraftonEngine/Source/Engine/Core/Types/CollisionTypes.h b/KraftonEngine/Source/Engine/Core/Types/CollisionTypes.h
+--- a/KraftonEngine/Source/Engine/Core/Types/CollisionTypes.h
++++ b/KraftonEngine/Source/Engine/Core/Types/CollisionTypes.h
+@@ -23,9 +23,11 @@
+ 	Trigger = 4,
+ 	// UE 의 ECC_Camera 대응. SpringArm probe / camera visibility query 용도.
+ 	Camera = 5,
++	// 카메라 occluder fade 전용 채널. SpringArm collision 과 분리해서 설정할 때 사용.
++	CameraFade = 6,
+ 	// 필요 시 확장 (ActiveCount, MAX 갱신)
+ 
+-	ActiveCount = 6, // 에디터/드롭다운에 노출되는 실질 채널 수
++	ActiveCount = 7, // 에디터/드롭다운에 노출되는 실질 채널 수
+ 	MAX = 16         // 응답 테이블 최대 슬롯 수
+ };
+ 
+@@ -144,6 +146,7 @@
+ 	UPROPERTY(Edit, Save, Category="Collision", DisplayName="Projectile", Member=Responses[3], Enum=ECollisionResponse);
+ 	UPROPERTY(Edit, Save, Category="Collision", DisplayName="Trigger", Member=Responses[4], Enum=ECollisionResponse);
+ 	UPROPERTY(Edit, Save, Category="Collision", DisplayName="Camera", Member=Responses[5], Enum=ECollisionResponse);
++	UPROPERTY(Edit, Save, Category="Collision", DisplayName="Camera Fade", Member=Responses[6], Enum=ECollisionResponse);
+ 
+ 	ECollisionResponse Responses[static_cast<int32>(ECollisionChannel::MAX)];
+ 

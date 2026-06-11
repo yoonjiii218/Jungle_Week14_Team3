@@ -1,4 +1,5 @@
 ﻿#include "Component/Camera/SpringArmComponent.h"
+#include "Component/PrimitiveComponent.h"
 #include "Object/Reflection/ObjectFactory.h"
 #include "Serialization/Archive.h"
 #include "GameFramework/AActor.h"
@@ -23,6 +24,144 @@ void USpringArmComponent::BeginPlay()
 	if (ArmPivotRotation.IsNearlyZero())
 	{
 		ArmPivotRotation = GetRelativeRotation();
+	}
+}
+
+namespace
+{
+	bool ContainsPrimitive(const TArray<UPrimitiveComponent*>& Components, UPrimitiveComponent* Component)
+	{
+		return std::find(Components.begin(), Components.end(), Component) != Components.end();
+	}
+}
+
+void USpringArmComponent::ClearCameraRayFade()
+{
+	for (UPrimitiveComponent* Component : CameraRayFadedComponents)
+	{
+		if (IsValid(Component))
+		{
+			Component->SetCameraRayFadeOpacity(1.0f);
+		}
+	}
+	CameraRayFadedComponents.clear();
+}
+
+UPrimitiveComponent* USpringArmComponent::ResolveCameraRayFadePrimitive(UPrimitiveComponent* HitComponent) const
+{
+	if (!IsValid(HitComponent))
+	{
+		return nullptr;
+	}
+
+	if (HitComponent->CanCameraRayFade()
+		&& HitComponent->IsVisible()
+		&& HitComponent->GetMeshBuffer())
+	{
+		return HitComponent;
+	}
+
+	AActor* HitOwner = HitComponent->GetOwner();
+	if (!IsValid(HitOwner))
+	{
+		return nullptr;
+	}
+
+	// Collision-only proxy(Box/Sphere/Capsule 등)에 맞은 경우, 같은 Actor의 실제 render primitive를 찾는다.
+	for (UPrimitiveComponent* Primitive : HitOwner->GetPrimitiveComponents())
+	{
+		if (!IsValid(Primitive) || Primitive == HitComponent)
+		{
+			continue;
+		}
+		if (!Primitive->CanCameraRayFade() || !Primitive->IsVisible())
+		{
+			continue;
+		}
+		if (Primitive->GetMeshBuffer())
+		{
+			return Primitive;
+		}
+	}
+
+	return nullptr;
+}
+
+void USpringArmComponent::UpdateCameraRayFade(const FVector& CameraWorld, const FVector& TargetWorld)
+{
+	if (!bEnableCameraRayFade)
+	{
+		ClearCameraRayFade();
+		return;
+	}
+
+	AActor* Owner = GetOwner();
+	UWorld* World = IsValid(Owner) ? GetWorld() : nullptr;
+	if (!World)
+	{
+		ClearCameraRayFade();
+		return;
+	}
+
+	const FVector Diff = TargetWorld - CameraWorld;
+	const float Distance = Diff.Length();
+	if (Distance <= 1e-4f)
+	{
+		ClearCameraRayFade();
+		return;
+	}
+
+	const FVector Dir = Diff / Distance;
+	TArray<FHitResult> Hits;
+	TArray<UPrimitiveComponent*> NewFadeComponents;
+	const int MaxFadeHits = std::max(1, CameraRayFadeMaxHits);
+
+	if (World->PhysicsRaycastMulti(CameraWorld, Dir, Distance, Hits, CameraRayFadeChannel, Owner))
+	{
+		for (const FHitResult& Hit : Hits)
+		{
+			UPrimitiveComponent* FadeComponent = ResolveCameraRayFadePrimitive(Hit.HitComponent);
+			if (!IsValid(FadeComponent) || ContainsPrimitive(NewFadeComponents, FadeComponent))
+			{
+				continue;
+			}
+
+			NewFadeComponents.push_back(FadeComponent);
+			if (static_cast<int>(NewFadeComponents.size()) >= MaxFadeHits)
+			{
+				break;
+			}
+		}
+	}
+
+	for (UPrimitiveComponent* OldComponent : CameraRayFadedComponents)
+	{
+		if (IsValid(OldComponent) && !ContainsPrimitive(NewFadeComponents, OldComponent))
+		{
+			OldComponent->SetCameraRayFadeOpacity(1.0f);
+		}
+	}
+
+	CameraRayFadedComponents = NewFadeComponents;
+	for (UPrimitiveComponent* FadeComponent : CameraRayFadedComponents)
+	{
+		if (IsValid(FadeComponent))
+		{
+			FadeComponent->SetCameraRayFadeOpacity(CameraRayFadeOpacity);
+		}
+	}
+
+	if (bCameraRayFadeDebug)
+	{
+		if (CameraRayFadedComponents.empty())
+		{
+			UE_LOG("[CameraRayFade] no fade target hits=%zu", Hits.size());
+		}
+		else
+		{
+			UE_LOG("[CameraRayFade] fading %zu component(s) from %zu hit(s) opacity=%.2f",
+				CameraRayFadedComponents.size(), Hits.size(), CameraRayFadeOpacity);
+		}
 	}
 }
 
@@ -116,6 +255,9 @@ void USpringArmComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	const FVector ArmDirWorld = ArmWorldRot.RotateVector(FVector(-TargetArmLength, 0.0f, 0.0f));
 	const FVector SocketWorld = ArmWorldRot.RotateVector(SocketOffset);
 	FVector ArmEndWorld = LaggedAttachLoc + ArmDirWorld + SocketWorld;
+	const FVector DesiredArmEndWorld = ArmEndWorld;
+
+	UpdateCameraRayFade(DesiredArmEndWorld, LaggedAttachLoc);
 
 	// (4b) Collision test — bDoCollisionTest 가 켜져 있으면 LaggedAttach → ArmEnd 방향으로
 	//      raycast. Hit 이 있으면 해당 거리에서 ProbeSize 만큼 안쪽에서 정지해 카메라가
