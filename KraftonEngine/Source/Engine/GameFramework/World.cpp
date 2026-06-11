@@ -249,6 +249,15 @@ bool UWorld::PhysicsRaycast(const FVector& Start, const FVector& Dir, float MaxD
 	return false;
 }
 
+bool UWorld::PhysicsRaycastMulti(const FVector& Start, const FVector& Dir, float MaxDist, TArray<FHitResult>& OutHits,
+	ECollisionChannel TraceChannel, const AActor* IgnoreActor) const
+{
+	OutHits.clear();
+	if (PhysicsScene)
+		return PhysicsScene->RaycastMulti(Start, Dir, MaxDist, OutHits, TraceChannel, IgnoreActor);
+	return false;
+}
+
 bool UWorld::PhysicsSweep(const FVector& Start, const FVector& Dir, float MaxDist, const FCollisionShape& Shape, const FQuat& ShapeRot, FHitResult& OutHit, ECollisionChannel TraceChannel, const AActor* IgnoreActor) const
 {
 	if (PhysicsScene)

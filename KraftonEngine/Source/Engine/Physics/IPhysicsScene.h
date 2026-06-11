@@ -128,6 +128,12 @@ public:
 		ECollisionChannel TraceChannel = ECollisionChannel::WorldStatic,
 		const AActor* IgnoreActor = nullptr) const = 0;
 
+	// Multi raycast — TraceChannel에 Block 응답하는 모든 hit을 거리순으로 반환한다.
+	// SpringArm camera occlusion fade처럼 카메라-타겟 사이의 여러 occluder를 동시에 처리할 때 사용한다.
+	virtual bool RaycastMulti(const FVector& Start, const FVector& Dir, float MaxDist, TArray<FHitResult>& OutHits,
+		ECollisionChannel TraceChannel = ECollisionChannel::WorldStatic,
+		const AActor* IgnoreActor = nullptr) const = 0;
+
 	virtual bool Sweep(const FVector& Start, const FVector& Dir, float MaxDist,
 		const FCollisionShape& Shape, const FQuat& ShapeRot, FHitResult& OutHit,
 		ECollisionChannel TraceChannel, const AActor* IgnoreActor) const = 0;

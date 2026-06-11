@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Component/SceneComponent.h"
+#include "Core/Types/CoreTypes.h"
 #include "Core/Types/CollisionTypes.h"
 #include "Math/Vector.h"
 #include "Math/Quat.h"
@@ -68,14 +69,16 @@ public:
 	UPROPERTY(Edit, Save, Category="SpringArm", DisplayName="Probe Size", Min=0.0f, Max=100.0f, Speed=0.01f)
 	float ProbeSize = 0.12f;               // hit 지점에서 ProbeSize 만큼 안쪽에 정지
 
-	// Camera ray fade — 카메라와 플레이어 사이를 가리는 첫 번째 mesh를 통째로 반투명 처리한다.
-	// DoCollisionTest와 독립적으로 켤 수 있고, 향후 multi-hit/partial mask로 확장할 진입점이다.
+	// Camera ray fade — 카메라와 플레이어 사이를 가리는 mesh들을 통째로 반투명 처리한다.
+	// DoCollisionTest와 독립적으로 켤 수 있고, 향후 partial mask/sweep으로 확장할 진입점이다.
 	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Enable Camera Ray Fade")
 	bool bEnableCameraRayFade = false;
 	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Channel", Enum=ECollisionChannel)
 	ECollisionChannel CameraRayFadeChannel = ECollisionChannel::Camera;
 	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Opacity", Min=0.02f, Max=1.0f, Speed=0.01f)
 	float CameraRayFadeOpacity = 0.35f;
+	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Max Hits", Min=1.0f, Max=32.0f, Speed=1.0f)
+	int CameraRayFadeMaxHits = 8;
 	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Debug")
 	bool bCameraRayFadeDebug = false;
 
@@ -98,7 +101,7 @@ private:
 	FQuat LaggedAttachRot;
 	bool bHasPreviousState = false;
 
-	UPrimitiveComponent* CameraRayFadedComponent = nullptr;
+	TArray<UPrimitiveComponent*> CameraRayFadedComponents;
 
 	void UpdateCameraRayFade(const FVector& CameraWorld, const FVector& TargetWorld);
 	UPrimitiveComponent* ResolveCameraRayFadePrimitive(UPrimitiveComponent* HitComponent) const;

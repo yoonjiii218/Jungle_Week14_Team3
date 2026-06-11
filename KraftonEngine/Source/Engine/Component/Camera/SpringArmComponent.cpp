@@ -27,13 +27,24 @@ void USpringArmComponent::BeginPlay()
 	}
 }
 
+namespace
+{
+	bool ContainsPrimitive(const TArray<UPrimitiveComponent*>& Components, UPrimitiveComponent* Component)
+	{
+		return std::find(Components.begin(), Components.end(), Component) != Components.end();
+	}
+}
+
 void USpringArmComponent::ClearCameraRayFade()
 {
-	if (IsValid(CameraRayFadedComponent))
+	for (UPrimitiveComponent* Component : CameraRayFadedComponents)
 	{
-		CameraRayFadedComponent->SetCameraRayFadeOpacity(1.0f);
+		if (IsValid(Component))
+		{
+			Component->SetCameraRayFadeOpacity(1.0f);
+		}
 	}
-	CameraRayFadedComponent = nullptr;
+	CameraRayFadedComponents.clear();
 }
 
 UPrimitiveComponent* USpringArmComponent::ResolveCameraRayFadePrimitive(UPrimitiveComponent* HitComponent) const
@@ -101,33 +112,56 @@ void USpringArmComponent::UpdateCameraRayFade(const FVector& CameraWorld, const 
 	}
 
 	const FVector Dir = Diff / Distance;
-	FHitResult Hit;
-	UPrimitiveComponent* NewFadeComponent = nullptr;
-	if (World->PhysicsRaycast(CameraWorld, Dir, Distance, Hit, CameraRayFadeChannel, Owner))
-	{
-		NewFadeComponent = ResolveCameraRayFadePrimitive(Hit.HitComponent);
-	}
+	TArray<FHitResult> Hits;
+	TArray<UPrimitiveComponent*> NewFadeComponents;
+	const int MaxFadeHits = std::max(1, CameraRayFadeMaxHits);
 
-	if (NewFadeComponent != CameraRayFadedComponent)
+	if (World->PhysicsRaycastMulti(CameraWorld, Dir, Distance, Hits, CameraRayFadeChannel, Owner))
 	{
-		if (IsValid(CameraRayFadedComponent))
+		for (const FHitResult& Hit : Hits)
 		{
-			CameraRayFadedComponent->SetCameraRayFadeOpacity(1.0f);
-		}
-		CameraRayFadedComponent = NewFadeComponent;
-	}
+			UPrimitiveComponent* FadeComponent = ResolveCameraRayFadePrimitive(Hit.HitComponent);
+			if (!IsValid(FadeComponent) || ContainsPrimitive(NewFadeComponents, FadeComponent))
+			{
+				continue;
+			}
 
-	if (IsValid(CameraRayFadedComponent))
-	{
-		CameraRayFadedComponent->SetCameraRayFadeOpacity(CameraRayFadeOpacity);
-		if (bCameraRayFadeDebug)
-		{
-			UE_LOG("[CameraRayFade] fading %s opacity=%.2f", CameraRayFadedComponent->GetName().c_str(), CameraRayFadeOpacity);
+			NewFadeComponents.push_back(FadeComponent);
+			if (static_cast<int>(NewFadeComponents.size()) >= MaxFadeHits)
+			{
+				break;
+			}
 		}
 	}
-	else if (bCameraRayFadeDebug)
+
+	for (UPrimitiveComponent* OldComponent : CameraRayFadedComponents)
 	{
-		UE_LOG("[CameraRayFade] no fade target");
+		if (IsValid(OldComponent) && !ContainsPrimitive(NewFadeComponents, OldComponent))
+		{
+			OldComponent->SetCameraRayFadeOpacity(1.0f);
+		}
+	}
+
+	CameraRayFadedComponents = NewFadeComponents;
+	for (UPrimitiveComponent* FadeComponent : CameraRayFadedComponents)
+	{
+		if (IsValid(FadeComponent))
+		{
+			FadeComponent->SetCameraRayFadeOpacity(CameraRayFadeOpacity);
+		}
+	}
+
+	if (bCameraRayFadeDebug)
+	{
+		if (CameraRayFadedComponents.empty())
+		{
+			UE_LOG("[CameraRayFade] no fade target hits=%zu", Hits.size());
+		}
+		else
+		{
+			UE_LOG("[CameraRayFade] fading %zu component(s) from %zu hit(s) opacity=%.2f",
+				CameraRayFadedComponents.size(), Hits.size(), CameraRayFadeOpacity);
+		}
 	}
 }
 

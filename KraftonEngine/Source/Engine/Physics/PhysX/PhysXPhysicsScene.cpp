@@ -2277,6 +2277,93 @@ bool FPhysXPhysicsScene::Raycast(const FVector& Start, const FVector& Dir, float
 	return true;
 }
 
+bool FPhysXPhysicsScene::RaycastMulti(const FVector& Start, const FVector& Dir, float MaxDist, TArray<FHitResult>& OutHits,
+	ECollisionChannel TraceChannel, const AActor* IgnoreActor) const
+{
+	OutHits.clear();
+	if (!Scene) return false;
+
+	// Channel + IgnoreActor 통합 filter. Multi-hit에서는 eTOUCH를 반환해야 중간 occluder들이
+	// block hit 하나에 의해 잘리지 않고 touches 배열로 모두 수집된다.
+	struct FChannelRaycastMultiFilter : PxQueryFilterCallback
+	{
+		const TArray<UPrimitiveComponent*>& BodyInstanceComponents;
+		const AActor* IgnoreActor = nullptr;
+		PxU32 TraceBit = 0;
+
+		FChannelRaycastMultiFilter(
+			const TArray<UPrimitiveComponent*>& InBodyInstanceComponents,
+			const AActor* InIgnoreActor,
+			ECollisionChannel InChannel)
+			: BodyInstanceComponents(InBodyInstanceComponents)
+			, IgnoreActor(InIgnoreActor)
+			, TraceBit(1u << static_cast<PxU32>(InChannel))
+		{
+		}
+
+		PxQueryHitType::Enum preFilter(const PxFilterData&, const PxShape* Shape, const PxRigidActor* Actor, PxHitFlags&) override
+		{
+			if (::ShouldIgnoreActorForQuery(Actor, IgnoreActor, BodyInstanceComponents))
+			{
+				return PxQueryHitType::eNONE;
+			}
+
+			if (Shape)
+			{
+				const PxFilterData ShapeData = Shape->getQueryFilterData();
+				if ((ShapeData.word1 & TraceBit) == 0)
+				{
+					return PxQueryHitType::eNONE;
+				}
+			}
+
+			return PxQueryHitType::eTOUCH;
+		}
+
+		PxQueryHitType::Enum postFilter(const PxFilterData&, const PxQueryHit&) override
+		{
+			return PxQueryHitType::eTOUCH;
+		}
+	};
+
+	PxRaycastHit Touches[128];
+	PxRaycastBuffer HitBuffer(Touches, 128);
+	PxQueryFilterData FilterData;
+	FilterData.flags = PxQueryFlag::eSTATIC | PxQueryFlag::eDYNAMIC | PxQueryFlag::ePREFILTER;
+	FChannelRaycastMultiFilter FilterCallback(BodyInstanceComponents, IgnoreActor, TraceChannel);
+
+	const bool bStatus = Scene->raycast(ToPxVec3(Start), ToPxVec3(Dir), MaxDist, HitBuffer, PxHitFlag::eDEFAULT, FilterData, &FilterCallback);
+	if (!bStatus || HitBuffer.nbTouches == 0)
+	{
+		return false;
+	}
+
+	OutHits.reserve(HitBuffer.nbTouches);
+	for (PxU32 Index = 0; Index < HitBuffer.nbTouches; ++Index)
+	{
+		const PxRaycastHit& Touch = HitBuffer.touches[Index];
+		FHitResult Hit;
+		if (!ResolvePhysXRaycastTarget(Touch, Hit))
+		{
+			continue;
+		}
+
+		Hit.bHit = true;
+		Hit.Distance = Touch.distance;
+		Hit.WorldHitLocation = ToFVector(Touch.position);
+		Hit.ImpactNormal = ToFVector(Touch.normal);
+		Hit.WorldNormal = Hit.ImpactNormal;
+		OutHits.push_back(Hit);
+	}
+
+	std::sort(OutHits.begin(), OutHits.end(), [](const FHitResult& A, const FHitResult& B)
+	{
+		return A.Distance < B.Distance;
+	});
+
+	return !OutHits.empty();
+}
+
 bool FPhysXPhysicsScene::RaycastByObjectTypes(const FVector& Start, const FVector& Dir, float MaxDist, FHitResult& OutHit,
 	uint32 ObjectTypeMask, const AActor* IgnoreActor) const
 {
