@@ -19,6 +19,11 @@ namespace
 	// Notify 에서는 캐시와 실제 AudioManager 상태를 함께 확인한다.
 	static TSet<FString> GLoadedPlaySoundPaths;
 
+	bool IsCinematicImpactSound(const FString& SoundPath)
+	{
+		return SoundPath.find("Cinematic_Impact") != FString::npos;
+	}
+
 	enum class ENotifyParticleTransformMode
 	{
 		World,
@@ -121,41 +126,59 @@ namespace
 	}
 }
 
-void UAnimNotify_PlaySound::NormalizePitch()
+void UAnimNotify_PlaySound::NormalizePlaybackSettings()
 {
 	if (Pitch <= 0.0f)
 	{
 		Pitch = 1.0f;
 	}
+	PlayChance = FMath::Clamp(PlayChance, 0.0f, 1.0f);
 }
 
 void UAnimNotify_PlaySound::PreSave()
 {
 	UObject::PreSave();
-	NormalizePitch();
+	NormalizePlaybackSettings();
+	bPlayChanceInitialized = true;
 }
 
 void UAnimNotify_PlaySound::PostLoad()
 {
 	UObject::PostLoad();
-	NormalizePitch();
+	if (!bPlayChanceInitialized)
+	{
+		if (FMath::Abs(PlayChance - 0.5f) > FMath::KINDA_SMALL_NUMBER)
+		{
+			PlayChance = 1.0f;
+		}
+		bPlayChanceInitialized = true;
+	}
+	NormalizePlaybackSettings();
 }
 
 void UAnimNotify_PlaySound::PreGetEditableProperties()
 {
-	NormalizePitch();
+	NormalizePlaybackSettings();
 }
 
 void UAnimNotify_PlaySound::PostEditProperty(const char* PropertyName)
 {
 	UObject::PostEditProperty(PropertyName);
-	NormalizePitch();
+	if (PropertyName && (std::strcmp(PropertyName, "PlayChance") == 0 || std::strcmp(PropertyName, "Play Chance") == 0))
+	{
+		bPlayChanceInitialized = true;
+	}
+	NormalizePlaybackSettings();
 }
 
 void UAnimNotify_PlaySound::Notify(USkeletalMeshComponent* /*MeshComp*/, UAnimSequenceBase* /*Anim*/)
 {
 	if (SoundPath.empty() || SoundPath == "None") return;
-	NormalizePitch();
+	NormalizePlaybackSettings();
+	if (PlayChance <= 0.0f || (PlayChance < 1.0f && FMath::FRand() >= PlayChance))
+	{
+		return;
+	}
 
 	// 캐시 key — path 자체. "AnimNotify:" prefix 로 게임 측 pre-loaded key 들과 namespace 분리.
 	const FString Key = FString("AnimNotify:") + SoundPath;
@@ -174,7 +197,7 @@ void UAnimNotify_PlaySound::Notify(USkeletalMeshComponent* /*MeshComp*/, UAnimSe
 		}
 	}
 
-	FAudioManager::Get().PlayAudio(Key, Volume, Pitch);
+	FAudioManager::Get().PlayAudio(Key, Volume, Pitch, 0, bPriority || IsCinematicImpactSound(SoundPath));
 }
 
 void UAnimNotify_PlayParticle::PostEditProperty(const char* PropertyName)

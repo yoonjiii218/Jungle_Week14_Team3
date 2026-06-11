@@ -1,4 +1,4 @@
-#include "AudioManager.h"
+﻿#include "AudioManager.h"
 #include "Core/Logging/Log.h"
 #include "Platform/Paths.h"
 #include <algorithm>
@@ -6,6 +6,7 @@
 namespace
 {
 	constexpr size_t MaxOneShotChannels = 256;
+	constexpr float PriorityImpactDuckMultiplier = 0.4f;
 
 	float ClampVolumeFloor(float Volume)
 	{
@@ -15,6 +16,11 @@ namespace
 	float ClampPitchFloor(float Pitch)
 	{
 		return Pitch < 0.1f ? 0.1f : Pitch;
+	}
+
+	bool IsAttackImpactKey(const FString& Key)
+	{
+		return Key == "PlayerAttackImpact" || Key == "PlayerUltimateAttackImpact";
 	}
 
 }
@@ -92,6 +98,7 @@ void FAudioManager::Tick()
 	{
 		System->update();
 		CleanupOneShotChannels();
+		ApplyOneShotMixing();
 	}
 }
 
@@ -121,7 +128,7 @@ bool FAudioManager::LoadAudio(const FString& Key, const FString& Path, bool bLoo
 	return true;
 }
 
-void FAudioManager::PlayAudio(const FString& Key, float Volume, float Pitch, int MaxInstances)
+void FAudioManager::PlayAudio(const FString& Key, float Volume, float Pitch, int MaxInstances, bool bPriority)
 {
 	if (!System)
 	{
@@ -191,9 +198,11 @@ void FAudioManager::PlayAudio(const FString& Key, float Volume, float Pitch, int
 
 	if (Result == FMOD_OK && Channel)
 	{
-		Channel->setVolume(ClampVolumeFloor(Volume));
+		const float BaseVolume = ClampVolumeFloor(Volume);
+		Channel->setVolume(BaseVolume);
 		Channel->setPitch(ClampPitchFloor(Pitch));
-		OneShotChannels.push_back({ Key, Channel });
+		OneShotChannels.push_back({ Key, Channel, BaseVolume, IsAttackImpactKey(Key), bPriority });
+		ApplyOneShotMixing();
 	}
 }
 
@@ -322,6 +331,30 @@ void FAudioManager::CleanupOneShotChannels()
 				return !Entry.Channel || Entry.Channel->isPlaying(&bIsPlaying) != FMOD_OK || !bIsPlaying;
 			}),
 		OneShotChannels.end());
+}
+
+void FAudioManager::ApplyOneShotMixing()
+{
+	const bool bHasPrioritySound = std::any_of(
+		OneShotChannels.begin(),
+		OneShotChannels.end(),
+		[](const FOneShotChannel& Entry)
+		{
+			return Entry.bPriority;
+		});
+
+	for (const FOneShotChannel& Entry : OneShotChannels)
+	{
+		if (!Entry.Channel || !Entry.bAttackImpact)
+		{
+			continue;
+		}
+
+		const float MixVolume = bHasPrioritySound
+			? Entry.BaseVolume * PriorityImpactDuckMultiplier
+			: Entry.BaseVolume;
+		Entry.Channel->setVolume(MixVolume);
+	}
 }
 
 FMOD::Channel* FAudioManager::FindPlayingLoopChannel(const FString& LoopName)

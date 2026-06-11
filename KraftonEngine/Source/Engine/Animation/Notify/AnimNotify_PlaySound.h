@@ -30,6 +30,15 @@ public:
 	UPROPERTY(Edit, Save, Category="PlaySound", DisplayName="Pitch", Min=0.1f, Speed=0.01f)
 	float Pitch = 1.0f;
 
+	UPROPERTY(Edit, Save, Category="PlaySound", DisplayName="Play Chance", Min=0.0f, Max=1.0f, Speed=0.01f)
+	float PlayChance = 1.0f;
+
+	UPROPERTY(Edit, Save, Category="PlaySound", DisplayName="Priority Sound")
+	bool bPriority = false;
+
+	UPROPERTY(Save)
+	bool bPlayChanceInitialized = false;
+
 	void PreSave() override;
 	void PostLoad() override;
 	void PreGetEditableProperties() override;
@@ -37,7 +46,7 @@ public:
 	void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Anim) override;
 
 private:
-	void NormalizePitch();
+	void NormalizePlaybackSettings();
 };
 
 UCLASS()
