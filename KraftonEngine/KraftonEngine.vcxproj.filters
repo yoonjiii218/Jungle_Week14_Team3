@@ -292,6 +292,12 @@
     <Filter Include="Source\Engine\Particles\Color">
       <UniqueIdentifier>{6b808ded-3425-8835-3be8-24ac7fbc72a5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Engine\Particles\Force">
+      <UniqueIdentifier>{d5c8ab9a-0c7f-4e31-9c78-2d2d9d0c2f10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Engine\Particles\SubUV">
+      <UniqueIdentifier>{e2d1f2df-5b0a-4d0e-9a7b-1c5f8a7f1234}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Engine\Particles\Event">
       <UniqueIdentifier>{f2963592-e17e-edd6-149f-ee6df576cd7a}</UniqueIdentifier>
     </Filter>
@@ -1535,6 +1541,9 @@
     <ClCompile Include="Source\Engine\Particles\Event\ParticleModuleEventGenerator.cpp">
       <Filter>Source\Engine\Particles\Event</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\Particles\Force\ParticleModuleWindSway.cpp">
+      <Filter>Source\Engine\Particles\Force</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Engine\Particles\Lifetime\ParticleModuleLifetime.cpp">
       <Filter>Source\Engine\Particles\Lifetime</Filter>
     </ClCompile>
@@ -1558,6 +1567,9 @@
     </ClCompile>
     <ClCompile Include="Source\Engine\Particles\Spawn\ParticleModuleSpawnPerUnit.cpp">
       <Filter>Source\Engine\Particles\Spawn</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Particles\SubUV\ParticleModuleSubUVRandom.cpp">
+      <Filter>Source\Engine\Particles\SubUV</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Particles\Trail\ParticleModuleTrailSource.cpp">
       <Filter>Source\Engine\Particles\Trail</Filter>
@@ -2951,6 +2963,9 @@
     <ClInclude Include="Source\Engine\Particles\Event\ParticleModuleEventGenerator.h">
       <Filter>Source\Engine\Particles\Event</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\Particles\Force\ParticleModuleWindSway.h">
+      <Filter>Source\Engine\Particles\Force</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Engine\Particles\Lifetime\ParticleModuleLifetime.h">
       <Filter>Source\Engine\Particles\Lifetime</Filter>
     </ClInclude>
@@ -2986,6 +3001,9 @@
     </ClInclude>
     <ClInclude Include="Source\Engine\Particles\Spawn\ParticleModuleSpawnPerUnit.h">
       <Filter>Source\Engine\Particles\Spawn</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Engine\Particles\SubUV\ParticleModuleSubUVRandom.h">
+      <Filter>Source\Engine\Particles\SubUV</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine\Particles\Trail\ParticleModuleTrailBase.h">
       <Filter>Source\Engine\Particles\Trail</Filter>

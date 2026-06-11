@@ -11,7 +11,7 @@ class AActor;
 class UPrimitiveComponent;
 
 // ============================================================
-// ECollisionChannel — 충돌 채널 (오브젝트 분류용)
+// ECollisionChannel — 충돌/트레이스 채널
 // ============================================================
 UENUM()
 enum class ECollisionChannel : uint8
@@ -21,9 +21,11 @@ enum class ECollisionChannel : uint8
 	Pawn = 2,
 	Projectile = 3,
 	Trigger = 4,
+	// UE 의 ECC_Camera 대응. SpringArm probe / camera visibility query 용도.
+	Camera = 5,
 	// 필요 시 확장 (ActiveCount, MAX 갱신)
 
-	ActiveCount = 5, // 에디터/드롭다운에 노출되는 실질 채널 수
+	ActiveCount = 6, // 에디터/드롭다운에 노출되는 실질 채널 수
 	MAX = 16         // 응답 테이블 최대 슬롯 수
 };
 
@@ -141,6 +143,7 @@ struct FCollisionResponseContainer
 	UPROPERTY(Edit, Save, Category="Collision", DisplayName="Pawn", Member=Responses[2], Enum=ECollisionResponse);
 	UPROPERTY(Edit, Save, Category="Collision", DisplayName="Projectile", Member=Responses[3], Enum=ECollisionResponse);
 	UPROPERTY(Edit, Save, Category="Collision", DisplayName="Trigger", Member=Responses[4], Enum=ECollisionResponse);
+	UPROPERTY(Edit, Save, Category="Collision", DisplayName="Camera", Member=Responses[5], Enum=ECollisionResponse);
 
 	ECollisionResponse Responses[static_cast<int32>(ECollisionChannel::MAX)];
 

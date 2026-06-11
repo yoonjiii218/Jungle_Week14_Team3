@@ -14,6 +14,7 @@
 #include "Color/ParticleModuleColorOverLife.h"
 #include "Particles/Rotation/ParticleModuleMeshRotation.h"
 #include "Particles/RotationRate/ParticleModuleMeshRotationRate.h"
+#include "Particles/SubUV/ParticleModuleSubUVRandom.h"
 
 namespace
 {
@@ -157,6 +158,7 @@ void UParticleEmitter::CacheEmitterModuleInfo()
 	LightDataOffset = 0;
 	CameraPayloadOffset = 0;
 	OrbitModuleOffset = 0;
+	SubUVDataOffset = 0;
 
 	ParticleSize = sizeof(FBaseParticle);
 	ReqInstanceBytes = 0;
@@ -217,6 +219,11 @@ void UParticleEmitter::CacheEmitterModuleInfo()
 		if (ReqBytes > 0)
 		{
 			AddModuleOffsetToAllLODs(ModuleIndex, static_cast<uint32>(ParticleSize));
+
+			if (ParticleModule->bEnabled && Cast<UParticleModuleSubUVRandom>(ParticleModule))
+			{
+				SubUVDataOffset = ParticleSize;
+			}
 
 			// TODO: Set CameraPayloadOffset and OrbitModuleOffset when
 			// UParticleModuleCameraOffset and UParticleModuleOrbit are implemented.
@@ -345,6 +352,7 @@ void UParticleEmitter::InitializeDefaultSpriteEmitter()
 	LightDataOffset            = 0;
 	CameraPayloadOffset        = 0;
 	OrbitModuleOffset          = 0;
+	SubUVDataOffset            = 0;
 
 	InitialAllocationCount     = 32;
 	QualityLevelSpawnRateScale = 1.0f;

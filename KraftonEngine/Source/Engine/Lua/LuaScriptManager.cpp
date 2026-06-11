@@ -2515,9 +2515,9 @@ void FLuaScriptManager::RegisterCoreBindings(sol::state& Lua)
 	{
 		return FAudioManager::Get().LoadAudio(SoundName, Path, bLoop.value_or(false));
 	});
-	AudioManager.set_function("Play", [](const FString& SoundName, sol::optional<float> Volume, sol::optional<float> Pitch)
+	AudioManager.set_function("Play", [](const FString& SoundName, sol::optional<float> Volume, sol::optional<float> Pitch, sol::optional<int> MaxInstances)
 	{
-		FAudioManager::Get().PlayAudio(SoundName, Volume.value_or(1.0f), Pitch.value_or(1.0f));
+		FAudioManager::Get().PlayAudio(SoundName, Volume.value_or(1.0f), Pitch.value_or(1.0f), MaxInstances.value_or(0));
 	});
 	AudioManager.set_function("PlayBGM", [](const FString& SoundName, sol::optional<float> Volume, sol::optional<float> Pitch)
 	{

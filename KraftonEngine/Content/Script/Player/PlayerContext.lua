@@ -85,6 +85,7 @@ local PlayerContext = {}
 ---@field DashChargeReadyBursted boolean
 ---@field DashChargeVFXTimer number
 ---@field DashChargeShakeTimer number
+---@field LastImpactSoundTimes table<string, number>|nil
 
 ---@class PlayerRuntimeState
 ---@field MovementComp any

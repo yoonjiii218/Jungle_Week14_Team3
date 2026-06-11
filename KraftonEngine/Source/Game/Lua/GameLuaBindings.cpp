@@ -84,6 +84,12 @@ namespace
 		{
 			Capsule->SetCapsuleSize(Spec.CapsuleRadius, Spec.CapsuleHalfHeight);
 			Capsule->SetSimulatePhysics(false);
+
+			// SpringArm camera collision test에서는 적 캡슐을 무시
+			Capsule->SetCollisionResponseToChannel(
+				ECollisionChannel::Camera,
+				ECollisionResponse::Ignore
+			);
 		}
 
 		if (USkeletalMeshComponent* Mesh = Actor->GetMesh())
