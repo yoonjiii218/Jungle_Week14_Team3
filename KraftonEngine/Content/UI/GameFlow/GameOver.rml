@@ -9,8 +9,7 @@
         #title-panel { position: absolute; left: 86px; top: 124px; width: 520px; height: 150px; }
         #sign { position: absolute; left: 60px; top: 290px; width: 600px; height: 286px; opacity: 0.93; }
         #panel { position: absolute; left: 128px; top: 342px; width: 390px; height: 188px; }
-        #report { position: absolute; left: 828px; top: 134px; width: 320px; height: 244px; background-color: #07030abb; border-width: 1px; border-color: #ff2bd6; padding: 18px; }
-        #tag { position: absolute; left: 830px; top: 520px; width: 310px; height: 58px; color: #ff2bd6; font-size: 26px; background-color: #07030abb; border-width: 2px; border-color: #ff2bd6; padding: 13px; }
+        #report { position: absolute; left: 828px; top: 134px; width: 320px; height: 260px; background-color: #07030ae0; border-width: 1px; border-color: #ff2bd6; padding: 18px; }
         .eyebrow { position: absolute; left: 0px; top: 0px; width: 220px; height: 18px; font-size: 16px; color: #00eaff; }
         .title-stack { position: absolute; left: 0px; top: 26px; width: 420px; height: 64px; }
         .title-layer { position: absolute; top: 0px; font-size: 52px; }
@@ -27,11 +26,16 @@
         #btn-main-menu { top: 78px; }
         #bg-exit { top: 124px; }
         #btn-exit { top: 136px; }
-        .report-head { font-size: 14px; color: #00eaff; margin-bottom: 12px; }
-        .report-row { font-size: 17px; color: #ffd7ee; margin-bottom: 10px; }
-        .report-line { width: 250px; height: 2px; background-color: #ff2bd6; margin: 13px 0 13px 0; }
-        .widget-scan-a { width: 132px; height: 2px; background-color: #00eaff; margin-bottom: 8px; }
-        .widget-scan-b { width: 64px; height: 2px; background-color: #ff2bd6; margin-bottom: 12px; }
+        .report-head { display: block; font-size: 14px; color: #00eaff; margin-bottom: 12px; }
+        .report-row { display: block; font-size: 17px; color: #ffd7ee; margin-bottom: 10px; }
+        .report-line { display: block; width: 280px; height: 2px; background-color: #ff2bd6; margin: 13px 0 13px 0; }
+        .widget-scan-a { display: block; width: 132px; height: 2px; background-color: #00eaff; margin-bottom: 8px; }
+        .widget-scan-b { display: block; width: 64px; height: 2px; background-color: #ff2bd6; margin-bottom: 12px; }
+        .label-name { color: #f2c7df; }
+        .val-lost { color: #ff3366; font-weight: bold; }
+        .val-severed { color: #ff3366; font-weight: bold; }
+        .val-preserved { color: #00eaff; font-weight: bold; }
+        .val-warn { color: #d7ff33; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -48,17 +52,16 @@
             <p>Vital field collapsed.</p>
         </div>
         <img id="sign" src="Images/menu_neon_backboard.png" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="60 73 600 286" data-ue-alignment="0 0.5" />
-        <div id="report" data-ue-anchors="1 0 1 0" data-ue-offsets="-132 134 320 244" data-ue-alignment="1 0">
+        <div id="report" data-ue-anchors="1 0 1 0" data-ue-offsets="-132 134 320 260" data-ue-alignment="1 0">
             <div class="report-head">FAILURE DIAGNOSTIC</div>
             <div class="widget-scan-a"></div>
-            <div class="report-row">Vitals: Lost</div>
-            <div class="report-row">Frame Link: Severed</div>
-            <div class="report-row">Memory Trace: Preserved</div>
+            <div class="report-row"><span class="label-name">Vitals:</span> <span class="val-lost">Lost</span></div>
+            <div class="report-row"><span class="label-name">Frame Link:</span> <span class="val-severed">Severed</span></div>
+            <div class="report-row"><span class="label-name">Memory Trace:</span> <span class="val-preserved">Preserved</span></div>
             <div class="report-line"></div>
-            <div class="report-row">Recovery route required.</div>
+            <div class="report-row val-warn">Recovery route required.</div>
             <div class="widget-scan-b"></div>
         </div>
-        <div id="tag" data-ue-anchors="1 1 1 1" data-ue-offsets="-450 -142 310 58" data-ue-alignment="0 1">HP//ZERO</div>
         <div id="panel" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="128 76 390 188" data-ue-alignment="0 0.5">
             <img id="bg-retry" class="button-bg" src="Images/button_retry.png" />
             <button id="btn-retry">Retry Boss</button>

@@ -56,11 +56,13 @@ public:
 
 	// Collision 옵션 — 활성화 시 부착점 → ArmEnd 사이로 ray 를 쏴서 첫 충돌점까지만 arm
 	// 길이를 단축. 카메라가 벽/지형 너머로 빠지는 현상 방지. Owner Pawn 은 ignore.
+	// 기본 ProbeChannel 은 UE 의 ECC_Camera 에 대응하는 Camera 채널이다. Tree/foliage처럼
+	// 카메라를 막으면 안 되는 컴포넌트는 Collision Responses > Camera 를 Ignore 로 설정한다.
 	// (본 엔진은 sphere sweep 미지원이라 단일 ray + ProbeSize 안전 거리로 근사한다.)
 	UPROPERTY(Edit, Save, Category="SpringArm", DisplayName="Do Collision Test")
 	bool bDoCollisionTest = false;
 	UPROPERTY(Edit, Save, Category="SpringArm", DisplayName="Probe Channel", Enum=ECollisionChannel)
-	ECollisionChannel ProbeChannel = ECollisionChannel::WorldStatic;
+	ECollisionChannel ProbeChannel = ECollisionChannel::Camera;
 	UPROPERTY(Edit, Save, Category="SpringArm", DisplayName="Probe Size", Min=0.0f, Max=100.0f, Speed=0.01f)
 	float ProbeSize = 0.12f;               // hit 지점에서 ProbeSize 만큼 안쪽에 정지
 

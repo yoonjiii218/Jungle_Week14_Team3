@@ -45,6 +45,28 @@ static FParticleRenderState ResolveParticleRenderState(EParticleBlendMode BlendM
 	}
 }
 
+
+static float ResolveParticleSubImageIndex(
+	const FBaseParticle* Particle,
+	int32 SubUVDataOffset,
+	float SubUVPlayRate)
+{
+	if (!Particle)
+	{
+		return 0.0f;
+	}
+
+	if (SubUVDataOffset > 0)
+	{
+		const FFullSubUVPayload* SubUVPayload =
+			reinterpret_cast<const FFullSubUVPayload*>(
+				reinterpret_cast<const uint8*>(Particle) + SubUVDataOffset);
+		return SubUVPayload->ImageIndex;
+	}
+
+	return Particle->RelativeTime * SubUVPlayRate;
+}
+
 static FShader* ResolveBeamTrailMaterialShader(UMaterial* Material)
 {
 	if (!Material)
@@ -411,7 +433,7 @@ void FParticleSystemSceneProxy::FillStagingBuffer(
 			Inst->Size     = FVector2(P->Size.X * Source.Scale.X, P->Size.Y * Source.Scale.Y);
 			Inst->Color    = P->Color.ToVector4();
 			Inst->Rotation = P->Rotation;
-			Inst->SubImageIndex = P->RelativeTime * SpriteSource.SubUVPlayRate;
+			Inst->SubImageIndex = ResolveParticleSubImageIndex(P, SpriteSource.SubUVDataOffset, SpriteSource.SubUVPlayRate);
 			// 모듈이 아직 없으므로 기본값. 0이어야 `pow(x, DP.r + 1)` 같은 패턴에서 자연스러움.
 			Inst->DynamicParam = FVector4(0.0f, 0.0f, 0.0f, 0.0f);
 		}
@@ -460,7 +482,7 @@ void FParticleSystemSceneProxy::FillStagingBuffer(
 				? ParticleTM * MeshSource.SimulationToWorld
 				: ParticleTM;
 			Inst->Color     = P->Color.ToVector4();
-			Inst->SubImageIndex = P->RelativeTime * MeshSource.SubUVPlayRate;
+			Inst->SubImageIndex = ResolveParticleSubImageIndex(P, MeshSource.SubUVDataOffset, MeshSource.SubUVPlayRate);
 			Inst->DynamicParam  = FVector4(0.0f, 0.0f, 0.0f, 0.0f);
 		}
 	}

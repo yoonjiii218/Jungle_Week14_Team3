@@ -73,6 +73,7 @@ START_MENU_BOOT_ELEMENT_IDS = {
 local startMenuBootTime = START_MENU_BOOT_DURATION + 1.0
 local filmCountdownTime = FILM_COUNTDOWN_DURATION + 1.0
 local filmCountdownStartRealtime = nil
+isRetryTransition = false
 local clearToCreditsTime = 0.0
 local creditsRollTime = CREDITS_ROLL_DURATION + 1.0
 local bossHudWasVisible = false
@@ -1305,6 +1306,7 @@ local function completeFilmCountdown()
 
     isCutsceneWaitingToCommit = false
     filmCountdownTime = FILM_COUNTDOWN_DURATION + 1.0
+    isRetryTransition = false
 
     if pendingTransitionSceneName ~= nil then
         local action = pendingTransitionAction
@@ -1372,8 +1374,17 @@ local function setCutReveal(countdown, pageIndex, cutIndex, progress)
     setCountdownProperty(countdown, cutId, "display", "block")
     setCountdownOpacity(countdown, cutId, 1.0)
 
-    local coverWidth = rect.Width * (1.0 - progress)
-    local coverLeft = rect.Width - coverWidth
+    local coverWidth, coverLeft
+    if pageIndex == 2 and cutIndex == 2 then
+        -- Page 2, Cut 2 (5th cut): reveal starts from middle (50%) to right end (100%)
+        coverWidth = rect.Width * 0.5 * (1.0 - progress)
+        coverLeft = rect.Width - coverWidth
+    else
+        -- Default (all other cuts): reveal starts from left (0%) to right end (100%)
+        coverWidth = rect.Width * (1.0 - progress)
+        coverLeft = rect.Width - coverWidth
+    end
+
     setCountdownRect(countdown, coverId, coverLeft, 0.0, coverWidth, rect.Height)
     setCountdownOpacity(countdown, coverId, progress < 1.0 and (0.96 - progress * 0.18) or 0.0)
 
@@ -1442,11 +1453,8 @@ end
 local function beginCutReveal(countdown, pageIndex, cutIndex)
     currentCutPage = pageIndex
     currentCutIndex = cutIndex
-    if pageIndex == 2 and cutIndex == 2 then
-        cutsceneRevealTime = CUTSCENE_REVEAL_DURATION
-    else
-        cutsceneRevealTime = 0.0
-    end
+    -- Enable reveal transition for all cuts (including page 2, cut 2)
+    cutsceneRevealTime = 0.0
     cutsceneHoldTime = 0.0
     showCutscenePage(countdown, currentCutPage)
     refreshCutsceneCuts(countdown)
@@ -1895,13 +1903,26 @@ local function triggerTransitionWithCountdown(sceneName, action)
     addToViewport(countdown, 400)
     widgets.Countdown = countdown
     currentScreen = "Countdown"
-    filmCountdownTime = 0.0
-    filmCountdownStartRealtime = getRealtimeSeconds()
     pendingTransitionAction = action
     pendingTransitionSceneName = sceneName
     pendingTransitionAsyncStarted = false
     pendingTransitionBeginFrameDelay = 30
-    playUiAudio(UI_AUDIO.FilmCountdown)
+    if isRetryTransition then
+        if Engine ~= nil and Engine.WriteTextFile ~= nil then
+            Engine.WriteTextFile("GameFlowRetryFlag.txt", "1")
+        end
+        filmCountdownTime = FILM_COUNTDOWN_DURATION
+        filmCountdownStartRealtime = nil
+        setCountdownProperty(countdown, "countdown-root", "display", "none")
+        setCountdownProperty(countdown, "cutscene-root", "display", "block")
+        setCountdownProperty(countdown, "cutscene-root", "opacity", scalar(1.0))
+        setText(countdown, "skip-hint", "LOADING SCENE...")
+        setCountdownProperty(countdown, "skip-hint", "opacity", scalar(1.0))
+    else
+        filmCountdownTime = 0.0
+        filmCountdownStartRealtime = getRealtimeSeconds()
+        playUiAudio(UI_AUDIO.FilmCountdown)
+    end
     updateFilmCountdown(0.0)
 end
 
@@ -2131,6 +2152,7 @@ local function showPauseMenu()
             hidePauseMenu()
         end)
         pause:bind_click("btn-restart", function()
+            isRetryTransition = true
             triggerTransitionWithCountdown(getRetryCombatSceneName(d), function()
                 d:RestartCombatScene()
             end)
@@ -2166,6 +2188,7 @@ local function showGameOver()
     if screen ~= nil then
         bindButtonAudio(screen, { "btn-retry", "btn-main-menu", "btn-exit" })
         screen:bind_click("btn-retry", function()
+            isRetryTransition = true
             triggerTransitionWithCountdown(getRetryCombatSceneName(d), function()
                 d:RestartCombatScene()
             end)
@@ -2488,8 +2511,20 @@ function BeginPlay()
         wavesFinishedHandle = GameplayEventBus.Subscribe("WavesFinished", obj, handleWavesFinished)
     end
 
+    local isRetry = false
+    if Engine ~= nil and Engine.ReadTextFile ~= nil and Engine.WriteTextFile ~= nil then
+        local flag = Engine.ReadTextFile("GameFlowRetryFlag.txt")
+        if flag == "1" then
+            isRetry = true
+            Engine.WriteTextFile("GameFlowRetryFlag.txt", "0")
+            print("[GameFlow-Debug] Startup: Detected retry flag. Skipping countdown.")
+        end
+    end
+
     local startup = d:GetStartupScreen()
-    if startup == "StartMenu" then
+    if isRetry then
+        startHudFlow()
+    elseif startup == "StartMenu" then
         showStartMenu()
     elseif startup == "HUD" then
         startHudFlow()

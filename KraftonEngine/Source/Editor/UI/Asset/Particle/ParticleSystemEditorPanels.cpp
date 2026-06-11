@@ -1353,6 +1353,42 @@ void FParticleSystemEditorWidget::RenderEmittersPanel(float Width, float Height)
                                 return static_cast<UParticleModule*>(N);
                             }
                         );
+                        AddItem(
+                            "Wind Sway",
+                            bSpriteType || bMeshType,
+                            HasModuleOfType<UParticleModuleWindSway>(LOD0),
+                            [](UParticleLODLevel* L)
+                            {
+                                auto* N = UObjectManager::Get().CreateObject<UParticleModuleWindSway>(L);
+                                N->bEnabled              = true;
+                                N->bSpawnModule          = true;
+                                N->bUpdateModule         = true;
+                                N->bFinalUpdateModule    = false;
+                                N->WindDirection         = FVector(1.0f, 0.0f, 0.0f);
+                                N->bInWorldSpace         = true;
+                                N->bRandomDirectionSign  = true;
+                                N->DirectionJitter       = 0.35f;
+
+                                auto* Amp = UObjectManager::Get().CreateObject<UDistributionFloatUniform>(N);
+                                Amp->Min = 8.0f;
+                                Amp->Max = 24.0f;
+                                N->Amplitude.Distribution = Amp;
+
+                                auto* Freq = UObjectManager::Get().CreateObject<UDistributionFloatUniform>(N);
+                                Freq->Min = 0.45f;
+                                Freq->Max = 1.15f;
+                                N->Frequency.Distribution = Freq;
+
+                                auto* GustStrength = UObjectManager::Get().CreateObject<UDistributionFloatConstant>(N);
+                                GustStrength->Constant = 0.35f;
+                                N->GustStrength.Distribution = GustStrength;
+
+                                auto* GustFreq = UObjectManager::Get().CreateObject<UDistributionFloatConstant>(N);
+                                GustFreq->Constant = 0.18f;
+                                N->GustFrequency.Distribution = GustFreq;
+                                return static_cast<UParticleModule*>(N);
+                            }
+                        );
 
                         ImGui::Separator();
 
@@ -1395,6 +1431,22 @@ void FParticleSystemEditorWidget::RenderEmittersPanel(float Width, float Height)
                                 N->bSpawnModule       = true;
                                 N->bUpdateModule      = true;
                                 N->bFinalUpdateModule = false;
+                                return static_cast<UParticleModule*>(N);
+                            }
+                        );
+                        AddItem(
+                            "SubUV Random",
+                            bSpriteType || bMeshType,
+                            HasModuleOfType<UParticleModuleSubUVRandom>(LOD0),
+                            [](UParticleLODLevel* L)
+                            {
+                                auto* N = UObjectManager::Get().CreateObject<UParticleModuleSubUVRandom>(L);
+                                N->bEnabled           = true;
+                                N->bSpawnModule       = true;
+                                N->bUpdateModule      = false;
+                                N->bFinalUpdateModule = false;
+                                N->FirstImageIndex    = 0;
+                                N->LastImageIndex     = -1;
                                 return static_cast<UParticleModule*>(N);
                             }
                         );
@@ -2226,6 +2278,99 @@ void FParticleSystemEditorWidget::RenderModuleProperties(UParticleModule* Module
                 Collision->bKillOnCollision = bKillOnCollision;
                 bChanged                    = true;
             }
+        }
+    }
+    else if (UParticleModuleWindSway* WindSway = Cast<UParticleModuleWindSway>(Module))
+    {
+        ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+        if (ImGui::CollapsingHeader("Wind Sway"))
+        {
+            bChanged |= ImGui::DragFloat3("Wind Direction", WindSway->WindDirection.Data, 0.01f, -1.0f, 1.0f);
+            if (WindSway->WindDirection.IsNearlyZero())
+            {
+                WindSway->WindDirection = FVector(1.0f, 0.0f, 0.0f);
+                bChanged = true;
+            }
+
+            bool bWorld = WindSway->bInWorldSpace;
+            if (ImGui::Checkbox("In World Space", &bWorld))
+            {
+                WindSway->bInWorldSpace = bWorld;
+                bChanged = true;
+            }
+
+            bool bRandomSign = WindSway->bRandomDirectionSign;
+            if (ImGui::Checkbox("Random Direction Sign", &bRandomSign))
+            {
+                WindSway->bRandomDirectionSign = bRandomSign;
+                bChanged = true;
+            }
+
+            if (ImGui::SliderFloat("Direction Jitter", &WindSway->DirectionJitter, 0.0f, 1.0f))
+            {
+                bChanged = true;
+            }
+            if (WindSway->DirectionJitter < 0.0f)
+            {
+                WindSway->DirectionJitter = 0.0f;
+                bChanged = true;
+            }
+            else if (WindSway->DirectionJitter > 1.0f)
+            {
+                WindSway->DirectionJitter = 1.0f;
+                bChanged = true;
+            }
+
+            DrawRawDistributionFloat("Amplitude", WindSway->Amplitude, bChanged, WindSway);
+            DrawRawDistributionFloat("Frequency", WindSway->Frequency, bChanged, WindSway);
+            DrawRawDistributionFloat("Gust Strength", WindSway->GustStrength, bChanged, WindSway);
+            DrawRawDistributionFloat("Gust Frequency", WindSway->GustFrequency, bChanged, WindSway);
+
+            ImGui::TextColored(PSE::DimTextV, "Amplitude controls side-to-side distance. Frequency is cycles per second.");
+        }
+    }
+    else if (UParticleModuleSubUVRandom* SubUVRandom = Cast<UParticleModuleSubUVRandom>(Module))
+    {
+        ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+        if (ImGui::CollapsingHeader("SubUV Random"))
+        {
+            int32 Columns = 1;
+            int32 Rows = 1;
+            if (UParticleSystem* PS = GetParticleSystem())
+            {
+                if (SelectedEmitterIndex >= 0 && SelectedEmitterIndex < static_cast<int32>(PS->GetEmitters().size()))
+                {
+                    if (UParticleEmitter* Emitter = PS->GetEmitters()[SelectedEmitterIndex])
+                    {
+                        if (UParticleLODLevel* LOD = Emitter->GetLODLevel(SelectedLODIndex))
+                        {
+                            if (UParticleModuleRequired* Required = LOD->RequiredModule)
+                            {
+                                Columns = (std::max)(1, Required->SubImages_Horizontal);
+                                Rows = (std::max)(1, Required->SubImages_Vertical);
+                            }
+                        }
+                    }
+                }
+            }
+            const int32 TotalImages = (std::max)(1, Columns * Rows);
+            ImGui::TextColored(PSE::DimTextV, "Required SubUV Grid: %d x %d = %d cells", Columns, Rows, TotalImages);
+
+            bChanged |= ImGui::DragInt("First Image Index", &SubUVRandom->FirstImageIndex, 1.0f, 0, 4096);
+            bChanged |= ImGui::DragInt("Last Image Index", &SubUVRandom->LastImageIndex, 1.0f, -1, 4096);
+            if (SubUVRandom->FirstImageIndex < 0)
+            {
+                SubUVRandom->FirstImageIndex = 0;
+                bChanged = true;
+            }
+            if (SubUVRandom->LastImageIndex < -1)
+            {
+                SubUVRandom->LastImageIndex = -1;
+                bChanged = true;
+            }
+
+            ImGui::TextColored(PSE::DimTextV, "Last Image Index = -1 uses the last cell from the Required SubUV grid.");
+            ImGui::TextColored(PSE::DimTextV, "For a 4 x 3 cherry blossom atlas, use First=0, Last=-1 or 11.");
         }
     }
     else if (UParticleModuleMeshMaterial* MeshMaterial = Cast<UParticleModuleMeshMaterial>(Module))

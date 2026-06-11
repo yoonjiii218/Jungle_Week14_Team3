@@ -3,7 +3,7 @@
   "Compiled" : {
     "BlendState" : "AlphaBlend",
     "Domain" : "ParticleMesh",
-    "GeneratorVersion" : "GeneratedMaterialPass_v8_SurfaceToonShading",
+    "GeneratorVersion" : "GeneratedMaterialPass_v10_SurfacePinSwizzle_InstancedStaticMesh",
     "GraphHash" : "B7C3868E508096B7",
     "GraphShaderMode" : "Generated",
     "Parameters" : {

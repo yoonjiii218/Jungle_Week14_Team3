@@ -32,6 +32,8 @@
 #include "Particles/Velocity/ParticleModuleVelocity.h"
 #include "Particles/Event/ParticleModuleEventGenerator.h"
 #include "Particles/Collision/ParticleModuleCollision.h"
+#include "Particles/Force/ParticleModuleWindSway.h"
+#include "Particles/SubUV/ParticleModuleSubUVRandom.h"
 #include "Materials/Material.h"
 #include "Materials/Graph/MaterialGraphAsset.h"
 #include "Materials/MaterialManager.h"

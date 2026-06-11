@@ -169,10 +169,10 @@ PlayerConfig.Default = {
         DashChargeAttackDamage = 30,
         FlyingSlashDamage = 20,
         FlyingSlashGaugeDelta = 8,
-        FlyingSlashHitStopDuration = 0.03,
-        UltimateDamage = 20,
+        FlyingSlashHitStopDuration = 0.06,
+        UltimateDamage = 40,
         UltimateRange = 42.0,
-        UltimateHitStopDuration = 0.03,
+        UltimateHitStopDuration = 0.06,
         UltimateDuplicateHitLifetime = 1.2,
 
         -- Multi-hit policy for AttackHitWindow.
@@ -199,7 +199,7 @@ PlayerConfig.Default = {
         DashChargeAttackHitCount = 1,
         DashChargeAttackHitInterval = 0.06,
         UltimateHitCount = 5,
-        UltimateHitInterval = 0.03,
+        UltimateHitInterval = 0.06,
 
         -- Gauge/anti-duplicate policy.
         AttackHitGaugeDelta = 10,
