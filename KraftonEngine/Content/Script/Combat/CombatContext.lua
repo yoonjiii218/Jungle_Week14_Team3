@@ -321,15 +321,22 @@ local function ScaleImpactValue(channelConfig, countForScale, fallbackBase)
     return math.min(maxValue, base + perTarget * math.max(0, (countForScale or 1) - 1))
 end
 
-local function ResolveImpactGroupKey(event)
+local function ResolveImpactGroupKey(event, groupConfig)
+    local base
     if event.AttackImpactGroupId ~= nil then
-        return tostring(event.AttackImpactGroupId)
+        base = tostring(event.AttackImpactGroupId)
+    else
+        base = tostring(event.AttackInstanceId or event.AttackId or "UnknownAttack")
+        if event.HitWindowSerial ~= nil then
+            base = base .. "_W" .. tostring(event.HitWindowSerial)
+        end
     end
 
-    local base = tostring(event.AttackInstanceId or event.AttackId or "UnknownAttack")
-    if event.HitWindowSerial ~= nil then
-        return base .. "_W" .. tostring(event.HitWindowSerial)
+    if groupConfig.GroupByHitIndex ~= false then
+        local hitIndex = math.max(1, math.floor(NumberOrDefault(event.HitIndex, 1)))
+        return base .. "_H" .. tostring(hitIndex)
     end
+
     return base
 end
 
@@ -396,7 +403,8 @@ local function AccumulateAttackImpactGroups(playerContext, events, now)
 
     for _, event in ipairs(events) do
         if PlayerEvents.Is(event, PlayerEvents.Type.AttackHit) then
-            local groupKey = ResolveImpactGroupKey(event)
+            local flushPerHit = groupConfig.GroupByHitIndex ~= false
+            local groupKey = ResolveImpactGroupKey(event, groupConfig)
             local group = pending[groupKey]
             if group == nil then
                 group = {
@@ -419,7 +427,8 @@ local function AccumulateAttackImpactGroups(playerContext, events, now)
                     LastHitTime = now,
                     RequestedHitStopDuration = 0.0,
                     HasRequestedHitStopDuration = false,
-                    WindowClosed = event.HitWindowSerial == nil,
+                    FlushPerHit = flushPerHit,
+                    WindowClosed = event.HitWindowSerial == nil or flushPerHit,
                     ExpectedFlushTime = now,
                 }
                 pending[groupKey] = group
@@ -437,7 +446,7 @@ local function AccumulateAttackImpactGroups(playerContext, events, now)
             if group.HitWindowSerial == nil then
                 group.HitWindowSerial = event.HitWindowSerial
             end
-            if event.HitWindowSerial ~= nil then
+            if event.HitWindowSerial ~= nil and group.FlushPerHit ~= true then
                 group.WindowClosed = false
             end
 
@@ -462,7 +471,10 @@ local function AccumulateAttackImpactGroups(playerContext, events, now)
             group.HitIndex = math.max(group.HitIndex or 1, hitIndex)
             group.HitCount = math.max(group.HitCount or hitCount, hitCount)
             group.HitInterval = math.max(group.HitInterval or 0.0, hitInterval)
-            local expectedFlushTime = now + math.max(0, hitCount - hitIndex) * hitInterval
+            local expectedFlushTime = now
+            if group.FlushPerHit ~= true then
+                expectedFlushTime = now + math.max(0, hitCount - hitIndex) * hitInterval
+            end
             group.ExpectedFlushTime = math.max(group.ExpectedFlushTime or now, expectedFlushTime)
 
             AddLocationToImpactGroup(group, TryGetEventLocation(event))
@@ -606,12 +618,15 @@ local function FlushReadyAttackImpactGroups(playerContext, events, now, forceFlu
 
     local fallbackFlushDelay = NumberOrDefault(groupConfig.FallbackFlushDelay, 0.12)
     local noWindowFlushDelay = NumberOrDefault(groupConfig.NoWindowFlushDelay, 0.0)
+    local hitAggregationDelay = NumberOrDefault(groupConfig.HitAggregationDelay, 0.0)
     local readyKeys = {}
 
     for groupKey, group in pairs(pending) do
         local ready = forceFlush == true
         if ready ~= true then
-            if group.HitWindowSerial ~= nil then
+            if group.FlushPerHit == true then
+                ready = now >= (group.LastHitTime or now) + hitAggregationDelay
+            elseif group.HitWindowSerial ~= nil then
                 ready = (group.WindowClosed == true and now >= (group.ExpectedFlushTime or now))
                     or (fallbackFlushDelay >= 0.0 and now >= (group.LastHitTime or now) + fallbackFlushDelay)
             else

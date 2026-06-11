@@ -11,6 +11,13 @@ local CombatContext = require("Combat/CombatContext")
 
 local COLLISION_QUERY_AND_PHYSICS = 3
 
+local function Now()
+    if World ~= nil and World.GetGameTime ~= nil then
+        return World.GetGameTime() or 0.0
+    end
+    return 0.0
+end
+
 local function Clamp(v, minValue, maxValue)
     if v < minValue then return minValue end
     if v > maxValue then return maxValue end
@@ -132,7 +139,7 @@ local function PlayConfiguredSound(playerContext, soundConfig)
         return
     end
 
-    AudioManager.Play(key, soundConfig.Volume or 1.0, soundConfig.Pitch or 1.0)
+    AudioManager.Play(key, soundConfig.Volume or 1.0, soundConfig.Pitch or 1.0, soundConfig.MaxInstances)
 end
 
 
@@ -539,9 +546,8 @@ local function SpawnDamageTextFeedback(playerContext, event)
 end
 
 local function PlayAttackHitFeedback(playerContext, event)
-    -- Individual AttackHit remains per-target UI feedback. Heavier camera/audio/VFX
-    -- feedback is emitted once per AttackImpact group so multi-target hit windows do
-    -- not stutter from repeated hit-stop/shake/sound playback.
+    -- Individual AttackHit remains per-target UI feedback. Camera/audio/VFX are
+    -- emitted once per HitIndex group, regardless of how many targets were hit.
     SpawnDamageTextFeedback(playerContext, event)
 end
 
@@ -567,6 +573,50 @@ local function ShouldSuppressAttackImpactFeedback(event, impactConfig)
     return hitCount > 1 and hitIndex < hitCount
 end
 
+local function GetAttackImpactHitPhase(event)
+    local hitIndex = math.max(1, tonumber(event.HitIndex) or 1)
+    local hitCount = math.max(hitIndex, tonumber(event.HitCount) or hitIndex)
+    if hitCount <= 1 then
+        return "Single"
+    end
+    if hitIndex >= hitCount then
+        return "Final"
+    end
+    if hitIndex <= 1 then
+        return "First"
+    end
+    return "Middle"
+end
+
+local function GetHitPhaseNumber(config, phase, suffix, fallback)
+    local value = config[phase .. suffix]
+    if value == nil then
+        return fallback
+    end
+    return value
+end
+
+local function CanPlayAttackImpactSound(playerContext, event, soundConfig)
+    local minInterval = math.max(0.0, tonumber(soundConfig.MinInterval) or 0.0)
+    if minInterval <= 0.0 then
+        return true
+    end
+
+    local soundKey = GetConfiguredSoundKey(soundConfig) or "AttackImpact"
+    local lastTimes = playerContext.Feedback.LastImpactSoundTimes or {}
+    playerContext.Feedback.LastImpactSoundTimes = lastTimes
+
+    local now = Now()
+    local phase = GetAttackImpactHitPhase(event)
+    local alwaysPlay = phase == "Final" and soundConfig.AlwaysPlayFinalHit ~= false
+    if alwaysPlay ~= true and now < (lastTimes[soundKey] or -999.0) + minInterval then
+        return false
+    end
+
+    lastTimes[soundKey] = now
+    return true
+end
+
 local function PlayAttackImpactFeedback(playerContext, event)
     local feedbackConfig = playerContext.Config.Feedback or {}
     local impactConfig, pulseConfigKey = ResolveAttackImpactFeedbackConfig(feedbackConfig, event)
@@ -575,10 +625,12 @@ local function PlayAttackImpactFeedback(playerContext, event)
     end
 
     local countForScale = event.CountForScale or event.TargetCount or 1
+    local hitPhase = GetAttackImpactHitPhase(event)
 
     local shakeConfig = impactConfig.CameraShake or {}
     local shakeScale = event.CameraShakeScale
         or ScaleByImpactCount(shakeConfig.Base or 0.0, shakeConfig.PerTarget or 0.0, shakeConfig.Max, countForScale)
+    shakeScale = shakeScale * GetHitPhaseNumber(shakeConfig, hitPhase, "HitMultiplier", 1.0)
     if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil and shakeScale > 0.0 then
         CameraManager.StartWaveShake(shakeScale)
     end
@@ -600,12 +652,14 @@ local function PlayAttackImpactFeedback(playerContext, event)
     end
 
     local soundConfig = impactConfig.Sound
-    if soundConfig ~= nil and soundConfig.Enabled ~= false then
+    if soundConfig ~= nil and soundConfig.Enabled ~= false
+        and CanPlayAttackImpactSound(playerContext, event, soundConfig) then
         local volume = event.SoundVolume
             or ScaleByImpactCount(soundConfig.BaseVolume or soundConfig.Volume or 1.0,
                 soundConfig.PerTargetVolume or 0.0,
                 soundConfig.MaxVolume,
                 countForScale)
+        volume = volume * GetHitPhaseNumber(soundConfig, hitPhase, "HitMultiplier", 1.0)
         volume = ClampOptional(volume, soundConfig.MinVolume, soundConfig.MaxVolume)
 
         local pitch = event.SoundPitch
@@ -613,6 +667,11 @@ local function PlayAttackImpactFeedback(playerContext, event)
                 soundConfig.PerTargetPitch or 0.0,
                 soundConfig.MaxPitch,
                 countForScale)
+        pitch = pitch + GetHitPhaseNumber(soundConfig, hitPhase, "HitPitchOffset", 0.0)
+        local randomPitchRange = math.max(0.0, tonumber(soundConfig.RandomPitchRange) or 0.0)
+        if randomPitchRange > 0.0 then
+            pitch = pitch + (math.random() * 2.0 - 1.0) * randomPitchRange
+        end
         pitch = ClampOptional(pitch, soundConfig.MinPitch, soundConfig.MaxPitch)
 
         local resolvedSound = {}
@@ -624,15 +683,18 @@ local function PlayAttackImpactFeedback(playerContext, event)
         PlayConfiguredSound(playerContext, resolvedSound)
     end
 
-    local pulsePrefix = "Player." .. tostring(pulseConfigKey)
-    StartFOVPulse(playerContext, pulsePrefix .. "FOV",
-        GetFOVConfig(playerContext, pulseConfigKey)
-            or GetFOVConfig(playerContext, "AttackImpact")
-            or GetFOVConfig(playerContext, "AttackHit"))
-    StartVignettePulse(playerContext, pulsePrefix .. "Vignette",
-        GetVignetteConfig(playerContext, pulseConfigKey)
-            or GetVignetteConfig(playerContext, "AttackImpact")
-            or GetVignetteConfig(playerContext, "AttackHit"))
+    if impactConfig.PulseFirstAndFinalOnly ~= true
+        or hitPhase == "Single" or hitPhase == "First" or hitPhase == "Final" then
+        local pulsePrefix = "Player." .. tostring(pulseConfigKey)
+        StartFOVPulse(playerContext, pulsePrefix .. "FOV",
+            GetFOVConfig(playerContext, pulseConfigKey)
+                or GetFOVConfig(playerContext, "AttackImpact")
+                or GetFOVConfig(playerContext, "AttackHit"))
+        StartVignettePulse(playerContext, pulsePrefix .. "Vignette",
+            GetVignetteConfig(playerContext, pulseConfigKey)
+                or GetVignetteConfig(playerContext, "AttackImpact")
+                or GetVignetteConfig(playerContext, "AttackHit"))
+    end
 end
 
 local function PlayDashStartedFeedback(playerContext, event)
@@ -1204,6 +1266,7 @@ end
 function PlayerFeedback.Init(playerContext)
     PlayerContext.Assert(playerContext, "PlayerFeedback.Init")
     ResetDashChargeFeedbackState(playerContext)
+    playerContext.Feedback.LastImpactSoundTimes = {}
     PlayerFeedback.AttachKatanaToWeaponSocket(playerContext)
     PlayerFeedback.AttachPSCToWeaponSocket(playerContext)
 
@@ -1235,6 +1298,7 @@ function PlayerFeedback.Shutdown(playerContext)
     end
     ResetDashChargeFeedbackState(playerContext)
     playerContext.Feedback.LoadedAudioKeys = nil
+    playerContext.Feedback.LastImpactSoundTimes = nil
     playerContext.Feedback.KatanaComponent = nil
     playerContext.Feedback.KatanaPSC = nil
 end
