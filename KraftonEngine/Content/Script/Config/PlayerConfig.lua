@@ -698,6 +698,15 @@ PlayerConfig.Default = {
         UltimateCamera = {
             BackDistance = 70.0,
             Height = 20.0,
+            -- 궁극기 시작 시 focus 기준 원형 yaw 후보를 검사해서 Camera 채널에 덜 막히는 쪽으로 cinematic camera를 배치한다.
+            CameraOcclusionEnabled = true,
+            CameraOcclusionTraceChannel = 5, -- ECollisionChannel::Camera
+            CameraOcclusionYawStep = 18.0,
+            CameraOcclusionCandidateCount = 5,
+            CameraOcclusionFocusHeightOffset = 1.2,
+            CameraOcclusionDebug = false,
+            -- 후보군으로 카메라 위치 자체를 해결하므로 궁극기 기본값은 fade 비활성화.
+            CameraRayFadeEnabled = false,
             SlashCameraDistance = 30.0,
             SlashCameraRightOffset = 15,
             SlashCameraHeightOffset = -5.0,

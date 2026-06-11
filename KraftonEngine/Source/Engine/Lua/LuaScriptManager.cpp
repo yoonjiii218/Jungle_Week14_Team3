@@ -2511,6 +2511,41 @@ void FLuaScriptManager::RegisterCoreBindings(sol::state& Lua)
 			Manager->StartCameraShakeAsset(AssetPath, Scale.value_or(1.0f));
 		}
 	});
+	CameraManager.set_function("ResolveOcclusionFreeCameraLocation", [](
+		const FVector& FocusWorld,
+		const FVector& DesiredCameraWorld,
+		AActor* IgnoreActor,
+		sol::optional<float> YawStepDegrees,
+		sol::optional<int> CandidateCount,
+		sol::optional<float> FocusHeightOffset,
+		sol::optional<int> TraceChannel,
+		sol::optional<bool> bDebug) -> FVector
+	{
+		if (!GEngine || !GEngine->GetWorld())
+		{
+			return DesiredCameraWorld;
+		}
+
+		FCameraOcclusionResolveParams Params;
+		Params.YawStepDegrees = YawStepDegrees.value_or(18.0f);
+		Params.CandidateCount = CandidateCount.value_or(5);
+		Params.FocusHeightOffset = FocusHeightOffset.value_or(1.2f);
+		Params.bDebug = bDebug.value_or(false);
+
+		const int ChannelValue = TraceChannel.value_or(static_cast<int>(ECollisionChannel::Camera));
+		const int MaxChannelValue = static_cast<int>(ECollisionChannel::MAX);
+		if (ChannelValue >= 0 && ChannelValue < MaxChannelValue)
+		{
+			Params.Channel = static_cast<ECollisionChannel>(ChannelValue);
+		}
+
+		return FCameraRayFadeSystem::ResolveBestCameraLocation(
+			GEngine->GetWorld(),
+			FocusWorld,
+			DesiredCameraWorld,
+			IgnoreActor,
+			Params);
+	});
 	CameraManager.set_function("UpdateActiveCameraRayFade", [](
 		AActor* FocusActor,
 		sol::optional<FVector> FocusOffset,

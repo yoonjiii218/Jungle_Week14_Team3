@@ -1140,6 +1140,51 @@ local function GetRightFromForward(forward)
     return right:Normalized()
 end
 
+local function ResolveUltimateCameraOcclusionBasis(cameraConfig, focusLocation, actorForward, actorRight, up, ignoreActor)
+    if cameraConfig == nil or cameraConfig.CameraOcclusionEnabled == false then
+        return actorForward, actorRight
+    end
+
+    if CameraManager == nil or CameraManager.ResolveOcclusionFreeCameraLocation == nil then
+        return actorForward, actorRight
+    end
+
+    local desiredCameraLocation = GetUltimateCameraBaseLocation(cameraConfig, focusLocation, actorForward, up)
+    local yawStep = tonumber(cameraConfig.CameraOcclusionYawStep) or 18.0
+    local candidateCount = math.max(1, math.floor(tonumber(cameraConfig.CameraOcclusionCandidateCount) or 5))
+    local focusOffset = tonumber(cameraConfig.CameraOcclusionFocusHeightOffset) or 1.2
+    local traceChannel = math.floor(tonumber(cameraConfig.CameraOcclusionTraceChannel) or 5)
+    local debug = cameraConfig.CameraOcclusionDebug == true
+
+    local resolvedCameraLocation = CameraManager.ResolveOcclusionFreeCameraLocation(
+        focusLocation,
+        desiredCameraLocation,
+        ignoreActor,
+        yawStep,
+        candidateCount,
+        focusOffset,
+        traceChannel,
+        debug
+    )
+
+    local resolvedForward = GetDirection2D(resolvedCameraLocation, focusLocation) or actorForward
+    local resolvedRight = GetRightFromForward(resolvedForward) or actorRight
+
+    if debug == true and resolvedCameraLocation ~= nil then
+        print(string.format(
+            "[UltimateCameraOcclusion] resolved camera loc=(%.2f, %.2f, %.2f) forward=(%.2f, %.2f, %.2f)",
+            resolvedCameraLocation.X,
+            resolvedCameraLocation.Y,
+            resolvedCameraLocation.Z,
+            resolvedForward.X,
+            resolvedForward.Y,
+            resolvedForward.Z
+        ))
+    end
+
+    return resolvedForward, resolvedRight
+end
+
 local function ResolveUltimateFocus(playerContext, actorLocation, fallbackForward)
     local target, targetDir = PlayerTargeting.FindTarget(playerContext, "Ultimate", fallbackForward)
     if target == nil then
@@ -1462,21 +1507,30 @@ function PlayerFeedback.BeginUltimate(playerContext)
     local moveConfig = playerContext.Config.Feedback.UltimateMove
     local vfxConfig = playerContext.Config.Feedback.UltimateVfx
     local fovConfig = playerContext.Config.Feedback.FOV or {}
+    ClearUltimateCameraRayFade()
     local slashAnchor =
         focusLocation
         + actorForward * (cameraConfig.SlashCameraDistance)
         + up * (cameraConfig.SlashCameraHeightOffset)
         + actorRight * (cameraConfig.SlashCameraRightOffset)
 
-    local cameraYaw = math.atan2(actorForward.Y, actorForward.X) * 180.0 / math.pi
+    local cameraForward, cameraRight = ResolveUltimateCameraOcclusionBasis(
+        cameraConfig,
+        focusLocation,
+        actorForward,
+        actorRight,
+        up,
+        owner
+    )
+    local cameraYaw = math.atan2(cameraForward.Y, cameraForward.X) * 180.0 / math.pi
     local baseCameraRotation = Vector(-10.0, 15.0, cameraYaw)
 
     ApplyUltimateCameraMotion(
         ultimateCamera,
         cameraConfig,
         focusLocation,
-        actorForward,
-        actorRight,
+        cameraForward,
+        cameraRight,
         up,
         baseCameraRotation,
         "Intro",
@@ -1499,8 +1553,8 @@ function PlayerFeedback.BeginUltimate(playerContext)
             ultimateCamera,
             cameraConfig,
             focusLocation,
-            actorForward,
-            actorRight,
+            cameraForward,
+            cameraRight,
             up,
             baseCameraRotation,
             "Intro",
@@ -1610,8 +1664,8 @@ function PlayerFeedback.BeginUltimate(playerContext)
             ultimateCamera,
             cameraConfig,
             focusLocation,
-            actorForward,
-            actorRight,
+            cameraForward,
+            cameraRight,
             up,
             baseCameraRotation,
             "Move",
@@ -1673,8 +1727,8 @@ function PlayerFeedback.BeginUltimate(playerContext)
             ultimateCamera,
             cameraConfig,
             focusLocation,
-            actorForward,
-            actorRight,
+            cameraForward,
+            cameraRight,
             up,
             baseCameraRotation,
             "Attack",
@@ -1738,8 +1792,8 @@ function PlayerFeedback.BeginUltimate(playerContext)
             ultimateCamera,
             cameraConfig,
             focusLocation,
-            actorForward,
-            actorRight,
+            cameraForward,
+            cameraRight,
             up,
             baseCameraRotation,
             "Recover",
