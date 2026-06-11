@@ -334,18 +334,18 @@ PlayerConfig.Default = {
             Sound = {
                 Enabled = true,
                 Key = "PlayerAttackImpact",
-                Path = "Hit Crash/WEAPSwrd_Sword_Hit_Crash_12.wav",
-                BaseVolume = 0.85,
-                PerTargetVolume = 0.12,
-                MaxVolume = 1.25,
-                BasePitch = 1.0,
+                Path = "Hit Crash/HitSound2.mp3",
+                BaseVolume = 0.6,
+                PerTargetVolume = 0.05,
+                MaxVolume = 0.8,
+                BasePitch = 0.8,
                 PerTargetPitch = -0.025,
-                MinPitch = 0.90,
-                MaxPitch = 1.08,
+                MinPitch = 0.5,
+                MaxPitch = 0.8,
             },
         },
 
-        -- 궁극기 직접 데미지 / 궁극기 HitWindow에서 발생한 AttackImpact 전용 채널.
+        -- 궁극기 직접 데미지 / 궁극기 HitWindow에서 dw발생한 AttackImpact 전용 채널.
         -- 반복 데미지 중간타는 개별 damage text로만 보이고, 큰 shake/sound/vignette는 최종 impact 한 번에 몰아준다.
         UltimateAttackImpact = {
             Enabled = true,
@@ -367,14 +367,14 @@ PlayerConfig.Default = {
             Sound = {
                 Enabled = true,
                 Key = "PlayerUltimateAttackImpact",
-                Path = "Hit Crash/WEAPSwrd_Sword_Hit_Crash_12.wav",
-                BaseVolume = 1.05,
-                PerTargetVolume = 0.10,
-                MaxVolume = 1.35,
-                BasePitch = 0.94,
-                PerTargetPitch = -0.018,
-                MinPitch = 0.86,
-                MaxPitch = 1.02,
+                Path = "Hit Crash/HitSound2.mp3",
+                BaseVolume = 0.6,
+                PerTargetVolume = 0.05,
+                MaxVolume = 0.8,
+                BasePitch = 0.8,
+                PerTargetPitch = -0.025,
+                MinPitch = 0.5,
+                MaxPitch = 0.8,
             },
         },
 
