@@ -14,7 +14,7 @@ public:
 	void Tick();
 
 	bool LoadAudio(const FString& Key, const FString& Path, bool bLoop = false);
-	void PlayAudio(const FString& Key, float Volume = 1.0f, float Pitch = 1.0f);
+	void PlayAudio(const FString& Key, float Volume = 1.0f, float Pitch = 1.0f, int MaxInstances = 0);
 	void PlayBGM(const FString& Key, float Volume = 1.0f, float Pitch = 1.0f);
 	void StopBGM();
 	void SetBGMPitch(float Pitch);
@@ -34,6 +34,12 @@ private:
 	void CleanupOneShotChannels();
 
 private:
+	struct FOneShotChannel
+	{
+		FString Key;
+		FMOD::Channel* Channel = nullptr;
+	};
+
 	FAudioManager() = default;
 	~FAudioManager() = default;
 
@@ -43,5 +49,5 @@ private:
 
 	TMap<FString, FMOD::Sound*> Audios;
 	TMap<FString, FMOD::Channel*> LoopChannels;
-	TArray<FMOD::Channel*> OneShotChannels;
+	TArray<FOneShotChannel> OneShotChannels;
 };

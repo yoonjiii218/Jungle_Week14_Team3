@@ -169,10 +169,10 @@ PlayerConfig.Default = {
         DashChargeAttackDamage = 30,
         FlyingSlashDamage = 20,
         FlyingSlashGaugeDelta = 8,
-        FlyingSlashHitStopDuration = 0.03,
-        UltimateDamage = 20,
+        FlyingSlashHitStopDuration = 0.06,
+        UltimateDamage = 40,
         UltimateRange = 42.0,
-        UltimateHitStopDuration = 0.03,
+        UltimateHitStopDuration = 0.06,
         UltimateDuplicateHitLifetime = 1.2,
 
         -- Multi-hit policy for AttackHitWindow.
@@ -199,7 +199,7 @@ PlayerConfig.Default = {
         DashChargeAttackHitCount = 1,
         DashChargeAttackHitInterval = 0.06,
         UltimateHitCount = 5,
-        UltimateHitInterval = 0.03,
+        UltimateHitInterval = 0.06,
 
         -- Gauge/anti-duplicate policy.
         AttackHitGaugeDelta = 10,
@@ -226,10 +226,12 @@ PlayerConfig.Default = {
         HitStopDuration = 0.05,
         EnemyHitStopDuration = 0.04,
 
-        -- AttackHitWindow 단위로 여러 AttackHit를 묶어 공격자 hitstop을 1회만 적용한다.
-        -- 다수 대상 피격은 아래 채널별 config로 조금씩 증폭하되, 반복 호출로 끊기지 않게 한다.
+        -- 같은 HitIndex에 맞은 모든 대상을 한 박자로 묶는다. 따라서 N회 타격 x M마리여도
+        -- 피격음은 최대 N번만 나며, 대상 수는 채널별 강도로 표현한다.
         ImpactGroup = {
             Enabled = true,
+            GroupByHitIndex = true,
+            HitAggregationDelay = 0.0,
             MaxCountForScale = 5,
             -- Window end 이벤트를 못 받는 예외 상황을 위한 안전 flush.
             FallbackFlushDelay = 0.12,
@@ -317,10 +319,15 @@ PlayerConfig.Default = {
         -- different channels independently: hitstop slightly, shake more, VFX/sound most.
         AttackImpact = {
             Enabled = true,
+            PulseFirstAndFinalOnly = true,
             CameraShake = {
-                Base = 0.22,
-                PerTarget = 0.08,
-                Max = 0.33,
+                Base = 0.08,
+                PerTarget = 0.025,
+                Max = 0.16,
+                SingleHitMultiplier = 1.40,
+                FirstHitMultiplier = 1.15,
+                MiddleHitMultiplier = 0.80,
+                FinalHitMultiplier = 1.75,
             },
             VFX = {
                 ParticlePath = "None",
@@ -335,13 +342,25 @@ PlayerConfig.Default = {
                 Enabled = true,
                 Key = "PlayerAttackImpact",
                 Path = "Hit Crash/WEAPSwrd_Sword_Hit_Crash_12.wav",
-                BaseVolume = 0.85,
-                PerTargetVolume = 0.12,
-                MaxVolume = 1.25,
-                BasePitch = 1.0,
-                PerTargetPitch = -0.025,
-                MinPitch = 0.90,
-                MaxPitch = 1.08,
+                MaxInstances = 3,
+                MinInterval = 0.1,
+                AlwaysPlayFinalHit = true,
+                BaseVolume = 0.68,
+                PerTargetVolume = 0.08,
+                MaxVolume = 0.95,
+                SingleHitMultiplier = 1.15,
+                FirstHitMultiplier = 1.0,
+                MiddleHitMultiplier = 0.88,
+                FinalHitMultiplier = 1.18,
+                BasePitch = 1.02,
+                PerTargetPitch = -0.015,
+                SingleHitPitchOffset = -0.04,
+                FirstHitPitchOffset = 0.0,
+                MiddleHitPitchOffset = 0.03,
+                FinalHitPitchOffset = -0.08,
+                RandomPitchRange = 0.2,
+                MinPitch = 0.80,
+                MaxPitch = 1.20,
             },
         },
 

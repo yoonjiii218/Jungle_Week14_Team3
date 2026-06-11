@@ -55,11 +55,11 @@ void FAudioManager::Shutdown()
 
 	StopBGM();
 	StopAllLoops();
-	for (FMOD::Channel* Channel : OneShotChannels)
+	for (const FOneShotChannel& Entry : OneShotChannels)
 	{
-		if (Channel)
+		if (Entry.Channel)
 		{
-			Channel->stop();
+			Entry.Channel->stop();
 		}
 	}
 	OneShotChannels.clear();
@@ -121,7 +121,7 @@ bool FAudioManager::LoadAudio(const FString& Key, const FString& Path, bool bLoo
 	return true;
 }
 
-void FAudioManager::PlayAudio(const FString& Key, float Volume, float Pitch)
+void FAudioManager::PlayAudio(const FString& Key, float Volume, float Pitch, int MaxInstances)
 {
 	if (!System)
 	{
@@ -135,9 +135,35 @@ void FAudioManager::PlayAudio(const FString& Key, float Volume, float Pitch)
 	}
 
 	CleanupOneShotChannels();
+	if (MaxInstances > 0)
+	{
+		int MatchingInstances = 0;
+		auto OldestMatching = OneShotChannels.end();
+		for (auto It = OneShotChannels.begin(); It != OneShotChannels.end(); ++It)
+		{
+			if (It->Key == Key)
+			{
+				if (OldestMatching == OneShotChannels.end())
+				{
+					OldestMatching = It;
+				}
+				++MatchingInstances;
+			}
+		}
+
+		if (MatchingInstances >= MaxInstances && OldestMatching != OneShotChannels.end())
+		{
+			if (OldestMatching->Channel)
+			{
+				OldestMatching->Channel->stop();
+			}
+			OneShotChannels.erase(OldestMatching);
+		}
+	}
+
 	if (OneShotChannels.size() >= MaxOneShotChannels)
 	{
-		if (FMOD::Channel* OldestChannel = OneShotChannels.front())
+		if (FMOD::Channel* OldestChannel = OneShotChannels.front().Channel)
 		{
 			OldestChannel->stop();
 		}
@@ -154,7 +180,7 @@ void FAudioManager::PlayAudio(const FString& Key, float Volume, float Pitch)
 
 		if (!OneShotChannels.empty())
 		{
-			if (FMOD::Channel* OldestChannel = OneShotChannels.front())
+			if (FMOD::Channel* OldestChannel = OneShotChannels.front().Channel)
 			{
 				OldestChannel->stop();
 			}
@@ -167,7 +193,7 @@ void FAudioManager::PlayAudio(const FString& Key, float Volume, float Pitch)
 	{
 		Channel->setVolume(ClampVolumeFloor(Volume));
 		Channel->setPitch(ClampPitchFloor(Pitch));
-		OneShotChannels.push_back(Channel);
+		OneShotChannels.push_back({ Key, Channel });
 	}
 }
 
@@ -290,10 +316,10 @@ void FAudioManager::CleanupOneShotChannels()
 		std::remove_if(
 			OneShotChannels.begin(),
 			OneShotChannels.end(),
-			[](FMOD::Channel* Channel)
+			[](const FOneShotChannel& Entry)
 			{
 				bool bIsPlaying = false;
-				return !Channel || Channel->isPlaying(&bIsPlaying) != FMOD_OK || !bIsPlaying;
+				return !Entry.Channel || Entry.Channel->isPlaying(&bIsPlaying) != FMOD_OK || !bIsPlaying;
 			}),
 		OneShotChannels.end());
 }
