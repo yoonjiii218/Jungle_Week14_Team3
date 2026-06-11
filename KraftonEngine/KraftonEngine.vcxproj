@@ -914,6 +914,7 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
     <ClInclude Include="Source\Engine\Component\SceneComponent.h" />
     <ClInclude Include="Source\Engine\Component\ShapeComponent.h" />
     <ClInclude Include="Source\Engine\Component\Camera\CameraComponent.h" />
+    <ClInclude Include="Source\Engine\Component\Camera\CameraRayFadeSystem.h" />
     <ClInclude Include="Source\Engine\Component\Camera\CineCameraComponent.h" />
     <ClInclude Include="Source\Engine\Component\Camera\SpringArmComponent.h" />
     <ClInclude Include="Source\Engine\Component\Debug\BoneDebugComponent.h" />

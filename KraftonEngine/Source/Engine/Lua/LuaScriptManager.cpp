@@ -10,6 +10,7 @@
 #include "Component/Movement/CharacterMovementComponent.h"
 #include "Component/Movement/FloatingPawnMovementComponent.h"
 #include "Component/Camera/CameraComponent.h"
+#include "Component/Camera/CameraRayFadeSystem.h"
 #include "Component/PrimitiveComponent.h"
 #include "Component/SceneComponent.h"
 #include "Component/Primitive/SkeletalMeshComponent.h"
@@ -2508,6 +2509,75 @@ void FLuaScriptManager::RegisterCoreBindings(sol::state& Lua)
 		{
 			Manager->StartCameraShakeAsset(AssetPath, Scale.value_or(1.0f));
 		}
+	});
+	CameraManager.set_function("UpdateActiveCameraRayFade", [](
+		AActor* FocusActor,
+		sol::optional<FVector> FocusOffset,
+		sol::optional<float> Opacity,
+		sol::optional<int> MaxHits,
+		sol::optional<bool> bDebug)
+	{
+		if (!GEngine || !GEngine->GetWorld() || !IsValid(FocusActor))
+		{
+			FCameraRayFadeSystem::ClearCinematic();
+			return false;
+		}
+
+		APlayerController* PC = GEngine->GetWorld()->GetFirstPlayerController();
+		APlayerCameraManager* Manager = PC ? PC->GetPlayerCameraManager() : nullptr;
+		UCameraComponent* ActiveCamera = Manager ? Manager->GetActiveCamera() : nullptr;
+		if (!IsValid(ActiveCamera))
+		{
+			FCameraRayFadeSystem::ClearCinematic();
+			return false;
+		}
+
+		FCameraRayFadeParams Params;
+		Params.Channel = ECollisionChannel::CameraFade;
+		Params.Opacity = Opacity.value_or(0.35f);
+		Params.MaxHits = MaxHits.value_or(8);
+		Params.bDebug = bDebug.value_or(false);
+
+		const FVector CameraWorld = ActiveCamera->GetWorldLocation();
+		const FVector TargetWorld = FocusActor->GetActorLocation() + FocusOffset.value_or(FVector::ZeroVector);
+		FCameraRayFadeSystem::UpdateCinematic(
+			GEngine->GetWorld(),
+			CameraWorld,
+			TargetWorld,
+			FocusActor,
+			Params);
+		return true;
+	});
+	CameraManager.set_function("UpdateCameraRayFade", [](
+		const FVector& CameraWorld,
+		const FVector& TargetWorld,
+		AActor* IgnoreActor,
+		sol::optional<float> Opacity,
+		sol::optional<int> MaxHits,
+		sol::optional<bool> bDebug)
+	{
+		if (!GEngine || !GEngine->GetWorld())
+		{
+			FCameraRayFadeSystem::ClearCinematic();
+			return false;
+		}
+
+		FCameraRayFadeParams Params;
+		Params.Channel = ECollisionChannel::CameraFade;
+		Params.Opacity = Opacity.value_or(0.35f);
+		Params.MaxHits = MaxHits.value_or(8);
+		Params.bDebug = bDebug.value_or(false);
+		FCameraRayFadeSystem::UpdateCinematic(
+			GEngine->GetWorld(),
+			CameraWorld,
+			TargetWorld,
+			IgnoreActor,
+			Params);
+		return true;
+	});
+	CameraManager.set_function("ClearCameraRayFade", []()
+	{
+		FCameraRayFadeSystem::ClearCinematic();
 	});
 
 	sol::table AudioManager = Lua.create_named_table("AudioManager");

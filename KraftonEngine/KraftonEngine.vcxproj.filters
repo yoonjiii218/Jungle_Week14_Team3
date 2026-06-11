@@ -2393,6 +2393,9 @@
     <ClInclude Include="Source\Engine\Component\Camera\CameraComponent.h">
       <Filter>Source\Engine\Component\Camera</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Engine\Component\Camera\CameraRayFadeSystem.h">
+      <Filter>Source\Engine\Component\Camera</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Engine\Component\Camera\CineCameraComponent.h">
       <Filter>Source\Engine\Component\Camera</Filter>
     </ClInclude>

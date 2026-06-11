@@ -961,7 +961,48 @@ local function GetUltimateCameraMotionTransform(cameraConfig, focusLocation, act
     return location, rotation
 end
 
-local function ApplyUltimateCameraMotion(ultimateCamera, cameraConfig, focusLocation, actorForward, actorRight, up, baseRotation, phase, t)
+local function UpdateUltimateCameraRayFade(cameraLocation, cameraConfig, focusLocation, ignoreActor, up)
+    if CameraManager == nil or CameraManager.UpdateCameraRayFade == nil then
+        return
+    end
+
+    if cameraLocation == nil or focusLocation == nil then
+        return
+    end
+
+    if cameraConfig ~= nil and cameraConfig.CameraRayFadeEnabled == false then
+        return
+    end
+
+    local focusOffset = 1.2
+    if cameraConfig ~= nil and cameraConfig.CameraRayFadeFocusHeightOffset ~= nil then
+        focusOffset = tonumber(cameraConfig.CameraRayFadeFocusHeightOffset) or focusOffset
+    end
+
+    local targetLocation = focusLocation
+    if up ~= nil then
+        targetLocation = focusLocation + up * focusOffset
+    end
+
+    local opacity = 0.35
+    local maxHits = 8
+    local debug = false
+    if cameraConfig ~= nil then
+        opacity = tonumber(cameraConfig.CameraRayFadeOpacity) or opacity
+        maxHits = math.max(1, math.floor(tonumber(cameraConfig.CameraRayFadeMaxHits) or maxHits))
+        debug = cameraConfig.CameraRayFadeDebug == true
+    end
+
+    CameraManager.UpdateCameraRayFade(cameraLocation, targetLocation, ignoreActor, opacity, maxHits, debug)
+end
+
+local function ClearUltimateCameraRayFade()
+    if CameraManager ~= nil and CameraManager.ClearCameraRayFade ~= nil then
+        CameraManager.ClearCameraRayFade()
+    end
+end
+
+local function ApplyUltimateCameraMotion(ultimateCamera, cameraConfig, focusLocation, actorForward, actorRight, up, baseRotation, phase, t, rayFadeIgnoreActor)
     if ultimateCamera == nil then
         return
     end
@@ -979,6 +1020,7 @@ local function ApplyUltimateCameraMotion(ultimateCamera, cameraConfig, focusLoca
 
     Reflection.Call(ultimateCamera, "SetActorLocation", location)
     Reflection.Call(ultimateCamera, "SetActorRotation", rotation)
+    UpdateUltimateCameraRayFade(location, cameraConfig, focusLocation, rayFadeIgnoreActor, up)
 end
 
 local function WaitWithUltimateCameraMotion(duration, frameStep, updateFunc)
@@ -1420,7 +1462,8 @@ function PlayerFeedback.BeginUltimate(playerContext)
         up,
         baseCameraRotation,
         "Intro",
-        0.0
+        0.0,
+        owner
     )
 
     CameraManager.ToggleOwnerCamera(ultimateCamera, 0)
@@ -1443,7 +1486,8 @@ function PlayerFeedback.BeginUltimate(playerContext)
             up,
             baseCameraRotation,
             "Intro",
-            t
+            t,
+            owner
         )
     end)
 
@@ -1550,7 +1594,8 @@ function PlayerFeedback.BeginUltimate(playerContext)
             up,
             baseCameraRotation,
             "Move",
-            t
+            t,
+            owner
         )
         Reflection.Call(owner, "SetActorLocation", nextPos)
 
@@ -1612,7 +1657,8 @@ function PlayerFeedback.BeginUltimate(playerContext)
             up,
             baseCameraRotation,
             "Attack",
-            Clamp(attackCameraElapsed / attackCameraDuration, 0.0, 1.0)
+            Clamp(attackCameraElapsed / attackCameraDuration, 0.0, 1.0),
+            owner
         )
     end
 
@@ -1672,7 +1718,8 @@ function PlayerFeedback.BeginUltimate(playerContext)
             up,
             baseCameraRotation,
             "Recover",
-            t
+            t,
+            owner
         )
     end)
 
@@ -1680,6 +1727,7 @@ function PlayerFeedback.BeginUltimate(playerContext)
     StartFOVPulse(playerContext, "Player.UltimateRecoverFOV", fovConfig.UltimateRecover)
     StartVignettePulse(playerContext, "Player.UltimateRecoverVignette", GetVignetteConfig(playerContext, "UltimateRecover"))
     CameraManager.ToggleOwnerCamera(owner, 0.4)
+    ClearUltimateCameraRayFade()
 
     if PrimComp ~= nil then
         Reflection.Call(PrimComp, "SetSimulatePhysics", PrevSimulatePhysics)

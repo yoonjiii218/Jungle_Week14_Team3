@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Component/SceneComponent.h"
+#include "Component/Camera/CameraRayFadeSystem.h"
 #include "Core/Types/CoreTypes.h"
 #include "Core/Types/CollisionTypes.h"
 #include "Math/Vector.h"
@@ -20,8 +21,6 @@
 // 충돌 인지(raycast) 는 별도 PR 에서 추가 — 현재는 lag 만 처리.
 // UE: USpringArmComponent (간소화)
 // ============================================================
-class UPrimitiveComponent;
-
 UCLASS()
 class USpringArmComponent : public USceneComponent
 {
@@ -103,9 +102,8 @@ private:
 	FQuat LaggedAttachRot;
 	bool bHasPreviousState = false;
 
-	TArray<UPrimitiveComponent*> CameraRayFadedComponents;
+	FCameraRayFadeState CameraRayFadeState;
 
 	void UpdateCameraRayFade(const FVector& CameraWorld, const FVector& TargetWorld);
-	UPrimitiveComponent* ResolveCameraRayFadePrimitive(UPrimitiveComponent* HitComponent) const;
 	void ClearCameraRayFade();
 };
