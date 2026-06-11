@@ -1372,8 +1372,17 @@ local function setCutReveal(countdown, pageIndex, cutIndex, progress)
     setCountdownProperty(countdown, cutId, "display", "block")
     setCountdownOpacity(countdown, cutId, 1.0)
 
-    local coverWidth = rect.Width * (1.0 - progress)
-    local coverLeft = rect.Width - coverWidth
+    local coverWidth, coverLeft
+    if pageIndex == 2 and cutIndex == 2 then
+        -- Page 2, Cut 2 (5th cut): reveal starts from middle (50%) to right end (100%)
+        coverWidth = rect.Width * 0.5 * (1.0 - progress)
+        coverLeft = rect.Width - coverWidth
+    else
+        -- Default (all other cuts): reveal starts from left (0%) to right end (100%)
+        coverWidth = rect.Width * (1.0 - progress)
+        coverLeft = rect.Width - coverWidth
+    end
+
     setCountdownRect(countdown, coverId, coverLeft, 0.0, coverWidth, rect.Height)
     setCountdownOpacity(countdown, coverId, progress < 1.0 and (0.96 - progress * 0.18) or 0.0)
 
@@ -1442,11 +1451,8 @@ end
 local function beginCutReveal(countdown, pageIndex, cutIndex)
     currentCutPage = pageIndex
     currentCutIndex = cutIndex
-    if pageIndex == 2 and cutIndex == 2 then
-        cutsceneRevealTime = CUTSCENE_REVEAL_DURATION
-    else
-        cutsceneRevealTime = 0.0
-    end
+    -- Enable reveal transition for all cuts (including page 2, cut 2)
+    cutsceneRevealTime = 0.0
     cutsceneHoldTime = 0.0
     showCutscenePage(countdown, currentCutPage)
     refreshCutsceneCuts(countdown)
