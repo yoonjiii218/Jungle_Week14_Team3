@@ -1,6 +1,7 @@
 ﻿#include "DrawCommandList.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include "Render/Shader/Shader.h"
 #include "Render/Resource/RenderResources.h"
@@ -192,10 +193,13 @@ void FDrawCommandList::SubmitCommand(const FDrawCommand& Cmd,
 		Cache.RenderState.DepthStencil = Cmd.RenderState.DepthStencil;
 	}
 
-	if (bForce || Cmd.RenderState.Blend != Cache.RenderState.Blend)
+	if (bForce
+		|| Cmd.RenderState.Blend != Cache.RenderState.Blend
+		|| std::abs(Cmd.RenderState.BlendFactor - Cache.RenderState.BlendFactor) > 1e-4f)
 	{
-		Resources.SetBlendState(Device, Cmd.RenderState.Blend);
+		Resources.SetBlendState(Device, Cmd.RenderState.Blend, Cmd.RenderState.BlendFactor);
 		Cache.RenderState.Blend = Cmd.RenderState.Blend;
+		Cache.RenderState.BlendFactor = Cmd.RenderState.BlendFactor;
 	}
 
 	if (bForce || Cmd.RenderState.Rasterizer != Cache.RenderState.Rasterizer)

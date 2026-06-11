@@ -19,6 +19,8 @@
 // 충돌 인지(raycast) 는 별도 PR 에서 추가 — 현재는 lag 만 처리.
 // UE: USpringArmComponent (간소화)
 // ============================================================
+class UPrimitiveComponent;
+
 UCLASS()
 class USpringArmComponent : public USceneComponent
 {
@@ -66,6 +68,17 @@ public:
 	UPROPERTY(Edit, Save, Category="SpringArm", DisplayName="Probe Size", Min=0.0f, Max=100.0f, Speed=0.01f)
 	float ProbeSize = 0.12f;               // hit 지점에서 ProbeSize 만큼 안쪽에 정지
 
+	// Camera ray fade — 카메라와 플레이어 사이를 가리는 첫 번째 mesh를 통째로 반투명 처리한다.
+	// DoCollisionTest와 독립적으로 켤 수 있고, 향후 multi-hit/partial mask로 확장할 진입점이다.
+	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Enable Camera Ray Fade")
+	bool bEnableCameraRayFade = false;
+	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Channel", Enum=ECollisionChannel)
+	ECollisionChannel CameraRayFadeChannel = ECollisionChannel::Camera;
+	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Opacity", Min=0.02f, Max=1.0f, Speed=0.01f)
+	float CameraRayFadeOpacity = 0.35f;
+	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Debug")
+	bool bCameraRayFadeDebug = false;
+
 	// Control rotation 사용 옵션 (UE 패턴). true 면 부모 (capsule) 의 world rotation 대신
 	// owner APawn 의 ControlRotation 을 desired rotation 으로 사용 — mouse look 이 capsule
 	// 회전 안 건드리고 카메라만 움직이는 ThirdPerson 패턴.
@@ -84,4 +97,10 @@ private:
 	FVector LaggedAttachLoc = FVector(0.0f, 0.0f, 0.0f);
 	FQuat LaggedAttachRot;
 	bool bHasPreviousState = false;
+
+	UPrimitiveComponent* CameraRayFadedComponent = nullptr;
+
+	void UpdateCameraRayFade(const FVector& CameraWorld, const FVector& TargetWorld);
+	UPrimitiveComponent* ResolveCameraRayFadePrimitive(UPrimitiveComponent* HitComponent) const;
+	void ClearCameraRayFade();
 };

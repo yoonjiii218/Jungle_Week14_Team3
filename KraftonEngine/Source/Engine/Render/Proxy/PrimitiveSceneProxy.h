@@ -82,6 +82,9 @@ public:
 	const FBoundingBox&             GetCachedBounds()       const { return CachedBounds; }
 	const FVector&                  GetCachedWorldPos()     const { return CachedWorldPos; }
 	const TArray<FMeshSectionDraw>& GetSectionDraws()       const { return SectionDraws; }
+	float                           GetCameraRayFadeOpacity() const { return CameraRayFadeOpacity; }
+	bool                            IsCameraRayFaded() const { return CameraRayFadeOpacity < 0.999f; }
+	void                            SetCameraRayFadeOpacity(float InOpacity);
 	bool HasMirroredTransform() const
 	{
 		const FMatrix& M = PerObjectConstants.Model;
@@ -145,6 +148,7 @@ protected:
 	bool bVisible = true;
 	bool bCastShadow = true;
 	bool bCastShadowAsTwoSided = false;
+	float CameraRayFadeOpacity = 1.0f;
 
 	// LOD (서브클래스 UpdateLOD에서 변경)
 	uint32 CurrentLOD = 0;

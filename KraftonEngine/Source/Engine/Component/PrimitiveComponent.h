@@ -99,6 +99,15 @@ public:
 	UFUNCTION(Pure, Category="Rendering")
 	bool GetCastShadowAsTwoSided() const { return bCastShadowAsTwoSided; }
 
+	// Camera ray fade — SpringArm camera visibility assist.
+	// Runtime opacity is separated from material opacity so shared materials stay unchanged.
+	UFUNCTION(Callable, Exec, Category="Rendering")
+	void SetCameraRayFadeOpacity(float InOpacity);
+	UFUNCTION(Pure, Category="Rendering")
+	float GetCameraRayFadeOpacity() const { return CameraRayFadeOpacity; }
+	UFUNCTION(Pure, Category="Rendering")
+	bool CanCameraRayFade() const { return bCanCameraRayFade; }
+
 	// 월드 공간 AABB를 FBoundingBox로 반환
 	FBoundingBox GetWorldBoundingBox() const;
 	void MarkWorldBoundsDirty();
@@ -289,6 +298,11 @@ protected:
 	bool bCastShadow = true;
 	UPROPERTY(Edit, Save, Category="Rendering", DisplayName="Two Sided Shadow")
 	bool bCastShadowAsTwoSided = false;
+	UPROPERTY(Edit, Save, Category="Rendering|Camera", DisplayName="Can Camera Ray Fade")
+	bool bCanCameraRayFade = true;
+
+	// 1.0 = normal, <1.0 = camera ray fade path. Runtime only.
+	float CameraRayFadeOpacity = 1.0f;
 	UPROPERTY(Edit, Save, Category="Physics", DisplayName="Simulate Physics")
 	bool bSimulatePhysics = false;
 	UPROPERTY(Edit, Save, Category="Collision", DisplayName="Generate Overlap Events")

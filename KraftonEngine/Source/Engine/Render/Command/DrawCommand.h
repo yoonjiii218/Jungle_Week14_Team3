@@ -36,6 +36,7 @@ struct FDrawCommandRenderState
 {
 	EDepthStencilState       DepthStencil = EDepthStencilState::Default;
 	EBlendState              Blend        = EBlendState::Opaque;
+	float                    BlendFactor  = 1.0f; // used by EBlendState::CameraRayFade
 	ERasterizerState         Rasterizer   = ERasterizerState::SolidBackCull;
 	D3D11_PRIMITIVE_TOPOLOGY Topology     = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 };
