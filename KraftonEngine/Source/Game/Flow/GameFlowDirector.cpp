@@ -27,6 +27,8 @@ AGameFlowDirector::AGameFlowDirector()
 
 void AGameFlowDirector::BeginPlay()
 {
+	ClearSceneName = "Credits"; // Force transition directly to Credits scene instead of Clear scene
+
 	AddTag(FName("GameDirector"));
 	NormalizeCombatValues();
 	ConfigureBossGameMode();

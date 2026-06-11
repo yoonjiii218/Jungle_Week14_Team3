@@ -4,12 +4,19 @@
 #include <fstream>
 #include <chrono>
 #include <cstring>
+#include <algorithm>
+#include <future>
+#include <memory>
+#include <utility>
 #include "SimpleJSON/json.hpp"
 #include "GameFramework/World.h"
 #include "GameFramework/AActor.h"
 #include "Component/SceneComponent.h"
 #include "Component/ActorComponent.h"
 #include "Render/Types/MinimalViewInfo.h"
+#include "Component/Primitive/SkeletalMeshComponent.h"
+#include "Component/Primitive/SkinnedMeshComponent.h"
+#include "Component/Primitive/StaticMeshComponent.h"
 #include "Component/Primitive/DecalComponent.h"
 #include "Component/Primitive/HeightFogComponent.h"
 #include "Component/Light/LightComponentBase.h"
@@ -162,6 +169,48 @@ void FSceneSaveManager::FSceneLoadContext::QueueProperties(UObject* Object, json
 
 	PendingProperties.push_back({ Object, &Properties });
 }
+
+struct FSceneSaveManager::FSceneAsyncLoadState
+{
+	enum class EPhase
+	{
+		LoadRoot,
+		InitWorld,
+		Actors,
+		Properties,
+		PostLoad,
+		Octree,
+		Finished,
+		Failed
+	};
+
+	struct FRootLoadResult
+	{
+		bool bSucceeded = false;
+		std::shared_ptr<json::JSON> Root;
+	};
+
+	std::shared_ptr<json::JSON> Root;
+	std::future<FRootLoadResult> RootFuture;
+	FWorldContext* OutWorldContext = nullptr;
+	FPerspectiveCameraData* OutCam = nullptr;
+	FSceneLoadContext LoadContextState;
+	UWorld* World = nullptr;
+	json::JSON* ActorsJSON = nullptr;
+	bool bHasOverrideWorldType = false;
+	EWorldType OverrideWorldType = EWorldType::Editor;
+	EWorldType WorldType = EWorldType::Editor;
+	FString ContextName;
+	FName ContextHandle;
+	TArray<UObject*> PostLoadObjects;
+	TArray<AActor*> OctreeActors;
+	int32 TotalActorCount = 0;
+	int32 NextActorIndex = 0;
+	int32 NextPropertyIndex = 0;
+	int32 NextPostLoadIndex = 0;
+	int32 NextOctreeActorIndex = 0;
+	EPhase Phase = EPhase::Failed;
+};
 
 static void SerializeComponentEditorMetadata(json::JSON& Node, const UActorComponent* Comp)
 {
@@ -452,6 +501,72 @@ void FSceneSaveManager::DeserializeCamera(json::JSON& CameraJSON, FPerspectiveCa
 	OutCam.bValid = true;
 }
 
+bool FSceneSaveManager::DeserializeActor(json::JSON& ActorJSON, UWorld* World, FSceneLoadContext& LoadContextState)
+{
+	if (!World)
+	{
+		return false;
+	}
+
+	string ActorClass = ActorJSON[SceneKeys::ClassName].ToString();
+
+	UObject* ActorObj = FObjectFactory::Get().Create(ActorClass, World);
+	if (!ActorObj || !ActorObj->IsA<AActor>())
+	{
+		return false;
+	}
+
+	AActor* Actor = static_cast<AActor*>(ActorObj);
+	LoadContextState.RegisterLoadedObject(ActorJSON, Actor);
+	World->AddActor(Actor);
+
+	if (ActorJSON.hasKey(SceneKeys::Name))
+	{
+		Actor->SetFName(FName(ActorJSON[SceneKeys::Name].ToString()));
+	}
+
+	if (ActorJSON.hasKey(SceneKeys::RootComponent))
+	{
+		json::JSON& RootJSON = ActorJSON[SceneKeys::RootComponent];
+		USceneComponent* Root = DeserializeSceneComponentTree(RootJSON, Actor, LoadContextState);
+		if (Root)
+		{
+			Actor->SetRootComponent(Root);
+		}
+	}
+
+	if (ActorJSON.hasKey(SceneKeys::Properties))
+	{
+		LoadContextState.QueueProperties(Actor, ActorJSON[SceneKeys::Properties]);
+	}
+
+	if (ActorJSON.hasKey(SceneKeys::NonSceneComponents))
+	{
+		for (auto& CompJSON : ActorJSON[SceneKeys::NonSceneComponents].ArrayRange())
+		{
+			string CompClass = CompJSON[SceneKeys::ClassName].ToString();
+			UObject* CompObj = FObjectFactory::Get().Create(CompClass, Actor);
+			if (!CompObj || !CompObj->IsA<UActorComponent>())
+			{
+				continue;
+			}
+
+			UActorComponent* Comp = static_cast<UActorComponent*>(CompObj);
+			LoadContextState.RegisterLoadedObject(CompJSON, Comp);
+			Actor->RegisterComponent(Comp);
+
+			if (CompJSON.hasKey(SceneKeys::Properties))
+			{
+				json::JSON& PropsJSON = CompJSON[SceneKeys::Properties];
+				LoadContextState.QueueProperties(Comp, PropsJSON);
+			}
+			DeserializeComponentEditorMetadata(Comp, CompJSON);
+		}
+	}
+
+	return true;
+}
+
 // ============================================================
 // Load
 // ============================================================
@@ -527,50 +642,9 @@ void FSceneSaveManager::LoadSceneFromJSON(const string& filepath, FWorldContext&
 	// Deserialize Actors
 	if (root.hasKey(SceneKeys::Actors))
 	{
-		for (auto& ActorJSON : root[SceneKeys::Actors].ArrayRange()) {
-			string ActorClass = ActorJSON[SceneKeys::ClassName].ToString();
-
-			UObject* ActorObj = FObjectFactory::Get().Create(ActorClass, World);
-			if (!ActorObj || !ActorObj->IsA<AActor>()) continue;
-			AActor* Actor = static_cast<AActor*>(ActorObj);
-			LoadContextState.RegisterLoadedObject(ActorJSON, Actor);
-			World->AddActor(Actor);
-
-			if (ActorJSON.hasKey(SceneKeys::Name)) {
-				Actor->SetFName(FName(ActorJSON[SceneKeys::Name].ToString()));
-			}
-
-			// RootComponent 트리 복원
-			if (ActorJSON.hasKey(SceneKeys::RootComponent)) {
-				JSON& RootJSON = ActorJSON[SceneKeys::RootComponent];
-				USceneComponent* Root = DeserializeSceneComponentTree(RootJSON, Actor, LoadContextState);
-				if (Root) Actor->SetRootComponent(Root);
-			}
-
-			// Actor 프로퍼티(Location/Rotation/Scale/Visible 및 서브클래스 추가 항목)
-			// 복원 — RootComponent 복원 뒤여야 SetActorLocation 등이 적용됨.
-			if (ActorJSON.hasKey(SceneKeys::Properties)) {
-				LoadContextState.QueueProperties(Actor, ActorJSON[SceneKeys::Properties]);
-			}
-
-			// Non-scene components 복원
-			if (ActorJSON.hasKey(SceneKeys::NonSceneComponents)) {
-				for (auto& CompJSON : ActorJSON[SceneKeys::NonSceneComponents].ArrayRange()) {
-					string CompClass = CompJSON[SceneKeys::ClassName].ToString();
-					UObject* CompObj = FObjectFactory::Get().Create(CompClass, Actor);
-					if (!CompObj || !CompObj->IsA<UActorComponent>()) continue;
-
-					UActorComponent* Comp = static_cast<UActorComponent*>(CompObj);
-					LoadContextState.RegisterLoadedObject(CompJSON, Comp);
-					Actor->RegisterComponent(Comp);
-
-					if (CompJSON.hasKey(SceneKeys::Properties)) {
-						JSON& PropsJSON = CompJSON[SceneKeys::Properties];
-						LoadContextState.QueueProperties(Comp, PropsJSON);
-					}
-					DeserializeComponentEditorMetadata(Comp, CompJSON);
-				}
-			}
+		for (auto& ActorJSON : root[SceneKeys::Actors].ArrayRange())
+		{
+			DeserializeActor(ActorJSON, World, LoadContextState);
 		}
 	}
 
@@ -605,6 +679,322 @@ void FSceneSaveManager::LoadSceneFromJSON(const string& filepath, FWorldContext&
 	OutWorldContext.World = World;
 	OutWorldContext.ContextName = ContextName;
 	OutWorldContext.ContextHandle = FName(ContextHandle);
+}
+
+FSceneSaveManager::FSceneAsyncLoadState* FSceneSaveManager::BeginLoadSceneFromJSONAsync(
+	const string& filepath,
+	FWorldContext& OutWorldContext,
+	FPerspectiveCameraData& OutCam,
+	const EWorldType* OverrideWorldType)
+{
+	using json::JSON;
+
+	FSceneAsyncLoadState* State = new FSceneAsyncLoadState();
+	State->OutWorldContext = &OutWorldContext;
+	State->OutCam = &OutCam;
+	State->LoadContextState.bDeferExpensiveAssetPostEdit = true;
+	State->bHasOverrideWorldType = OverrideWorldType != nullptr;
+	if (OverrideWorldType)
+	{
+		State->OverrideWorldType = *OverrideWorldType;
+	}
+	OutWorldContext = FWorldContext();
+
+	const std::filesystem::path FilePath(FPaths::ToWide(filepath));
+	State->RootFuture = std::async(std::launch::async, [FilePath]() -> FSceneAsyncLoadState::FRootLoadResult
+	{
+		FSceneAsyncLoadState::FRootLoadResult Result;
+		std::ifstream File(FilePath);
+		if (!File.is_open())
+		{
+			std::cerr << "Failed to open file at target destination" << std::endl;
+			return Result;
+		}
+
+		const string FileContent((std::istreambuf_iterator<char>(File)),
+			std::istreambuf_iterator<char>());
+		Result.Root = std::make_shared<JSON>(JSON::Load(FileContent));
+		Result.bSucceeded = true;
+		return Result;
+	});
+
+	State->Phase = FSceneAsyncLoadState::EPhase::LoadRoot;
+	return State;
+}
+
+FSceneSaveManager::FSceneAsyncLoadStatus FSceneSaveManager::TickLoadSceneFromJSONAsync(
+	FSceneAsyncLoadState& State,
+	int32 WorkBudget,
+	double MaxWorkMilliseconds)
+{
+	FSceneAsyncLoadStatus Status;
+	Status.LoadedActorCount = State.NextActorIndex;
+	Status.TotalActorCount = State.TotalActorCount;
+
+	if (State.Phase == FSceneAsyncLoadState::EPhase::Finished)
+	{
+		Status.bFinished = true;
+		Status.bSucceeded = true;
+		return Status;
+	}
+	if (State.Phase == FSceneAsyncLoadState::EPhase::Failed)
+	{
+		Status.bFinished = true;
+		Status.bSucceeded = false;
+		return Status;
+	}
+
+	int32 RemainingBudget = (std::max)(1, WorkBudget);
+	int32 CompletedWorkItems = 0;
+	const uint64 WorkStartCycles = FPlatformTime::Cycles64();
+	auto IsTimeBudgetExhausted = [&]() -> bool
+	{
+		if (CompletedWorkItems <= 0 || MaxWorkMilliseconds <= 0.0)
+		{
+			return false;
+		}
+		return FPlatformTime::ToMilliseconds(FPlatformTime::Cycles64() - WorkStartCycles) >= MaxWorkMilliseconds;
+	};
+
+	while (RemainingBudget > 0 && !IsTimeBudgetExhausted())
+	{
+		switch (State.Phase)
+		{
+		case FSceneAsyncLoadState::EPhase::LoadRoot:
+		{
+			if (!State.RootFuture.valid())
+			{
+				State.Phase = FSceneAsyncLoadState::EPhase::Failed;
+				break;
+			}
+
+			if (State.RootFuture.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+			{
+				Status.LoadedActorCount = State.NextActorIndex;
+				Status.TotalActorCount = State.TotalActorCount;
+				return Status;
+			}
+
+			FSceneAsyncLoadState::FRootLoadResult Result = State.RootFuture.get();
+			if (!Result.bSucceeded || !Result.Root)
+			{
+				State.Phase = FSceneAsyncLoadState::EPhase::Failed;
+				break;
+			}
+
+			State.Root = std::move(Result.Root);
+			State.Phase = FSceneAsyncLoadState::EPhase::InitWorld;
+			--RemainingBudget;
+			++CompletedWorkItems;
+			break;
+		}
+
+		case FSceneAsyncLoadState::EPhase::InitWorld:
+		{
+			if (!State.Root)
+			{
+				State.Phase = FSceneAsyncLoadState::EPhase::Failed;
+				break;
+			}
+
+			json::JSON& Root = *State.Root;
+			string ClassName = Root[SceneKeys::ClassName].ToString();
+			ClassName = ClassName.empty() ? "UWorld" : ClassName;
+			UObject* WorldObj = FObjectFactory::Get().Create(ClassName);
+			if (!WorldObj || !WorldObj->IsA<UWorld>())
+			{
+				if (WorldObj)
+				{
+					UObjectManager::Get().DestroyObject(WorldObj);
+				}
+				State.Phase = FSceneAsyncLoadState::EPhase::Failed;
+				break;
+			}
+
+			State.World = static_cast<UWorld*>(WorldObj);
+			State.LoadContextState.RegisterLoadedObject(Root, State.World);
+
+			State.WorldType = State.bHasOverrideWorldType
+				? State.OverrideWorldType
+				: (Root.hasKey(SceneKeys::WorldType)
+					? StringToWorldType(Root[SceneKeys::WorldType].ToString())
+					: EWorldType::Editor);
+
+			State.World->SetWorldType(State.WorldType);
+			State.ContextName = Root.hasKey(SceneKeys::ContextName)
+				? Root[SceneKeys::ContextName].ToString()
+				: "Loaded Scene";
+			const FString ContextHandle = Root.hasKey(SceneKeys::ContextHandle)
+				? Root[SceneKeys::ContextHandle].ToString()
+				: State.ContextName;
+			State.ContextHandle = FName(ContextHandle);
+
+			FWorldSettings WorldSettings;
+			if (Root.hasKey(SceneKeys::WorldSettings))
+			{
+				json::JSON& WSObj = Root[SceneKeys::WorldSettings];
+				if (WSObj.hasKey(SceneKeys::GameMode))
+				{
+					WorldSettings.GameModeClassName = WSObj[SceneKeys::GameMode].ToString();
+				}
+			}
+			else if (Root.hasKey(SceneKeys::GameMode))
+			{
+				WorldSettings.GameModeClassName = Root[SceneKeys::GameMode].ToString();
+			}
+			State.World->GetWorldSettings() = WorldSettings;
+			State.World->InitWorld();
+
+			const char* CamKey = Root.hasKey("PerspectiveCamera") ? "PerspectiveCamera"
+				: Root.hasKey("Camera") ? "Camera"
+				: nullptr;
+			if (CamKey && State.OutCam)
+			{
+				json::JSON& Cam = Root[CamKey];
+				DeserializeCamera(Cam, *State.OutCam);
+			}
+
+			if (Root.hasKey(SceneKeys::Actors))
+			{
+				State.ActorsJSON = &Root[SceneKeys::Actors];
+				for (auto& ActorJSON : State.ActorsJSON->ArrayRange())
+				{
+					(void)ActorJSON;
+					++State.TotalActorCount;
+				}
+			}
+
+			if (State.OutWorldContext)
+			{
+				State.OutWorldContext->WorldType = State.WorldType;
+				State.OutWorldContext->World = State.World;
+				State.OutWorldContext->ContextName = State.ContextName;
+				State.OutWorldContext->ContextHandle = State.ContextHandle;
+			}
+
+			State.Phase = FSceneAsyncLoadState::EPhase::Actors;
+			--RemainingBudget;
+			++CompletedWorkItems;
+			break;
+		}
+
+		case FSceneAsyncLoadState::EPhase::Actors:
+			if (!State.ActorsJSON || State.NextActorIndex >= State.TotalActorCount)
+			{
+				State.Phase = FSceneAsyncLoadState::EPhase::Properties;
+				break;
+			}
+
+			DeserializeActor(State.ActorsJSON->at(static_cast<unsigned>(State.NextActorIndex)), State.World, State.LoadContextState);
+			++State.NextActorIndex;
+			--RemainingBudget;
+			++CompletedWorkItems;
+			break;
+
+		case FSceneAsyncLoadState::EPhase::Properties:
+			if (State.NextPropertyIndex >= static_cast<int32>(State.LoadContextState.PendingProperties.size()))
+			{
+				for (auto& It : State.LoadContextState.ObjectById)
+				{
+					if (It.second)
+					{
+						State.PostLoadObjects.push_back(It.second);
+					}
+				}
+				State.Phase = FSceneAsyncLoadState::EPhase::PostLoad;
+				break;
+			}
+			else
+			{
+				FPendingPropertyLoad& Pending = State.LoadContextState.PendingProperties[State.NextPropertyIndex];
+				if (Pending.Object && Pending.Properties)
+				{
+					DeserializeProperties(Pending.Object, *Pending.Properties, State.LoadContextState);
+				}
+				++State.NextPropertyIndex;
+				--RemainingBudget;
+				++CompletedWorkItems;
+			}
+			break;
+
+		case FSceneAsyncLoadState::EPhase::PostLoad:
+			if (State.NextPostLoadIndex >= static_cast<int32>(State.PostLoadObjects.size()))
+			{
+				for (AActor* Actor : State.World->GetActors())
+				{
+					if (Actor)
+					{
+						State.OctreeActors.push_back(Actor);
+					}
+				}
+				State.Phase = FSceneAsyncLoadState::EPhase::Octree;
+				break;
+			}
+			else
+			{
+				UObject* Object = State.PostLoadObjects[State.NextPostLoadIndex];
+				if (Object)
+				{
+					Object->PostLoad();
+				}
+				++State.NextPostLoadIndex;
+				--RemainingBudget;
+				++CompletedWorkItems;
+			}
+			break;
+
+		case FSceneAsyncLoadState::EPhase::Octree:
+			if (State.NextOctreeActorIndex >= static_cast<int32>(State.OctreeActors.size()))
+			{
+				if (State.OutWorldContext)
+				{
+					State.OutWorldContext->WorldType = State.WorldType;
+					State.OutWorldContext->World = State.World;
+					State.OutWorldContext->ContextName = State.ContextName;
+					State.OutWorldContext->ContextHandle = State.ContextHandle;
+				}
+				State.Phase = FSceneAsyncLoadState::EPhase::Finished;
+				Status.bFinished = true;
+				Status.bSucceeded = true;
+				Status.LoadedActorCount = State.NextActorIndex;
+				Status.TotalActorCount = State.TotalActorCount;
+				return Status;
+			}
+			else
+			{
+				AActor* Actor = State.OctreeActors[State.NextOctreeActorIndex];
+				if (Actor)
+				{
+					State.World->RemoveActorToOctree(Actor);
+					State.World->InsertActorToOctree(Actor);
+				}
+				++State.NextOctreeActorIndex;
+				--RemainingBudget;
+				++CompletedWorkItems;
+			}
+			break;
+
+		case FSceneAsyncLoadState::EPhase::Finished:
+			Status.bFinished = true;
+			Status.bSucceeded = true;
+			return Status;
+
+		case FSceneAsyncLoadState::EPhase::Failed:
+		default:
+			Status.bFinished = true;
+			Status.bSucceeded = false;
+			return Status;
+		}
+	}
+
+	Status.LoadedActorCount = State.NextActorIndex;
+	Status.TotalActorCount = State.TotalActorCount;
+	return Status;
+}
+
+void FSceneSaveManager::DestroySceneAsyncLoadState(FSceneAsyncLoadState* State)
+{
+	delete State;
 }
 
 USceneComponent* FSceneSaveManager::DeserializeSceneComponentTree(json::JSON& Node, AActor* Owner, FSceneLoadContext& Context)
@@ -643,6 +1033,53 @@ USceneComponent* FSceneSaveManager::DeserializeSceneComponentTree(json::JSON& No
 	EnsureEditorBillboardMetadata(Comp);
 
 	return Comp;
+}
+
+static bool ShouldDeferSceneLoadPostEdit(UObject* Obj, const FProperty* Property)
+{
+	if (!Obj || !Property)
+	{
+		return false;
+	}
+
+	const char* Name = Property->Name ? Property->Name : "";
+	const char* DisplayName = Property->DisplayName ? Property->DisplayName : "";
+
+	if (Obj->IsA<UStaticMeshComponent>())
+	{
+		return std::strcmp(Name, "StaticMeshPath") == 0
+			|| std::strcmp(DisplayName, "Static Mesh") == 0
+			|| std::strcmp(Name, "MaterialSlots") == 0
+			|| std::strcmp(DisplayName, "Materials") == 0
+			|| std::strncmp(DisplayName, "Element ", 8) == 0;
+	}
+
+	if (Obj->IsA<USkinnedMeshComponent>())
+	{
+		if (std::strcmp(Name, "SkeletalMeshPath") == 0
+			|| std::strcmp(DisplayName, "Skeletal Mesh") == 0
+			|| std::strcmp(Name, "MaterialSlots") == 0
+			|| std::strcmp(DisplayName, "Materials") == 0
+			|| std::strncmp(DisplayName, "Element ", 8) == 0)
+		{
+			return true;
+		}
+	}
+
+	if (Obj->IsA<USkeletalMeshComponent>())
+	{
+		return std::strcmp(Name, "AnimationMode") == 0
+			|| std::strcmp(DisplayName, "Animation Mode") == 0
+			|| std::strcmp(Name, "AnimationData") == 0
+			|| std::strcmp(DisplayName, "Animation Data") == 0
+			|| std::strcmp(Name, "AnimInstanceClass") == 0
+			|| std::strcmp(DisplayName, "Anim Instance Class") == 0
+			|| std::strcmp(Name, "AnimToPlayPath") == 0
+			|| std::strcmp(Name, "LuaAnimScriptFile") == 0
+			|| std::strcmp(DisplayName, "Lua Anim Script") == 0;
+	}
+
+	return false;
 }
 
 void FSceneSaveManager::DeserializeProperties(UObject* Obj, json::JSON& PropsJSON, FSceneLoadContext& Context)
@@ -695,6 +1132,11 @@ void FSceneSaveManager::DeserializeProperties(UObject* Obj, json::JSON& PropsJSO
 
 		FSceneJsonLoadArchive Ar(PropsJSON[PropertyKey], Context);
 		Property->Serialize(Obj, Ar);
+
+		if (Context.bDeferExpensiveAssetPostEdit && ShouldDeferSceneLoadPostEdit(Obj, Property))
+		{
+			continue;
+		}
 
 		FPropertyChangedEvent Event;
 		Event.Object = Obj;

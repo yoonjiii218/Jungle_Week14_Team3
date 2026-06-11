@@ -2,6 +2,7 @@
 
 #include "Profiling/StartupProfiler.h"
 #include "Profiling/Time/Timer.h"
+#include "Profiling/Time/PlatformTime.h"
 #include "UI/RmlUiDocumentAsset.h"
 #include "UI/RmlUiDocumentManager.h"
 #include <filesystem>
@@ -18,6 +19,10 @@
 #include "Component/Camera/CameraComponent.h"
 #include "Component/Debug/GizmoComponent.h"
 #include "Component/PrimitiveComponent.h"
+#include "Component/ActorComponent.h"
+#include "Component/Primitive/SkeletalMeshComponent.h"
+#include "Component/Primitive/SkinnedMeshComponent.h"
+#include "Component/Primitive/StaticMeshComponent.h"
 #include "Render/Types/MinimalViewInfo.h"
 #include "Editor/Viewport/ViewportCameraTransform.h"
 #include "GameFramework/World.h"
@@ -271,12 +276,12 @@ void UEditorEngine::Init(FWindowsWindow* InWindow)
 	// 에디터 엔진이 완전히 이니셜라이즈된 시점에 디스크의 RML 소스를 UAsset으로 안전하게 싱크
 	auto SyncRmlToUasset = []() {
 		const std::filesystem::path ContentRoot = std::filesystem::path(FPaths::RootDir()) / L"Content";
+		UE_LOG("[AutoSync] SyncRmlToUasset started. ContentRoot: %ls", ContentRoot.wstring().c_str());
 		if (!std::filesystem::exists(ContentRoot))
 		{
+			UE_LOG("[AutoSync] ContentRoot does not exist!");
 			return;
 		}
-
-		const std::filesystem::path ProjectRoot(FPaths::RootDir());
 
 		for (const auto& Entry : std::filesystem::recursive_directory_iterator(ContentRoot))
 		{
@@ -295,11 +300,13 @@ void UEditorEngine::Init(FWindowsWindow* InWindow)
 			std::filesystem::path UassetPath = Entry.path();
 			UassetPath.replace_extension(L".uasset");
 
-
+			FString RelUassetPath = FPaths::MakeProjectRelative(FPaths::ToUtf8(UassetPath.wstring()));
+			UE_LOG("[AutoSync] Processing RML: %ls -> RelUasset: %s", Entry.path().wstring().c_str(), RelUassetPath.c_str());
 
 			std::ifstream RmlFile(Entry.path(), std::ios::binary);
 			if (!RmlFile.is_open())
 			{
+				UE_LOG("[AutoSync] Failed to open RML file: %ls", Entry.path().wstring().c_str());
 				continue;
 			}
 			std::stringstream Ss;
@@ -307,7 +314,6 @@ void UEditorEngine::Init(FWindowsWindow* InWindow)
 			std::string RmlContent = Ss.str();
 			RmlFile.close();
 
-			FString RelUassetPath = FPaths::ToUtf8(UassetPath.lexically_relative(ProjectRoot).generic_wstring());
 			URmlUiDocumentAsset* Asset = FRmlUiDocumentManager::Get().Load(RelUassetPath);
 			if (Asset)
 			{
@@ -318,9 +324,14 @@ void UEditorEngine::Init(FWindowsWindow* InWindow)
 					FRmlUiDocumentManager::Get().Reload(RelUassetPath);
 					UE_LOG("[AutoSync] Successfully updated RML to uasset: %s", RelUassetPath.c_str());
 				}
+				else
+				{
+					UE_LOG("[AutoSync] RML source matches uasset, no update needed: %s", RelUassetPath.c_str());
+				}
 			}
 			else
 			{
+				UE_LOG("[AutoSync] Loading existing uasset failed. Recreating: %s", RelUassetPath.c_str());
 				URmlUiDocumentAsset* NewAsset = UObjectManager::Get().CreateObject<URmlUiDocumentAsset>();
 				NewAsset->SetSourcePath(RelUassetPath);
 				NewAsset->SetDocumentSource(RmlContent);
@@ -342,6 +353,8 @@ void UEditorEngine::Init(FWindowsWindow* InWindow)
 
 void UEditorEngine::Shutdown()
 {
+	ResetAsyncSceneTransition(true);
+
 	// 에디터 해제 (엔진보다 먼저)
 	ViewportLayout.SaveToSettings();
 	MainPanel.SaveToSettings();
@@ -364,6 +377,32 @@ void UEditorEngine::OnWindowResized(uint32 Width, uint32 Height)
 	UEngine::OnWindowResized(Width, Height);
 	// 윈도우 리사이즈 시에는 ImGui 패널이 실제 크기를 결정하므로
 	// FViewport RT는 SSplitter 레이아웃에서 지연 리사이즈로 처리됨
+}
+
+void UEditorEngine::AddReferencedObjects(FReferenceCollector& Collector)
+{
+	UEngine::AddReferencedObjects(Collector);
+
+	if (AsyncLoadedContext.World)
+	{
+		Collector.AddReferencedObject(AsyncLoadedContext.World, "UEditorEngine.AsyncLoadedContext.World");
+	}
+
+	for (UStaticMeshComponent* Comp : DeferredStaticMeshResolveComponents)
+	{
+		if (Comp)
+		{
+			Collector.AddReferencedObject(Comp, "UEditorEngine.DeferredStaticMeshResolveComponents");
+		}
+	}
+
+	for (USkinnedMeshComponent* Comp : DeferredSkinnedMeshResolveComponents)
+	{
+		if (Comp)
+		{
+			Collector.AddReferencedObject(Comp, "UEditorEngine.DeferredSkinnedMeshResolveComponents");
+		}
+	}
 }
 
 void UEditorEngine::Tick(float DeltaTime)
@@ -412,6 +451,10 @@ void UEditorEngine::Tick(float DeltaTime)
     
 	Render(DeltaTime);
 	SelectionManager.Tick();
+
+	TickAsyncSceneTransition();
+	ProcessAsyncSceneTransitionCommit();
+	TickDeferredMeshResolves();
 }
 
 bool UEditorEngine::ProcessQueuedUnrealSceneCommandlet()
@@ -621,6 +664,8 @@ void UEditorEngine::RequestEndPlayMap()
 
 void UEditorEngine::RequestTransitionToScene(const FString& InScenePath)
 {
+	ResetAsyncSceneTransition(true);
+
 	// Queue scene travel until the next editor tick. The Lua click callback may
 	// still be on the stack, so do not tear down the PIE world immediately here.
 	if (!PlayInEditorSessionInfo.has_value() || InScenePath.empty())
@@ -1014,6 +1059,7 @@ void UEditorEngine::LoadStartLevel()
 void UEditorEngine::ClearScene()
 {
 	StopPlayInEditorImmediate();
+	ResetAsyncSceneTransition(true);
 	SelectionManager.ClearSelection();
 	SelectionManager.SetWorld(nullptr);
 
@@ -1263,4 +1309,299 @@ bool UEditorEngine::ImportUnrealSceneManifestWithDialog(bool bOptimizeStaticMesh
 		ENotificationType::Success,
 		7.0f);
 	return true;
+}
+
+bool UEditorEngine::RequestAsyncTransitionToScene(const FString& InScenePath)
+{
+	ResetAsyncSceneTransition(true);
+	if (InScenePath.empty() || !PlayInEditorSessionInfo.has_value())
+	{
+		return false;
+	}
+
+	AsyncScenePath = InScenePath;
+	AsyncResolvedScenePath = ::ResolveSceneFilePath(InScenePath);
+	AsyncTransitionPIEParams = PlayInEditorSessionInfo->OriginalRequestParams;
+
+	const EWorldType EditorType = EWorldType::Editor;
+	AsyncLoadState = FSceneSaveManager::BeginLoadSceneFromJSONAsync(
+		AsyncResolvedScenePath,
+		AsyncLoadedContext,
+		AsyncLoadedCamera,
+		&EditorType);
+	if (!AsyncLoadState)
+	{
+		UE_LOG("[EditorEngine] Async TransitionToScene begin failed: %s", AsyncResolvedScenePath.c_str());
+		bAsyncSceneTransitionFailed = true;
+		return false;
+	}
+
+	bAsyncSceneTransitionPending = true;
+	bAsyncSceneTransitionReady = false;
+	bAsyncSceneTransitionFailed = false;
+	bAsyncSceneTransitionResolvingAssets = false;
+	AsyncLoadedActorCount = 0;
+	AsyncTotalActorCount = 0;
+	UE_LOG("[EditorEngine] Async TransitionToScene begin: %s", AsyncResolvedScenePath.c_str());
+	return true;
+}
+
+float UEditorEngine::GetAsyncSceneTransitionProgress() const
+{
+	if (!bAsyncSceneTransitionPending)
+	{
+		return bAsyncSceneTransitionReady ? 1.0f : 0.0f;
+	}
+
+	if (AsyncTotalActorCount <= 0)
+	{
+		return bAsyncSceneTransitionReady ? 1.0f : 0.0f;
+	}
+
+	const float Progress = static_cast<float>(AsyncLoadedActorCount) / static_cast<float>(AsyncTotalActorCount);
+	return (std::max)(0.0f, (std::min)(Progress, 1.0f));
+}
+
+bool UEditorEngine::CommitAsyncSceneTransition()
+{
+	if (!bAsyncSceneTransitionReady || bAsyncSceneTransitionFailed || !AsyncLoadedContext.World)
+	{
+		return false;
+	}
+
+	bAsyncSceneTransitionCommitRequested = true;
+	return true;
+}
+
+void UEditorEngine::TickAsyncSceneTransition()
+{
+	if (!bAsyncSceneTransitionPending || bAsyncSceneTransitionReady || bAsyncSceneTransitionFailed || !AsyncLoadState)
+	{
+		return;
+	}
+
+	if (bAsyncSceneTransitionResolvingAssets)
+	{
+		if (HasDeferredMeshResolves())
+		{
+			return;
+		}
+
+		bAsyncSceneTransitionResolvingAssets = false;
+		bAsyncSceneTransitionReady = true;
+		AsyncLoadedActorCount = AsyncTotalActorCount;
+		UE_LOG("[EditorEngine] Async TransitionToScene ready: %s", AsyncResolvedScenePath.c_str());
+		return;
+	}
+
+	constexpr int32 AsyncSceneLoadWorkBudget = 128;
+	constexpr double AsyncSceneLoadMaxWorkMilliseconds = 2.0;
+	const FSceneSaveManager::FSceneAsyncLoadStatus Status =
+		FSceneSaveManager::TickLoadSceneFromJSONAsync(
+			*AsyncLoadState,
+			AsyncSceneLoadWorkBudget,
+			AsyncSceneLoadMaxWorkMilliseconds);
+
+	AsyncLoadedActorCount = Status.LoadedActorCount;
+	AsyncTotalActorCount = Status.TotalActorCount;
+	if (!Status.bFinished)
+	{
+		return;
+	}
+
+	if (!Status.bSucceeded || !AsyncLoadedContext.World)
+	{
+		UE_LOG("[EditorEngine] Async TransitionToScene load failed: %s", AsyncResolvedScenePath.c_str());
+		bAsyncSceneTransitionFailed = true;
+		return;
+	}
+
+	AsyncLoadedActorCount = AsyncTotalActorCount;
+	QueueDeferredMeshResolves(AsyncLoadedContext.World);
+	if (HasDeferredMeshResolves())
+	{
+		bAsyncSceneTransitionResolvingAssets = true;
+		UE_LOG("[EditorEngine] Async TransitionToScene resolving deferred assets: %s", AsyncResolvedScenePath.c_str());
+		return;
+	}
+
+	bAsyncSceneTransitionReady = true;
+	UE_LOG("[EditorEngine] Async TransitionToScene ready: %s", AsyncResolvedScenePath.c_str());
+}
+
+void UEditorEngine::ProcessAsyncSceneTransitionCommit()
+{
+	if (!bAsyncSceneTransitionCommitRequested)
+	{
+		return;
+	}
+	bAsyncSceneTransitionCommitRequested = false;
+
+	if (!bAsyncSceneTransitionReady || bAsyncSceneTransitionFailed || !AsyncLoadedContext.World)
+	{
+		return;
+	}
+
+	const FString LoadedPath = AsyncResolvedScenePath;
+
+	// Extract the loaded context and camera data first, and reset async load states,
+	// so that ClearScene() -> ResetAsyncSceneTransition(true) does not destroy our loaded world.
+	FWorldContext LoadedContext = AsyncLoadedContext;
+	AsyncLoadedContext = FWorldContext();
+	FPerspectiveCameraData LoadedCamera = AsyncLoadedCamera;
+	AsyncLoadedCamera = FPerspectiveCameraData();
+	FSceneSaveManager::FSceneAsyncLoadState* SavedLoadState = AsyncLoadState;
+	AsyncLoadState = nullptr;
+
+	bAsyncSceneTransitionPending = false;
+	bAsyncSceneTransitionReady = false;
+	bAsyncSceneTransitionFailed = false;
+	AsyncLoadedActorCount = 0;
+	AsyncTotalActorCount = 0;
+	AsyncScenePath.clear();
+	AsyncResolvedScenePath.clear();
+
+	// 1) Stop current PIE session immediately
+	StopPlayInEditorImmediate();
+
+	// 2) Clear old Editor scene
+	ClearScene();
+
+	// Clean up the load state after clearing the scene
+	FSceneSaveManager::DestroySceneAsyncLoadState(SavedLoadState);
+
+	WorldList.push_back(LoadedContext);
+	SetActiveWorld(LoadedContext.ContextHandle);
+	SelectionManager.SetWorld(LoadedContext.World);
+	LoadedContext.World->WarmupPickingData();
+	ResetViewport();
+	RestoreViewportCamera(LoadedCamera);
+
+	CurrentLevelFilePath = LoadedPath;
+
+	UE_LOG("[EditorEngine] Async TransitionToScene committed: %s", LoadedPath.c_str());
+
+	// 4) Restart the PIE session with the same parameters
+	RequestPlaySession(AsyncTransitionPIEParams);
+}
+
+void UEditorEngine::QueueDeferredMeshResolves(UWorld* World)
+{
+	DeferredStaticMeshResolveComponents.clear();
+	DeferredSkinnedMeshResolveComponents.clear();
+	if (!World)
+	{
+		return;
+	}
+
+	for (AActor* Actor : World->GetActors())
+	{
+		if (!Actor)
+		{
+			continue;
+		}
+
+		for (UActorComponent* Component : Actor->GetComponents())
+		{
+			if (UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(Component))
+			{
+				if (!StaticMeshComponent->GetStaticMeshPath().empty() && StaticMeshComponent->GetStaticMeshPath() != "None")
+				{
+					DeferredStaticMeshResolveComponents.push_back(StaticMeshComponent);
+				}
+			}
+			else if (USkinnedMeshComponent* SkinnedMeshComponent = Cast<USkinnedMeshComponent>(Component))
+			{
+				if (!SkinnedMeshComponent->GetSkeletalMeshPath().empty() && SkinnedMeshComponent->GetSkeletalMeshPath() != "None")
+				{
+					DeferredSkinnedMeshResolveComponents.push_back(SkinnedMeshComponent);
+				}
+			}
+		}
+	}
+}
+
+bool UEditorEngine::HasDeferredMeshResolves() const
+{
+	return !DeferredSkinnedMeshResolveComponents.empty() || !DeferredStaticMeshResolveComponents.empty();
+}
+
+void UEditorEngine::TickDeferredMeshResolves()
+{
+	if (!HasDeferredMeshResolves())
+	{
+		return;
+	}
+
+	constexpr int32 DeferredMeshResolveWorkBudget = 32;
+	constexpr double DeferredMeshResolveMaxWorkMilliseconds = 2.0;
+	int32 CompletedWorkItems = 0;
+	const uint64 WorkStartCycles = FPlatformTime::Cycles64();
+	while (CompletedWorkItems < DeferredMeshResolveWorkBudget && HasDeferredMeshResolves())
+	{
+		if (CompletedWorkItems > 0
+			&& FPlatformTime::ToMilliseconds(FPlatformTime::Cycles64() - WorkStartCycles) >= DeferredMeshResolveMaxWorkMilliseconds)
+		{
+			break;
+		}
+
+		if (!DeferredSkinnedMeshResolveComponents.empty())
+		{
+			USkinnedMeshComponent* Component = DeferredSkinnedMeshResolveComponents.back();
+			DeferredSkinnedMeshResolveComponents.pop_back();
+			if (Component)
+			{
+				TArray<FSoftObjectPtr> TempSlots = Component->GetMaterialSlots();
+				Component->PostEditProperty("SkeletalMeshPath");
+				Component->SetMaterialSlots(TempSlots);
+				Component->PostEditProperty("MaterialSlots");
+				if (USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(Component))
+				{
+					SkeletalMeshComponent->PostEditProperty("AnimationMode");
+					SkeletalMeshComponent->PostEditProperty("AnimInstanceClass");
+					SkeletalMeshComponent->PostEditProperty("AnimationData");
+					SkeletalMeshComponent->PostEditProperty("AnimToPlayPath");
+					SkeletalMeshComponent->PostEditProperty("LuaAnimScriptFile");
+				}
+			}
+			++CompletedWorkItems;
+			continue;
+		}
+
+		UStaticMeshComponent* Component = DeferredStaticMeshResolveComponents.back();
+		DeferredStaticMeshResolveComponents.pop_back();
+		if (Component)
+		{
+			TArray<FSoftObjectPtr> TempSlots = Component->GetMaterialSlots();
+			Component->PostEditProperty("StaticMeshPath");
+			Component->SetMaterialSlots(TempSlots);
+			Component->PostEditProperty("MaterialSlots");
+		}
+		++CompletedWorkItems;
+	}
+}
+
+void UEditorEngine::ResetAsyncSceneTransition(bool bDestroyLoadedWorld)
+{
+	if (bDestroyLoadedWorld && AsyncLoadedContext.World)
+	{
+		AsyncLoadedContext.World->RouteWorldDestroyed();
+		UObjectManager::Get().DestroyObject(AsyncLoadedContext.World);
+	}
+
+	FSceneSaveManager::DestroySceneAsyncLoadState(AsyncLoadState);
+	AsyncLoadState = nullptr;
+	AsyncLoadedContext = FWorldContext();
+	AsyncLoadedCamera = FPerspectiveCameraData();
+	bAsyncSceneTransitionPending = false;
+	bAsyncSceneTransitionReady = false;
+	bAsyncSceneTransitionFailed = false;
+	bAsyncSceneTransitionCommitRequested = false;
+	bAsyncSceneTransitionResolvingAssets = false;
+	AsyncLoadedActorCount = 0;
+	AsyncTotalActorCount = 0;
+	AsyncScenePath.clear();
+	AsyncResolvedScenePath.clear();
+	DeferredStaticMeshResolveComponents.clear();
+	DeferredSkinnedMeshResolveComponents.clear();
 }

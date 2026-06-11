@@ -28,8 +28,7 @@
         #name-03 { top: 508px; }
         #role-04 { top: 614px; }
         #name-04 { top: 642px; }
-        #thanks-a { top: 800px; }
-        #thanks-b { top: 832px; }
+
         #end-title { position: absolute; left: 0px; top: 930px; width: 800px; height: 58px; color: #ffffff; font-size: 42px; text-align: center; }
         #end-sub { position: absolute; left: 0px; top: 994px; width: 800px; height: 28px; color: #d9ff2f; font-size: 18px; text-align: center; }
         #control-panel { position: absolute; left: 816px; top: 462px; width: 360px; height: 208px; opacity: 0; }
@@ -42,11 +41,11 @@
         #btn-main-menu { top: 80px; }
         #bg-exit { top: 126px; }
         #btn-exit { top: 138px; }
-        #score-panel { position: absolute; left: 72px; top: 104px; width: 500px; height: 370px; background-color: #020b08dd; border-width: 1px; border-color: #d9ff2f; padding: 18px; display: none; opacity: 0; }
-        #score-title { font-size: 18px; color: #00eaff; margin-bottom: 8px; }
-        #score-current { font-size: 20px; color: #d9ff2f; margin-bottom: 14px; }
-        .score-line { width: 320px; height: 2px; background-color: #ff2bd6; margin-bottom: 14px; }
-        .score-rank { width: 480px; font-size: 13px; color: #ffffff; margin-bottom: 14px; white-space: nowrap; }
+        #score-panel { position: absolute; left: 72px; top: 74px; width: 500px; height: 430px; background-color: #020b08dd; border-width: 1px; border-color: #d9ff2f; padding: 18px; display: none; opacity: 0; }
+        #score-title { display: block; font-size: 18px; color: #00eaff; margin-bottom: 8px; }
+        #score-current { display: block; font-size: 20px; color: #d9ff2f; margin-bottom: 14px; }
+        .score-line { display: block; width: 320px; height: 2px; background-color: #ff2bd6; margin-bottom: 14px; }
+        .score-rank { display: block; width: 480px; font-size: 13px; color: #ffffff; margin-bottom: 8px; white-space: nowrap; }
         #skip-hint { position: absolute; left: 64px; top: 626px; width: 340px; height: 24px; color: #d3d8e3; font-size: 15px; opacity: 0.68; }
     </style>
 </head>
@@ -59,7 +58,7 @@
                 <div id="title-cyan">ENDING CREDITS</div>
                 <div id="title-pink">ENDING CREDITS</div>
                 <div id="title-main">ENDING CREDITS</div>
-                <div id="subtitle">FINAL ARCHIVE // TARGET CORE COLLAPSED</div>
+                <div id="subtitle">FINAL GAME JAM</div>
                 <div id="roll-line-a"></div>
                 <div id="roll-line-b"></div>
 
@@ -72,9 +71,8 @@
                 <div id="role-04" class="credit-role">TEAM MEMBER 04</div>
                 <div id="name-04" class="credit-name">조 상현</div>
 
-                <div id="thanks-a" class="credit-note">SPECIAL THANKS TO THE JUNGLE WEEK 14 TEAM</div>
-                <div id="thanks-b" class="credit-note">AND YOU</div>
-                <div id="end-title">THE END</div>
+
+                <div id="end-title">AND YOU</div>
                 <div id="end-sub">THANK YOU FOR PLAYING</div>
             </div>
         </div>
@@ -89,7 +87,7 @@
             <img id="bg-exit" class="button-bg" src="Images/button_exit.png" />
             <button id="btn-exit">Exit</button>
         </div>
-        <div id="score-panel" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="72 -185 500 370" data-ue-alignment="0 0.5">
+        <div id="score-panel" data-ue-anchors="0 0.5 0 0.5" data-ue-offsets="72 -215 500 430" data-ue-alignment="0 0.5">
             <div id="score-title">CLEAR SCOREBOARD</div>
             <div id="score-current">LAST CLEAR  --:--.--</div>
             <div class="score-line"></div>
@@ -98,6 +96,11 @@
             <div id="score-rank-3" class="score-rank">#3  --:--.--</div>
             <div id="score-rank-4" class="score-rank">#4  --:--.--</div>
             <div id="score-rank-5" class="score-rank">#5  --:--.--</div>
+            <div id="score-rank-6" class="score-rank">#6  --:--.--</div>
+            <div id="score-rank-7" class="score-rank">#7  --:--.--</div>
+            <div id="score-rank-8" class="score-rank">#8  --:--.--</div>
+            <div id="score-rank-9" class="score-rank">#9  --:--.--</div>
+            <div id="score-rank-10" class="score-rank">#10  --:--.--</div>
         </div>
         <div id="skip-hint" data-ue-anchors="0 1 0 1" data-ue-offsets="64 -74 340 24" data-ue-alignment="0 1">Esc pauses. Buttons unlock after the staff roll.</div>
     </div>

@@ -45,6 +45,8 @@ public:
 	bool LineTraceComponent(const FRay& Ray, FHitResult& OutHitResult) override;
 
 	const FString& GetSkeletalMeshPath() const { return SkeletalMeshPath.ToString(); }
+	const TArray<FSoftObjectPtr>& GetMaterialSlots() const { return MaterialSlots; }
+	void SetMaterialSlots(const TArray<FSoftObjectPtr>& InSlots) { MaterialSlots = InSlots; }
 
 	// Bone edit 섹션: bone getter/setter는 edit pose를 만들고 CPU skinning/cache revision까지 갱신해야 한다.
 	void EnsureBoneEditPose();

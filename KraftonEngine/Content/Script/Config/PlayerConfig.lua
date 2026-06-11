@@ -170,9 +170,9 @@ PlayerConfig.Default = {
         FlyingSlashDamage = 20,
         FlyingSlashGaugeDelta = 8,
         FlyingSlashHitStopDuration = 0.03,
-        UltimateDamage = 5,
+        UltimateDamage = 20,
         UltimateRange = 42.0,
-        UltimateHitStopDuration = 0.08,
+        UltimateHitStopDuration = 0.03,
         UltimateDuplicateHitLifetime = 1.2,
 
         -- Multi-hit policy for AttackHitWindow.
@@ -198,7 +198,7 @@ PlayerConfig.Default = {
         },
         DashChargeAttackHitCount = 1,
         DashChargeAttackHitInterval = 0.06,
-        UltimateHitCount = 20,
+        UltimateHitCount = 5,
         UltimateHitInterval = 0.03,
 
         -- Gauge/anti-duplicate policy.
@@ -237,9 +237,9 @@ PlayerConfig.Default = {
             NoWindowFlushDelay = 0.0,
 
             AttackerHitStop = {
-                Base = 0.035,
-                PerTarget = 0.006,
-                Max = 0.05,
+                Base = 0.0,
+                PerTarget = 0.0,
+                Max = 0.0,
                 MinInterval = 0.08,
             },
 
@@ -298,7 +298,7 @@ PlayerConfig.Default = {
 
         PerfectDodge = {
             CameraShakeScale = 0.5,
-            PostProcessIntensity = 1.0,
+            PostProcessIntensity = 0.45,
             FocusHighlightStrength = 1.25,
             Sound = {
                 Enabled = true,
@@ -351,9 +351,9 @@ PlayerConfig.Default = {
             Enabled = true,
             FinalHitOnly = true,
             CameraShake = {
-                Base = 0.44,
+                Base = 0.0,
                 PerTarget = 0.08,
-                Max = 0.72,
+                Max = 0.0,
             },
             VFX = {
                 ParticlePath = "None",

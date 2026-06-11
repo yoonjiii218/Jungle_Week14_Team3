@@ -321,6 +321,22 @@ void RegisterGameLuaBindings(sol::state& Lua)
 			GEngine->RequestTransitionToScene(SceneName);
 		}
 	});
+	GameFlow.set_function("BeginAsyncOpenScene", [](const FString& SceneName) -> bool
+	{
+		return GEngine ? GEngine->RequestAsyncTransitionToScene(SceneName) : false;
+	});
+	GameFlow.set_function("IsAsyncOpenSceneReady", []() -> bool
+	{
+		return GEngine ? GEngine->IsAsyncSceneTransitionReady() : true;
+	});
+	GameFlow.set_function("GetAsyncOpenSceneProgress", []() -> float
+	{
+		return GEngine ? GEngine->GetAsyncSceneTransitionProgress() : 1.0f;
+	});
+	GameFlow.set_function("CommitAsyncOpenScene", []() -> bool
+	{
+		return GEngine ? GEngine->CommitAsyncSceneTransition() : false;
+	});
 
 	// Tutorial spawns are runtime-created ALuaCharacter actors configured from
 	// MobTest.Scene / BossTest.Scene actor settings. The helper initializes

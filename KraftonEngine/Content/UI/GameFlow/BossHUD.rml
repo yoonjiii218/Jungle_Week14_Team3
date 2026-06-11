@@ -39,9 +39,9 @@
 
         #combo-plate { left: 24px; top: 284px; width: 250px; height: 118px; }
         #combo-shell { left: 26px; top: 286px; width: 238px; height: 106px; }
-        #combo-cyan { left: 18px; top: 12px; width: 150px; height: 34px; font-size: 28px; color: #00eaff; }
-        #combo-pink { left: 24px; top: 12px; width: 150px; height: 34px; font-size: 28px; color: #ff2bd6; }
-        #combo-text { left: 21px; top: 12px; width: 150px; height: 34px; font-size: 28px; color: #ffffff; }
+        #combo-cyan { left: 18px; top: 12px; width: 200px; height: 34px; font-size: 28px; color: #00eaff; white-space: nowrap; }
+        #combo-pink { left: 24px; top: 12px; width: 200px; height: 34px; font-size: 28px; color: #ff2bd6; white-space: nowrap; }
+        #combo-text { left: 21px; top: 12px; width: 200px; height: 34px; font-size: 28px; color: #ffffff; white-space: nowrap; }
         #combo-readout { left: 170px; top: 24px; width: 48px; height: 14px; font-size: 12px; color: #d7ff33; text-align: right; }
         #combo-bar { left: 18px; top: 62px; width: 188px; height: 10px; }
         #combo-impact-flash { position: absolute; left: 18px; top: 56px; width: 188px; height: 22px; background-color: #ffffff; opacity: 0; display: none; }

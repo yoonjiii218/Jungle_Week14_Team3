@@ -56,6 +56,8 @@ public:
 	void PostEditProperty(const char* PropertyName) override;
 
 	const FString& GetStaticMeshPath() const { return StaticMeshPath.ToString(); }
+	const TArray<FSoftObjectPtr>& GetMaterialSlots() const { return MaterialSlots; }
+	void SetMaterialSlots(const TArray<FSoftObjectPtr>& InSlots) { MaterialSlots = InSlots; }
 
     void AddReferencedObjects(FReferenceCollector& Collector) override;
 
