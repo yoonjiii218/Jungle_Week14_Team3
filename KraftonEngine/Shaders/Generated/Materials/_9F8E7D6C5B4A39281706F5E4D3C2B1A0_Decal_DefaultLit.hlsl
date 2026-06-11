@@ -42,12 +42,12 @@ FMaterialResult EvaluateMaterial(FMaterialPixelInput Input)
     float2 n_12 = Input.UV0;
     float4 n_3 = Tex_Diffuse.Sample(LinearWrapSampler, n_12);
     FMaterialResult Result;
-    Result.BaseColor = (n_3).xyz;
+    Result.BaseColor = (n_3).rgb;
     Result.Normal = float3(0, 0, 1);
     Result.Roughness = 0.5f;
     Result.Metallic = 0.0f;
     Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = (n_3).x;
+    Result.Opacity = (n_3).a;
     return Result;
 }
 
@@ -80,7 +80,7 @@ float4 PS(MaterialDecalVSOutput input) : SV_TARGET
     clip(0.5f - abs(decalPos.z));
 
     FMaterialPixelInput MaterialInput;
-    MaterialInput.UV0           = decalPos.xy + 0.5f;
+    MaterialInput.UV0           = float2(decalPos.y + 0.5f, 0.5f - decalPos.z);
     MaterialInput.UV1           = float2(0, 0);
     MaterialInput.UV2           = float2(0, 0);
     MaterialInput.ParticleColor = float4(1, 1, 1, 1);

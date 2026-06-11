@@ -274,6 +274,7 @@ void FParticleEmitterInstance::InitParameters(
 	LightDataOffset = SpriteTemplate->LightDataOffset;
 	OrbitModuleOffset = SpriteTemplate->OrbitModuleOffset;
 	CameraPayloadOffset = SpriteTemplate->CameraPayloadOffset;
+	SubUVDataOffset = SpriteTemplate->SubUVDataOffset;
 
 	ParticleSize = SpriteTemplate->ParticleSize;
 	InstancePayloadSize = SpriteTemplate->ReqInstanceBytes;
