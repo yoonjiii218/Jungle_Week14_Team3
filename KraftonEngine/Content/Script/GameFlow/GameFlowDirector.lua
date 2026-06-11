@@ -73,6 +73,7 @@ START_MENU_BOOT_ELEMENT_IDS = {
 local startMenuBootTime = START_MENU_BOOT_DURATION + 1.0
 local filmCountdownTime = FILM_COUNTDOWN_DURATION + 1.0
 local filmCountdownStartRealtime = nil
+isRetryTransition = false
 local clearToCreditsTime = 0.0
 local creditsRollTime = CREDITS_ROLL_DURATION + 1.0
 local bossHudWasVisible = false
@@ -1305,6 +1306,7 @@ local function completeFilmCountdown()
 
     isCutsceneWaitingToCommit = false
     filmCountdownTime = FILM_COUNTDOWN_DURATION + 1.0
+    isRetryTransition = false
 
     if pendingTransitionSceneName ~= nil then
         local action = pendingTransitionAction
@@ -1901,13 +1903,23 @@ local function triggerTransitionWithCountdown(sceneName, action)
     addToViewport(countdown, 400)
     widgets.Countdown = countdown
     currentScreen = "Countdown"
-    filmCountdownTime = 0.0
-    filmCountdownStartRealtime = getRealtimeSeconds()
     pendingTransitionAction = action
     pendingTransitionSceneName = sceneName
     pendingTransitionAsyncStarted = false
     pendingTransitionBeginFrameDelay = 30
-    playUiAudio(UI_AUDIO.FilmCountdown)
+    if isRetryTransition then
+        filmCountdownTime = FILM_COUNTDOWN_DURATION
+        filmCountdownStartRealtime = nil
+        setCountdownProperty(countdown, "countdown-root", "display", "none")
+        setCountdownProperty(countdown, "cutscene-root", "display", "block")
+        setCountdownProperty(countdown, "cutscene-root", "opacity", scalar(1.0))
+        setText(countdown, "skip-hint", "LOADING SCENE...")
+        setCountdownProperty(countdown, "skip-hint", "opacity", scalar(1.0))
+    else
+        filmCountdownTime = 0.0
+        filmCountdownStartRealtime = getRealtimeSeconds()
+        playUiAudio(UI_AUDIO.FilmCountdown)
+    end
     updateFilmCountdown(0.0)
 end
 
@@ -2137,6 +2149,7 @@ local function showPauseMenu()
             hidePauseMenu()
         end)
         pause:bind_click("btn-restart", function()
+            isRetryTransition = true
             triggerTransitionWithCountdown(getRetryCombatSceneName(d), function()
                 d:RestartCombatScene()
             end)
@@ -2172,6 +2185,7 @@ local function showGameOver()
     if screen ~= nil then
         bindButtonAudio(screen, { "btn-retry", "btn-main-menu", "btn-exit" })
         screen:bind_click("btn-retry", function()
+            isRetryTransition = true
             triggerTransitionWithCountdown(getRetryCombatSceneName(d), function()
                 d:RestartCombatScene()
             end)
