@@ -11,8 +11,10 @@
 #include "GameFramework/GameMode/GameStateBase.h"
 #include "Animation/AnimationMode.h"
 #include "Component/Input/ActionComponent.h"
+#include "Component/Movement/CharacterMovementComponent.h"
 #include "Component/Primitive/SkeletalMeshComponent.h"
 #include "Component/Shape/CapsuleComponent.h"
+#include "Core/Types/CollisionTypes.h"
 #include "GameFramework/Pawn/LuaCharacter.h"
 #include "Materials/MaterialManager.h"
 #include "Mesh/MeshManager.h"
@@ -67,6 +69,21 @@ namespace
 			return nullptr;
 		}
 
+		FVector SpawnLocation = Location;
+		FHitResult GroundHit;
+		const FVector GroundProbeStart = Location + FVector(0.0f, 0.0f, 50.0f);
+		const bool bGroundHit = World->PhysicsRaycastByObjectTypes(
+			GroundProbeStart,
+			FVector(0.0f, 0.0f, -1.0f),
+			250.0f,
+			GroundHit,
+			ObjectTypeBit(ECollisionChannel::WorldStatic),
+			nullptr);
+		if (bGroundHit)
+		{
+			SpawnLocation.Z = GroundHit.WorldHitLocation.Z + Spec.CapsuleHalfHeight;
+		}
+
 		UObject* Created = FObjectFactory::Get().Create("ALuaCharacter", World);
 		ALuaCharacter* Actor = Cast<ALuaCharacter>(Created);
 		if (!Actor)
@@ -75,7 +92,7 @@ namespace
 		}
 
 		Actor->InitDefaultComponents(Spec.MeshPath, Spec.ScriptFile);
-		Actor->SetActorLocation(Location);
+		Actor->SetActorLocation(SpawnLocation);
 		Actor->SetActorRotation(FRotator(0.0f, YawDegrees, 0.0f));
 		Actor->SetActorScale(FVector(1.0f, 1.0f, 1.0f));
 		Actor->bAutoInputMouseLook = false;
@@ -106,6 +123,12 @@ namespace
 		if (!Actor->GetComponentByClass<UActionComponent>())
 		{
 			Actor->AddComponent<UActionComponent>();
+		}
+
+		if (UCharacterMovementComponent* Movement = Actor->GetCharacterMovement())
+		{
+			// BeginPlay must resolve the floor before a long first frame applies gravity.
+			Movement->bWaitForInitialFloor = bGroundHit;
 		}
 
 		for (const FString& Tag : Spec.Tags)
