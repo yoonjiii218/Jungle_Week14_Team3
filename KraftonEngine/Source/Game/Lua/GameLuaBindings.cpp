@@ -90,6 +90,11 @@ namespace
 				ECollisionChannel::Camera,
 				ECollisionResponse::Ignore
 			);
+
+			Capsule->SetCollisionResponseToChannel(
+				ECollisionChannel::CameraFade,
+				ECollisionResponse::Ignore
+			);
 		}
 
 		if (USkeletalMeshComponent* Mesh = Actor->GetMesh())

@@ -23,9 +23,11 @@ enum class ECollisionChannel : uint8
 	Trigger = 4,
 	// UE 의 ECC_Camera 대응. SpringArm probe / camera visibility query 용도.
 	Camera = 5,
+	// 카메라 occluder fade 전용 채널. SpringArm collision 과 분리해서 설정할 때 사용.
+	CameraFade = 6,
 	// 필요 시 확장 (ActiveCount, MAX 갱신)
 
-	ActiveCount = 6, // 에디터/드롭다운에 노출되는 실질 채널 수
+	ActiveCount = 7, // 에디터/드롭다운에 노출되는 실질 채널 수
 	MAX = 16         // 응답 테이블 최대 슬롯 수
 };
 
@@ -144,6 +146,7 @@ struct FCollisionResponseContainer
 	UPROPERTY(Edit, Save, Category="Collision", DisplayName="Projectile", Member=Responses[3], Enum=ECollisionResponse);
 	UPROPERTY(Edit, Save, Category="Collision", DisplayName="Trigger", Member=Responses[4], Enum=ECollisionResponse);
 	UPROPERTY(Edit, Save, Category="Collision", DisplayName="Camera", Member=Responses[5], Enum=ECollisionResponse);
+	UPROPERTY(Edit, Save, Category="Collision", DisplayName="Camera Fade", Member=Responses[6], Enum=ECollisionResponse);
 
 	ECollisionResponse Responses[static_cast<int32>(ECollisionChannel::MAX)];
 
