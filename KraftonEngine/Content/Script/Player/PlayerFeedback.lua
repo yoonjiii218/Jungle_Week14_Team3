@@ -570,46 +570,66 @@ end
 local function PlayAttackImpactFeedback(playerContext, event)
     local feedbackConfig = playerContext.Config.Feedback or {}
     local impactConfig, pulseConfigKey = ResolveAttackImpactFeedbackConfig(feedbackConfig, event)
-    if impactConfig.Enabled == false or ShouldSuppressAttackImpactFeedback(event, impactConfig) == true then
+    if impactConfig.Enabled == false then
         return
     end
 
+    -- UltimateAttackImpact.FinalHitOnly == true 인 경우,
+    -- 중간타에서는 카메라 흔들림 / VFX / FOV / Vignette 같은 무거운 피드백만 막고,
+    -- Sound는 계속 재생되게 분리한다.
+    local suppressHeavyFeedback = ShouldSuppressAttackImpactFeedback(event, impactConfig) == true
     local countForScale = event.CountForScale or event.TargetCount or 1
 
-    local shakeConfig = impactConfig.CameraShake or {}
-    local shakeScale = event.CameraShakeScale
-        or ScaleByImpactCount(shakeConfig.Base or 0.0, shakeConfig.PerTarget or 0.0, shakeConfig.Max, countForScale)
-    if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil and shakeScale > 0.0 then
-        CameraManager.StartWaveShake(shakeScale)
+    if suppressHeavyFeedback ~= true then
+        local shakeConfig = impactConfig.CameraShake or {}
+        local shakeScale = event.CameraShakeScale
+            or ScaleByImpactCount(
+                shakeConfig.Base or 0.0,
+                shakeConfig.PerTarget or 0.0,
+                shakeConfig.Max,
+                countForScale)
+
+        if CameraManager ~= nil and CameraManager.StartWaveShake ~= nil and shakeScale > 0.0 then
+            CameraManager.StartWaveShake(shakeScale)
+        end
+
+        local vfxConfig = impactConfig.VFX or {}
+        local particlePath = vfxConfig.ParticlePath
+        local center = event.CenterLocation
+        if center ~= nil and particlePath ~= nil and particlePath ~= "" and particlePath ~= "None" then
+            local zOffset = vfxConfig.ZOffset or 0.0
+            local scaleValue = event.VfxScale
+                or ScaleByImpactCount(
+                    vfxConfig.BaseScale or 1.0,
+                    vfxConfig.PerTargetScale or 0.0,
+                    vfxConfig.MaxScale,
+                    countForScale)
+
+            SpawnParticleSystem(
+                particlePath,
+                Vector(center.X, center.Y, center.Z + zOffset),
+                vfxConfig.Rotation or Vector(0.0, 0.0, 0.0),
+                Vector(scaleValue, scaleValue, scaleValue),
+                vfxConfig.Life or 0.45,
+                vfxConfig.MaterialPath or "None")
+        end
     end
 
-    local vfxConfig = impactConfig.VFX or {}
-    local particlePath = vfxConfig.ParticlePath
-    local center = event.CenterLocation
-    if center ~= nil and particlePath ~= nil and particlePath ~= "" and particlePath ~= "None" then
-        local zOffset = vfxConfig.ZOffset or 0.0
-        local scaleValue = event.VfxScale
-            or ScaleByImpactCount(vfxConfig.BaseScale or 1.0, vfxConfig.PerTargetScale or 0.0, vfxConfig.MaxScale, countForScale)
-        SpawnParticleSystem(
-            particlePath,
-            Vector(center.X, center.Y, center.Z + zOffset),
-            vfxConfig.Rotation or Vector(0.0, 0.0, 0.0),
-            Vector(scaleValue, scaleValue, scaleValue),
-            vfxConfig.Life or 0.45,
-            vfxConfig.MaterialPath or "None")
-    end
-
+    -- Sound는 suppressHeavyFeedback 밖에서 처리한다.
+    -- 그래서 UltimateHitCount 반복 중간타에서도 소리는 계속 난다.
     local soundConfig = impactConfig.Sound
     if soundConfig ~= nil and soundConfig.Enabled ~= false then
         local volume = event.SoundVolume
-            or ScaleByImpactCount(soundConfig.BaseVolume or soundConfig.Volume or 1.0,
+            or ScaleByImpactCount(
+                soundConfig.BaseVolume or soundConfig.Volume or 1.0,
                 soundConfig.PerTargetVolume or 0.0,
                 soundConfig.MaxVolume,
                 countForScale)
         volume = ClampOptional(volume, soundConfig.MinVolume, soundConfig.MaxVolume)
 
         local pitch = event.SoundPitch
-            or ScaleByImpactCount(soundConfig.BasePitch or soundConfig.Pitch or 1.0,
+            or ScaleByImpactCount(
+                soundConfig.BasePitch or soundConfig.Pitch or 1.0,
                 soundConfig.PerTargetPitch or 0.0,
                 soundConfig.MaxPitch,
                 countForScale)
@@ -619,20 +639,26 @@ local function PlayAttackImpactFeedback(playerContext, event)
         for key, value in pairs(soundConfig) do
             resolvedSound[key] = value
         end
+
         resolvedSound.Volume = volume
         resolvedSound.Pitch = pitch
+
         PlayConfiguredSound(playerContext, resolvedSound)
     end
 
-    local pulsePrefix = "Player." .. tostring(pulseConfigKey)
-    StartFOVPulse(playerContext, pulsePrefix .. "FOV",
-        GetFOVConfig(playerContext, pulseConfigKey)
-            or GetFOVConfig(playerContext, "AttackImpact")
-            or GetFOVConfig(playerContext, "AttackHit"))
-    StartVignettePulse(playerContext, pulsePrefix .. "Vignette",
-        GetVignetteConfig(playerContext, pulseConfigKey)
-            or GetVignetteConfig(playerContext, "AttackImpact")
-            or GetVignetteConfig(playerContext, "AttackHit"))
+    if suppressHeavyFeedback ~= true then
+        local pulsePrefix = "Player." .. tostring(pulseConfigKey)
+
+        StartFOVPulse(playerContext, pulsePrefix .. "FOV",
+            GetFOVConfig(playerContext, pulseConfigKey)
+                or GetFOVConfig(playerContext, "AttackImpact")
+                or GetFOVConfig(playerContext, "AttackHit"))
+
+        StartVignettePulse(playerContext, pulsePrefix .. "Vignette",
+            GetVignetteConfig(playerContext, pulseConfigKey)
+                or GetVignetteConfig(playerContext, "AttackImpact")
+                or GetVignetteConfig(playerContext, "AttackHit"))
+    end
 end
 
 local function PlayDashStartedFeedback(playerContext, event)
