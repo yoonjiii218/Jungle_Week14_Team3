@@ -1,6 +1,6 @@
-// Generated from Content/Material/VFX/M_Mesh_Particle_Refraction.mat
+// Generated from Content/Material/VFX/M_Blossom.mat
 // Domain: ParticleSprite
-// ShadingModel: UnLit
+// ShadingModel: DefaultLit
 
 #include "Common/ConstantBuffers.hlsli"
 #include "Common/VertexLayouts.hlsli"
@@ -38,6 +38,8 @@ struct FMaterialResult
     float2 UVOffset;
 };
 
+Texture2D Tex_Diffuse : register(t0);
+
 struct FMaterialEvalResult
 {
     FMaterialResult Material;
@@ -48,11 +50,15 @@ struct FMaterialEvalResult
 
 FMaterialEvalResult EvaluateMaterialWithRefraction(FMaterialPixelInput Input)
 {
-    float4 n_1 = Input.ParticleColor;
+    float2 n_54 = ((float2(fmod(floor(saturate(Input.SubImageIndex) * (12 - 0.0001f)), 4), floor(floor(saturate(Input.SubImageIndex) * (12 - 0.0001f)) / 4)) + Input.UV0) * float2(1.0f/4, 1.0f/3));
+    float4 n_3 = Tex_Diffuse.Sample(LinearWrapSampler, n_54);
+    float4 n_12 = Input.ParticleColor;
+    float3 n_19 = ((n_3).rgb * (n_12).rgb);
+    float n_23 = ((n_3).a * (n_12).a);
     FMaterialResult Result;
-    Result.Color = (n_1).rgb;
+    Result.Color = n_19;
     Result.Emissive = float3(0, 0, 0);
-    Result.Opacity = (n_1).a;
+    Result.Opacity = n_23;
     Result.UVOffset = float2(0, 0);
     FMaterialEvalResult Eval;
     Eval.Material = Result;

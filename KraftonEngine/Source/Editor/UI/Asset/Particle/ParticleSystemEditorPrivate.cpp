@@ -176,6 +176,8 @@
         if (Cast<UParticleModuleColorOverLife>(Module)) return "Color Over Life";
         if (Cast<UParticleModuleEventGenerator>(Module)) return "Event Generator";
         if (Cast<UParticleModuleCollision>(Module)) return "Collision";
+        if (Cast<UParticleModuleWindSway>(Module)) return "Wind Sway";
+        if (Cast<UParticleModuleSubUVRandom>(Module)) return "SubUV Random";
         if (Cast<UParticleModuleColor>(Module)) return "Color";
         if (Cast<UParticleModuleMeshMaterial>(Module)) return "Mesh Material";
         if (Cast<UParticleModuleMeshRotation>(Module)) return "Rotation";
@@ -209,6 +211,8 @@
         if (Cast<UParticleModuleColorOverLife>(Module))    return IM_COL32( 70, 130, 180, 110); // blue
         if (Cast<UParticleModuleColor>(Module))            return IM_COL32( 80, 130, 170, 100); // blue
         if (Cast<UParticleModuleCollision>(Module))        return IM_COL32(170,  90,  50, 100); // brown
+        if (Cast<UParticleModuleWindSway>(Module))         return IM_COL32( 72, 150, 120, 110); // wind green
+        if (Cast<UParticleModuleSubUVRandom>(Module))      return IM_COL32(155,  95, 170, 110); // subuv purple
         if (Cast<UParticleModuleEventGenerator>(Module))   return IM_COL32(160,  95, 130, 100); // pink
         if (Cast<UParticleModuleMeshMaterial>(Module))     return IM_COL32( 60,  80, 130, 110);
         if (Cast<UParticleModuleMeshRotation>(Module))     return IM_COL32( 60, 100, 150, 110);
@@ -751,6 +755,13 @@ void CollectParticleCurveProperties(UParticleModule* Module, TArray<FParticleCur
     else if (UParticleModuleMeshRotationRate* MeshRotationRate = Cast<UParticleModuleMeshRotationRate>(Module))
     {
         AddVectorProperty("Start Rotation Rate", MeshRotationRate->StartRotationRate, Module, EParticleCurveDomain::EmitterTime, EParticleCurvePropertyKind::VectorXYZ, OutProperties);
+    }
+    else if (UParticleModuleWindSway* WindSway = Cast<UParticleModuleWindSway>(Module))
+    {
+        AddFloatProperty("Amplitude", WindSway->Amplitude, Module, EParticleCurveDomain::EmitterTime, OutProperties);
+        AddFloatProperty("Frequency", WindSway->Frequency, Module, EParticleCurveDomain::EmitterTime, OutProperties);
+        AddFloatProperty("Gust Strength", WindSway->GustStrength, Module, EParticleCurveDomain::EmitterTime, OutProperties);
+        AddFloatProperty("Gust Frequency", WindSway->GustFrequency, Module, EParticleCurveDomain::EmitterTime, OutProperties);
     }
     else if (UParticleModuleTrailSource* TrailSource = Cast<UParticleModuleTrailSource>(Module))
     {

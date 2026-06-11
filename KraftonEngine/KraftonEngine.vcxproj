@@ -628,6 +628,7 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
     <ClCompile Include="Source\Engine\Particles\Color\ParticleModuleColor.cpp" />
     <ClCompile Include="Source\Engine\Particles\Color\ParticleModuleColorOverLife.cpp" />
     <ClCompile Include="Source\Engine\Particles\Event\ParticleModuleEventGenerator.cpp" />
+    <ClCompile Include="Source\Engine\Particles\Force\ParticleModuleWindSway.cpp" />
     <ClCompile Include="Source\Engine\Particles\Lifetime\ParticleModuleLifetime.cpp" />
     <ClCompile Include="Source\Engine\Particles\Location\ParticleModuleLocation.cpp" />
     <ClCompile Include="Source\Engine\Particles\Material\ParticleModuleMeshMaterial.cpp" />
@@ -636,6 +637,7 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
     <ClCompile Include="Source\Engine\Particles\Size\ParticleModuleSize.cpp" />
     <ClCompile Include="Source\Engine\Particles\Spawn\ParticleModuleSpawn.cpp" />
     <ClCompile Include="Source\Engine\Particles\Spawn\ParticleModuleSpawnPerUnit.cpp" />
+    <ClCompile Include="Source\Engine\Particles\SubUV\ParticleModuleSubUVRandom.cpp" />
     <ClCompile Include="Source\Engine\Particles\Trail\ParticleModuleTrailSource.cpp" />
     <ClCompile Include="Source\Engine\Particles\TypeData\ParticleModuleTypeDataBase.cpp" />
     <ClCompile Include="Source\Engine\Particles\TypeData\ParticleModuleTypeDataBeam2.cpp" />
@@ -1102,6 +1104,7 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
     <ClInclude Include="Source\Engine\Particles\Color\ParticleModuleColorOverLife.h" />
     <ClInclude Include="Source\Engine\Particles\Event\ParticleModuleEventBase.h" />
     <ClInclude Include="Source\Engine\Particles\Event\ParticleModuleEventGenerator.h" />
+    <ClInclude Include="Source\Engine\Particles\Force\ParticleModuleWindSway.h" />
     <ClInclude Include="Source\Engine\Particles\Lifetime\ParticleModuleLifetime.h" />
     <ClInclude Include="Source\Engine\Particles\Lifetime\ParticleModuleLifetimeBase.h" />
     <ClInclude Include="Source\Engine\Particles\Location\ParticleModuleLocation.h" />
@@ -1114,6 +1117,7 @@ xcopy /Y "$(ProjectDir)ThirdParty\NvCloth\bin\DxSolverKernel.cso" "$(OutDir)"</C
     <ClInclude Include="Source\Engine\Particles\Spawn\ParticleModuleSpawn.h" />
     <ClInclude Include="Source\Engine\Particles\Spawn\ParticleModuleSpawnBase.h" />
     <ClInclude Include="Source\Engine\Particles\Spawn\ParticleModuleSpawnPerUnit.h" />
+    <ClInclude Include="Source\Engine\Particles\SubUV\ParticleModuleSubUVRandom.h" />
     <ClInclude Include="Source\Engine\Particles\Trail\ParticleModuleTrailBase.h" />
     <ClInclude Include="Source\Engine\Particles\Trail\ParticleModuleTrailSource.h" />
     <ClInclude Include="Source\Engine\Particles\TypeData\ParticleModuleTypeDataBase.h" />

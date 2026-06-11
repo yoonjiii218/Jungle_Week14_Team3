@@ -101,6 +101,7 @@ public:
 	int32 LightDataOffset = 0;
 	int32 CameraPayloadOffset = 0;
 	int32 OrbitModuleOffset = 0;
+	int32 SubUVDataOffset = 0;
 
 	UPROPERTY(Edit, Save, Category="Particle", DisplayName="Use Legacy Spawning Behavior")
 	bool bUseLegacySpawningBehavior = false;
