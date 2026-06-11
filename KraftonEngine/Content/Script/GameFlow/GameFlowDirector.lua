@@ -1908,6 +1908,9 @@ local function triggerTransitionWithCountdown(sceneName, action)
     pendingTransitionAsyncStarted = false
     pendingTransitionBeginFrameDelay = 30
     if isRetryTransition then
+        if Engine ~= nil and Engine.WriteTextFile ~= nil then
+            Engine.WriteTextFile("GameFlowRetryFlag.txt", "1")
+        end
         filmCountdownTime = FILM_COUNTDOWN_DURATION
         filmCountdownStartRealtime = nil
         setCountdownProperty(countdown, "countdown-root", "display", "none")
@@ -2508,8 +2511,20 @@ function BeginPlay()
         wavesFinishedHandle = GameplayEventBus.Subscribe("WavesFinished", obj, handleWavesFinished)
     end
 
+    local isRetry = false
+    if Engine ~= nil and Engine.ReadTextFile ~= nil and Engine.WriteTextFile ~= nil then
+        local flag = Engine.ReadTextFile("GameFlowRetryFlag.txt")
+        if flag == "1" then
+            isRetry = true
+            Engine.WriteTextFile("GameFlowRetryFlag.txt", "0")
+            print("[GameFlow-Debug] Startup: Detected retry flag. Skipping countdown.")
+        end
+    end
+
     local startup = d:GetStartupScreen()
-    if startup == "StartMenu" then
+    if isRetry then
+        startHudFlow()
+    elseif startup == "StartMenu" then
         showStartMenu()
     elseif startup == "HUD" then
         startHudFlow()
