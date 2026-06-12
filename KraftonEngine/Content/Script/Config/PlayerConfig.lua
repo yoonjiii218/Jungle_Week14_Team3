@@ -705,8 +705,12 @@ PlayerConfig.Default = {
             CameraOcclusionCandidateCount = 6,
             CameraOcclusionFocusHeightOffset = 1.2,
             CameraOcclusionDebug = false,
-            -- 후보군으로 카메라 위치 자체를 해결하므로 궁극기 기본값은 fade 비활성화.
-            CameraRayFadeEnabled = false,
+            -- 궁극기 카메라와 플레이어 사이의 CameraFade Block 오브젝트를 반투명 처리한다.
+            CameraRayFadeEnabled = true,
+            CameraRayFadeOpacity = 0.1,
+            CameraRayFadeMaxHits = 8,
+            CameraRayFadeFocusHeightOffset = 1.2,
+            CameraRayFadeDebug = false,
             SlashCameraDistance = 30.0,
             SlashCameraRightOffset = 15,
             SlashCameraHeightOffset = -5.0,

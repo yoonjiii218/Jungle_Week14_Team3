@@ -999,7 +999,7 @@ local function UpdateUltimateCameraRayFade(cameraLocation, cameraConfig, focusLo
         targetLocation = focusLocation + up * focusOffset
     end
 
-    local opacity = 0.35
+    local opacity = 0.1
     local maxHits = 8
     local debug = false
     if cameraConfig ~= nil then
