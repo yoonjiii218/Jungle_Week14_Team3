@@ -587,7 +587,10 @@ void FDrawCommandBuilder::BuildMeshCommands(FScene& Scene, const FPrimitiveScene
 		BuildCommandForProxy(Scene, *Proxy, ERenderPass::PreDepth);
 		BuildCommandForProxy(Scene, *Proxy, ERenderPass::Opaque);
 	}
-	if (bHasTranslucent)
+	// Camera ray fade reroutes opaque sections to AlphaBlend inside
+	// BuildCommandForProxy, so faded opaque-only proxies also need an
+	// AlphaBlend submission here.
+	if (bHasTranslucent || Proxy->IsCameraRayFaded())
 		BuildCommandForProxy(Scene, *Proxy, ERenderPass::AlphaBlend);
 }
 

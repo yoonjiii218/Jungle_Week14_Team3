@@ -20,6 +20,9 @@ void USpringArmComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	bHasPreviousState = false;
+	bHasCameraRayFadeQuery = false;
+	CameraRayFadeTimeSinceQuery = 0.0f;
+	CameraRayFadeQueryCount = 0;
 
 	if (ArmPivotRotation.IsNearlyZero())
 	{
@@ -30,9 +33,12 @@ void USpringArmComponent::BeginPlay()
 void USpringArmComponent::ClearCameraRayFade()
 {
 	FCameraRayFadeSystem::Clear(CameraRayFadeState);
+	bHasCameraRayFadeQuery = false;
+	CameraRayFadeTimeSinceQuery = 0.0f;
+	CameraRayFadeQueryCount = 0;
 }
 
-void USpringArmComponent::UpdateCameraRayFade(const FVector& CameraWorld, const FVector& TargetWorld)
+void USpringArmComponent::UpdateCameraRayFade(float DeltaTime, const FVector& CameraWorld, const FVector& TargetWorld)
 {
 	if (!bEnableCameraRayFade)
 	{
@@ -48,12 +54,58 @@ void USpringArmComponent::UpdateCameraRayFade(const FVector& CameraWorld, const 
 		return;
 	}
 
+	CameraRayFadeTimeSinceQuery += std::max<float>(DeltaTime, 0.0f);
+	const float UpdateRate = std::max<float>(CameraRayFadeUpdateRate, 1.0f);
+	const float ActiveInterval = 1.0f / UpdateRate;
+	const float IdleInterval = std::max<float>(CameraRayFadeIdleRefreshInterval, ActiveInterval);
+	const float MovementThreshold = std::max<float>(CameraRayFadeMovementThreshold, 0.0f);
+	const float MovementThresholdSq = MovementThreshold * MovementThreshold;
+	const float CameraMoveSq = bHasCameraRayFadeQuery
+		? FVector::DistSquared(CameraWorld, LastCameraRayFadeCameraWorld)
+		: 0.0f;
+	const float TargetMoveSq = bHasCameraRayFadeQuery
+		? FVector::DistSquared(TargetWorld, LastCameraRayFadeTargetWorld)
+		: 0.0f;
+	const bool bMovedEnough = MovementThreshold <= 0.0f
+		|| CameraMoveSq >= MovementThresholdSq
+		|| TargetMoveSq >= MovementThresholdSq;
+	const bool bFirstQuery = !bHasCameraRayFadeQuery;
+	const bool bActiveRefresh = bMovedEnough && CameraRayFadeTimeSinceQuery + 1e-6f >= ActiveInterval;
+	const bool bIdleRefresh = CameraRayFadeTimeSinceQuery + 1e-6f >= IdleInterval;
+	if (!bFirstQuery && !bActiveRefresh && !bIdleRefresh)
+	{
+		return;
+	}
+
+	++CameraRayFadeQueryCount;
+	const char* QueryReason = bFirstQuery ? "first" : (bActiveRefresh ? "movement" : "idle");
+	const bool bLogQuerySummary = bCameraRayFadeDebug
+		&& (bFirstQuery || bIdleRefresh || CameraRayFadeQueryCount % 30 == 0);
+	if (bLogQuerySummary)
+	{
+		UE_LOG("[CameraRayFade][Schedule] query=%u reason=%s elapsed=%.3f cameraMove=%.3f targetMove=%.3f rate=%.1fHz",
+			CameraRayFadeQueryCount,
+			QueryReason,
+			CameraRayFadeTimeSinceQuery,
+			std::sqrt(CameraMoveSq),
+			std::sqrt(TargetMoveSq),
+			UpdateRate);
+	}
+
 	FCameraRayFadeParams Params;
 	Params.Channel = CameraRayFadeChannel;
 	Params.Opacity = CameraRayFadeOpacity;
+	Params.RayHalfWidth = CameraRayFadeHalfWidth;
 	Params.MaxHits = CameraRayFadeMaxHits;
 	Params.bDebug = bCameraRayFadeDebug;
+	Params.bLogQuerySummary = bLogQuerySummary;
+	Params.QueryId = CameraRayFadeQueryCount;
 	FCameraRayFadeSystem::Update(World, CameraWorld, TargetWorld, Owner, Params, CameraRayFadeState);
+
+	LastCameraRayFadeCameraWorld = CameraWorld;
+	LastCameraRayFadeTargetWorld = TargetWorld;
+	bHasCameraRayFadeQuery = true;
+	CameraRayFadeTimeSinceQuery = 0.0f;
 }
 
 void USpringArmComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction& ThisTickFunction)
@@ -148,7 +200,7 @@ void USpringArmComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	FVector ArmEndWorld = LaggedAttachLoc + ArmDirWorld + SocketWorld;
 	const FVector DesiredArmEndWorld = ArmEndWorld;
 
-	UpdateCameraRayFade(DesiredArmEndWorld, LaggedAttachLoc);
+	UpdateCameraRayFade(DeltaTime, DesiredArmEndWorld, LaggedAttachLoc);
 
 	// (4b) Collision test — bDoCollisionTest 가 켜져 있으면 LaggedAttach → ArmEnd 방향으로
 	//      raycast. Hit 이 있으면 해당 거리에서 ProbeSize 만큼 안쪽에서 정지해 카메라가

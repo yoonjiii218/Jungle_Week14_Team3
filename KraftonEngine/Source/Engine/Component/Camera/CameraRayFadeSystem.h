@@ -13,8 +13,11 @@ struct FCameraRayFadeParams
 {
 	ECollisionChannel Channel = ECollisionChannel::CameraFade;
 	float Opacity = 0.35f;
+	float RayHalfWidth = 0.0f;
 	int MaxHits = 8;
 	bool bDebug = false;
+	bool bLogQuerySummary = false;
+	uint32 QueryId = 0;
 };
 
 struct FCameraRayFadeState
@@ -161,14 +164,44 @@ public:
 			return;
 		}
 
-		const FVector Dir = Diff / Distance;
-		TArray<FHitResult> Hits;
 		TArray<UPrimitiveComponent*> NewFadeComponents;
+		TArray<UPrimitiveComponent*> NewHitComponents;
 		const int MaxFadeHits = std::max<int>(1, Params.MaxHits);
-
-		if (World->PhysicsRaycastMulti(CameraWorld, Dir, Distance, Hits, Params.Channel, IgnoreActor))
+		const FVector CenterDir = Diff / Distance;
+		const float RayHalfWidth = std::max<float>(0.0f, Params.RayHalfWidth);
+		const FVector RayRight = FVector::UpVector.Cross(CenterDir).GetSafeNormal(1e-4f, FVector::RightVector);
+		const int RayCount = RayHalfWidth > 1e-4f ? 3 : 1;
+		const FVector RayTargets[3] =
 		{
-			for (const FHitResult& Hit : Hits)
+			TargetWorld,
+			TargetWorld - RayRight * RayHalfWidth,
+			TargetWorld + RayRight * RayHalfWidth
+		};
+		size_t TotalHitCount = 0;
+
+		for (int RayIndex = 0; RayIndex < RayCount; ++RayIndex)
+		{
+			const FVector RayDiff = RayTargets[RayIndex] - CameraWorld;
+			const float RayDistance = RayDiff.Length();
+			if (RayDistance <= 1e-4f)
+			{
+				continue;
+			}
+
+			TArray<FHitResult> RayHits;
+			if (!World->PhysicsRaycastMulti(
+				CameraWorld,
+				RayDiff / RayDistance,
+				RayDistance,
+				RayHits,
+				Params.Channel,
+				IgnoreActor))
+			{
+				continue;
+			}
+
+			TotalHitCount += RayHits.size();
+			for (const FHitResult& Hit : RayHits)
 			{
 				UPrimitiveComponent* FadeComponent = ResolveFadePrimitive(Hit.HitComponent);
 				if (!IsValid(FadeComponent) || Contains(NewFadeComponents, FadeComponent))
@@ -177,41 +210,101 @@ public:
 				}
 
 				NewFadeComponents.push_back(FadeComponent);
+				NewHitComponents.push_back(Hit.HitComponent);
 				if (static_cast<int>(NewFadeComponents.size()) >= MaxFadeHits)
 				{
 					break;
 				}
 			}
+
+			if (static_cast<int>(NewFadeComponents.size()) >= MaxFadeHits)
+			{
+				break;
+			}
+		}
+
+		if (Params.bDebug && Params.bLogQuerySummary)
+		{
+			UE_LOG("[CameraRayFade][Trace] query=%u rays=%d halfWidth=%.3f rawHits=%zu fadeTargets=%zu",
+				Params.QueryId,
+				RayCount,
+				RayHalfWidth,
+				TotalHitCount,
+				NewFadeComponents.size());
 		}
 
 		for (UPrimitiveComponent* OldComponent : State.FadedComponents)
 		{
 			if (IsValid(OldComponent) && !Contains(NewFadeComponents, OldComponent))
 			{
+				if (Params.bDebug)
+				{
+					AActor* Owner = OldComponent->GetOwner();
+					UE_LOG("[CameraRayFade][Restore] actor=%s component=%s opacity=%.3f->1.000",
+						IsValid(Owner) ? Owner->GetName().c_str() : "(null)",
+						OldComponent->GetName().c_str(),
+						OldComponent->GetCameraRayFadeOpacity());
+				}
 				OldComponent->SetCameraRayFadeOpacity(1.0f);
 			}
 		}
 
+		const TArray<UPrimitiveComponent*> PreviousFadeComponents = State.FadedComponents;
 		State.FadedComponents = NewFadeComponents;
 		const float ClampedOpacity = std::max<float>(0.0f, std::min<float>(Params.Opacity, 1.0f));
-		for (UPrimitiveComponent* FadeComponent : State.FadedComponents)
+		for (size_t Index = 0; Index < State.FadedComponents.size(); ++Index)
 		{
+			UPrimitiveComponent* FadeComponent = State.FadedComponents[Index];
 			if (IsValid(FadeComponent))
 			{
+				const bool bNewlyFaded = !Contains(PreviousFadeComponents, FadeComponent);
+				const float PreviousOpacity = FadeComponent->GetCameraRayFadeOpacity();
 				FadeComponent->SetCameraRayFadeOpacity(ClampedOpacity);
+				if (Params.bDebug && bNewlyFaded)
+				{
+					UPrimitiveComponent* HitComponent = Index < NewHitComponents.size()
+						? NewHitComponents[Index]
+						: nullptr;
+					AActor* Owner = FadeComponent->GetOwner();
+					const ECollisionResponse HitResponse = IsValid(HitComponent)
+						? HitComponent->GetCollisionResponseToChannel(Params.Channel)
+						: ECollisionResponse::Ignore;
+					UE_LOG("[CameraRayFade][Apply] actor=%s hit=%s render=%s channel=%d response=%d opacity=%.3f->%.3f proxyReady=%s",
+						IsValid(Owner) ? Owner->GetName().c_str() : "(null)",
+						IsValid(HitComponent) ? HitComponent->GetName().c_str() : "(null)",
+						FadeComponent->GetName().c_str(),
+						static_cast<int>(Params.Channel),
+						static_cast<int>(HitResponse),
+						PreviousOpacity,
+						FadeComponent->GetCameraRayFadeOpacity(),
+						FadeComponent->GetSceneProxy() ? "true" : "false");
+				}
 			}
 		}
 
 		if (Params.bDebug)
 		{
-			if (State.FadedComponents.empty())
+			bool bStateChanged = PreviousFadeComponents.size() != State.FadedComponents.size();
+			if (!bStateChanged)
 			{
-				UE_LOG("[CameraRayFade] no fade target hits=%zu", Hits.size());
+				for (UPrimitiveComponent* Component : State.FadedComponents)
+				{
+					if (!Contains(PreviousFadeComponents, Component))
+					{
+						bStateChanged = true;
+						break;
+					}
+				}
 			}
-			else
+
+			if (bStateChanged && State.FadedComponents.empty())
 			{
-				UE_LOG("[CameraRayFade] fading %zu component(s) from %zu hit(s) opacity=%.2f",
-					State.FadedComponents.size(), Hits.size(), ClampedOpacity);
+				UE_LOG("[CameraRayFade] no fade target rawHits=%zu", TotalHitCount);
+			}
+			else if (bStateChanged)
+			{
+				UE_LOG("[CameraRayFade] fading %zu component(s) from %zu raw hit(s) opacity=%.2f",
+					State.FadedComponents.size(), TotalHitCount, ClampedOpacity);
 			}
 		}
 	}

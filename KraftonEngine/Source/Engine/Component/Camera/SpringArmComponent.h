@@ -77,7 +77,15 @@ public:
 	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Channel", Enum=ECollisionChannel)
 	ECollisionChannel CameraRayFadeChannel = ECollisionChannel::CameraFade;
 	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Opacity", Min=0.02f, Max=1.0f, Speed=0.01f)
-	float CameraRayFadeOpacity = 0.35f;
+	float CameraRayFadeOpacity = 0.01f;
+	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Half Width", Min=0.0f, Max=10.0f, Speed=0.01f)
+	float CameraRayFadeHalfWidth = 0.4f;
+	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Update Rate", Min=1.0f, Max=120.0f, Speed=1.0f)
+	float CameraRayFadeUpdateRate = 30.0f;
+	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Movement Threshold", Min=0.0f, Max=10.0f, Speed=0.01f)
+	float CameraRayFadeMovementThreshold = 0.05f;
+	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Idle Refresh Interval", Min=0.02f, Max=2.0f, Speed=0.01f)
+	float CameraRayFadeIdleRefreshInterval = 0.25f;
 	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Max Hits", Min=1.0f, Max=32.0f, Speed=1.0f)
 	int CameraRayFadeMaxHits = 8;
 	UPROPERTY(Edit, Save, Category="SpringArm|Camera Occlusion", DisplayName="Camera Ray Fade Debug")
@@ -103,7 +111,12 @@ private:
 	bool bHasPreviousState = false;
 
 	FCameraRayFadeState CameraRayFadeState;
+	float CameraRayFadeTimeSinceQuery = 0.0f;
+	FVector LastCameraRayFadeCameraWorld = FVector::ZeroVector;
+	FVector LastCameraRayFadeTargetWorld = FVector::ZeroVector;
+	bool bHasCameraRayFadeQuery = false;
+	uint32 CameraRayFadeQueryCount = 0;
 
-	void UpdateCameraRayFade(const FVector& CameraWorld, const FVector& TargetWorld);
+	void UpdateCameraRayFade(float DeltaTime, const FVector& CameraWorld, const FVector& TargetWorld);
 	void ClearCameraRayFade();
 };
