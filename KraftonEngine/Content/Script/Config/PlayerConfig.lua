@@ -701,8 +701,8 @@ PlayerConfig.Default = {
             -- 궁극기 시작 시 focus 기준 원형 yaw 후보를 검사해서 Camera 채널에 덜 막히는 쪽으로 cinematic camera를 배치한다.
             CameraOcclusionEnabled = true,
             CameraOcclusionTraceChannel = 5, -- ECollisionChannel::Camera
-            CameraOcclusionYawStep = 18.0,
-            CameraOcclusionCandidateCount = 5,
+            CameraOcclusionYawStep = 60.0,
+            CameraOcclusionCandidateCount = 6,
             CameraOcclusionFocusHeightOffset = 1.2,
             CameraOcclusionDebug = false,
             -- 후보군으로 카메라 위치 자체를 해결하므로 궁극기 기본값은 fade 비활성화.
